@@ -1,7 +1,7 @@
 title: "[Announcement] "
 labels: ["announcement"]
 body:
-  - type: yml
+  - type: markdown
     attributes:
       value: |
         중요한 공지, 업데이트, 릴리스 안내를 공유하는 공간입니다.
