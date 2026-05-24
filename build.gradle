@@ -23,6 +23,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // section 02: AOP 기반 로깅 구현을 위한 AspectJ 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     compileOnly 'org.projectlombok:lombok'
 // 추후 DB 연결 후 주석 해제 예정
 //    runtimeOnly 'com.mysql:mysql-connector-j'
