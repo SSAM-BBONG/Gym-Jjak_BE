@@ -40,6 +40,7 @@ public record ApiErrorResponse(
                 Map.of()
         );
     }
+
     // ErrorCode에 추가 상세 정보를 붙이고 싶을 때
     // Validation 오류 필드 목록 표시 같은거!
     public static ApiErrorResponse of(

@@ -110,8 +110,6 @@ public class GlobalExceptionHandler {
                 .map(fieldError -> {
                     Map<String, Object> error = new LinkedHashMap<>();
                     error.put("field", fieldError.getField());
-                    // rejectedValue 값에는 비번, 토큰 등이 노출이 되는데 빼는게 낫겠죠?
-//                    error.put("rejectedValue", fieldError.getRejectedValue());
                     error.put("reason", fieldError.getDefaultMessage());
                     return error;
                 })
