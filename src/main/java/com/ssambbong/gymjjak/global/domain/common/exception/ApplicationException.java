@@ -31,4 +31,8 @@ public abstract class ApplicationException extends RuntimeException {
     protected void addContext(String key, Object value) {
         this.context.put(key, value);
     }
+
+    public Map<String, Object> getContext() {
+        return Map.copyOf(context);
+    }
 }
