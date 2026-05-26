@@ -3,14 +3,15 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   check-base-branch:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR source branch
         run: |
-          if [ "${{ github.head_ref }}" != "develop" ]; then
+          # develop → main 만 허용
+          if [ "${{ github.base_ref }}" == "main" ] && \
+             [ "${{ github.head_ref }}" != "develop" ]; then
             echo "main으로의 PR은 develop 브랜치에서만 가능합니다."
             exit 1
           fi
