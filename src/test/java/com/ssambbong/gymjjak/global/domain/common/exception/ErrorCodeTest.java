@@ -12,7 +12,7 @@ public class ErrorCodeTest {
     @Test
     void invalidInputErrorCodeHasExceptedValues() {
 
-        ErrorCode errorCode = ErrorCode.INVALID_INPUT;
+        ErrorCode errorCode = CommonErrorCode.INVALID_INPUT;
 
         assertThat(errorCode.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(errorCode.getCode()).isEqualTo("COMMON_400");
@@ -22,7 +22,7 @@ public class ErrorCodeTest {
     @DisplayName("INTERNAL_SERVER_ERROR 에러 코드는 500 상태를 가진다")
     @Test
     void internalServerErrorHasExpectedStatus() {
-        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+        ErrorCode errorCode = CommonErrorCode.INTERNAL_SERVER_ERROR;
 
         assertThat(errorCode.getHttpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(errorCode.getCode()).isEqualTo("COMMON_500");
