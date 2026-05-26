@@ -20,7 +20,7 @@ import java.util.concurrent.Executor;
 public class AsyncConfig implements AsyncConfigurer {
 
     // TODO : TraceId 만드는 TraceIdFilter 추가하기
-    
+
     @Bean(name = "applicationTaskExecutor")
     public Executor applicationTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
