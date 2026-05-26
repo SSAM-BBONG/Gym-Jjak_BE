@@ -26,11 +26,11 @@ dependencies {
     // section 02: AOP 기반 로깅 구현을 위한 AspectJ 의존성
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     compileOnly 'org.projectlombok:lombok'
-// 추후 DB 연결 후 주석 해제 예정
-//    runtimeOnly 'com.mysql:mysql-connector-j'
+    // 추후 DB 연결 후 주석 해제 예정
+     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//    testImplementation 'org.springframework.security:spring-security-test'
+    // testImplementation 'org.springframework.security:spring-security-test'
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
@@ -38,6 +38,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
     // swagger 의존성
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.16'
+    // Source: https://mvnrepository.com/artifact/org.mapstruct/mapstruct
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 }
 
 tasks.named('test') {
