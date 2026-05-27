@@ -16,9 +16,9 @@ import java.util.Optional;
 public class PerformanceLogAspect {
 
     @Around("""
-            execution(* com.ssambbong.gymjjak..service..get*(..))" ||
-            execution(* com.ssambbong.gymjjak..service..find*(..))"
-     """)
+            execution(* com.ssambbong.gymjjak..service..get*(..)) ||
+            execution(* com.ssambbong.gymjjak..service..find*(..))
+            """)
     public Object measureExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
 
         long startTime = System.nanoTime();
@@ -35,20 +35,11 @@ public class PerformanceLogAspect {
 
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 
-            log.info("""
-                
-                ==================== [성능 측정 결과] ====================
-                traceId      : {}
-                대상 메서드   : {}.{}
-                실행 시간(ms) : {}ms
-                실행 시간(sec): {}초
-                ==================== [측정 완료] ====================
-                """,
+            log.info("[PERFORMANCE] traceId={}, method={}.{}, executionTimeMs={}ms",
                     traceId,
                     signature.getDeclaringType().getSimpleName(),
                     signature.getMethod().getName(),
-                    executionTimeMs,
-                    String.format("%.2f", executionTimeSec)
+                    executionTimeMs
             );
         }
     }
