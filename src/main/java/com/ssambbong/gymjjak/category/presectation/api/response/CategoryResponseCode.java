@@ -15,14 +15,4 @@ public enum CategoryResponseCode implements ResponseCode {
 
     private final String code;
     private final String message;
-
-    @Override
-    public String code() {
-        return code;
-    }
-
-    @Override
-    public String message() {
-        return message;
-    }
 }
