@@ -15,9 +15,9 @@ public class User {
     private String phone;
     private UserRole role;
     private UserStatus status;
+    private Instant lastLoginAt;
     private final Instant createdAt;
     private Instant updatedAt;
-    private Instant lastLoginAt;
     private Instant deletedAt;
 
     private User(
@@ -81,9 +81,9 @@ public class User {
             String phone,
             UserRole role,
             UserStatus status,
+            Instant lastLoginAt,
             Instant createdAt,
             Instant updatedAt,
-            Instant lastLoginAt,
             Instant deletedAt
     ) {
         return new User(
@@ -95,9 +95,9 @@ public class User {
                 phone,
                 role,
                 status,
+                lastLoginAt,
                 createdAt,
                 updatedAt,
-                lastLoginAt,
                 deletedAt
         );
     }
@@ -113,7 +113,7 @@ public class User {
         this.name = validateRequired(name, "name");
         this.nickname = validateRequired(nickname, "nickname");
         this.phone = validateRequired(phone, "phone");
-        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+        this.updatedAt = updatedAt;
     }
 
     public void changePassword(String encodedPassword, Instant updatedAt) {
