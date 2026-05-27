@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.user.adapter.in.web;
 
-import com.ssambbong.gymjjak.global.presentation.api.common.ApiResponse;
+import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.SignupRequest;
@@ -26,7 +26,7 @@ public class UserAuthController {
 
     @PostMapping("/signup")
     @Operation( summary = "일반 회원 계정 생성", description = "회원이 회원가입을 하는 요청이다.")
-    public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest request) {
+    public ResponseEntity<GlobalApiResponse<Void>> signup(@Valid @RequestBody SignupRequest request) {
 
         userCommandUseCase.registerUser(new RegisterUserCommand(
                 request.username(),
@@ -36,7 +36,7 @@ public class UserAuthController {
                 request.phone()
         ));
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.created(
+                .body(GlobalApiResponse.created(
                         UserResponseCode.USER_REGISTERED
                 ));
 

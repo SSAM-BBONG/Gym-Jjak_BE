@@ -9,4 +9,6 @@ public interface UserRepositoryPort {
     boolean existsByUsername(String username);
 
     boolean existsByNickname(String nickname);
+
+    boolean existsByPhone(String phone);
 }

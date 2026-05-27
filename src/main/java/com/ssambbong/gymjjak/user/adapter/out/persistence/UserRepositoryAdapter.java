@@ -29,4 +29,9 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public boolean existsByNickname(String nickname) {
         return springDataUserRepository.existsByNickname(nickname);
     }
+
+    @Override
+    public boolean existsByPhone(String phone) {
+        return springDataUserRepository.existsByPhone(phone);
+    }
 }
