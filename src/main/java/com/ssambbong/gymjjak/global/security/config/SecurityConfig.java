@@ -111,8 +111,8 @@ public class SecurityConfig {
         // 프론트엔드 주소 허용
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
-                "http://localhost:8080",
-                "https://gymjjak.com"
+                "http://localhost:8080"
+//                "https://gymjjak.com"
         ));
 
         // 허용 HTTP 메서드
