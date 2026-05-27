@@ -224,3 +224,8 @@ $RECYCLE.BIN/
 ### yaml ###
 **/application.yml
 **/application-*.yml
+
+### env ###
+.env
+.env.*
+!.env.example

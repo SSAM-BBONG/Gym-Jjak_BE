@@ -42,6 +42,12 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
     testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+//    aws s3 버킷 관련 의존성 추가
+    implementation platform('software.amazon.awssdk:bom:2.31.78')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:s3-transfer-manager'
+    // .env 파일 읽기
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 }
 
 tasks.named('test') {
