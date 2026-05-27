@@ -36,11 +36,11 @@ public record GlobalApiResponse<T>(
 
     // 200 ok - responseCode는 각 도메인에서 enum으로 만들기
     public static <T> GlobalApiResponse<T> ok(ResponseCode responseCode, T data) {
-        return ok(responseCode.code(), responseCode.message(), data);
+        return ok(responseCode.getCode(), responseCode.getMessage(), data);
     }
 
     public static GlobalApiResponse<Void> ok(ResponseCode responseCode) {
-        return ok(responseCode.code(), responseCode.message());
+        return ok(responseCode.getCode(), responseCode.getMessage());
     }
 
     // 201 created - body 값 있음
@@ -53,10 +53,10 @@ public record GlobalApiResponse<T>(
     }
     // 201 created - body 값 있음
     public static <T> GlobalApiResponse<T> created(ResponseCode responseCode, T data) {
-        return created(responseCode.code(), responseCode.message(), data);
+        return created(responseCode.getCode(), responseCode.getMessage(), data);
     }
     // 201 created - body 값 없음
     public static GlobalApiResponse<Void> created(ResponseCode responseCode) {
-        return created(responseCode.code(), responseCode.message());
+        return created(responseCode.getCode(), responseCode.getMessage());
     }
 }
