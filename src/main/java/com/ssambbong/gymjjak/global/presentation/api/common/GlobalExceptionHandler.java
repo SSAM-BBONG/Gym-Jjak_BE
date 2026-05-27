@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.global.presentation.api.common;
 
 import com.ssambbong.gymjjak.global.domain.common.exception.ApplicationException;
+import com.ssambbong.gymjjak.global.domain.common.exception.CommonErrorCode;
 import com.ssambbong.gymjjak.global.domain.common.exception.ErrorCode;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +51,8 @@ public class GlobalExceptionHandler {
         log.warn("[MethodArgumentNotValidException] traceId={}, details={}", traceId, details);
 
         return ResponseEntity
-                .status(ErrorCode.INVALID_INPUT.getHttpStatus())
-                .body(ApiErrorResponse.of(ErrorCode.INVALID_INPUT, traceId, details));
+                .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
+                .body(ApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId, details));
     }
 
     // @ModelAttribute or query/form binding 검증 실패
@@ -63,8 +64,8 @@ public class GlobalExceptionHandler {
         log.warn("[BindException] traceId={}, details={}", traceId, details);
 
         return ResponseEntity
-                .status(ErrorCode.INVALID_INPUT.getHttpStatus())
-                .body(ApiErrorResponse.of(ErrorCode.INVALID_INPUT, traceId, details));
+                .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
+                .body(ApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId, details));
     }
 
     // @RequestParam, @PathVariable 검증 실패
@@ -89,8 +90,8 @@ public class GlobalExceptionHandler {
         log.warn("[ConstraintViolationException] traceId={}, details={}", traceId, details);
 
         return ResponseEntity
-                .status(ErrorCode.INVALID_INPUT.getHttpStatus())
-                .body(ApiErrorResponse.of(ErrorCode.INVALID_INPUT, traceId, details));
+                .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
+                .body(ApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId, details));
     }
 
     // 500 에러! 예상 못한 서버 오류
@@ -101,8 +102,8 @@ public class GlobalExceptionHandler {
         log.error("[UnhandledException] traceId={}, message={}", traceId, exception.getMessage(), exception);
 
         return ResponseEntity
-                .status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
-                .body(ApiErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, traceId));
+                .status(CommonErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(ApiErrorResponse.of(CommonErrorCode.INTERNAL_SERVER_ERROR, traceId));
     }
 
     private Map<String, Object> createFieldErrorDetails(List<FieldError> fieldErrors) {
