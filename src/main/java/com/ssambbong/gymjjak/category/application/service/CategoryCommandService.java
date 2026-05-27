@@ -1,0 +1,64 @@
+package com.ssambbong.gymjjak.category.application.service;
+
+import com.ssambbong.gymjjak.category.application.command.CreateCategoryCommand;
+import com.ssambbong.gymjjak.category.application.command.DeleteCategoryCommand;
+import com.ssambbong.gymjjak.category.application.command.UpdateCategoryCommand;
+import com.ssambbong.gymjjak.category.application.usecase.CategoryCommandUseCase;
+import com.ssambbong.gymjjak.category.domain.exception.CategoryAlreadyExistsException;
+import com.ssambbong.gymjjak.category.domain.exception.CategoryNotFoundException;
+import com.ssambbong.gymjjak.category.domain.model.Category;
+import com.ssambbong.gymjjak.category.domain.repository.CategoryRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class CategoryCommandService implements CategoryCommandUseCase {
+
+    private final CategoryRepository categoryRepository;
+
+    // 생성자 매개변수
+    public CategoryCommandService(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
+
+    // 카테고리 (이름) 등록
+    @Override
+    public Long handle(CreateCategoryCommand command) {
+        // 중복 이름 확인
+        if (categoryRepository.existsByName(command.name())) {
+            throw new CategoryAlreadyExistsException();
+        }
+        // 도메인 객체 생성
+        Category category = Category.create(command.name());
+        // 저장 후 id 반환
+        Category saved = categoryRepository.save(category);
+        return saved.getId(); // 카테고리 id를 반환
+    }
+
+    // 카테고리 수정
+    @Override
+    public void handle(UpdateCategoryCommand command) {
+        // 카테고리 존재 확인
+        Category category = categoryRepository.findById(command.id())
+                .orElseThrow(CategoryNotFoundException::new);
+        // 중복 이름 확인 (자기 자신과 같은 경우 허용)
+        if (!category.getName().equals(command.name()) &&
+                categoryRepository.existsByName(command.name())) {
+            throw new CategoryAlreadyExistsException();
+        }
+        // 이름 변경 후 저장
+        category.changeName(command.name());
+        categoryRepository.save(category);
+    }
+
+    // 카테고리 삭제
+    @Override
+    public void handle(DeleteCategoryCommand command) {
+        // 카테고리 존재 확인
+        categoryRepository.findById(command.id())
+                .orElseThrow(CategoryNotFoundException::new);
+        // 삭제
+        categoryRepository.deleteById(command.id());
+    }
+}
