@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.organization.domain.model;
 
-public enum Status {
+public enum OrganizationApplicationStatus {
     PENDING,    // 검토 중
     ACCEPTED,   // 승인
     REJECTED,   // 반려

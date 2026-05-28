@@ -1,10 +1,12 @@
 package com.ssambbong.gymjjak.organization.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
-import com.ssambbong.gymjjak.organization.domain.model.Status;
+import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -17,7 +19,7 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
        boolean alreadyExist = springDataOrganizationApplicationRepository
                .existsByBusinessRegistrationNumberAndStatus(
                        businessRegistrationNumber,
-                       Status.ACCEPTED);
+                       OrganizationApplicationStatus.ACCEPTED);
 
        return alreadyExist;
     }
@@ -29,5 +31,16 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
         OrganizationApplicationJpaEntity saved = springDataOrganizationApplicationRepository.save(organizationApplicationJpaEntity);
 
         return saved.getOrganizationApplicationId();
+    }
+
+    @Override
+    public List<OrganizationApplication> findAllByApplicantUserId(Long applicantUserId) {
+
+        List<OrganizationApplicationJpaEntity> myOrganizationApplication =
+                springDataOrganizationApplicationRepository.findAllByApplicantUserId(applicantUserId);
+
+        return myOrganizationApplication.stream()
+                .map(OrganizationApplicationJpaEntity::toDomain)
+                .toList();
     }
 }

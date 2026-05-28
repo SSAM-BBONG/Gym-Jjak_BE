@@ -157,7 +157,7 @@ CREATE TABLE organization_applications (
                                            business_name VARCHAR(100) NOT NULL,
                                            representative_name VARCHAR(50) NOT NULL,
                                            representative_phone VARCHAR(20) NOT NULL,
-                                           opening_date VARCHAR(20) NOT NULL,
+                                           opening_date DATE NOT NULL,
                                            road_address VARCHAR(255) NOT NULL,
                                            jibun_address VARCHAR(255) NULL,
                                            detail_address VARCHAR(255) NULL,
