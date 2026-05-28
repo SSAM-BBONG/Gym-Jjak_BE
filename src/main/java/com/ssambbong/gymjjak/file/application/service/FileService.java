@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -49,8 +51,11 @@ public class FileService implements FileUseCase {
     }
 
     @Override
-    public String getPresignedUrl(String key) {
-        return fileStoragePort.getPresignedUrl(key);
+    @Transactional(readOnly = true)
+    public String getPresignedUrl(Long fileId) {
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(FileNotFoundException::new);
+        return fileStoragePort.getPresignedUrl(file.getFileUrl());
     }
 
     @Override

@@ -17,7 +17,7 @@ public class OrganizationApplication {
     private final String businessName;
     private final String representativeName;
     private final String representativePhone;
-    private final String openingDate;
+    private final LocalDate openingDate;
     private final String roadAddress;
     private final String jibunAddress;
     private final String detailAddress;
@@ -27,7 +27,7 @@ public class OrganizationApplication {
     private final String instagramUrl;
     private final String blogUrl;
     private final String facilityPhone;
-    private final Status status;
+    private final OrganizationApplicationStatus status;
     private final String rejectReason;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
@@ -41,7 +41,7 @@ public class OrganizationApplication {
             String businessName,
             String representativeName,
             String representativePhone,
-            String openingDate,
+            LocalDate openingDate,
             String roadAddress,
             String jibunAddress,
             String detailAddress,
@@ -51,7 +51,7 @@ public class OrganizationApplication {
             String instagramUrl,
             String blogUrl,
             String facilityPhone,
-            Status status,
+            OrganizationApplicationStatus status,
             String rejectReason,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
@@ -89,7 +89,7 @@ public class OrganizationApplication {
             String businessName,
             String representativeName,
             String representativePhone,
-            String openingDate,
+            LocalDate openingDate,
             String roadAddress,
             String jibunAddress,
             String detailAddress,
@@ -119,10 +119,60 @@ public class OrganizationApplication {
                 instagramUrl,
                 blogUrl,
                 facilityPhone,
-                Status.PENDING,
+                OrganizationApplicationStatus.PENDING,
                 null,
                 null,
                 null
+        );
+    }
+
+    public static OrganizationApplication restore(
+            Long organizationApplicationId,
+            Long applicantUserId,
+            String requestedLoginId,
+            Long businessLicenseFileId,
+            String businessRegistrationNumber,
+            String businessName,
+            String representativeName,
+            String representativePhone,
+            LocalDate openingDate,
+            String roadAddress,
+            String jibunAddress,
+            String detailAddress,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String websiteUrl,
+            String instagramUrl,
+            String blogUrl,
+            String facilityPhone,
+            OrganizationApplicationStatus status,
+            String rejectReason,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        return new OrganizationApplication(
+        organizationApplicationId,
+        applicantUserId,
+        requestedLoginId,
+        businessLicenseFileId,
+        businessRegistrationNumber,
+        businessName,
+        representativeName,
+        representativePhone,
+        openingDate,
+        roadAddress,
+        jibunAddress,
+        detailAddress,
+        latitude,
+        longitude,
+        websiteUrl,
+        instagramUrl,
+        blogUrl,
+        facilityPhone,
+        status,
+        rejectReason,
+        createdAt,
+        updatedAt
         );
     }
 
