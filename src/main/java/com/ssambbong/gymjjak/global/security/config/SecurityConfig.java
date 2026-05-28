@@ -68,6 +68,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        .requestMatchers("/api/token/validate").authenticated()
+
                         // 신고 관리
                         .requestMatchers("/api/reportgroup/**")
                         .hasAnyAuthority("ADMIN")
