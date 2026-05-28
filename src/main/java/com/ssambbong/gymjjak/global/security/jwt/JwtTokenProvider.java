@@ -42,13 +42,13 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createRefreshToken(Long userId, String email) {
+    public String createRefreshToken(Long userId, String username) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + jwtProperties.getRefreshTokenExpiration());
 
         return Jwts.builder()
-                .subject(email)
-                .claim("userId", userId)
+                .subject(String.valueOf(userId))
+                .claim("username", username)
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(secretKey, Jwts.SIG.HS256)
@@ -69,11 +69,11 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
 
-        String email = claims.getSubject();
+        String userId = claims.getSubject();
         String role = claims.get("role", String.class);
 
         return new UsernamePasswordAuthenticationToken(
-                email,
+                userId,
                 null,
                 List.of(new SimpleGrantedAuthority(toAuthority(role)))
         );
@@ -81,12 +81,12 @@ public class JwtTokenProvider {
 
     public Long getUserId(String token) {
         Claims claims = parseClaims(token);
-        return claims.get("userId", Long.class);
+        return Long.valueOf(claims.getSubject());
     }
 
-    public String getEmail(String token) {
+    public String getUsername(String token) {
         Claims claims = parseClaims(token);
-        return claims.getSubject();
+        return claims.get("username", String.class);
     }
 
     public String getRole(String token) {
