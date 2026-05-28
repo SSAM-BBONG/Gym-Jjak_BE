@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.global.security.jwt;
 
+import com.ssambbong.gymjjak.global.security.principal.AuthUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -69,11 +70,14 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
 
-        String userId = claims.getSubject();
+        Long userId = Long.valueOf(claims.getSubject());
+        String username = claims.get("username", String.class);
         String role = claims.get("role", String.class);
 
+        AuthUser authUser = new AuthUser(userId, username, role);
+
         return new UsernamePasswordAuthenticationToken(
-                userId,
+                authUser,
                 null,
                 List.of(new SimpleGrantedAuthority(toAuthority(role)))
         );

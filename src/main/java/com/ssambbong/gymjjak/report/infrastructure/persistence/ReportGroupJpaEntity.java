@@ -1,7 +1,8 @@
 package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
-import com.ssambbong.gymjjak.report.domain.model.ReportGroupStatus;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroupReviewStatus;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -40,15 +41,18 @@ public class ReportGroupJpaEntity extends BaseTimeEntity {
     private String snapshotFileUrl;
 
     @Column(nullable = false)
-    private int reportCount;
+    private int totalReportCount;
 
     @Column(nullable = false)
-    private int accessCount;
+    private int effectiveReportCount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private ReportGroupStatus status;
+    private ReportGroupReviewStatus reviewStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private ReportGroupSanctionStatus sanctionStatus;
 
     private Long processedBy;
-
 }

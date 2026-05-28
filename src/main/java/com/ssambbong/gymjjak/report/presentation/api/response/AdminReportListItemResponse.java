@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
  * @param targetDisplayText : 제목 부분에 들어갈 신고 타입별 제목
  * @param targetOwnerUsername : 피신고 게시글 작성자
  * @param reportedAt : 최근 신고일
- * @param reportCount : 총 신고 건수
- * @param status : 현재 신고 게시글의 상태, PENDING : 임시 블라인드 상태, RESOLVED : 해결됨, REJECTED : 반려
+ * @param effectiveReportCount : 승인된 신고 건수
+ * @param status : 현재 신고 게시글의 상태, PENDING : 대기상태, RESOLVED : 검토 완료, REJECTED : 검토 완료, 모든 승인 반려
  * @param navigationType : 상세 보기 클릭시 modal창 / 해당 게시글 페이지로 이동 결정 전달 값
  */
 @Builder
@@ -25,7 +25,7 @@ public record AdminReportListItemResponse(
         String targetDisplayText,
         String targetOwnerUsername,
         LocalDateTime reportedAt,
-        int reportCount,
+        int effectiveReportCount,
         String status,
         String navigationType
 ) {
@@ -37,7 +37,7 @@ public record AdminReportListItemResponse(
                 .targetDisplayText(item.targetDisplayText())
                 .targetOwnerUsername(item.targetOwnerUsername())
                 .reportedAt(item.reportedAt())
-                .reportCount(item.reportCount())
+                .effectiveReportCount(item.effectiveReportCount())
                 .status(item.status().getDescription())
                 .navigationType(item.navigationType().name())
                 .build();

@@ -12,13 +12,20 @@ import java.util.Optional;
 @Transactional
 @RequiredArgsConstructor
 public class ReportRepositoryAdapter implements ReportRepository {
+
+    private final SpringDataReportRepository reportRepository;
+    private final ReportPersistenceMapper reportPersistenceMapper;
+
     @Override
-    public Optional<Report> findById(Long reportGroupId) {
-        return Optional.empty();
+    public Optional<Report> findById(Long reportId) {
+        return reportRepository.findById(reportId)
+                .map(reportPersistenceMapper::toDomain);
     }
 
     @Override
     public Report save(Report report) {
-        return null;
+        ReportJpaEntity entity = reportPersistenceMapper.toEntity(report);
+        ReportJpaEntity savedEntity = reportRepository.save(entity);
+        return reportPersistenceMapper.toDomain(savedEntity);
     }
 }
