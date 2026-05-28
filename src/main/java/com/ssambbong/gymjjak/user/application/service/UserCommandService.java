@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.user.application.service;
 
 import com.ssambbong.gymjjak.user.application.command.LoginCommand;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
+import com.ssambbong.gymjjak.user.application.command.ReissueTokenCommand;
 import com.ssambbong.gymjjak.user.application.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.application.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
@@ -76,6 +77,13 @@ public class UserCommandService implements UserCommandUseCase {
             throw new UserException(UserErrorCode.LOGIN_FAILED);
         }
 
+        user.markLoggedIn(LocalDateTime.now());
+
+        userPort.updateLastLoginAt(
+                user.getId(),
+                user.getLastLoginAt()
+        );
+
         userPolicy.validateLoginAllowed(user);
 
         String accessToken = userPort.createAccessToken(
@@ -99,6 +107,39 @@ public class UserCommandService implements UserCommandUseCase {
                 refreshToken
         );
 
+    }
+
+    @Override
+    public String reissueAccessToken(ReissueTokenCommand command) {
+        String refreshToken = command.refreshToken();
+
+        // 1. refreshToken 자체가 유효한 JWT인지 검증
+        if (!userPort.validateToken(refreshToken)) {
+            throw new UserException(UserErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // 2. refreshToken에서 userId 추출
+        Long userId = userPort.getUserId(refreshToken);
+
+        // 3. DB에 저장된 refreshToken 조회
+        String savedRefreshToken = userPort.findRefreshTokenByUserId(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.REFRESH_TOKEN_NOT_FOUND));
+
+        // 4. 요청으로 들어온 refreshToken과 DB refreshToken 비교
+        if (!savedRefreshToken.equals(refreshToken)) {
+            throw new UserException(UserErrorCode.REFRESH_TOKEN_MISMATCH);
+        }
+
+        // 5. 사용자 조회
+        User user = userPort.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        // 6. 새 accessToken 발급
+        return userPort.createAccessToken(
+                user.getId(),
+                user.getUsername(),
+                user.getRole().name()
+        );
     }
 
     private String maskPhone(String phone) {

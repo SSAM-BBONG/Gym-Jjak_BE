@@ -131,8 +131,6 @@ public class User {
     }
 
     public void markLoggedIn(LocalDateTime  lastLoginAt) {
-        validateLoginAllowed();
-
         this.lastLoginAt = Objects.requireNonNull(lastLoginAt, "lastLoginAt은 필수입니다.");
     }
 
