@@ -68,9 +68,15 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // 관리자 API
-                        .requestMatchers("/api/admin/**")
-                        .hasAuthority("ADMIN")
+                        // 신고 관리
+                        .requestMatchers("/api/reportgroup/**")
+                        .hasAnyAuthority("ADMIN")
+
+                        .requestMatchers("/api/{reportGroupId}/**")
+                        .hasAnyAuthority("ADMIN")
+
+                        .requestMatchers("/api/reports/**")
+                        .hasAnyAuthority("ADMIN")
 
                         // 일반 사용자 API
                         // 관리자가 사용자 API도 접근 가능해야 하면 ROLE_ADMIN 포함
@@ -81,9 +87,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/trainers/**")
                         .hasAnyAuthority("TRAINER", "ADMIN")
 
-                        // 트레이너 API
+                        // 조직 API
                         .requestMatchers("/api/organizations/**")
                         .hasAnyAuthority("ORGANIZATION", "ADMIN")
+
+                        .requestMatchers("/api/organization-applications/**")
+                        .hasAnyAuthority("USER", "TRAINER", "ADMIN")
+
+                        .requestMatchers("/api/organizations/**")
+                        .hasAnyAuthority("TRAINER", "ADMIN")
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
