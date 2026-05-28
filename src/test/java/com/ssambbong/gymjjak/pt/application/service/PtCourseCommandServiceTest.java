@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.pt.application.service;
 
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,29 +25,29 @@ public class PtCourseCommandServiceTest {
     @Mock
     private PtCourseRepository ptCourseRepository;
 
-    // 테스트할 식제 객체를 생성하고 위에서 만든 @Mock 객체들을 자동으로 주입해줌
+    @Mock
+    private FileUseCase fileUseCase;
+
     @InjectMocks
     private PtCourseCommandService ptCourseCommandService;
 
     @Test
-    @DisplayName("정상적인 요청으로 PT 강습 등록 시 ptCourseId가 반환되어야 한다")
-    void createPtCourse_success() {
+    @DisplayName("썸네일 없이 PT 강습 등록 시 ptCourseId가 반환되어야 한다")
+    void createPtCourse_success_withoutThumbnail() {
 
-        // given : 테스트에 필요한 데이터 준비
-        // 실제 Http 요청 대신 Command 객체를 직접 만들어 테스트
+        // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L,                                    // organizationId (임시)
-                1L,                                    // trainerProfileId (임시)
-                1L,                                    // categoryId
-                1L,                                    // tagId
-                null,                                  // thumbnailFileId (선택)
-                "체계적인 가슴 집중 PT",                // title
-                "가슴 근육 발달에 특화된 12주 프로그램", // description
-                50000,                                 // price
-                12                                     // totalSessionCount
+                1L,                                     // userId
+                1L,                                     // organizationId
+                1L,                                     // trainerProfileId
+                1L,                                     // categoryId
+                1L,                                     // tagId
+                "체계적인 가슴 집중 PT",                 // title
+                "가슴 근육 발달에 특화된 12주 프로그램",  // description
+                50000,                                  // price
+                12                                      // totalSessionCount
         );
 
-        // DB에 저장됐다고 가정한 PtCourse 객체
         PtCourse savedPtCourse = PtCourse.restore(
                 1L, 1L, 1L, 1L, 1L, null,
                 "체계적인 가슴 집중 PT",
@@ -52,17 +55,49 @@ public class PtCourseCommandServiceTest {
                 50000, 12, false, false, PtCourseStatus.VISIBLE
         );
 
-        // Mock 동작 정의: ptCourseRepository.save()가 호출되면 savedPtCourse를 반환하도록 설정
-        // any(PtCourse.class): 어떤 PtCourse 객체가 들어오든 상관없이 savedPtCourse 반환
         when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
 
-        // when : 실제 테스트할 메서드 실행
-        Long ptCourseId = ptCourseCommandService.createPtCourse(command);
+        // when
+        Long ptCourseId = ptCourseCommandService.createPtCourse(null, command);
 
-        // then : 결과 검증
+        // then
         assertEquals(1L, ptCourseId);
+        verify(ptCourseRepository).save(any(PtCourse.class));
+        verify(fileUseCase, never()).uploadFile(any(), any(), any()); // 파일 업로드 호출 안 됨
+    }
 
-        // ptCourseRepository.save()가 정확히 1번 호출됐는지 확인
+    @Test
+    @DisplayName("썸네일 있을 때 PT 강습 등록 시 파일 업로드 후 ptCourseId가 반환되어야 한다")
+    void createPtCourse_success_withThumbnail() {
+
+        // given
+        MultipartFile thumbnail = mock(MultipartFile.class);
+        when(thumbnail.isEmpty()).thenReturn(false);
+
+        CreatePtCourseCommand command = new CreatePtCourseCommand(
+                1L, 1L, 1L, 1L, 1L,
+                "체계적인 가슴 집중 PT",
+                "가슴 근육 발달에 특화된 12주 프로그램",
+                50000, 12
+        );
+
+        when(fileUseCase.uploadFile(thumbnail, 1L, FileType.COURSE_THUMBNAIL)).thenReturn(99L);
+
+        PtCourse savedPtCourse = PtCourse.restore(
+                1L, 1L, 1L, 1L, 1L, 99L,
+                "체계적인 가슴 집중 PT",
+                "가슴 근육 발달에 특화된 12주 프로그램",
+                50000, 12, false, false, PtCourseStatus.VISIBLE
+        );
+
+        when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
+
+        // when
+        Long ptCourseId = ptCourseCommandService.createPtCourse(thumbnail, command);
+
+        // then
+        assertEquals(1L, ptCourseId);
+        verify(fileUseCase).uploadFile(thumbnail, 1L, FileType.COURSE_THUMBNAIL); // 파일 업로드 호출됨
         verify(ptCourseRepository).save(any(PtCourse.class));
     }
 
@@ -70,19 +105,17 @@ public class PtCourseCommandServiceTest {
     @DisplayName("title이 비어있으면 PtCourseInvalidException이 발생해야 한다")
     void createPtCourse_emptyTitle_throwsException() {
 
-        // given : title이 빈 문자열인 잘못된 요청
+        // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, 1L, null,
+                1L, 1L, 1L, 1L, 1L,
                 "",
                 "설명", 5000, 12
         );
-        // when & then : 예외 발생 확인
-        // assertThrows: 람다 안에서 특정 예외가 발생하는지 검증
-        // PtCourse.create() 내부에서 검증하기 때문에 repository.save()는 호출되지 않음
-        assertThrows(PtCourseInvalidException.class,
-                () -> ptCourseCommandService.createPtCourse(command));
 
-        // save가 호출되지 않았는지 확인
+        // when & then
+        assertThrows(PtCourseInvalidException.class,
+                () -> ptCourseCommandService.createPtCourse(null, command));
+
         verify(ptCourseRepository, never()).save(any(PtCourse.class));
     }
 
@@ -90,16 +123,16 @@ public class PtCourseCommandServiceTest {
     @DisplayName("price가 음수이면 PtCourseInvalidException이 발생해야 한다")
     void createPtCourse_negativePrice_throwsException() {
 
-        // Given: price가 음수인 잘못된 요청
+        // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, 1L, null,
+                1L, 1L, 1L, 1L, 1L,
                 "PT 강습 제목", "설명",
-                -1,  // 음수 price → 도메인 규칙 위반
-                12
+                -1, 12
         );
-        // When & Then
+
+        // when & then
         assertThrows(PtCourseInvalidException.class,
-                () -> ptCourseCommandService.createPtCourse(command));
+                () -> ptCourseCommandService.createPtCourse(null, command));
 
         verify(ptCourseRepository, never()).save(any(PtCourse.class));
     }
@@ -108,19 +141,17 @@ public class PtCourseCommandServiceTest {
     @DisplayName("totalSessionCount가 1 미만이면 PtCourseInvalidException이 발생해야 한다")
     void createPtCourse_zeroTotalSessionCount_throwsException() {
 
-        // Given: totalSessionCount가 0인 잘못된 요청
+        // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, 1L, null,
+                1L, 1L, 1L, 1L, 1L,
                 "PT 강습 제목", "설명",
-                50000,
-                0  // 0회차 → 도메인 규칙 위반 (최소 1회 이상)
+                50000, 0
         );
 
-        // When & Then
+        // when & then
         assertThrows(PtCourseInvalidException.class,
-                () -> ptCourseCommandService.createPtCourse(command));
+                () -> ptCourseCommandService.createPtCourse(null, command));
 
         verify(ptCourseRepository, never()).save(any(PtCourse.class));
     }
-
 }

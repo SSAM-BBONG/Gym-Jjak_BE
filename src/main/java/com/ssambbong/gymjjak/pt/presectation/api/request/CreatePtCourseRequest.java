@@ -24,9 +24,6 @@ public record CreatePtCourseRequest(
         @NotNull
         Long tagId,
 
-        @Schema(description = "썸네일 파일 ID (선택)", example = "10")
-        Long thumbnailFileId,
-
         @Schema(description = "가격 (1회당)", example = "50000")
         @Min(0)
         int price,

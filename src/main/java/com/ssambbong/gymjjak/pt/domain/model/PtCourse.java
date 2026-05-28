@@ -89,7 +89,7 @@ public class PtCourse {
                 totalSessionCount,
                 false,
                 false,
-                PtCourseStatus.HIDDEN
+                PtCourseStatus.VISIBLE
         );
     }
 
