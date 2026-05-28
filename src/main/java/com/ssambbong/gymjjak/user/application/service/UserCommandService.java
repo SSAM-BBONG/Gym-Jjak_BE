@@ -37,6 +37,7 @@ public class UserCommandService implements UserCommandUseCase {
                 maskPhone(command.phone())
         );
 
+        userPolicy.validatePasswordPolicy(command.password());
         userPolicy.validateDuplicateUsername(command.username());
         userPolicy.validateDuplicateNickname(command.nickname());
         userPolicy.validateDuplicatePhone(command.phone());
