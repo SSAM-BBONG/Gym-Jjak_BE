@@ -1,0 +1,9 @@
+# 불필요한 파일 ignore
+.gradle
+build
+out
+.idea
+*.iml
+.git
+.gitignore
+README.md

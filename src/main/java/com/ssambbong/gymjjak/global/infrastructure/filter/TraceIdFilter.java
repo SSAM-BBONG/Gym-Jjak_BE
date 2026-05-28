@@ -15,6 +15,10 @@ import java.util.UUID;
 public class TraceIdFilter extends OncePerRequestFilter {
 
     private static final String TRACE_ID = "traceId";
+    private static final String METHOD = "method";
+    private static final String REQUEST_URI = "requestURI";
+    private static final String REMOTE_ADDR = "remoteAddr";
+
     private static final String TRACE_ID_HEADER = "X-Trace-Id";
 
     @Override
@@ -29,6 +33,10 @@ public class TraceIdFilter extends OncePerRequestFilter {
 
         try {
             MDC.put(TRACE_ID, traceId);
+            MDC.put(METHOD, request.getMethod());
+            MDC.put(REQUEST_URI, request.getRequestURI());
+            MDC.put(REMOTE_ADDR, request.getRemoteAddr());
+
             response.setHeader(TRACE_ID_HEADER, traceId);
             filterChain.doFilter(request, response);
         } finally {

@@ -16,6 +16,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "신고그룹 컨트롤러", description = "관리자 신고그룹 관리 REST-API")
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/reportgroup")
 @RequiredArgsConstructor
 @Slf4j
 @Validated
@@ -40,7 +41,7 @@ public class ReportGroupController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
             @ApiResponse(responseCode = "403", description = "관리자 권한 없음")
     })
-    @GetMapping("/reports")
+    @GetMapping("/list")
     public ResponseEntity<GlobalApiResponse<AdminReportListResponse>> findReportGroups(
             @RequestParam ReportTargetType targetType,
             @RequestParam(defaultValue = "0") @Min(0) int page,
