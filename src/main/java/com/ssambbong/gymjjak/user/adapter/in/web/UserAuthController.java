@@ -1,10 +1,14 @@
 package com.ssambbong.gymjjak.user.adapter.in.web;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.LoginRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.response.LoginResponse;
+import com.ssambbong.gymjjak.user.application.command.LoginCommand;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.SignupRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
+import com.ssambbong.gymjjak.user.application.result.LoginResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,13 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api")
 @Tag(name = "User", description = "회원가입, 로그인을 처리하는 API")
 public class UserAuthController {
 
     private final UserCommandUseCase userCommandUseCase;
 
-    @PostMapping("/signup")
+    @PostMapping("/auth/signup")
     @Operation( summary = "일반 회원 계정 생성", description = "회원이 회원가입을 하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> signup(@Valid @RequestBody SignupRequest request) {
 
@@ -41,5 +45,26 @@ public class UserAuthController {
                         UserResponseCode.USER_REGISTERED
                 ));
 
+    }
+
+    @PostMapping("/auth/login")
+    @Operation( summary = "로그인", description = "로그인을 하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<LoginResponse>> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        LoginResult result = userCommandUseCase.login(new LoginCommand(
+                request.username(),
+                request.password()
+        ));
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(GlobalApiResponse.ok(
+                        UserResponseCode.USER_LOGIN_SUCCESS,
+                        new LoginResponse(
+                                result.accessToken(),
+                                result.refreshToken()
+                        )
+                ));
     }
 }

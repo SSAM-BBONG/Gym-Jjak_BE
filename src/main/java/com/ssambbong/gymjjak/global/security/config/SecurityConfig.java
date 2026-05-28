@@ -81,7 +81,7 @@ public class SecurityConfig {
                         // 일반 사용자 API
                         // 관리자가 사용자 API도 접근 가능해야 하면 ROLE_ADMIN 포함
                         .requestMatchers("/api/users/**")
-                        .hasAnyAuthority("USER", "ADMIN")
+                        .hasAnyAuthority("ADMIN", "USER","TRAINER")
 
                         // 트레이너 API
                         .requestMatchers("/api/trainers/**")

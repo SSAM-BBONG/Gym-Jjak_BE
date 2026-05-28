@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -51,16 +52,16 @@ public class UserJpaEntity {
     private UserStatus status;
 
     @Column(name = "last_login_at", columnDefinition = "DATETIME(6)")
-    private Instant lastLoginAt;
+    private LocalDateTime  lastLoginAt;
 
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME(6)")
-    private Instant createdAt;
+    private LocalDateTime  createdAt;
 
     @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
-    private Instant updatedAt;
+    private LocalDateTime  updatedAt;
 
     @Column(name = "deleted_at", columnDefinition = "DATETIME(6)")
-    private Instant deletedAt;
+    private LocalDateTime  deletedAt;
 
     public UserJpaEntity(
             Long id,
@@ -71,10 +72,10 @@ public class UserJpaEntity {
             String phone,
             UserRole role,
             UserStatus status,
-            Instant lastLoginAt,
-            Instant createdAt,
-            Instant updatedAt,
-            Instant deletedAt
+            LocalDateTime  lastLoginAt,
+            LocalDateTime  createdAt,
+            LocalDateTime  updatedAt,
+            LocalDateTime deletedAt
     ) {
         this.id = id;
         this.username = username;
