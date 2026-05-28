@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gymjjak-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - gymjjak-mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gymjjak-backend
+    # 자동 재시작 옵션, 도커 컨테이너 실횅시 자동 부팅
+    # 개발중에는 no, 배포는 always
+    restart: no
+    # 도커 실행 전 먼저 실행되는 서비스
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # 컨테이너 내부에서 사용할 환경 변수(Environment Variable) 설정
+    # 환경 변수 이름을 자동으로 읽어서 application.yml 값으로 매핑
+    environment:
+      # 활성 프로파일 설정. 실행 시 application-docker.yml 자동으로 읽어주는 설정
+      SPRING_PROFILES_ACTIVE: docker
+      # DB 연결 관련 docker 에서는 localhost(x), mysql 로 실행
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+    # hostPortNum (my PC) : containerPortNum (docker inner)
+    ports:
+      - "${BACKEND_PORT}:8080"
+# Docker 영구 저장소 설정
+volumes:
+  gymjjak-mysql-data:

@@ -68,6 +68,11 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        // 개발 중 report 관리자 API 임시 허용
+                        .requestMatchers(
+                                "/api/reportgroup/**"
+                        ).permitAll()
+
                         // 관리자 API
                         .requestMatchers("/api/admin/**")
                         .hasAuthority("ADMIN")

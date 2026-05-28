@@ -173,7 +173,7 @@
         - 우리 프로젝트 패키지는 DEBUG까지 출력
         - SQL도 개발 편의상 DEBUG로 확인
     -->
-    <springProfile name="dev,default">
+    <springProfile name="dev,default,docker">
 
         <!--
             root logger
@@ -285,6 +285,37 @@
         <!-- 테스트 프레임워크 내부 로그 최소화 -->
         <logger name="org.springframework.test" level="WARN"/>
         <logger name="org.springframework.boot.test" level="WARN"/>
+    </springProfile>
+
+    <!-- ===================================================== -->
+    <!-- 6. docker 환경(test) -->
+    <!-- ===================================================== -->
+
+    <springProfile name="docker">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+
+        <logger name="com.ssambbong.gymjjak"
+                level="DEBUG"
+                additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </logger>
+
+        <logger name="com.ssambbong.gymjjak.global.infrastructure.aop.PerformanceLogAspect"
+                level="INFO"
+                additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="PERFORMANCE_FILE"/>
+        </logger>
+
+        <logger name="org.springframework" level="INFO"/>
+        <logger name="org.hibernate" level="INFO"/>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
     </springProfile>
 
 </configuration>
