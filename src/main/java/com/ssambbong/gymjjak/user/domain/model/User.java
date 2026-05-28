@@ -44,8 +44,8 @@ public class User {
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.status = Objects.requireNonNull(status, "status는 필수입니다.");
         this.lastLoginAt = lastLoginAt;
-        this.createdAt = Objects.requireNonNull(createdAt, "createdAt은 필수입니다.");
-        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.deletedAt = deletedAt;
     }
 
@@ -54,8 +54,7 @@ public class User {
             String encodedPassword,
             String name,
             String nickname,
-            String phone,
-            LocalDateTime createdAt
+            String phone
     ) {
         return new User(
                 null,
@@ -67,8 +66,8 @@ public class User {
                 UserRole.USER,
                 UserStatus.ACTIVE,
                 null,
-                createdAt,
-                createdAt,
+                null,
+                null,
                 null
         );
     }

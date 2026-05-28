@@ -42,15 +42,12 @@ public class UserCommandService implements UserCommandUseCase {
 
         String encodedPassword = userPort.encode(command.password());
 
-        LocalDateTime now = LocalDateTime.now();
-
         User user = User.register(
                 command.username(),
                 encodedPassword,
                 command.name(),
                 command.nickname(),
-                command.phone(),
-                now
+                command.phone()
         );
 
         userPort.save(user);

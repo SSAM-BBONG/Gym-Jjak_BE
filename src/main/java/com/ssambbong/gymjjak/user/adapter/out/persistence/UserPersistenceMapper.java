@@ -16,10 +16,7 @@ public class UserPersistenceMapper {
                 user.getPhone(),
                 user.getRole(),
                 user.getStatus(),
-                user.getLastLoginAt(),
-                user.getCreatedAt(),
-                user.getUpdatedAt(),
-                user.getDeletedAt()
+                user.getLastLoginAt()
         );
     }
 
