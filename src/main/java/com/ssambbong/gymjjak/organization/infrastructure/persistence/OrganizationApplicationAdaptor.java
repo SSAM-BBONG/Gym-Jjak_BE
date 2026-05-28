@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -42,5 +43,14 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
         return myOrganizationApplication.stream()
                 .map(OrganizationApplicationJpaEntity::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<OrganizationApplication> findById(Long organizationApplicationId) {
+
+        Optional<OrganizationApplicationJpaEntity> organizationApplicationDetails =
+                springDataOrganizationApplicationRepository.findById(organizationApplicationId);
+
+        return organizationApplicationDetails.map(OrganizationApplicationJpaEntity::toDomain);
     }
 }

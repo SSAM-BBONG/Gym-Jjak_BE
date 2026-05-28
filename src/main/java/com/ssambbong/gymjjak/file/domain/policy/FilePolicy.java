@@ -41,7 +41,7 @@ public enum FilePolicy {
     ),
     BUSINESS_LICENSE(
             FileType.BUSINESS_LICENSE,
-            List.of("image/jpeg", "image/png", "image/webp"),
+            List.of("image/jpeg", "image/png", "image/webp", "application/pdf"),
             10 * 1024 * 1024L
     ),
 
