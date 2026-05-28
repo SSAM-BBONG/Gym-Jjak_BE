@@ -18,6 +18,7 @@ public class OpenAPIConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(apiInfo())
+                .components(securityComponents())
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
     }
 
@@ -28,5 +29,15 @@ public class OpenAPIConfig {
                 .description("짐짝 프로젝트 API 문서");
     }
 
-    // TODO : 주원이가 SecurityComponents 관련 추가
+    private Components securityComponents() {
+        return new Components()
+                .addSecuritySchemes(
+                        SECURITY_SCHEME_NAME,
+                        new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")
+                );
+    }
+
 }

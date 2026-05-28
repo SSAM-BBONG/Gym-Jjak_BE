@@ -22,9 +22,9 @@ bin/
 *.iws
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+/out/
+!**/src/main/**/out/**
+!**/src/test/**/out/**
 
 ### NetBeans ###
 /nbproject/private/
@@ -92,7 +92,7 @@ cmake-build-*/
 *.iws
 
 # IntelliJ
-out/
+/out/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -223,4 +223,10 @@ $RECYCLE.BIN/
 
 ### yaml ###
 **/application.yml
-**/application-*.yml
+
+### env ###
+.env
+.env.*
+!.env.example
+
+logs/
