@@ -1,10 +1,12 @@
 package com.ssambbong.gymjjak.report.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
+import com.ssambbong.gymjjak.report.application.query.AdminReportDetailResult;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
 import com.ssambbong.gymjjak.report.application.usecase.ReportQueryUseCase;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
+import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportDetailResponse;
 import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportListResponse;
 import com.ssambbong.gymjjak.report.presentation.api.response.ReportResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,10 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "신고그룹 컨트롤러", description = "관리자 신고그룹 관리 REST-API")
 @RestController
@@ -35,6 +34,7 @@ public class ReportGroupController {
 
     private final ReportQueryUseCase reportQueryUseCase;
 
+//    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "타입별 신고 그룹을 조회", description = "관리자가 targetType 기준으로 신고 그룹 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 목록 조회 성공"),
@@ -44,7 +44,7 @@ public class ReportGroupController {
     @GetMapping("/list")
     public ResponseEntity<GlobalApiResponse<AdminReportListResponse>> findReportGroups(
             @RequestParam ReportTargetType targetType,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
         AdminReportListQuery query = new AdminReportListQuery(targetType, page, size);
@@ -56,6 +56,26 @@ public class ReportGroupController {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         ReportResponseCode.GET_ADMIN_REPORT_LIST_SUCCESS,
+                        response
+                )
+        );
+    }
+
+    @Operation(summary = "신고 사유 상세 조회", description = "관리자가 특정 신고 그룹의 신고 사유 상세 내역을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "신고 사유 상세 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "신고 그룹을 찾을 수 없음")
+    })
+    @GetMapping("/detail/{reportGroupId}")
+    public ResponseEntity<GlobalApiResponse<AdminReportDetailResponse>> findReportDetails(@PathVariable Long reportGroupId) {
+
+        AdminReportDetailResult result = reportQueryUseCase.findReportDetail(reportGroupId);
+
+        AdminReportDetailResponse response = AdminReportDetailResponse.from(result);
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        ReportResponseCode.GET_ADMIN_REPORT_DETAIL_SUCCESS,
                         response
                 )
         );

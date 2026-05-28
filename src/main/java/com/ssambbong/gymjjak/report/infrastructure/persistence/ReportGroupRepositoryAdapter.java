@@ -1,9 +1,10 @@
 package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.report.application.policy.ReportTargetOwnerPolicy;
-import com.ssambbong.gymjjak.report.application.query.AdminReportListItem;
-import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
-import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
+import com.ssambbong.gymjjak.report.application.port.UserProfileView;
+import com.ssambbong.gymjjak.report.application.port.UserQueryPort;
+import com.ssambbong.gymjjak.report.application.query.*;
+import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
 import com.ssambbong.gymjjak.report.domain.model.ReportNavigationType;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -26,6 +28,7 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     private final SpringDataReportGroupRepository reportGroupRepository;
     private final SpringDataReportRepository reportRepository;
     private final ReportTargetOwnerPolicy reportTargetOwnerPolicy;
+    private final UserQueryPort userQueryPort;
 
     @Override
     public ReportGroup save(ReportGroup reportGroup) {
@@ -89,6 +92,43 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
         );
     }
 
+    // 상세 신고 목록 조립
+    @Override
+    @Transactional(readOnly = true)
+    public AdminReportDetailResult findReportDetail(Long reportGroupId) {
+
+        ReportGroupJpaEntity reportGroup = reportGroupRepository.findById(reportGroupId)
+                .orElseThrow(() -> new ReportGroupNotFoundException(reportGroupId));
+
+        List<AdminReportReasonItem> reports = reportRepository
+                .findByReportGroupIdOrderByCreatedAtDesc(reportGroupId)
+                .stream()
+                .map(this::toAdminReportReasonItem)
+                .toList();
+
+        return new AdminReportDetailResult(
+                reportGroup.getReportGroupId(),
+                reportGroup.getStatus(),
+                reports
+        );
+    }
+
+    private AdminReportReasonItem toAdminReportReasonItem(ReportJpaEntity entity) {
+
+        String reporterUsername = userQueryPort.findUserProfile(entity.getReporterId())
+                .map(UserProfileView::username)
+                .orElse("알 수 없음");
+
+        return new AdminReportReasonItem(
+                entity.getReportId(),
+                reporterUsername,
+                entity.getReason(),
+                entity.getDetail(),
+                entity.getCreatedAt(),
+                entity.getStatus()
+        );
+    }
+
 
     /* Comment
     *   역할 : 신고 대상자 username 추출
@@ -100,9 +140,6 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     private String resolveTargetOwnerUsername(ReportGroupJpaEntity entity) {
         return reportTargetOwnerPolicy.resolveUsername(entity.getTargetOwnerId());
     }
-//    private String resolveTargetOwnerUsername(ReportGroupJpaEntity entity) {
-//        return "TODO_targetUsername";
-//    }
 
     private LocalDateTime resolveLatestReportedAt(ReportGroupJpaEntity entity) {
         return reportRepository.findTopByReportGroupIdOrderByCreatedAtDesc(entity.getReportGroupId())
