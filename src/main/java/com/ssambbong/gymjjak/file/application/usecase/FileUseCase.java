@@ -13,7 +13,7 @@ public interface FileUseCase {
     Long replaceFile(Long oldFileId, MultipartFile multipartFile, Long uploaderId, FileType fileType);
 
     // S3 key로 Presigned URL 발급
-    String getPresignedUrl(String key);
+    String getPresignedUrl(Long fileId);
 
     // 파일 삭제
     void deleteFile(Long fileId);

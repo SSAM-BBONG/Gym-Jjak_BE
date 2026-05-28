@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.organization.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
-import com.ssambbong.gymjjak.organization.domain.model.Status;
+import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -48,7 +48,7 @@ public class OrganizationApplicationJpaEntity {
     private String representativePhone;
 
     @Column(name = "opening_date", nullable = false)
-    private String openingDate;
+    private LocalDate openingDate;
 
     @Column(name = "road_address", nullable = false, length = 255)
     private String roadAddress;
@@ -79,7 +79,7 @@ public class OrganizationApplicationJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
-    private Status status;
+    private OrganizationApplicationStatus status;
 
     @Column(name = "reject_reason", length = 500)
     private String rejectReason;
@@ -121,6 +121,33 @@ public class OrganizationApplicationJpaEntity {
         entity.status = domain.getStatus();
         entity.rejectReason = domain.getRejectReason();
         return entity;
+    }
+
+    public OrganizationApplication toDomain() {
+        return OrganizationApplication.restore(
+                this.organizationApplicationId,
+                this.applicantUserId,
+                this.requestedLoginId,
+                this.businessLicenseFileId,
+                this.businessRegistrationNumber,
+                this.businessName,
+                this.representativeName,
+                this.representativePhone,
+                this.openingDate,
+                this.roadAddress,
+                this.jibunAddress,
+                this.detailAddress,
+                this.latitude,
+                this.longitude,
+                this.websiteUrl,
+                this.instagramUrl,
+                this.blogUrl,
+                this.facilityPhone,
+                this.status,
+                this.rejectReason,
+                this.createdAt,
+                this.updatedAt
+        );
     }
 
 }

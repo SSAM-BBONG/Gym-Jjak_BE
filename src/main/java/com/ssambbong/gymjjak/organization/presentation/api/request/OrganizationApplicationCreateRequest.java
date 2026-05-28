@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public record OrganizationApplicationCreateRequest(
         // applicantUserId -> CustomUserDetails 추가 시 삭제 예정
@@ -14,10 +15,6 @@ public record OrganizationApplicationCreateRequest(
 
         @NotBlank(message = "요청 로그인 ID는 필수입니다.")
         String requestedLoginId,
-
-        @NotNull(message = "사업자등록증 파일 ID는 필수입니다.")
-        @Schema(example = "1")
-        Long businessLicenseFileId,
 
         @NotBlank(message = "사업자등록번호는 필수입니다.")
         String businessRegistrationNumber,
@@ -31,9 +28,9 @@ public record OrganizationApplicationCreateRequest(
         @NotBlank(message = "대표자 전화번호는 필수입니다.")
         String representativePhone,
 
-        @NotBlank(message = "개업일자는 필수입니다.")
+        @NotNull(message = "개업일자는 필수입니다.")
         @Schema(example = "2024-01-01")
-        String openingDate,
+        LocalDate openingDate,
 
         @NotBlank(message = "도로명 주소는 필수입니다.")
         String roadAddress,

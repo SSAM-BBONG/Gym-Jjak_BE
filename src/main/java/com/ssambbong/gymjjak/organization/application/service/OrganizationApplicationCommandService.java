@@ -1,25 +1,30 @@
 package com.ssambbong.gymjjak.organization.application.service;
 
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.organization.application.command.OrganizationApplicationCreateCommand;
-import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationUsecase;
+import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.exception.DuplicateException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class OrganizationApplicationService implements OrganizationApplicationUsecase {
+public class OrganizationApplicationCommandService implements OrganizationApplicationCommandUsecase {
 
     private final OrganizationApplicationRepository organizationApplicationRepository;
+    private final FileUseCase fileUseCase;
 
     @Override
     @Transactional
-    public Long createOrganizationApplication(OrganizationApplicationCreateCommand command) {
+    public Long createOrganizationApplication(MultipartFile businessLicenseFile, OrganizationApplicationCreateCommand command) {
 
         boolean alreadyExist = organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber());
 
@@ -27,10 +32,12 @@ public class OrganizationApplicationService implements OrganizationApplicationUs
             throw new DuplicateException();
         }
 
+        Long fileId = fileUseCase.uploadFile(businessLicenseFile, command.applicantUserId(), FileType.BUSINESS_LICENSE);
+
         OrganizationApplication organizationApplication = OrganizationApplication.create(
                 command.applicantUserId(),
                 command.requestedLoginId(),
-                command.businessLicenseFileId(),
+                fileId,
                 command.businessRegistrationNumber(),
                 command.businessName(),
                 command.representativeName(),
@@ -47,8 +54,12 @@ public class OrganizationApplicationService implements OrganizationApplicationUs
                 command.facilityPhone()
         );
 
-        Long organizationApplicationId = organizationApplicationRepository.save(organizationApplication);
-
-        return organizationApplicationId;
+        try {
+            return organizationApplicationRepository.save(organizationApplication);
+        } catch (DataAccessException e) {
+            log.error("조직 신청 DB 저장 실패 → S3 파일 롤백 - fileId: {}", fileId);
+            fileUseCase.deleteFile(fileId);
+            throw e;
+        }
     }
 }
