@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.report.domain.repository;
 
+import com.ssambbong.gymjjak.report.application.query.AdminReportDetailResult;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
@@ -13,4 +14,6 @@ public interface ReportGroupRepository {
     Optional<ReportGroup> findById(Long reportGroupId);
 
     AdminReportListResult findAdminReportList(AdminReportListQuery query);
+
+    AdminReportDetailResult findReportDetail(Long reportGroupId);
 }

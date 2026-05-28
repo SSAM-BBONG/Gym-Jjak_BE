@@ -602,12 +602,18 @@ CREATE TABLE reports (
                          report_group_id BIGINT NOT NULL,
                          reporter_id BIGINT NOT NULL,
                          reason VARCHAR(50) NOT NULL,
-                         detail VARCHAR(500) NULL,
+                         detail TEXT NULL,
+                         status VARCHAR(30) NOT NULL,
+                         processed_by BIGINT NULL,
+                         processed_at DATETIME(6) NULL,
                          created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                          CONSTRAINT pk_reports PRIMARY KEY (report_id),
-                         CONSTRAINT uk_reports_group_reporter UNIQUE (report_group_id, reporter_id),
-                         CONSTRAINT fk_reports_group FOREIGN KEY (report_group_id) REFERENCES report_groups(report_group_id) ON DELETE CASCADE,
-                         CONSTRAINT fk_reports_reporter FOREIGN KEY (reporter_id) REFERENCES users(user_id)
+                         CONSTRAINT fk_reports_report_group FOREIGN KEY (report_group_id) REFERENCES report_groups(report_group_id),
+                         CONSTRAINT fk_reports_reporter FOREIGN KEY (reporter_id) REFERENCES users(user_id),
+                         CONSTRAINT fk_reports_processed_by FOREIGN KEY (processed_by) REFERENCES users(user_id),
+                         INDEX idx_reports_group_created (report_group_id, created_at),
+                         INDEX idx_reports_reporter_created (reporter_id, created_at),
+                         INDEX idx_reports_status_created (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE notifications (
