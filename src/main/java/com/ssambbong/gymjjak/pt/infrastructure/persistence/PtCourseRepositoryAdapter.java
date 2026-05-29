@@ -43,10 +43,10 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
 
     // pt 목록 조회
     @Override
-    public List<PtCourse> findAll() {
-        return repository.findAll()
+    public List<PtCourse> findAllOrderByCreatedAtDesc() {
+        return repository.findAllByOrderByCreatedAtDesc()
                 .stream()
-                .map(entity -> toDomain(entity))
+                .map(this::toDomain)
                 .toList();
     }
 
