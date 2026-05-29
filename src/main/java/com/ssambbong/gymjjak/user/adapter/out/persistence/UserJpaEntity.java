@@ -76,4 +76,8 @@ public class UserJpaEntity extends BaseTimeEntity {
         this.status = status;
         this.lastLoginAt = lastLoginAt;
     }
+
+    public void updateLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
+    }
 }

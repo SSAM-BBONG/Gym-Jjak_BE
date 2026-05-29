@@ -31,9 +31,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (StringUtils.hasText(token)) {
+            if (jwtTokenProvider.validateToken(token)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else if (jwtTokenProvider.isTokenExpired(token)) {
+                request.setAttribute("exception", "ACCESS_TOKEN_EXPIRED");
+            } else {
+                request.setAttribute("exception", "INVALID_TOKEN");
+            }
         }
 
         filterChain.doFilter(request, response);

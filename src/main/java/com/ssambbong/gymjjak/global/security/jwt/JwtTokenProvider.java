@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.global.security.jwt;
 
+import com.ssambbong.gymjjak.global.security.principal.AuthUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -69,14 +70,36 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
 
-        String userId = claims.getSubject();
+        Long userId = Long.valueOf(claims.getSubject());
+        String username = claims.get("username", String.class);
         String role = claims.get("role", String.class);
 
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("username claim이 없습니다.");
+        }
+
+        if (role == null || role.isBlank()) {
+            throw new IllegalArgumentException("role claim이 없습니다.");
+        }
+
+        AuthUser authUser = new AuthUser(userId, username, role);
+
         return new UsernamePasswordAuthenticationToken(
-                userId,
+                authUser,
                 null,
                 List.of(new SimpleGrantedAuthority(toAuthority(role)))
         );
+    }
+
+    public boolean isTokenExpired(String token) {
+        try {
+            parseClaims(token);
+            return false;
+        } catch (ExpiredJwtException e) {
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     public Long getUserId(String token) {
@@ -104,7 +127,7 @@ public class JwtTokenProvider {
 
     private String toAuthority(String role) {
         if (role == null || role.isBlank()) {
-            return "USER";
+            throw new IllegalArgumentException("role claim이 없습니다.");
         }
 
         return role;
