@@ -126,6 +126,14 @@ public class PtCourse {
         );
     }
 
+    public void blind() {
+        this.status = PtCourseStatus.BLOCKED;
+    }
+
+    public void unblind() {
+        this.status = PtCourseStatus.VISIBLE;
+    }
+
     // getter
     public Long getId() { return id; }
     public Long getOrganizationId() { return organizationId; }

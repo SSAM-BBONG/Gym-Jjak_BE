@@ -80,7 +80,18 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication approved = organizationApplication.approve(reviewedBy);
 
         organizationApplicationRepository.approve(approved);
+    }
 
+    @Override
+    @Transactional
+    public void rejectOrganizationApplication(Long organizationApplicationId, Long reviewedBy, String rejectReason) {
 
+        OrganizationApplication organizationApplication = organizationApplicationRepository
+                .findById(organizationApplicationId)
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        OrganizationApplication rejected = organizationApplication.reject(reviewedBy, rejectReason);
+
+        organizationApplicationRepository.reject(rejected);
     }
 }
