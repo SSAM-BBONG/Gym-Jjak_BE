@@ -1,22 +1,30 @@
 package com.ssambbong.gymjjak.organization.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.organization.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationQueryUsecase;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.presentation.api.request.OrganizationApplicationCreateRequest;
+import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.organization.presentation.api.response.FindAllOrganizationApplicationsResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.FindMyOrganizationApplicationResponse;
+import com.ssambbong.gymjjak.organization.presentation.api.response.FindOrganizationApplicationDetailsResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.OrganizationApplicationCreateResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.OrganizationApplicationResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +38,7 @@ public class OrganizationController {
 
     private final OrganizationApplicationCommandUsecase organizationApplicationCommandUsecase;
     private final OrganizationApplicationQueryUsecase organizationApplicationQueryUsecase;
+    private final FileUseCase fileUseCase;
 
     @Operation(summary = "조직 신청", description = "사용자가 조직(헬스장) 등록을 신청합니다.")
     @ApiResponses({
@@ -38,12 +47,15 @@ public class OrganizationController {
             @ApiResponse(responseCode = "409", description = "이미 등록된 사업자등록번호",
                     content = @Content(schema = @Schema()))
     })
-    @PostMapping
+    @RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+            encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)))
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public GlobalApiResponse<OrganizationApplicationCreateResponse> createOrganizationApplication(
+            @AuthenticationPrincipal AuthUser authUser,
             @RequestPart("file") MultipartFile businessLicenseFile,
             @RequestPart("request") @Valid OrganizationApplicationCreateRequest request) {
 
-        Long applicantUserId = request.applicantUserId();
+        Long applicantUserId = authUser.userId();
 
         Long organizationApplicationId = organizationApplicationCommandUsecase.createOrganizationApplication(businessLicenseFile, new OrganizationApplicationCreateCommand(
                 applicantUserId,
@@ -74,14 +86,16 @@ public class OrganizationController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = FindMyOrganizationApplicationResponse.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+            @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema()))
     })
     @GetMapping("/me")
     public GlobalApiResponse<List<FindMyOrganizationApplicationResponse>> findMyOrganizationApplications(
-            @RequestParam Long userId
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        List<OrganizationApplication> myOrganizationApplication = organizationApplicationQueryUsecase.findMyOrganizationApplications(userId);
+        Long applicantUserId = authUser.userId();
+
+        List<OrganizationApplication> myOrganizationApplication = organizationApplicationQueryUsecase.findMyOrganizationApplications(applicantUserId);
 
         List<FindMyOrganizationApplicationResponse> response = myOrganizationApplication.stream()
                 .map(domain -> new FindMyOrganizationApplicationResponse(
@@ -99,4 +113,79 @@ public class OrganizationController {
                 OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_FOUND,
                 response);
     }
+
+    @Operation(summary = "관리자 조직 신청 전체 목록 조회", description = "관리자가 모든 조직 신청 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = FindAllOrganizationApplicationsResponse.class))),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping
+    public GlobalApiResponse<List<FindAllOrganizationApplicationsResponse>> findAllOrganizationApplications() {
+
+        List<OrganizationApplication> applications = organizationApplicationQueryUsecase.findPendingOrganizationApplications();
+
+        List<FindAllOrganizationApplicationsResponse> response = applications.stream()
+                .map(domain -> new FindAllOrganizationApplicationsResponse(
+                        domain.getOrganizationApplicationId(),
+                        domain.getRequestedLoginId(),
+                        domain.getBusinessName(),
+                        domain.getRepresentativeName(),
+                        domain.getRepresentativePhone()
+                ))
+                .toList();
+
+        return GlobalApiResponse.ok(
+                OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_ALL_FOUND,
+                response);
+    }
+
+    @Operation(summary = "조직 신청 상세 조회", description = "조직 신청 건의 상세 정보를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = FindOrganizationApplicationDetailsResponse.class))),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "신청 내역을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+
+    @GetMapping("/{applicationId}")
+    public GlobalApiResponse<FindOrganizationApplicationDetailsResponse> findOrganizationApplicationDetails(
+            @PathVariable Long applicationId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        Long requestUserId = authUser.userId();
+        boolean isAdmin = authUser.role().equals("ADMIN");
+
+        OrganizationApplication organizationApplicationDetails =
+                organizationApplicationQueryUsecase.findOrganizationApplicationDetails(applicationId, requestUserId, isAdmin);
+
+        String presignedUrl = fileUseCase.getPresignedUrl(organizationApplicationDetails.getBusinessLicenseFileId());
+
+        return GlobalApiResponse.ok(
+                OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_DETAILS_FOUND,
+                new FindOrganizationApplicationDetailsResponse(
+                        organizationApplicationDetails.getOrganizationApplicationId(),
+                        organizationApplicationDetails.getRequestedLoginId(),
+                        organizationApplicationDetails.getBusinessRegistrationNumber(),
+                        organizationApplicationDetails.getBusinessName(),
+                        organizationApplicationDetails.getRepresentativeName(),
+                        organizationApplicationDetails.getRepresentativePhone(),
+                        organizationApplicationDetails.getOpeningDate(),
+                        organizationApplicationDetails.getRoadAddress(),
+                        organizationApplicationDetails.getJibunAddress(),
+                        organizationApplicationDetails.getDetailAddress(),
+                        organizationApplicationDetails.getLatitude(),
+                        organizationApplicationDetails.getLongitude(),
+                        organizationApplicationDetails.getWebsiteUrl(),
+                        organizationApplicationDetails.getInstagramUrl(),
+                        organizationApplicationDetails.getBlogUrl(),
+                        organizationApplicationDetails.getFacilityPhone(),
+                        presignedUrl
+                )
+        );
+    }
+
 }

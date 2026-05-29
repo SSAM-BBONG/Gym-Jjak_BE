@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -16,12 +17,15 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
 
     @Override
     public boolean existsByBusinessRegistrationNumberAndStatus(String businessRegistrationNumber) {
-       boolean alreadyExist = springDataOrganizationApplicationRepository
+       return springDataOrganizationApplicationRepository
                .existsByBusinessRegistrationNumberAndStatus(
                        businessRegistrationNumber,
                        OrganizationApplicationStatus.ACCEPTED);
+    }
 
-       return alreadyExist;
+    @Override
+    public boolean existsByRequestedLoginId(String requestedLoginId) {
+        return springDataOrganizationApplicationRepository.existsByRequestedLoginId(requestedLoginId);
     }
 
     @Override
@@ -40,6 +44,23 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
                 springDataOrganizationApplicationRepository.findAllByApplicantUserId(applicantUserId);
 
         return myOrganizationApplication.stream()
+                .map(OrganizationApplicationJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<OrganizationApplication> findById(Long organizationApplicationId) {
+
+        Optional<OrganizationApplicationJpaEntity> organizationApplicationDetails =
+                springDataOrganizationApplicationRepository.findById(organizationApplicationId);
+
+        return organizationApplicationDetails.map(OrganizationApplicationJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<OrganizationApplication> findAllByStatus(OrganizationApplicationStatus status) {
+
+        return springDataOrganizationApplicationRepository.findAllByStatus(status).stream()
                 .map(OrganizationApplicationJpaEntity::toDomain)
                 .toList();
     }
