@@ -17,12 +17,15 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
 
     @Override
     public boolean existsByBusinessRegistrationNumberAndStatus(String businessRegistrationNumber) {
-       boolean alreadyExist = springDataOrganizationApplicationRepository
+       return springDataOrganizationApplicationRepository
                .existsByBusinessRegistrationNumberAndStatus(
                        businessRegistrationNumber,
                        OrganizationApplicationStatus.ACCEPTED);
+    }
 
-       return alreadyExist;
+    @Override
+    public boolean existsByRequestedLoginId(String requestedLoginId) {
+        return springDataOrganizationApplicationRepository.existsByRequestedLoginId(requestedLoginId);
     }
 
     @Override
@@ -52,5 +55,13 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
                 springDataOrganizationApplicationRepository.findById(organizationApplicationId);
 
         return organizationApplicationDetails.map(OrganizationApplicationJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<OrganizationApplication> findAllByStatus(OrganizationApplicationStatus status) {
+
+        return springDataOrganizationApplicationRepository.findAllByStatus(status).stream()
+                .map(OrganizationApplicationJpaEntity::toDomain)
+                .toList();
     }
 }

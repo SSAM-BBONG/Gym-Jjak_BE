@@ -7,19 +7,23 @@ import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplic
 import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationQueryUsecase;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.presentation.api.request.OrganizationApplicationCreateRequest;
+import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.organization.presentation.api.response.FindAllOrganizationApplicationsResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.FindMyOrganizationApplicationResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.FindOrganizationApplicationDetailsResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.OrganizationApplicationCreateResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.OrganizationApplicationResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,13 +47,15 @@ public class OrganizationController {
             @ApiResponse(responseCode = "409", description = "이미 등록된 사업자등록번호",
                     content = @Content(schema = @Schema()))
     })
-    @PostMapping
+    @RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+            encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)))
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public GlobalApiResponse<OrganizationApplicationCreateResponse> createOrganizationApplication(
-            @AuthenticationPrincipal String userId,
+            @AuthenticationPrincipal AuthUser authUser,
             @RequestPart("file") MultipartFile businessLicenseFile,
             @RequestPart("request") @Valid OrganizationApplicationCreateRequest request) {
 
-        Long applicantUserId = Long.valueOf(userId);
+        Long applicantUserId = authUser.userId();
 
         Long organizationApplicationId = organizationApplicationCommandUsecase.createOrganizationApplication(businessLicenseFile, new OrganizationApplicationCreateCommand(
                 applicantUserId,
@@ -85,9 +91,9 @@ public class OrganizationController {
     })
     @GetMapping("/me")
     public GlobalApiResponse<List<FindMyOrganizationApplicationResponse>> findMyOrganizationApplications(
-            @AuthenticationPrincipal String userId
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        Long applicantUserId = Long.valueOf(userId);
+        Long applicantUserId = authUser.userId();
 
         List<OrganizationApplication> myOrganizationApplication = organizationApplicationQueryUsecase.findMyOrganizationApplications(applicantUserId);
 
@@ -108,6 +114,33 @@ public class OrganizationController {
                 response);
     }
 
+    @Operation(summary = "관리자 조직 신청 전체 목록 조회", description = "관리자가 모든 조직 신청 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = FindAllOrganizationApplicationsResponse.class))),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping
+    public GlobalApiResponse<List<FindAllOrganizationApplicationsResponse>> findAllOrganizationApplications() {
+
+        List<OrganizationApplication> applications = organizationApplicationQueryUsecase.findPendingOrganizationApplications();
+
+        List<FindAllOrganizationApplicationsResponse> response = applications.stream()
+                .map(domain -> new FindAllOrganizationApplicationsResponse(
+                        domain.getOrganizationApplicationId(),
+                        domain.getRequestedLoginId(),
+                        domain.getBusinessName(),
+                        domain.getRepresentativeName(),
+                        domain.getRepresentativePhone()
+                ))
+                .toList();
+
+        return GlobalApiResponse.ok(
+                OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_ALL_FOUND,
+                response);
+    }
+
     @Operation(summary = "조직 신청 상세 조회", description = "조직 신청 건의 상세 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -121,11 +154,10 @@ public class OrganizationController {
     @GetMapping("/{applicationId}")
     public GlobalApiResponse<FindOrganizationApplicationDetailsResponse> findOrganizationApplicationDetails(
             @PathVariable Long applicationId,
-            Authentication authentication
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        Long requestUserId = Long.parseLong((String) authentication.getPrincipal());
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ADMIN"));
+        Long requestUserId = authUser.userId();
+        boolean isAdmin = authUser.role().equals("ADMIN");
 
         OrganizationApplication organizationApplicationDetails =
                 organizationApplicationQueryUsecase.findOrganizationApplicationDetails(applicationId, requestUserId, isAdmin);
