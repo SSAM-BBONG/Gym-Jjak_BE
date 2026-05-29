@@ -57,6 +57,7 @@ CREATE TABLE users (
                        phone VARCHAR(20) NOT NULL,
                        role VARCHAR(30) NOT NULL DEFAULT 'USER',
                        status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+                       onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
                        last_login_at DATETIME(6) NULL,
                        created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                        updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
