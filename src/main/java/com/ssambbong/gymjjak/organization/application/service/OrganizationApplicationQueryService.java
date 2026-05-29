@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.organization.application.service;
 
 import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationQueryUsecase;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
+import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationAccessDeniedException;
 import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationNotFoundException;
@@ -37,6 +38,11 @@ public class OrganizationApplicationQueryService implements OrganizationApplicat
         }
 
         return organizationApplication;
+    }
+
+    @Override
+    public List<OrganizationApplication> findPendingOrganizationApplications() {
+        return organizationApplicationRepository.findAllByStatus(OrganizationApplicationStatus.PENDING);
     }
 
 }

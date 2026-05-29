@@ -15,6 +15,9 @@ public interface FileUseCase {
     // S3 key로 Presigned URL 발급
     String getPresignedUrl(Long fileId);
 
-    // 파일 삭제
+    // 파일 삭제 (DB soft delete)
     void deleteFile(Long fileId);
+
+    // S3 스토리지에서만 삭제 (DB는 건드리지 않음 — 트랜잭션 롤백으로 처리되는 경우에 사용)
+    void deleteFromStorage(Long fileId);
 }

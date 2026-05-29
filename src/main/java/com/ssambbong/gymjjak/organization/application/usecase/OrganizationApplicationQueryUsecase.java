@@ -9,4 +9,6 @@ public interface OrganizationApplicationQueryUsecase {
     List<OrganizationApplication> findMyOrganizationApplications(Long applicantUserId);
 
     OrganizationApplication findOrganizationApplicationDetails(Long organizationApplicationId, Long requestUserId, boolean isAdmin);
+
+    List<OrganizationApplication> findPendingOrganizationApplications();
 }
