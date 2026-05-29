@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +40,7 @@ public class ReportGroupController {
 
     private final ReportGroupQueryUseCase reportGroupQueryUseCase;
 
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "타입별 신고 그룹을 조회", description = "관리자가 targetType 기준으로 신고 그룹 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 목록 조회 성공"),
@@ -66,7 +67,7 @@ public class ReportGroupController {
         );
     }
 
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "신고 사유 상세 조회", description = "관리자가 특정 신고 그룹의 신고 사유 상세 내역을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 사유 상세 조회 성공"),
@@ -86,7 +87,7 @@ public class ReportGroupController {
                 )
         );
     }
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "신고 승인 처리", description = "관리자가 특정 신고를 승인한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 승인 처리 성공"),
@@ -109,7 +110,7 @@ public class ReportGroupController {
         );
     }
 
-    //    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "신고 반려 처리", description = "관리자가 특정 신고를 반려한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 반려 처리 성공"),

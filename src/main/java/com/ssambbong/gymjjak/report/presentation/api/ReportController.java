@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +42,7 @@ public class ReportController {
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
             @ApiResponse(responseCode = "404", description = "신고 대상이 존재하지 않는 경우")
     })
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ORGANIZATION', 'ADMIN')")
     @PostMapping
     public ResponseEntity<GlobalApiResponse<Void>> createReport(
             @Valid @RequestBody CreateReportRequest request,
