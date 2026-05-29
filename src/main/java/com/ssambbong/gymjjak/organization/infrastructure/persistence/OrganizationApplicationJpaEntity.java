@@ -1,14 +1,12 @@
 package com.ssambbong.gymjjak.organization.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,10 +14,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "organization_applications")
-@EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrganizationApplicationJpaEntity {
+public class OrganizationApplicationJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -90,14 +87,6 @@ public class OrganizationApplicationJpaEntity {
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     // 도메인 → JpaEntity 변환
     public static OrganizationApplicationJpaEntity fromDomain(OrganizationApplication domain) {
         OrganizationApplicationJpaEntity entity = new OrganizationApplicationJpaEntity();
@@ -145,8 +134,8 @@ public class OrganizationApplicationJpaEntity {
                 this.facilityPhone,
                 this.status,
                 this.rejectReason,
-                this.createdAt,
-                this.updatedAt
+                this.getCreatedAt(),
+                this.getUpdatedAt()
         );
     }
 

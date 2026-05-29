@@ -6,7 +6,7 @@ import com.ssambbong.gymjjak.organization.application.command.OrganizationApplic
 import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
-import com.ssambbong.gymjjak.organization.exception.DuplicateException;
+import com.ssambbong.gymjjak.organization.exception.DuplicateBusinessRegistrationNumberException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -29,7 +29,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         boolean alreadyExist = organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber());
 
         if (alreadyExist) {
-            throw new DuplicateException();
+            throw new DuplicateBusinessRegistrationNumberException();
         }
 
         Long fileId = fileUseCase.uploadFile(businessLicenseFile, command.applicantUserId(), FileType.BUSINESS_LICENSE);
