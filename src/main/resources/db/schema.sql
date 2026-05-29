@@ -600,7 +600,7 @@ CREATE TABLE report_groups (
                                CONSTRAINT fk_report_groups_processed_by FOREIGN KEY (processed_by) REFERENCES users(user_id),
 
                                CONSTRAINT chk_report_groups_total_count CHECK (total_report_count >= 0),
-                               CONSTRAINT chk_report_groups_effective_count CHECK (effective_report_count >= 0),
+                               CONSTRAINT chk_report_groups_effective_count CHECK (effective_report_count >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE reports (

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -27,5 +28,13 @@ public class ReportRepositoryAdapter implements ReportRepository {
         ReportJpaEntity entity = reportPersistenceMapper.toEntity(report);
         ReportJpaEntity savedEntity = reportRepository.save(entity);
         return reportPersistenceMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public List<Report> findAllByReportGroupId(Long reportGroupId) {
+        return reportRepository.findByReportGroupIdOrderByCreatedAtDesc(reportGroupId)
+                .stream()
+                .map(reportPersistenceMapper::toDomain)
+                .toList();
     }
 }

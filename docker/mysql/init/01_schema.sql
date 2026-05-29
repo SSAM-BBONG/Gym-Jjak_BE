@@ -157,7 +157,7 @@ CREATE TABLE organization_applications (
                                            business_name VARCHAR(100) NOT NULL,
                                            representative_name VARCHAR(50) NOT NULL,
                                            representative_phone VARCHAR(20) NOT NULL,
-                                           opening_date VARCHAR(20) NOT NULL,
+                                           opening_date DATE NOT NULL,
                                            road_address VARCHAR(255) NOT NULL,
                                            jibun_address VARCHAR(255) NULL,
                                            detail_address VARCHAR(255) NULL,
@@ -600,7 +600,7 @@ CREATE TABLE report_groups (
                                CONSTRAINT fk_report_groups_processed_by FOREIGN KEY (processed_by) REFERENCES users(user_id),
 
                                CONSTRAINT chk_report_groups_total_count CHECK (total_report_count >= 0),
-                               CONSTRAINT chk_report_groups_effective_count CHECK (effective_report_count >= 0),
+                               CONSTRAINT chk_report_groups_effective_count CHECK (effective_report_count >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE reports (
