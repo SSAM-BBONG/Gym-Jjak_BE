@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.exception.DuplicateBusinessRegistrationNumberException;
 import com.ssambbong.gymjjak.organization.exception.DuplicateRequestedLoginIdException;
+import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -66,5 +67,20 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
             fileUseCase.deleteFromStorage(fileId); // S3만 삭제, DB는 트랜잭션 롤백이 처리
             throw e;
         }
+    }
+
+    @Override
+    @Transactional
+    public void approveOrganizationApplication(Long organizationApplicationId, Long reviewedBy) {
+
+        OrganizationApplication organizationApplication = organizationApplicationRepository
+                .findById(organizationApplicationId)
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        OrganizationApplication approved = organizationApplication.approve(reviewedBy);
+
+        organizationApplicationRepository.approve(approved);
+
+
     }
 }
