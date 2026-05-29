@@ -1,13 +1,17 @@
-package com.ssambbong.gymjjak.pt.presectation.api;
+package com.ssambbong.gymjjak.pt.presentation.api;
 
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.security.principal.AuthUser;
 import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseCommandUseCase;
-import com.ssambbong.gymjjak.pt.presectation.api.request.CreatePtCourseRequest;
-import com.ssambbong.gymjjak.pt.presectation.api.response.PtCourseResponseCode;
+import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
+import com.ssambbong.gymjjak.pt.presentation.api.request.CreatePtCourseRequest;
+import com.ssambbong.gymjjak.pt.presentation.api.response.CreatePtCourseResponse;
+import com.ssambbong.gymjjak.pt.presentation.api.response.PtCourseResponseCode;
+import com.ssambbong.gymjjak.pt.presentation.api.response.PtCourseViewResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -17,12 +21,16 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
+@Tag(name = "PT", description = "PT 관련 API")
 @RestController
 @RequestMapping("/api/pt-courses")
 @RequiredArgsConstructor
 public class PtCourseController {
 
     private final PtCourseCommandUseCase ptCourseCommandUseCase;
+    private final PtCourseQueryUseCase ptCourseQueryUseCase;
     private final FileUseCase fileUseCase;
 
     // 트레이너만 PT 강습 등록 가능
@@ -39,8 +47,8 @@ public class PtCourseController {
         // TODO: userId로 trainerProfileId, organizationId 조회 후 수정 예정
         CreatePtCourseCommand command = new CreatePtCourseCommand(
                 authUser.userId(),
-                null,// organizationId - 임시
-                null,                    // trainerProfileId - 임시
+                1L,// organizationId - 임시
+                1L  ,                    // trainerProfileId - 임시
                 request.categoryId(),
                 request.tagId(),
                 request.title(),
@@ -52,6 +60,30 @@ public class PtCourseController {
         Long ptCourseId = ptCourseCommandUseCase.createPtCourse(thumbnail,command);
 
         return ResponseEntity.status(201)
-                .body(GlobalApiResponse.created(PtCourseResponseCode.PT_COURSE_CREATED, ptCourseId));
+                .body(GlobalApiResponse.created(PtCourseResponseCode.PT_COURSE_CREATED,
+                        new CreatePtCourseResponse(ptCourseId)));
+    }
+
+    // 누구나 목록 조회 가능
+    @Operation(summary = "PT 강습 목록 조회", description = "VISIBLE 상태의 PT 강습 목록을 조회한다.")
+    @GetMapping
+    public ResponseEntity<GlobalApiResponse<?>> findAllPtCourses() {
+        List<PtCourseViewResponse> response = ptCourseQueryUseCase.findAllPtCourses()
+                .stream()
+                .map(PtCourseViewResponse::from)
+                .toList();
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_LIST, response)
+        );
+    }
+
+    // 누구나 상세 조회 가능
+    @Operation(summary = "PT 강습 상세 조회", description = "VISIBLE 상태의 PT 강습 상세 정보를 조회한다.")
+    @GetMapping("/{ptCourseId}")
+    public ResponseEntity<GlobalApiResponse<?>> findPtCourse(@PathVariable Long ptCourseId) {
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_DETAIL,
+                        PtCourseViewResponse.from(ptCourseQueryUseCase.findPtCourseDetail(ptCourseId)))
+        );
     }
 }

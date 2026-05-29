@@ -65,25 +65,10 @@ public class UserAuthController {
                         UserResponseCode.USER_LOGIN_SUCCESS,
                         new LoginResponse(
                                 result.accessToken(),
-                                result.refreshToken()
+                                result.refreshToken(),
+                                result.onboardingCompleted()
                         )
                 ));
     }
 
-    @PostMapping("/token/reissue")
-    @Operation(summary = "AccessToken 재발급", description = "RefreshToken을 검증한 뒤 새로운 AccessToken을 발급한다.")
-    public ResponseEntity<GlobalApiResponse<ReissueTokenResponse>> reissueAccessToken(
-            @Valid @RequestBody ReissueTokenRequest request
-    ) {
-        String accessToken = userCommandUseCase.reissueAccessToken(
-                new ReissueTokenCommand(request.refreshToken())
-        );
-
-        return ResponseEntity.ok(
-                GlobalApiResponse.ok(
-                        UserResponseCode.ACCESS_TOKEN_REISSUED,
-                        new ReissueTokenResponse(accessToken)
-                )
-        );
-    }
 }

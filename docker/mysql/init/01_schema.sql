@@ -1,5 +1,3 @@
-USE gymjjak_db;
-
 -- GymJjak 1st Project Schema (MySQL 8.x)
 -- Version: v4, Team meeting updates applied + single tag per PT course.
 -- Generated from ERD export after syntax/constraint cleanup.

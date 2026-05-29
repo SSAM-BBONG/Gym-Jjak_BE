@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -186,6 +187,28 @@ public class OrganizationController {
                         presignedUrl
                 )
         );
+    }
+
+    @Operation(summary = "조직 신청 승인", description = "관리자가 조직 신청을 승인합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "승인 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "신청 내역 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{applicationId}/approve")
+    public GlobalApiResponse<Void> approveOrganizationApplication(
+            @PathVariable Long applicationId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+
+        organizationApplicationCommandUsecase.approveOrganizationApplication(applicationId, authUser.userId());
+
+        return GlobalApiResponse
+                .ok(OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_APPROVED, null);
     }
 
 }

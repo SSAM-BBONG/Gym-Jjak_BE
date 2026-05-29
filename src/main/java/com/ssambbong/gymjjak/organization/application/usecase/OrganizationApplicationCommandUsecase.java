@@ -6,4 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface OrganizationApplicationCommandUsecase {
 
     Long createOrganizationApplication(MultipartFile businessLicenseFile, OrganizationApplicationCreateCommand command);
+
+    void approveOrganizationApplication(Long organizationApplicationId, Long reviewedBy);
 }

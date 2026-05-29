@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.pt.presectation.api.request;
+package com.ssambbong.gymjjak.pt.presentation.api.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
