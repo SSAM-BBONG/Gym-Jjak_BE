@@ -28,9 +28,13 @@ public class OrganizationApplication {
     private final String blogUrl;
     private final String facilityPhone;
     private final OrganizationApplicationStatus status;
-    private final String rejectReason;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
+
+    // 관리자 승인/거절 필드
+    private final String rejectReason;
+    private final Long reviewedBy;
+    private final LocalDateTime reviewedAt;
 
     private OrganizationApplication(
             Long organizationApplicationId,
@@ -52,10 +56,12 @@ public class OrganizationApplication {
             String blogUrl,
             String facilityPhone,
             OrganizationApplicationStatus status,
-            String rejectReason,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
-    ) {
+            LocalDateTime updatedAt,
+            String rejectReason,
+            Long reviewedBy,
+            LocalDateTime reviewedAt
+            ) {
         this.organizationApplicationId = organizationApplicationId;
         this.applicantUserId = applicantUserId;
         this.requestedLoginId = requestedLoginId;
@@ -75,9 +81,11 @@ public class OrganizationApplication {
         this.blogUrl = blogUrl;
         this.facilityPhone = facilityPhone;
         this.status = status;
-        this.rejectReason = rejectReason;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.rejectReason = rejectReason;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
     }
 
     // 신규 신청 생성 (id=null, status=PENDING)
@@ -122,6 +130,8 @@ public class OrganizationApplication {
                 OrganizationApplicationStatus.PENDING,
                 null,
                 null,
+                null,
+                null,
                 null
         );
     }
@@ -146,10 +156,12 @@ public class OrganizationApplication {
             String blogUrl,
             String facilityPhone,
             OrganizationApplicationStatus status,
-            String rejectReason,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
-    ) {
+            LocalDateTime updatedAt,
+            String rejectReason,
+            Long reviewedBy,
+            LocalDateTime reviewedAt
+            ) {
         return new OrganizationApplication(
                 organizationApplicationId,
                 applicantUserId,
@@ -170,9 +182,40 @@ public class OrganizationApplication {
                 blogUrl,
                 facilityPhone,
                 status,
-                rejectReason,
                 createdAt,
-                updatedAt
+                updatedAt,
+                rejectReason,
+                reviewedBy,
+                reviewedAt
+                );
+    }
+
+    public OrganizationApplication approve(Long reviewedBy) {
+        return new OrganizationApplication(
+                this.organizationApplicationId,
+                this.applicantUserId,
+                this.requestedLoginId,
+                this.businessLicenseFileId,
+                this.businessRegistrationNumber,
+                this.businessName,
+                this.representativeName,
+                this.representativePhone,
+                this.openingDate,
+                this.roadAddress,
+                this.jibunAddress,
+                this.detailAddress,
+                this.latitude,
+                this.longitude,
+                this.websiteUrl,
+                this.instagramUrl,
+                this.blogUrl,
+                this.facilityPhone,
+                OrganizationApplicationStatus.ACCEPTED,
+                this.createdAt,
+                this.updatedAt,
+                null,
+                reviewedBy,
+                LocalDateTime.now()
         );
     }
 

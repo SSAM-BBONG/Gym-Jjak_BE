@@ -76,9 +76,6 @@ public class SecurityConfig {
                         // 임시 설정
 //                        .permitAll()
 
-//                        .requestMatchers("/api/{reportGroupId}/**")
-//                        .hasAnyAuthority("ADMIN")
-
                         .requestMatchers("/api/reports/**")
                         .hasAnyAuthority("ADMIN")
 
