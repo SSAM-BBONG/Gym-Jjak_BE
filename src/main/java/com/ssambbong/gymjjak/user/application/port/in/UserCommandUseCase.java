@@ -12,5 +12,4 @@ public interface UserCommandUseCase {
 
     LoginResult login(LoginCommand loginCommand);
 
-    String reissueAccessToken(ReissueTokenCommand command);
 }

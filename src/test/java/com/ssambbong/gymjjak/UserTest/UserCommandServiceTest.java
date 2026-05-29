@@ -1,8 +1,9 @@
 package com.ssambbong.gymjjak.UserTest;
 
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
-import com.ssambbong.gymjjak.user.application.exception.UserErrorCode;
-import com.ssambbong.gymjjak.user.application.exception.UserException;
+import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.application.service.UserCommandService;
 import com.ssambbong.gymjjak.user.domain.model.User;
@@ -14,9 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,6 +23,7 @@ import static org.mockito.Mockito.*;
 
 class UserCommandServiceTest {
 
+    private TokenPort tokenPort;
     private UserPort userPort;
     private UserPolicy userPolicy;
     private UserCommandService userCommandService;
@@ -31,10 +31,12 @@ class UserCommandServiceTest {
     @BeforeEach
     void setUp() {
         userPort = mock(UserPort.class);
+        tokenPort = mock(TokenPort.class);
         userPolicy = mock(UserPolicy.class);
 
         userCommandService = new UserCommandService(
                 userPort,
+                tokenPort,
                 userPolicy
         );
     }

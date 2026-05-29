@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -68,13 +69,33 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        .requestMatchers("/api/token/reissue").permitAll()
+
                         .requestMatchers("/api/token/validate").authenticated()
+
+
 
                         // 신고 관리
                         .requestMatchers("/api/reportgroup/**")
-                        .hasAnyAuthority("ADMIN")
+//                        .hasAnyAuthority("ADMIN")
                         // 임시 설정
-//                        .permitAll()
+                        .permitAll()
+
+                        // 카테고리 API
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**")
+                        .hasAnyAuthority("ADMIN", "TRAINER")
+
+                        // PT API
+                        .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/pt-courses/**")
+                        .hasAnyAuthority("TRAINER")
+
+
+                                .requestMatchers("/api/{reportGroupId}/**")
+                        .hasAnyAuthority("ADMIN")
 
                         .requestMatchers("/api/reports/**")
                         .hasAnyAuthority("ADMIN")
@@ -94,9 +115,6 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/organization-applications/**")
                         .hasAnyAuthority("USER", "TRAINER", "ADMIN")
-
-                        .requestMatchers("/api/organizations/**")
-                        .hasAnyAuthority("TRAINER", "ADMIN")
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
