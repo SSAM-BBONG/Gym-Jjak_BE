@@ -73,8 +73,41 @@ public class ReportGroup {
         );
     }
 
-    public static ReportGroup create() {
-        return null;
+    public static ReportGroup create(
+            String reportNumber,
+            ReportTargetType targetType,
+            Long targetId,
+            Long targetOwnerId,
+            String snapshotTitle,
+            String snapshotContent,
+            String snapshotFileUrl,
+            LocalDateTime now
+    ) {
+        return new ReportGroup(
+                null,
+                reportNumber,
+                targetType,
+                targetId,
+                targetOwnerId,
+                snapshotTitle,
+                snapshotContent,
+                snapshotFileUrl,
+                1,
+                1,
+                ReportGroupReviewStatus.PENDING,
+                ReportGroupSanctionStatus.NONE,
+                null,
+                now,
+                now,
+                null
+        );
+    }
+
+    // 누적 신고 수,
+    public void registerNewReport() {
+        this.totalReportCount++;
+        this.effectiveReportCount++;
+        this.reviewStatus = ReportGroupReviewStatus.PENDING;
     }
 
     // 상세 리뷰 처리에 따른 신고 그룹 검토 상태 값 재계산

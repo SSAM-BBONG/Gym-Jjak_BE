@@ -13,4 +13,7 @@ public interface SpringDataReportRepository extends JpaRepository<ReportJpaEntit
 
     // 개별 신고 목록 최신순 정렬 조회
     List<ReportJpaEntity> findByReportGroupIdOrderByCreatedAtDesc(Long reportGroupId);
+
+    // 같은 사용자가 같은 신고그룹을 이미 신고했는지 검증
+    boolean existsByReporterIdAndReportGroupId(Long reporterId, Long reportGroupId);
 }

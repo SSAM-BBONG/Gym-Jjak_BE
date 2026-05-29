@@ -39,7 +39,7 @@ public class ReportRepositoryAdapter implements ReportRepository {
     }
 
     @Override
-    public boolean existsByReportIdAndReportGroupId(Long reportId, Long reportGroupId) {
-        return false;
+    public boolean existsByReporterIdAndReportGroupId(Long reporterId, Long reportGroupId) {
+        return reportRepository.existsByReporterIdAndReportGroupId(reporterId, reportGroupId);
     }
 }

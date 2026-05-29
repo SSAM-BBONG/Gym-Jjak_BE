@@ -44,8 +44,24 @@ public class Report {
         );
     }
 
-    public static Report create() {
-        return null;
+    public static Report create(
+            Long reportGroupId,
+            Long reporterId,
+            ReportReasonType reason,
+            String detail,
+            LocalDateTime now
+    ) {
+        return new Report(
+                null,
+                reportGroupId,
+                reporterId,
+                reason,
+                detail,
+                ReportStatus.PENDING,
+                null,
+                null,
+                now
+        );
     }
 
     public void approve(Long adminId, LocalDateTime now) {
