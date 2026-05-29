@@ -73,6 +73,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/token/validate").authenticated()
 
+                        .requestMatchers("/api/onboarding/**")
+                        .hasAnyAuthority("USER", "ADMIN")
 
 
                         // 신고 관리
@@ -93,9 +95,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/**")
                         .hasAnyAuthority("TRAINER")
 
-
-                                .requestMatchers("/api/{reportGroupId}/**")
-                        .hasAnyAuthority("ADMIN")
 
                         .requestMatchers("/api/reports/**")
                         .hasAnyAuthority("ADMIN")
