@@ -148,4 +148,10 @@ public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
         this.reviewedAt = reviewedAt;
     }
 
+    public void reject(Long reviewedBy, LocalDateTime reviewedAt, String rejectReason) {
+        this.status = OrganizationApplicationStatus.REJECTED;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+        this.rejectReason = rejectReason;
+    }
 }

@@ -21,4 +21,6 @@ public interface OrganizationApplicationRepository {
     List<OrganizationApplication> findAllByStatus(OrganizationApplicationStatus status);
 
     void approve(OrganizationApplication organizationApplication);
+
+    void reject(OrganizationApplication organizationApplication);
 }
