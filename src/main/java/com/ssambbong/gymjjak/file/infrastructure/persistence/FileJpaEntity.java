@@ -3,7 +3,7 @@ package com.ssambbong.gymjjak.file.infrastructure.persistence;
 import com.ssambbong.gymjjak.file.domain.model.File;
 import com.ssambbong.gymjjak.file.domain.model.FileStatus;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
-import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedDeletedEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "files")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FileJpaEntity extends BaseTimeEntity {
+public class FileJpaEntity extends BaseCreatedDeletedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

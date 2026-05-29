@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.organization.infrastructure.persistence;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
+import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,12 +18,15 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
 
     @Override
     public boolean existsByBusinessRegistrationNumberAndStatus(String businessRegistrationNumber) {
-       boolean alreadyExist = springDataOrganizationApplicationRepository
+       return springDataOrganizationApplicationRepository
                .existsByBusinessRegistrationNumberAndStatus(
                        businessRegistrationNumber,
                        OrganizationApplicationStatus.ACCEPTED);
+    }
 
-       return alreadyExist;
+    @Override
+    public boolean existsByRequestedLoginId(String requestedLoginId) {
+        return springDataOrganizationApplicationRepository.existsByRequestedLoginId(requestedLoginId);
     }
 
     @Override
@@ -52,5 +56,33 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
                 springDataOrganizationApplicationRepository.findById(organizationApplicationId);
 
         return organizationApplicationDetails.map(OrganizationApplicationJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<OrganizationApplication> findAllByStatus(OrganizationApplicationStatus status) {
+
+        return springDataOrganizationApplicationRepository.findAllByStatus(status).stream()
+                .map(OrganizationApplicationJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public void approve(OrganizationApplication organizationApplication) {
+
+        OrganizationApplicationJpaEntity entity = springDataOrganizationApplicationRepository
+                .findById(organizationApplication.getOrganizationApplicationId())
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        entity.approve(organizationApplication.getReviewedBy(), organizationApplication.getReviewedAt());
+    }
+
+    @Override
+    public void reject(OrganizationApplication organizationApplication) {
+
+        OrganizationApplicationJpaEntity entity = springDataOrganizationApplicationRepository
+                .findById(organizationApplication.getOrganizationApplicationId())
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        entity.reject(organizationApplication.getReviewedBy(), organizationApplication.getReviewedAt(), organizationApplication.getRejectReason());
     }
 }

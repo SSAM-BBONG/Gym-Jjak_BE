@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -66,6 +67,16 @@ public class FileService implements FileUseCase {
         if (!deleted) {
             throw new FileNotFoundException(fileId);
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteFromStorage(Long fileId) {
+        // REQUIRED: 외부 트랜잭션에 합류해 1차 캐시에서 엔티티를 조회
+        // (REQUIRES_NEW 사용 시 외부 트랜잭션의 미커밋 데이터를 볼 수 없어 FileNotFoundException 발생)
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new FileNotFoundException(fileId));
+        fileStoragePort.delete(file.getFileUrl());
     }
 
     // uploadFile, replaceFile 공통 로직

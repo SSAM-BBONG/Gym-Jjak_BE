@@ -9,5 +9,9 @@ public interface SpringDataOrganizationApplicationRepository extends JpaReposito
 
     boolean existsByBusinessRegistrationNumberAndStatus(String businessRegistrationNumber, OrganizationApplicationStatus accepted);
 
+    boolean existsByRequestedLoginId(String requestedLoginId);
+
     List<OrganizationApplicationJpaEntity> findAllByApplicantUserId(Long applicantUserId);
+
+    List<OrganizationApplicationJpaEntity> findAllByStatus(OrganizationApplicationStatus status);
 }

@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.organization.infrastructure.persistence;
 
-import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedUpdatedEntity;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus;
 import jakarta.persistence.*;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "organization_applications")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrganizationApplicationJpaEntity extends BaseTimeEntity {
+public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -133,10 +133,25 @@ public class OrganizationApplicationJpaEntity extends BaseTimeEntity {
                 this.blogUrl,
                 this.facilityPhone,
                 this.status,
-                this.rejectReason,
                 this.getCreatedAt(),
-                this.getUpdatedAt()
+                this.getUpdatedAt(),
+                this.rejectReason,
+                this.reviewedBy,
+                this.reviewedAt
         );
     }
 
+    // OrganizationApplicationJpaEntity에 추가
+    public void approve(Long reviewedBy, LocalDateTime reviewedAt) {
+        this.status = OrganizationApplicationStatus.ACCEPTED;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+    }
+
+    public void reject(Long reviewedBy, LocalDateTime reviewedAt, String rejectReason) {
+        this.status = OrganizationApplicationStatus.REJECTED;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+        this.rejectReason = rejectReason;
+    }
 }

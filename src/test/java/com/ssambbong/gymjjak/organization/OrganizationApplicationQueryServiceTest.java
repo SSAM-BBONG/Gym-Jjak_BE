@@ -57,9 +57,11 @@ class OrganizationApplicationQueryServiceTest {
                 null,
                 "02-1234-5678",
                 OrganizationApplicationStatus.PENDING,
-                null,
                 LocalDateTime.of(2026, 5, 1, 10, 0),
-                LocalDateTime.of(2026, 5, 1, 10, 0)
+                LocalDateTime.of(2026, 5, 1, 10, 0),
+                null,
+                null,
+                null
         );
 
         when(organizationApplicationRepository.findAllByApplicantUserId(applicantUserId))
@@ -122,9 +124,11 @@ class OrganizationApplicationQueryServiceTest {
                 null,
                 "02-1234-5678",
                 OrganizationApplicationStatus.PENDING,
-                null,
                 LocalDateTime.of(2026, 5, 1, 10, 0),
-                LocalDateTime.of(2026, 5, 1, 10, 0)
+                LocalDateTime.of(2026, 5, 1, 10, 0),
+                null,
+                null,
+                null
         );
 
         when(organizationApplicationRepository.findById(organizationApplicationId))
@@ -170,9 +174,11 @@ class OrganizationApplicationQueryServiceTest {
                 null,
                 "02-1234-5678",
                 OrganizationApplicationStatus.PENDING,
-                null,
                 LocalDateTime.of(2026, 5, 1, 10, 0),
-                LocalDateTime.of(2026, 5, 1, 10, 0)
+                LocalDateTime.of(2026, 5, 1, 10, 0),
+                null,
+                null,
+                null
         );
 
         when(organizationApplicationRepository.findById(organizationApplicationId))
@@ -232,9 +238,11 @@ class OrganizationApplicationQueryServiceTest {
                 null,
                 "02-1234-5678",
                 OrganizationApplicationStatus.PENDING,
-                null,
                 LocalDateTime.of(2026, 5, 1, 10, 0),
-                LocalDateTime.of(2026, 5, 1, 10, 0)
+                LocalDateTime.of(2026, 5, 1, 10, 0),
+                null,
+                null,
+                null
         );
 
         when(organizationApplicationRepository.findById(organizationApplicationId))
