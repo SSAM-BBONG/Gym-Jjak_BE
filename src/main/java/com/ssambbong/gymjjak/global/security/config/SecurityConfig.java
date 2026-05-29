@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -76,7 +77,20 @@ public class SecurityConfig {
                         // 임시 설정
 //                        .permitAll()
 
-                        .requestMatchers("/api/{reportGroupId}/**")
+                        // 카테고리 API
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**")
+                        .hasAnyAuthority("ADMIN", "TRAINER")
+
+                        // PT API
+                        .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/pt-courses/**")
+                        .hasAnyAuthority("TRAINER")
+
+
+                                .requestMatchers("/api/{reportGroupId}/**")
                         .hasAnyAuthority("ADMIN")
 
                         .requestMatchers("/api/reports/**")
