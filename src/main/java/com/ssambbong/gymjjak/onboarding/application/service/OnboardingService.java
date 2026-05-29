@@ -1,0 +1,73 @@
+package com.ssambbong.gymjjak.onboarding.application.service;
+
+import com.ssambbong.gymjjak.onboarding.application.command.RegisterOnboardingCommand;
+import com.ssambbong.gymjjak.onboarding.application.port.in.OnboardingUsecase;
+import com.ssambbong.gymjjak.onboarding.application.port.out.OnboardingPort;
+import com.ssambbong.gymjjak.onboarding.domain.model.OnboardingSurvey;
+import com.ssambbong.gymjjak.onboarding.domain.model.Region;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class OnboardingService implements OnboardingUsecase {
+
+    private final OnboardingPort onboardingPort;
+
+    @Override
+    public void complete(RegisterOnboardingCommand command) {
+        log.info("[onboarding] 온보딩 등록 처리 시작. userId={}", command.userId());
+
+        if (onboardingPort.existsByUserId(command.userId())) {
+            log.warn("[onboarding] 온보딩 중복 등록 시도. userId={}", command.userId());
+            throw new UserException(UserErrorCode.ONBOARDING_ALREADY_COMPLETED);
+        }
+
+        Region region = Region.create(
+                command.region().sido(),
+                command.region().sigungu(),
+                command.region().eupmyeondong(),
+                command.region().fullName(),
+                command.region().latitude(),
+                command.region().longitude()
+        );
+
+        log.info("[onboarding] 선호 지역 생성 완료. userId={}, sido={}, sigungu={}, eupmyeondong={}",
+                command.userId(),
+                command.region().sido(),
+                command.region().sigungu(),
+                command.region().eupmyeondong());
+
+        Long regionId = onboardingPort.saveRegion(region);
+
+        log.info("[onboarding] 선호 지역 저장 완료. userId={}, regionId={}",
+                command.userId(),
+                regionId);
+
+        OnboardingSurvey onboardingSurvey = OnboardingSurvey.create(
+                command.userId(),
+                command.exerciseGoal(),
+                command.exercisePeriod(),
+                command.exerciseFrequency(),
+                command.preferredExercise(),
+                regionId,
+                command.height(),
+                command.weight()
+        );
+
+        onboardingPort.saveOnboardingSurvey(onboardingSurvey);
+
+        log.info("[onboarding] 온보딩 설문 저장 완료. userId={}, regionId={}",
+                command.userId(),
+                regionId);
+
+        onboardingPort.completeUserOnboarding(command.userId());
+        log.info("[onboarding] 사용자 온보딩 완료 상태 변경 완료. userId={}", command.userId());
+    }
+}
