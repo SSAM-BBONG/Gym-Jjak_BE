@@ -18,7 +18,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +28,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.Duration;
 
 @RequiredArgsConstructor
 @RestController
@@ -63,13 +67,21 @@ public class UserAuthController {
                 request.password()
         ));
 
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", result.refreshToken())
+                .httpOnly(true)
+                .secure(false) // 로컬 개발 환경이면 false, 배포 HTTPS 환경이면 true
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ofDays(14))
+                .build();
+
         return ResponseEntity
                 .status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                 .body(GlobalApiResponse.ok(
                         UserResponseCode.USER_LOGIN_SUCCESS,
                         new LoginResponse(
                                 result.accessToken(),
-                                result.refreshToken(),
                                 result.onboardingCompleted()
                         )
                 ));
