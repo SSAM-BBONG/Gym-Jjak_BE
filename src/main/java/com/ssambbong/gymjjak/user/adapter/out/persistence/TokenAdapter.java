@@ -44,6 +44,11 @@ public class TokenAdapter implements TokenPort {
     }
 
     @Override
+    public void deleteRefreshToken(Long userId) {
+        springDataRefreshTokenRepository.deleteByUserId(userId);
+    }
+
+    @Override
     public Long getUserId(String token) {
         return jwtTokenProvider.getUserId(token);
     }

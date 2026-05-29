@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.user.application.service;
 
 import com.ssambbong.gymjjak.user.application.command.LoginCommand;
+import com.ssambbong.gymjjak.user.application.command.LogoutCommand;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
@@ -108,6 +109,13 @@ public class UserCommandService implements UserCommandUseCase {
                 user.isOnboardingCompleted()
         );
 
+    }
+
+    @Override
+    public void logout(LogoutCommand command) {
+        log.info("[로그아웃 요청] userId={}", command.userId());
+        tokenPort.deleteRefreshToken(command.userId());
+        log.info("[로그아웃 완료] refresh token 삭제 완료. userId={}", command.userId());
     }
 
     private String maskPhone(String phone) {

@@ -15,4 +15,6 @@ public interface TokenPort {
     Long getUserId(String token);
 
     Optional<String> findRefreshTokenByUserId(Long userId);
+
+    void deleteRefreshToken(Long userId);
 }
