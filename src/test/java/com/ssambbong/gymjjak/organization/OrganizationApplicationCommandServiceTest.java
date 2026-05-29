@@ -116,6 +116,6 @@ class OrganizationApplicationCommandServiceTest {
         assertThatThrownBy(() -> organizationApplicationCommandService.createOrganizationApplication(businessLicenseFile, command))
                 .isInstanceOf(DataAccessException.class);
 
-        verify(fileUseCase).deleteFile(fileId);
+        verify(fileUseCase).deleteFromStorage(fileId);
     }
 }

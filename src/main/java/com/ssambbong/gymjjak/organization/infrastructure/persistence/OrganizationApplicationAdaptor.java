@@ -74,6 +74,15 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
                 .orElseThrow(OrganizationApplicationNotFoundException::new);
 
         entity.approve(organizationApplication.getReviewedBy(), organizationApplication.getReviewedAt());
+    }
 
+    @Override
+    public void reject(OrganizationApplication organizationApplication) {
+
+        OrganizationApplicationJpaEntity entity = springDataOrganizationApplicationRepository
+                .findById(organizationApplication.getOrganizationApplicationId())
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        entity.reject(organizationApplication.getReviewedBy(), organizationApplication.getReviewedAt(), organizationApplication.getRejectReason());
     }
 }

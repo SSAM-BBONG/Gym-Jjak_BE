@@ -219,4 +219,33 @@ public class OrganizationApplication {
         );
     }
 
+    public OrganizationApplication reject(Long reviewedBy, String rejectReason) {
+        return new OrganizationApplication(
+                this.organizationApplicationId,
+                this.applicantUserId,
+                this.requestedLoginId,
+                this.businessLicenseFileId,
+                this.businessRegistrationNumber,
+                this.businessName,
+                this.representativeName,
+                this.representativePhone,
+                this.openingDate,
+                this.roadAddress,
+                this.jibunAddress,
+                this.detailAddress,
+                this.latitude,
+                this.longitude,
+                this.websiteUrl,
+                this.instagramUrl,
+                this.blogUrl,
+                this.facilityPhone,
+                OrganizationApplicationStatus.REJECTED,
+                this.createdAt,
+                this.updatedAt,
+                rejectReason,
+                reviewedBy,
+                LocalDateTime.now()
+        );
+    }
+
 }

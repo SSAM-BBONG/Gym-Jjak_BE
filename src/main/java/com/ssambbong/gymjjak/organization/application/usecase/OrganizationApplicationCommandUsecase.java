@@ -8,4 +8,6 @@ public interface OrganizationApplicationCommandUsecase {
     Long createOrganizationApplication(MultipartFile businessLicenseFile, OrganizationApplicationCreateCommand command);
 
     void approveOrganizationApplication(Long organizationApplicationId, Long reviewedBy);
+
+    void rejectOrganizationApplication(Long organizationApplicationId, Long reviewedBy, String rejectReason);
 }
