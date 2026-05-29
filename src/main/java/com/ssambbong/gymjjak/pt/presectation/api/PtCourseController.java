@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.presectation.api;
 
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
+import com.ssambbong.gymjjak.global.security.principal.AuthUser;
 import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.presectation.api.request.CreatePtCourseRequest;
@@ -29,7 +30,7 @@ public class PtCourseController {
     @Operation(summary = "PT 강습 등록", description = "조직 소속 트레이너가 PT 강습을 등록한다.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GlobalApiResponse<?>> createPtCourse(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal AuthUser authUser,
             @RequestPart("data") @Valid CreatePtCourseRequest request,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
             ) {
@@ -37,7 +38,7 @@ public class PtCourseController {
 
         // TODO: userId로 trainerProfileId, organizationId 조회 후 수정 예정
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                userId,
+                authUser.userId(),
                 null,// organizationId - 임시
                 null,                    // trainerProfileId - 임시
                 request.categoryId(),

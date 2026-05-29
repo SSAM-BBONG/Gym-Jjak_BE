@@ -581,20 +581,26 @@ CREATE TABLE report_groups (
                                snapshot_title TEXT NULL,
                                snapshot_content TEXT NULL,
                                snapshot_file_url VARCHAR(500) NULL,
-                               report_count INT NOT NULL DEFAULT 1,
-                               access_count INT NOT NULL DEFAULT 0,
-                               status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+
+                               total_report_count INT NOT NULL DEFAULT 1,
+                               effective_report_count INT NOT NULL DEFAULT 1,
+
+                               review_status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+                               sanction_status VARCHAR(30) NOT NULL DEFAULT 'NONE',
+
                                processed_by BIGINT NULL,
                                created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                                deleted_at DATETIME(6) NULL,
+
                                CONSTRAINT pk_report_groups PRIMARY KEY (report_group_id),
                                CONSTRAINT uk_report_groups_report_number UNIQUE (report_number),
                                CONSTRAINT uk_report_groups_target UNIQUE (target_type, target_id),
                                CONSTRAINT fk_report_groups_target_owner FOREIGN KEY (target_owner_id) REFERENCES users(user_id),
                                CONSTRAINT fk_report_groups_processed_by FOREIGN KEY (processed_by) REFERENCES users(user_id),
-                               CONSTRAINT chk_report_groups_count CHECK (report_count >= 1),
-                               CONSTRAINT chk_report_groups_access_count CHECK (access_count >= 0)
+
+                               CONSTRAINT chk_report_groups_total_count CHECK (total_report_count >= 0),
+                               CONSTRAINT chk_report_groups_effective_count CHECK (effective_report_count >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE reports (

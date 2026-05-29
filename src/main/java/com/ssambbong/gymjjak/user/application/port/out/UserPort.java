@@ -24,19 +24,13 @@ public interface UserPort {
 
     boolean matchesPassword(String rawPassword, String encodedPassword);
 
-    String createAccessToken(Long userId, String username, String role);
-
-    String createRefreshToken(Long userId, String username);
-
     void updateLastLoginAt(Long userId, LocalDateTime lastLoginAt);
 
-    void saveOrUpdateRefreshToken(Long userId, String refreshToken);
 
 
-    boolean validateToken(String token);
 
-    Long getUserId(String token);
 
-    Optional<String> findRefreshTokenByUserId(Long userId);
+
+
 
 }
