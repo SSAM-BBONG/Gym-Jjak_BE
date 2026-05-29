@@ -71,50 +71,10 @@ public class UserAdapter implements UserPort {
     }
 
     @Override
-    public String createAccessToken(Long userId, String username, String role) {
-        return jwtTokenProvider.createAccessToken(userId, username, role);
-    }
-
-    @Override
-    public String createRefreshToken(Long userId, String username) {
-        return jwtTokenProvider.createRefreshToken(userId, username);
-    }
-
-    @Override
     public void updateLastLoginAt(Long userId, LocalDateTime lastLoginAt) {
         UserJpaEntity userJpaEntity = springDataUserRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.LOGIN_FAILED));
 
         userJpaEntity.updateLastLoginAt(lastLoginAt);
-    }
-
-    @Override
-    public void saveOrUpdateRefreshToken(Long userId, String refreshToken) {
-        LocalDateTime now = LocalDateTime.now();
-
-        springDataRefreshTokenRepository.findByUserId(userId)
-                .ifPresentOrElse(
-                        existingRefreshToken -> existingRefreshToken.updateToken(refreshToken, now)
-                        ,() -> springDataRefreshTokenRepository.save(
-                                RefreshTokenJpaEntity.create(userId, refreshToken, now)
-                        )
-                );
-    }
-
-
-    @Override
-    public boolean validateToken(String token) {
-        return jwtTokenProvider.validateToken(token);
-    }
-
-    @Override
-    public Long getUserId(String token) {
-        return jwtTokenProvider.getUserId(token);
-    }
-
-    @Override
-    public Optional<String> findRefreshTokenByUserId(Long userId) {
-        return springDataRefreshTokenRepository.findByUserId(userId)
-                .map(RefreshTokenJpaEntity::getRefreshToken);
     }
 }

@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.user.application.command.ReissueTokenCommand;
 import com.ssambbong.gymjjak.user.application.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.application.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
+import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.application.result.LoginResult;
 import com.ssambbong.gymjjak.user.domain.model.User;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 public class UserCommandService implements UserCommandUseCase {
 
     private final UserPort userPort;
+    private final TokenPort tokenPort;
     private final UserPolicy userPolicy;
 
     @Override
@@ -87,15 +89,15 @@ public class UserCommandService implements UserCommandUseCase {
 
         userPolicy.validateLoginAllowed(user);
 
-        String accessToken = userPort.createAccessToken(
+        String accessToken = tokenPort.createAccessToken(
                 user.getId(),
                 user.getUsername(),
                 user.getRole().name()
         );
 
-        String refreshToken = userPort.createRefreshToken(user.getId(), user.getUsername());
+        String refreshToken = tokenPort.createRefreshToken(user.getId(), user.getUsername());
 
-        userPort.saveOrUpdateRefreshToken(user.getId(), refreshToken);
+        tokenPort.saveOrUpdateRefreshToken(user.getId(), refreshToken);
 
         log.info("[UserLoginSuccess] userId={}, username={}, role={}",
                 user.getId(),
@@ -107,52 +109,6 @@ public class UserCommandService implements UserCommandUseCase {
                 accessToken,
                 refreshToken
         );
-
-    }
-
-    @Override
-    public String reissueAccessToken(ReissueTokenCommand command) {
-        String refreshToken = command.refreshToken();
-
-        log.info("[토큰 재발급] AccessToken 재발급 요청 시작");
-
-        // 1. refreshToken 자체가 유효한 JWT인지 검증
-        if (!userPort.validateToken(refreshToken)) {
-            log.warn("[토큰 재발급] 유효하지 않은 RefreshToken");
-            throw new UserException(UserErrorCode.INVALID_REFRESH_TOKEN);
-        }
-
-        // 2. refreshToken에서 userId 추출
-        Long userId = userPort.getUserId(refreshToken);
-        log.info("[토큰 재발급] RefreshToken 검증 성공. userId={}", userId);
-
-        // 3. DB에 저장된 refreshToken 조회
-        String savedRefreshToken = userPort.findRefreshTokenByUserId(userId)
-                .orElseThrow(() -> {
-                    log.warn("[토큰 재발급] DB에 저장된 RefreshToken 없음. userId={}", userId);
-                    return new UserException(UserErrorCode.REFRESH_TOKEN_NOT_FOUND);
-                });
-
-        // 4. 요청으로 들어온 refreshToken과 DB refreshToken 비교
-        if (!savedRefreshToken.equals(refreshToken)) {
-            log.warn("[토큰 재발급] RefreshToken 불일치. userId={}", userId);
-            throw new UserException(UserErrorCode.REFRESH_TOKEN_MISMATCH);
-        }
-
-        // 5. 사용자 조회
-        User user = userPort.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-
-        // 6. 새 accessToken 발급
-        String accessToken = userPort.createAccessToken(
-                user.getId(),
-                user.getUsername(),
-                user.getRole().name()
-        );
-
-        log.info("[토큰 재발급] AccessToken 재발급 성공. userId={}, role={}", user.getId(), user.getRole());
-
-        return accessToken;
 
     }
 

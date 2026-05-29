@@ -68,7 +68,11 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        .requestMatchers("/api/token/reissue").permitAll()
+
                         .requestMatchers("/api/token/validate").authenticated()
+
+
 
                         // 신고 관리
                         .requestMatchers("/api/reportgroup/**")
@@ -97,9 +101,6 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/organization-applications/**")
                         .hasAnyAuthority("USER", "TRAINER", "ADMIN")
-
-                        .requestMatchers("/api/organizations/**")
-                        .hasAnyAuthority("TRAINER", "ADMIN")
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
