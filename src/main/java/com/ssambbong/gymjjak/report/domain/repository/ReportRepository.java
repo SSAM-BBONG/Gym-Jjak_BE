@@ -12,4 +12,6 @@ public interface ReportRepository {
     Report save(Report report);
 
     List<Report> findAllByReportGroupId(Long reportGroupId);
+
+    boolean existsByReportIdAndReportGroupId(Long reportId, Long reportGroupId);
 }

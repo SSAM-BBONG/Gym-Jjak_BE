@@ -5,7 +5,7 @@ import com.ssambbong.gymjjak.global.security.handler.CustomAccessDeniedHandler;
 import com.ssambbong.gymjjak.global.security.handler.CustomAuthenticationEntryPoint;
 import com.ssambbong.gymjjak.global.security.jwt.JwtAuthenticationFilter;
 import com.ssambbong.gymjjak.report.application.query.*;
-import com.ssambbong.gymjjak.report.application.usecase.ReportQueryUseCase;
+import com.ssambbong.gymjjak.report.application.usecase.ReportGroupQueryUseCase;
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.*;
 import com.ssambbong.gymjjak.report.presentation.api.ReportGroupController;
@@ -39,7 +39,7 @@ public class ReportGroupControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private ReportQueryUseCase reportQueryUseCase;
+    private ReportGroupQueryUseCase reportGroupQueryUseCase;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -75,7 +75,7 @@ public class ReportGroupControllerTest {
     void 신고_목록_조회_api_올바른_목록_반환_테스트() throws Exception {
 
         // given
-        BDDMockito.given(reportQueryUseCase.findReportGroups(any(AdminReportListQuery.class)))
+        BDDMockito.given(reportGroupQueryUseCase.findReportGroups(any(AdminReportListQuery.class)))
                 .willReturn(result);
 
         // when, than
@@ -131,7 +131,7 @@ public class ReportGroupControllerTest {
                 ReportGroupReviewStatus.PENDING,
                 List.of(report1, report2)
         );
-        BDDMockito.given(reportQueryUseCase.findReportDetail(1L))
+        BDDMockito.given(reportGroupQueryUseCase.findReportDetail(1L))
                         .willReturn(detailResult);
 
         // when & then
@@ -172,7 +172,7 @@ public class ReportGroupControllerTest {
                 ReportGroupReviewStatus.PENDING,
                 List.of(report1, report2)
         );
-        BDDMockito.given(reportQueryUseCase.findReportDetail(999L))
+        BDDMockito.given(reportGroupQueryUseCase.findReportDetail(999L))
                 .willThrow(new ReportGroupNotFoundException(999L));
 
         // when, than

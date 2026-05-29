@@ -1,15 +1,11 @@
 package com.ssambbong.gymjjak.report.application.service;
 
-import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
-import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
-import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionTargetPort;
+import com.ssambbong.gymjjak.report.application.port.ReportTargetQueryPort;
+import com.ssambbong.gymjjak.report.application.port.ReportTargetSnapshot;
+import com.ssambbong.gymjjak.report.application.usecase.CreateReportCommand;
 import com.ssambbong.gymjjak.report.application.usecase.ReportCommandUseCase;
-import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
-import com.ssambbong.gymjjak.report.domain.exception.ReportNotFoundException;
-import com.ssambbong.gymjjak.report.domain.model.Report;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
-import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,79 +13,54 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional
-@Slf4j
 public class ReportCommandService implements ReportCommandUseCase {
 
     private final ReportRepository reportRepository;
     private final ReportGroupRepository reportGroupRepository;
-    private final ReportSanctionTargetPort  reportSanctionTargetPort;
+    private final ReportTargetQueryPort reportTargetQueryPort;
+    private final ReportSanctionTargetPort reportSanctionTargetPort;
+//    private final ReportNumberGenerator reportNumberGenerator;
 
     @Override
-    public void approveReport(ApproveReportCommand command) {
-        Report report = getReport(command.reportId());
+    public Long createReport(CreateReportCommand command) {
 
-        report.validateReportGroupId(command.reportGroupId());
+        log.info("[ReportCommandService] 신고 생성 시작!");
+        // 신고 스냅샷 저장하기
+        ReportTargetSnapshot snapshot = getTargetSnapshot(command);
 
-        report.approve(command.adminId(), LocalDateTime.now());
-        reportRepository.save(report);
+        Optional<ReportGroup> reportGroupOptional =
+                reportGroupRepository.findByTargetTypeAndTargetId(
+                        command.targetType(),
+                        command.targetId()
+                );
+        // 신고 대상 존재 여부 검증
 
-        ReportGroup reportGroup = getReportGroup(command.reportGroupId());
-        List<Report> reports = reportRepository.findAllByReportGroupId(command.reportGroupId());
 
+        // 본인 게시글 신고 방지 검증
+//        validatedNotSelfReport(command.reporterId(), snapshot.targetOwnerId());
 
-        reportGroup.recalculateReviewStatus(reports);
-        reportGroup.syncAutoSanctionStatus();
-        reportGroup.markProcessedBy(command.adminId());
+        // 중복 신고 방지 검증
 
-        reportGroupRepository.save(reportGroup);
+        // ReportGroup 없으면 새로 생성, 있으면 기존 거에 올리기
+
+        // report 생성
+
+        // 그룹 count 증가
+
+        // 그룹 리뷰 상태 관리 이동시키기?
+        return 0L;
     }
 
-    @Override
-    public void rejectReport(RejectReportCommand command) {
-        Report report = getReport(command.reportId());
-
-        report.validateReportGroupId(command.reportGroupId());
-
-        report.reject(command.adminId(), LocalDateTime.now());
-        reportRepository.save(report);
-
-        ReportGroup reportGroup = getReportGroup(command.reportGroupId());
-
-        ReportGroupSanctionStatus previousSanctionStatus = reportGroup.getSanctionStatus();
-
-        reportGroup.decreaseEffectiveReportCount();
-
-        List<Report> reports = reportRepository.findAllByReportGroupId(command.reportGroupId());
-
-        reportGroup.recalculateReviewStatus(reports);
-        reportGroup.syncAutoSanctionStatus();
-        reportGroup.markProcessedBy(command.adminId());
-
-        reportGroupRepository.save(reportGroup);
-
-        if (previousSanctionStatus == ReportGroupSanctionStatus.AUTO_BLINDED
-                && reportGroup.getSanctionStatus() == ReportGroupSanctionStatus.NONE) {
-            reportSanctionTargetPort.changeAutoBlind(
-                    reportGroup.getTargetType(),
-                    reportGroup.getTargetId(),
-                    ReportSanctionAction.RELEASE_AUTO_BLIND
-            );
-        }
-    }
-
-    private Report getReport(Long reportId) {
-        return reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportNotFoundException(reportId));
-    }
-
-    private ReportGroup getReportGroup(Long reportGroupId) {
-        return reportGroupRepository.findById(reportGroupId)
-                .orElseThrow(() -> new ReportGroupNotFoundException(reportGroupId));
+    private ReportTargetSnapshot getTargetSnapshot(CreateReportCommand command) {
+        return reportTargetQueryPort.getSnapshot(
+                command.targetType(),
+                command.targetId()
+        );
     }
 }

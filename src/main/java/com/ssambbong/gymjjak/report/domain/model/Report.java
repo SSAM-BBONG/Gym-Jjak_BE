@@ -44,6 +44,10 @@ public class Report {
         );
     }
 
+    public static Report create() {
+        return null;
+    }
+
     public void approve(Long adminId, LocalDateTime now) {
         validatePending();
         this.status = ReportStatus.APPROVED;

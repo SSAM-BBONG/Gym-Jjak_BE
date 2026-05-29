@@ -73,6 +73,10 @@ public class ReportGroup {
         );
     }
 
+    public static ReportGroup create() {
+        return null;
+    }
+
     // 상세 리뷰 처리에 따른 신고 그룹 검토 상태 값 재계산
     public void recalculateReviewStatus(List<Report> reports) {
 

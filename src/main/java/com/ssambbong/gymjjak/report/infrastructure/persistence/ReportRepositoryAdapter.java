@@ -37,4 +37,9 @@ public class ReportRepositoryAdapter implements ReportRepository {
                 .map(reportPersistenceMapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public boolean existsByReportIdAndReportGroupId(Long reportId, Long reportGroupId) {
+        return false;
+    }
 }
