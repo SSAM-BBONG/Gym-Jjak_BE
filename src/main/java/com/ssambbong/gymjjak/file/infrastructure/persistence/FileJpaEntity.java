@@ -3,22 +3,18 @@ package com.ssambbong.gymjjak.file.infrastructure.persistence;
 import com.ssambbong.gymjjak.file.domain.model.File;
 import com.ssambbong.gymjjak.file.domain.model.FileStatus;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "files")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
-public class FileJpaEntity {
+public class FileJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,13 +46,6 @@ public class FileJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private FileStatus status;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
 
     @Builder
     private FileJpaEntity(
@@ -111,6 +100,6 @@ public class FileJpaEntity {
     // soft delete
     public void delete() {
         this.status = FileStatus.DELETED;
-        this.deletedAt = LocalDateTime.now();
+        super.delete();
     }
 }
