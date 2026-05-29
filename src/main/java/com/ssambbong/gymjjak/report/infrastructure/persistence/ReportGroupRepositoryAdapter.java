@@ -1,10 +1,12 @@
 package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.report.application.policy.ReportTargetOwnerPolicy;
-import com.ssambbong.gymjjak.report.application.query.AdminReportListItem;
-import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
-import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
+import com.ssambbong.gymjjak.report.application.port.UserProfileView;
+import com.ssambbong.gymjjak.report.application.port.UserQueryPort;
+import com.ssambbong.gymjjak.report.application.query.*;
+import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
 import com.ssambbong.gymjjak.report.domain.model.ReportNavigationType;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -26,28 +29,21 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     private final SpringDataReportGroupRepository reportGroupRepository;
     private final SpringDataReportRepository reportRepository;
     private final ReportTargetOwnerPolicy reportTargetOwnerPolicy;
+    private final UserQueryPort userQueryPort;
+    private final ReportGroupPersistenceMapper reportGroupPersistenceMapper;
 
     @Override
     public ReportGroup save(ReportGroup reportGroup) {
-        /*
-        * 저장 흐름
-        * 1. 새 신고 그룹 -> 신고그룹엔티티 새로 만들기
-        * 2. 기존 신고 그룹 -> 영속 상태 신고그룹 엔티티 조회 후
-        *   현재 Domain Model 상태를 jpa Entity에 반영
-        * 3. 저장한 jpa Entity -> 다시 Domain Model로 변경
-        * */
-        return null;
+        ReportGroupJpaEntity entity = reportGroupPersistenceMapper.toEntity(reportGroup);
+        ReportGroupJpaEntity savedEntity = reportGroupRepository.save(entity);
+        return reportGroupPersistenceMapper.toDomain(savedEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<ReportGroup> findById(Long reportGroupId) {
-        return reportGroupRepository.findById(reportGroupId).map(this::toDomain);
-    }
-
-    private ReportGroup toDomain(ReportGroupJpaEntity entity) {
-        //TODO : JAPEntity -> DomainModel 변환 코드 구현하기
-        return null;
+        return reportGroupRepository.findById(reportGroupId)
+                .map(reportGroupPersistenceMapper::toDomain);
     }
 
     @Override
@@ -58,12 +54,17 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
 
         // 페이지 요청 객체 생성
         // 페이지 번호, 데이터 개수
-        PageRequest pageRequest = PageRequest.of(query.page(), query.size());
+        PageRequest pageRequest = PageRequest.of(query.page() - 1, query.size());
 
         // if로 신고 그룹 존재 여부 조회
 
         // JPA repo 조회
-        Page<ReportGroupJpaEntity> page = reportGroupRepository.findByTargetType(query.targetType(), pageRequest);
+        Page<ReportGroupJpaEntity> page = reportGroupRepository
+                .findByTargetTypeAndSanctionStatusNot(
+                        query.targetType(),
+                        ReportGroupSanctionStatus.MANUAL_BLINDED,
+                        pageRequest
+                );
 
         // 조회 결과 전체 감싸는 객체
         return new AdminReportListResult(
@@ -82,10 +83,60 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
                             );
                         })
                         .toList(),
-                page.getNumber(), // 현재 페이지 번호
+                query.page(), // 현재 페이지 번호
                 page.getSize(), // 페이지 크기
                 page.getTotalElements(), // 전체 신고 그룹 개수
                 page.getTotalPages() // 전체 페이지 수
+        );
+    }
+
+    // 상세 신고 목록 조립
+    @Override
+    @Transactional(readOnly = true)
+    public AdminReportDetailResult findReportDetail(Long reportGroupId) {
+
+        ReportGroupJpaEntity reportGroup = reportGroupRepository.findById(reportGroupId)
+                .orElseThrow(() -> new ReportGroupNotFoundException(reportGroupId));
+
+        List<AdminReportReasonItem> reports = reportRepository
+                .findByReportGroupIdOrderByCreatedAtDesc(reportGroupId)
+                .stream()
+                .map(this::toAdminReportReasonItem)
+                .toList();
+
+        return new AdminReportDetailResult(
+                reportGroup.getReportGroupId(),
+                reportGroup.getReviewStatus(),
+                reports
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ReportGroup> findByTargetTypeAndTargetId(ReportTargetType targetType, Long targetId) {
+        return reportGroupRepository.findByTargetTypeAndTargetId(targetType, targetId)
+                .map(reportGroupPersistenceMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByReportNumber(String reportNumber) {
+        return reportGroupRepository.existsByReportNumber(reportNumber);
+    }
+
+    private AdminReportReasonItem toAdminReportReasonItem(ReportJpaEntity entity) {
+
+        String reporterUsername = userQueryPort.findUserProfile(entity.getReporterId())
+                .map(UserProfileView::username)
+                .orElse("알 수 없음");
+
+        return new AdminReportReasonItem(
+                entity.getReportId(),
+                reporterUsername,
+                entity.getReason(),
+                entity.getDetail(),
+                entity.getCreatedAt(),
+                entity.getStatus()
         );
     }
 
@@ -100,9 +151,6 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     private String resolveTargetOwnerUsername(ReportGroupJpaEntity entity) {
         return reportTargetOwnerPolicy.resolveUsername(entity.getTargetOwnerId());
     }
-//    private String resolveTargetOwnerUsername(ReportGroupJpaEntity entity) {
-//        return "TODO_targetUsername";
-//    }
 
     private LocalDateTime resolveLatestReportedAt(ReportGroupJpaEntity entity) {
         return reportRepository.findTopByReportGroupIdOrderByCreatedAtDesc(entity.getReportGroupId())
@@ -181,8 +229,8 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
                 targetDisplayText,
                 targetOwnerUsername,
                 latestReportedAt,
-                entity.getReportCount(),
-                entity.getStatus(),
+                entity.getEffectiveReportCount(),
+                entity.getReviewStatus(),
                 resolveNavigationType(entity.getTargetType())
         );
     }

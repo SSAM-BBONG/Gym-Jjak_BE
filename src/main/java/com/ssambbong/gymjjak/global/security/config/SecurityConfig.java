@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -58,6 +59,8 @@ public class SecurityConfig {
                 // URL별 인증/인가 설정
                 .authorizeHttpRequests(auth -> auth
 
+                        .requestMatchers("/api/auth/logout").authenticated()
+
                         // 회원가입, 로그인, 토큰 재발급 등 인증 없이 접근 가능
                         .requestMatchers("/api/auth/**").permitAll()
 
@@ -68,20 +71,37 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        .requestMatchers("/api/token/reissue").permitAll()
+
+                        .requestMatchers("/api/token/validate").authenticated()
+
+                        .requestMatchers("/api/onboarding/**")
+                        .hasAnyAuthority("USER", "ADMIN")
+                        
                         // 신고 관리
                         .requestMatchers("/api/reportgroup/**")
                         .hasAnyAuthority("ADMIN")
 
-                        .requestMatchers("/api/{reportGroupId}/**")
-                        .hasAnyAuthority("ADMIN")
+                        // 카테고리 API
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**")
+                        .hasAnyAuthority("ADMIN", "TRAINER")
 
-                        .requestMatchers("/api/reports/**")
-                        .hasAnyAuthority("ADMIN")
+                        // PT API
+                        .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations").hasAnyAuthority("USER", "TRAINER")
+                        .requestMatchers(HttpMethod.POST, "/api/pt-courses/**")
+                        .hasAnyAuthority("TRAINER")
+
+
+                        .requestMatchers("/api/reports/**").authenticated()
 
                         // 일반 사용자 API
                         // 관리자가 사용자 API도 접근 가능해야 하면 ROLE_ADMIN 포함
                         .requestMatchers("/api/users/**")
-                        .hasAnyAuthority("USER", "ADMIN")
+                        .hasAnyAuthority("ADMIN", "USER","TRAINER")
 
                         // 트레이너 API
                         .requestMatchers("/api/trainers/**")
@@ -93,9 +113,6 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/organization-applications/**")
                         .hasAnyAuthority("USER", "TRAINER", "ADMIN")
-
-                        .requestMatchers("/api/organizations/**")
-                        .hasAnyAuthority("TRAINER", "ADMIN")
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()

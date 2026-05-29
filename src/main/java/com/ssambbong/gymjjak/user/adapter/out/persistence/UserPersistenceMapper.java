@@ -16,10 +16,8 @@ public class UserPersistenceMapper {
                 user.getPhone(),
                 user.getRole(),
                 user.getStatus(),
-                user.getLastLoginAt(),
-                user.getCreatedAt(),
-                user.getUpdatedAt(),
-                user.getDeletedAt()
+                user.isOnboardingCompleted(),
+                user.getLastLoginAt()
         );
     }
 
@@ -33,6 +31,7 @@ public class UserPersistenceMapper {
                 entity.getPhone(),
                 entity.getRole(),
                 entity.getStatus(),
+                entity.isOnboardingCompleted(),
                 entity.getLastLoginAt(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),

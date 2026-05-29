@@ -37,8 +37,20 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         errorResponse.put("timestamp", LocalDateTime.now().toString());
         errorResponse.put("status", HttpServletResponse.SC_UNAUTHORIZED);
         errorResponse.put("error", "Unauthorized");
-        errorResponse.put("code", "AUTH_401");
-        errorResponse.put("message", "인증이 필요합니다.");
+
+        Object exception = request.getAttribute("exception");
+
+        if ("ACCESS_TOKEN_EXPIRED".equals(exception)) {
+            errorResponse.put("code", "ACCESS_TOKEN_EXPIRED");
+            errorResponse.put("message", "AccessToken이 만료되었습니다.");
+        } else if ("INVALID_TOKEN".equals(exception)) {
+            errorResponse.put("code", "INVALID_TOKEN");
+            errorResponse.put("message", "유효하지 않은 토큰입니다.");
+        } else {
+            errorResponse.put("code", "AUTH_401");
+            errorResponse.put("message", "인증이 필요합니다.");
+        }
+
         errorResponse.put("path", request.getRequestURI());
 
         objectMapper.writeValue(response.getWriter(), errorResponse);

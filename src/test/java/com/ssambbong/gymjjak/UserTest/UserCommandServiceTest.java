@@ -1,22 +1,21 @@
 package com.ssambbong.gymjjak.UserTest;
 
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
-import com.ssambbong.gymjjak.user.application.exception.UserErrorCode;
-import com.ssambbong.gymjjak.user.application.exception.UserException;
-import com.ssambbong.gymjjak.user.application.port.out.PasswordEncodePort;
-import com.ssambbong.gymjjak.user.application.port.out.UserRepositoryPort;
+import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
+import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.application.service.UserCommandService;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
+import com.ssambbong.gymjjak.user.domain.policy.UserPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,25 +23,21 @@ import static org.mockito.Mockito.*;
 
 class UserCommandServiceTest {
 
-    private UserRepositoryPort userRepositoryPort;
-    private PasswordEncodePort passwordEncodePort;
-    private Clock clock;
+    private TokenPort tokenPort;
+    private UserPort userPort;
+    private UserPolicy userPolicy;
     private UserCommandService userCommandService;
 
     @BeforeEach
     void setUp() {
-        userRepositoryPort = mock(UserRepositoryPort.class);
-        passwordEncodePort = mock(PasswordEncodePort.class);
-
-        clock = Clock.fixed(
-                Instant.parse("2026-05-27T00:00:00Z"),
-                ZoneOffset.UTC
-        );
+        userPort = mock(UserPort.class);
+        tokenPort = mock(TokenPort.class);
+        userPolicy = mock(UserPolicy.class);
 
         userCommandService = new UserCommandService(
-                userRepositoryPort,
-                passwordEncodePort,
-                clock
+                userPort,
+                tokenPort,
+                userPolicy
         );
     }
 
@@ -58,17 +53,17 @@ class UserCommandServiceTest {
                 "010-1111-2222"
         );
 
-        when(userRepositoryPort.existsByUsername(command.username()))
+        when(userPort.existsByUsername(command.username()))
                 .thenReturn(false);
-        when(userRepositoryPort.existsByNickname(command.nickname()))
+        when(userPort.existsByNickname(command.nickname()))
                 .thenReturn(false);
-        when(userRepositoryPort.existsByPhone(command.phone()))
+        when(userPort.existsByPhone(command.phone()))
                 .thenReturn(false);
 
-        when(passwordEncodePort.encode(command.password()))
+        when(userPort.encode(command.password()))
                 .thenReturn("encodedPassword");
 
-        when(userRepositoryPort.save(any(User.class)))
+        when(userPort.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -76,7 +71,7 @@ class UserCommandServiceTest {
 
         // then
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepositoryPort).save(userCaptor.capture());
+        verify(userPort).save(userCaptor.capture());
 
         User savedUser = userCaptor.getValue();
 
@@ -92,7 +87,7 @@ class UserCommandServiceTest {
         assertThat(savedUser.getLastLoginAt()).isNull();
         assertThat(savedUser.getDeletedAt()).isNull();
 
-        verify(passwordEncodePort).encode("Test1234!");
+        verify(userPort).encode("Test1234!");
     }
 
     @Test
@@ -107,7 +102,7 @@ class UserCommandServiceTest {
                 "010-1111-2222"
         );
 
-        when(userRepositoryPort.existsByUsername(command.username()))
+        when(userPort.existsByUsername(command.username()))
                 .thenReturn(true);
 
         // when & then
@@ -115,8 +110,8 @@ class UserCommandServiceTest {
                 .isInstanceOf(UserException.class)
                 .hasMessage(UserErrorCode.DUPLICATE_USERNAME.getMessage());
 
-        verify(userRepositoryPort, never()).save(any(User.class));
-        verify(passwordEncodePort, never()).encode(anyString());
+        verify(userPort, never()).save(any(User.class));
+        verify(userPort, never()).encode(anyString());
     }
 
     @Test
@@ -131,9 +126,9 @@ class UserCommandServiceTest {
                 "010-1111-2222"
         );
 
-        when(userRepositoryPort.existsByUsername(command.username()))
+        when(userPort.existsByUsername(command.username()))
                 .thenReturn(false);
-        when(userRepositoryPort.existsByNickname(command.nickname()))
+        when(userPort.existsByNickname(command.nickname()))
                 .thenReturn(true);
 
         // when & then
@@ -141,8 +136,8 @@ class UserCommandServiceTest {
                 .isInstanceOf(UserException.class)
                 .hasMessage(UserErrorCode.DUPLICATE_NICKNAME.getMessage());
 
-        verify(userRepositoryPort, never()).save(any(User.class));
-        verify(passwordEncodePort, never()).encode(anyString());
+        verify(userPort, never()).save(any(User.class));
+        verify(userPort, never()).encode(anyString());
     }
 
     @Test
@@ -157,11 +152,11 @@ class UserCommandServiceTest {
                 "010-1111-2222"
         );
 
-        when(userRepositoryPort.existsByUsername(command.username()))
+        when(userPort.existsByUsername(command.username()))
                 .thenReturn(false);
-        when(userRepositoryPort.existsByNickname(command.nickname()))
+        when(userPort.existsByNickname(command.nickname()))
                 .thenReturn(false);
-        when(userRepositoryPort.existsByPhone(command.phone()))
+        when(userPort.existsByPhone(command.phone()))
                 .thenReturn(true);
 
         // when & then
@@ -169,7 +164,7 @@ class UserCommandServiceTest {
                 .isInstanceOf(UserException.class)
                 .hasMessage(UserErrorCode.DUPLICATE_PHONE.getMessage());
 
-        verify(userRepositoryPort, never()).save(any(User.class));
-        verify(passwordEncodePort, never()).encode(anyString());
+        verify(userPort, never()).save(any(User.class));
+        verify(userPort, never()).encode(anyString());
     }
 }

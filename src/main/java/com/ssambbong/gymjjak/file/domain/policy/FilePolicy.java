@@ -24,8 +24,8 @@ public enum FilePolicy {
             List.of("image/jpeg", "image/png", "image/webp"),
             10 * 1024 * 1024L
     ),
-    COURSE_THUMBNAIL(
-            FileType.COURSE_THUMBNAIL,
+    PT_THUMBNAIL(
+            FileType.PT_THUMBNAIL,
             List.of("image/jpeg", "image/png", "image/webp"),
             10 * 1024 * 1024L
     ),
@@ -41,7 +41,7 @@ public enum FilePolicy {
     ),
     BUSINESS_LICENSE(
             FileType.BUSINESS_LICENSE,
-            List.of("image/jpeg", "image/png", "image/webp"),
+            List.of("image/jpeg", "image/png", "image/webp", "application/pdf"),
             10 * 1024 * 1024L
     ),
 

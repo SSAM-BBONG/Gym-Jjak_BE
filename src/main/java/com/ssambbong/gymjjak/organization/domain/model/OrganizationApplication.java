@@ -17,7 +17,7 @@ public class OrganizationApplication {
     private final String businessName;
     private final String representativeName;
     private final String representativePhone;
-    private final String openingDate;
+    private final LocalDate openingDate;
     private final String roadAddress;
     private final String jibunAddress;
     private final String detailAddress;
@@ -27,10 +27,14 @@ public class OrganizationApplication {
     private final String instagramUrl;
     private final String blogUrl;
     private final String facilityPhone;
-    private final Status status;
-    private final String rejectReason;
+    private final OrganizationApplicationStatus status;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
+
+    // 관리자 승인/거절 필드
+    private final String rejectReason;
+    private final Long reviewedBy;
+    private final LocalDateTime reviewedAt;
 
     private OrganizationApplication(
             Long organizationApplicationId,
@@ -41,7 +45,7 @@ public class OrganizationApplication {
             String businessName,
             String representativeName,
             String representativePhone,
-            String openingDate,
+            LocalDate openingDate,
             String roadAddress,
             String jibunAddress,
             String detailAddress,
@@ -51,11 +55,13 @@ public class OrganizationApplication {
             String instagramUrl,
             String blogUrl,
             String facilityPhone,
-            Status status,
-            String rejectReason,
+            OrganizationApplicationStatus status,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
-    ) {
+            LocalDateTime updatedAt,
+            String rejectReason,
+            Long reviewedBy,
+            LocalDateTime reviewedAt
+            ) {
         this.organizationApplicationId = organizationApplicationId;
         this.applicantUserId = applicantUserId;
         this.requestedLoginId = requestedLoginId;
@@ -75,9 +81,11 @@ public class OrganizationApplication {
         this.blogUrl = blogUrl;
         this.facilityPhone = facilityPhone;
         this.status = status;
-        this.rejectReason = rejectReason;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.rejectReason = rejectReason;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
     }
 
     // 신규 신청 생성 (id=null, status=PENDING)
@@ -89,7 +97,7 @@ public class OrganizationApplication {
             String businessName,
             String representativeName,
             String representativePhone,
-            String openingDate,
+            LocalDate openingDate,
             String roadAddress,
             String jibunAddress,
             String detailAddress,
@@ -119,10 +127,124 @@ public class OrganizationApplication {
                 instagramUrl,
                 blogUrl,
                 facilityPhone,
-                Status.PENDING,
+                OrganizationApplicationStatus.PENDING,
+                null,
+                null,
                 null,
                 null,
                 null
+        );
+    }
+
+    public static OrganizationApplication restore(
+            Long organizationApplicationId,
+            Long applicantUserId,
+            String requestedLoginId,
+            Long businessLicenseFileId,
+            String businessRegistrationNumber,
+            String businessName,
+            String representativeName,
+            String representativePhone,
+            LocalDate openingDate,
+            String roadAddress,
+            String jibunAddress,
+            String detailAddress,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String websiteUrl,
+            String instagramUrl,
+            String blogUrl,
+            String facilityPhone,
+            OrganizationApplicationStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            String rejectReason,
+            Long reviewedBy,
+            LocalDateTime reviewedAt
+            ) {
+        return new OrganizationApplication(
+                organizationApplicationId,
+                applicantUserId,
+                requestedLoginId,
+                businessLicenseFileId,
+                businessRegistrationNumber,
+                businessName,
+                representativeName,
+                representativePhone,
+                openingDate,
+                roadAddress,
+                jibunAddress,
+                detailAddress,
+                latitude,
+                longitude,
+                websiteUrl,
+                instagramUrl,
+                blogUrl,
+                facilityPhone,
+                status,
+                createdAt,
+                updatedAt,
+                rejectReason,
+                reviewedBy,
+                reviewedAt
+                );
+    }
+
+    public OrganizationApplication approve(Long reviewedBy) {
+        return new OrganizationApplication(
+                this.organizationApplicationId,
+                this.applicantUserId,
+                this.requestedLoginId,
+                this.businessLicenseFileId,
+                this.businessRegistrationNumber,
+                this.businessName,
+                this.representativeName,
+                this.representativePhone,
+                this.openingDate,
+                this.roadAddress,
+                this.jibunAddress,
+                this.detailAddress,
+                this.latitude,
+                this.longitude,
+                this.websiteUrl,
+                this.instagramUrl,
+                this.blogUrl,
+                this.facilityPhone,
+                OrganizationApplicationStatus.ACCEPTED,
+                this.createdAt,
+                this.updatedAt,
+                null,
+                reviewedBy,
+                LocalDateTime.now()
+        );
+    }
+
+    public OrganizationApplication reject(Long reviewedBy, String rejectReason) {
+        return new OrganizationApplication(
+                this.organizationApplicationId,
+                this.applicantUserId,
+                this.requestedLoginId,
+                this.businessLicenseFileId,
+                this.businessRegistrationNumber,
+                this.businessName,
+                this.representativeName,
+                this.representativePhone,
+                this.openingDate,
+                this.roadAddress,
+                this.jibunAddress,
+                this.detailAddress,
+                this.latitude,
+                this.longitude,
+                this.websiteUrl,
+                this.instagramUrl,
+                this.blogUrl,
+                this.facilityPhone,
+                OrganizationApplicationStatus.REJECTED,
+                this.createdAt,
+                this.updatedAt,
+                rejectReason,
+                reviewedBy,
+                LocalDateTime.now()
         );
     }
 

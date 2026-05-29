@@ -5,6 +5,14 @@ import lombok.Builder;
 
 import java.util.List;
 
+/**
+ * 관리자 신고 그룹 목록 조회 전체 response 객체
+ * @param reports : 신고 그룹 페이지에 보여줄 1행의 신고 response List
+ * @param page : page 기능, 현재 페이지
+ * @param size : 한 페이지에 담길 데이터 개수
+ * @param totalElements : 총 데이터 개수
+ * @param totalPages : 총 page 수
+ */
 @Builder
 public record AdminReportListResponse(
         List<AdminReportListItemResponse> reports,

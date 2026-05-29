@@ -16,6 +16,6 @@ public interface FileRepository {
     // file_id로 파일 조회
     Optional<File> findById(Long fileId);
 
-    // file_id로 파일 삭제 (soft delete)
-    void deleteById(Long fileId);
+    // file_id로 파일 삭제 (soft delete) → 삭제된 행 수 반환 (0이면 존재하지 않음)
+    boolean deleteById(Long fileId);
 }

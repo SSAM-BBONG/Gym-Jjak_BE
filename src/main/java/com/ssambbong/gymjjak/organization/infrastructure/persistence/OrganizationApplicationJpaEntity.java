@@ -1,14 +1,12 @@
 package com.ssambbong.gymjjak.organization.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedUpdatedEntity;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
-import com.ssambbong.gymjjak.organization.domain.model.Status;
+import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,10 +14,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "organization_applications")
-@EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrganizationApplicationJpaEntity {
+public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,7 +45,7 @@ public class OrganizationApplicationJpaEntity {
     private String representativePhone;
 
     @Column(name = "opening_date", nullable = false)
-    private String openingDate;
+    private LocalDate openingDate;
 
     @Column(name = "road_address", nullable = false, length = 255)
     private String roadAddress;
@@ -79,7 +76,7 @@ public class OrganizationApplicationJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
-    private Status status;
+    private OrganizationApplicationStatus status;
 
     @Column(name = "reject_reason", length = 500)
     private String rejectReason;
@@ -89,14 +86,6 @@ public class OrganizationApplicationJpaEntity {
 
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     // 도메인 → JpaEntity 변환
     public static OrganizationApplicationJpaEntity fromDomain(OrganizationApplication domain) {
@@ -123,4 +112,46 @@ public class OrganizationApplicationJpaEntity {
         return entity;
     }
 
+    public OrganizationApplication toDomain() {
+        return OrganizationApplication.restore(
+                this.organizationApplicationId,
+                this.applicantUserId,
+                this.requestedLoginId,
+                this.businessLicenseFileId,
+                this.businessRegistrationNumber,
+                this.businessName,
+                this.representativeName,
+                this.representativePhone,
+                this.openingDate,
+                this.roadAddress,
+                this.jibunAddress,
+                this.detailAddress,
+                this.latitude,
+                this.longitude,
+                this.websiteUrl,
+                this.instagramUrl,
+                this.blogUrl,
+                this.facilityPhone,
+                this.status,
+                this.getCreatedAt(),
+                this.getUpdatedAt(),
+                this.rejectReason,
+                this.reviewedBy,
+                this.reviewedAt
+        );
+    }
+
+    // OrganizationApplicationJpaEntity에 추가
+    public void approve(Long reviewedBy, LocalDateTime reviewedAt) {
+        this.status = OrganizationApplicationStatus.ACCEPTED;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+    }
+
+    public void reject(Long reviewedBy, LocalDateTime reviewedAt, String rejectReason) {
+        this.status = OrganizationApplicationStatus.REJECTED;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+        this.rejectReason = rejectReason;
+    }
 }

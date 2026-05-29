@@ -1,8 +1,11 @@
 package com.ssambbong.gymjjak.user.domain.model;
 
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class User {
@@ -15,10 +18,11 @@ public class User {
     private String phone;
     private UserRole role;
     private UserStatus status;
-    private Instant lastLoginAt;
-    private final Instant createdAt;
-    private Instant updatedAt;
-    private Instant deletedAt;
+    private boolean onboardingCompleted;
+    private LocalDateTime  lastLoginAt;
+    private final LocalDateTime  createdAt;
+    private LocalDateTime  updatedAt;
+    private LocalDateTime  deletedAt;
 
     private User(
             Long id,
@@ -29,10 +33,11 @@ public class User {
             String phone,
             UserRole role,
             UserStatus status,
-            Instant lastLoginAt,
-            Instant createdAt,
-            Instant updatedAt,
-            Instant deletedAt
+            boolean onboardingCompleted,
+            LocalDateTime  lastLoginAt,
+            LocalDateTime  createdAt,
+            LocalDateTime  updatedAt,
+            LocalDateTime  deletedAt
     ) {
         this.id = id;
         this.username = validateRequired(username, "username");
@@ -42,9 +47,10 @@ public class User {
         this.phone = validateRequired(phone, "phone");
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.status = Objects.requireNonNull(status, "status는 필수입니다.");
+        this.onboardingCompleted = onboardingCompleted;
         this.lastLoginAt = lastLoginAt;
-        this.createdAt = Objects.requireNonNull(createdAt, "createdAt은 필수입니다.");
-        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.deletedAt = deletedAt;
     }
 
@@ -53,8 +59,7 @@ public class User {
             String encodedPassword,
             String name,
             String nickname,
-            String phone,
-            Instant createdAt
+            String phone
     ) {
         return new User(
                 null,
@@ -65,9 +70,10 @@ public class User {
                 phone,
                 UserRole.USER,
                 UserStatus.ACTIVE,
+                false,
                 null,
-                createdAt,
-                createdAt,
+                null,
+                null,
                 null
         );
     }
@@ -81,10 +87,11 @@ public class User {
             String phone,
             UserRole role,
             UserStatus status,
-            Instant lastLoginAt,
-            Instant createdAt,
-            Instant updatedAt,
-            Instant deletedAt
+            boolean onboardingCompleted,
+            LocalDateTime  lastLoginAt,
+            LocalDateTime  createdAt,
+            LocalDateTime  updatedAt,
+            LocalDateTime  deletedAt
     ) {
         return new User(
                 id,
@@ -95,6 +102,7 @@ public class User {
                 phone,
                 role,
                 status,
+                onboardingCompleted,
                 lastLoginAt,
                 createdAt,
                 updatedAt,
@@ -102,11 +110,19 @@ public class User {
         );
     }
 
+    public void completeOnboarding() {
+        if (this.onboardingCompleted) {
+            throw new UserException(UserErrorCode.ONBOARDING_ALREADY_COMPLETED);
+        }
+
+        this.onboardingCompleted = true;
+    }
+
     public void updateProfile(
             String name,
             String nickname,
             String phone,
-            Instant updatedAt
+            LocalDateTime  updatedAt
     ) {
         validateUsableUser();
 
@@ -116,27 +132,25 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    public void changePassword(String encodedPassword, Instant updatedAt) {
+    public void changePassword(String encodedPassword, LocalDateTime  updatedAt) {
         validateUsableUser();
 
         this.password = validateRequired(encodedPassword, "password");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
-    public void changeRole(UserRole role, Instant updatedAt) {
+    public void changeRole(UserRole role, LocalDateTime  updatedAt) {
         validateNotWithdrawn();
 
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
-    public void markLoggedIn(Instant lastLoginAt) {
-        validateLoginAllowed();
-
+    public void markLoggedIn(LocalDateTime  lastLoginAt) {
         this.lastLoginAt = Objects.requireNonNull(lastLoginAt, "lastLoginAt은 필수입니다.");
     }
 
-    public void suspendForSevenDays(Instant updatedAt) {
+    public void suspendForSevenDays(LocalDateTime  updatedAt) {
         validateNotWithdrawn();
 
         if (this.status == UserStatus.DAY_7) {
@@ -151,7 +165,7 @@ public class User {
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
-    public void suspendPermanently(Instant updatedAt) {
+    public void suspendPermanently(LocalDateTime  updatedAt) {
         validateNotWithdrawn();
 
         if (this.status == UserStatus.ETERNAL) {
@@ -162,14 +176,14 @@ public class User {
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
-    public void activate(Instant updatedAt) {
+    public void activate(LocalDateTime  updatedAt) {
         validateNotWithdrawn();
 
         this.status = UserStatus.ACTIVE;
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
-    public void withdraw(Instant deletedAt) {
+    public void withdraw(LocalDateTime  deletedAt) {
         if (isWithdrawn()) {
             throw new IllegalStateException("이미 탈퇴한 회원입니다.");
         }
@@ -180,6 +194,10 @@ public class User {
 
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE && !isWithdrawn();
+    }
+
+    public boolean isOnboardingCompleted() {
+        return onboardingCompleted;
     }
 
     public boolean isSevenDaysSuspended() {
@@ -260,19 +278,19 @@ public class User {
         return status;
     }
 
-    public Instant getCreatedAt() {
+    public LocalDateTime  getCreatedAt() {
         return createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public LocalDateTime  getUpdatedAt() {
         return updatedAt;
     }
 
-    public Instant getLastLoginAt() {
+    public LocalDateTime  getLastLoginAt() {
         return lastLoginAt;
     }
 
-    public Instant getDeletedAt() {
+    public LocalDateTime  getDeletedAt() {
         return deletedAt;
     }
 }

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import jakarta.persistence.*;
@@ -8,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -20,7 +22,7 @@ import java.time.Instant;
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserJpaEntity {
+public class UserJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,17 +52,11 @@ public class UserJpaEntity {
     @Column(name = "status", nullable = false, length = 30)
     private UserStatus status;
 
+    @Column(name = "onboarding_completed", nullable = false)
+    private boolean onboardingCompleted;
+
     @Column(name = "last_login_at", columnDefinition = "DATETIME(6)")
-    private Instant lastLoginAt;
-
-    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME(6)")
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
-    private Instant updatedAt;
-
-    @Column(name = "deleted_at", columnDefinition = "DATETIME(6)")
-    private Instant deletedAt;
+    private LocalDateTime  lastLoginAt;
 
     public UserJpaEntity(
             Long id,
@@ -71,10 +67,8 @@ public class UserJpaEntity {
             String phone,
             UserRole role,
             UserStatus status,
-            Instant lastLoginAt,
-            Instant createdAt,
-            Instant updatedAt,
-            Instant deletedAt
+            boolean onboardingCompleted,
+            LocalDateTime  lastLoginAt
     ) {
         this.id = id;
         this.username = username;
@@ -84,9 +78,15 @@ public class UserJpaEntity {
         this.phone = phone;
         this.role = role;
         this.status = status;
+        this.onboardingCompleted = onboardingCompleted;
         this.lastLoginAt = lastLoginAt;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.deletedAt = deletedAt;
+    }
+
+    public void updateLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
+    }
+
+    public void completeOnboarding() {
+        this.onboardingCompleted = true;
     }
 }
