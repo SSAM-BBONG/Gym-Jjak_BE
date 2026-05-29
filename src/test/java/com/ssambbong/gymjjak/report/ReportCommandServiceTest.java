@@ -2,7 +2,7 @@ package com.ssambbong.gymjjak.report;
 
 import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
 import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
-import com.ssambbong.gymjjak.report.application.service.ReportCommandService;
+import com.ssambbong.gymjjak.report.application.service.ReportGroupCommandService;
 import com.ssambbong.gymjjak.report.domain.model.*;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
@@ -34,7 +34,7 @@ public class ReportCommandServiceTest {
     private ReportGroupRepository reportGroupRepository;
 
     @InjectMocks
-    private ReportCommandService reportCommandService;
+    private ReportGroupCommandService reportCommandService;
 
     private ApproveReportCommand command;
 
