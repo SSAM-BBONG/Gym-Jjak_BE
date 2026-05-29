@@ -14,11 +14,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Category", description = "카테고리 관리 API")
 @RestController
-@RequestMapping("/api/admin/categories")
+@RequestMapping("/api/categories")
 @RequiredArgsConstructor
 public class CategoryController {
 
@@ -37,6 +38,7 @@ public class CategoryController {
     }
 
     // 카테고리 등록
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "카테고리 등록", description = "관리자가 카테고리를 등록한다.")
     @PostMapping
     public ResponseEntity<GlobalApiResponse<?>> createCategory(
@@ -47,6 +49,7 @@ public class CategoryController {
     }
 
     // 카테고리 수정
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "카테고리 수정", description = "관리자가 카테고리명을 수정한다.")
     @PatchMapping("/{categoryId}")
     public ResponseEntity<GlobalApiResponse<?>> updateCategory(
@@ -59,6 +62,7 @@ public class CategoryController {
     }
 
     // 카테고리 삭제
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "카테고리 삭제", description = "관리자가 카테고리를 삭제한다.")
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<GlobalApiResponse<?>> deleteCategory(@PathVariable Long categoryId) {
