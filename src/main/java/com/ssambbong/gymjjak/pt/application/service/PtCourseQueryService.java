@@ -27,7 +27,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     public List<PtCourseView> findAllPtCourses() {
         log.debug("[PTCourseList] 목록 조회 시작");
 
-        List<PtCourseView> result = ptCourseRepository.findAll()
+        List<PtCourseView> result = ptCourseRepository.findAllOrderByCreatedAtDesc()
                 .stream()
                 .filter(ptCourse -> ptCourse.getStatus() == PtCourseStatus.VISIBLE)
                 .map(this::toView)

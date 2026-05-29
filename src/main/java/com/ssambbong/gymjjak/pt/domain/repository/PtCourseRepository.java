@@ -14,5 +14,5 @@ public interface PtCourseRepository {
     Optional<PtCourse> findById(Long id);
 
     // 목록 조회
-    List<PtCourse> findAll();
+    List<PtCourse> findAllOrderByCreatedAtDesc();
 }

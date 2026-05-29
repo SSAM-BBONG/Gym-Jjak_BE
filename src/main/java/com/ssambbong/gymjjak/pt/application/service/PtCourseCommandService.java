@@ -36,7 +36,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         // 썸네일 파일 업로드
         Long thumbnailFileId = null;
         if (thumbnail != null && !thumbnail.isEmpty()) {
-            thumbnailFileId = fileUseCase.uploadFile(thumbnail, command.userId(), FileType.COURSE_THUMBNAIL);
+            thumbnailFileId = fileUseCase.uploadFile(thumbnail, command.userId(), FileType.PT_THUMBNAIL);
         }
 
         // 도메인 객체 생성
