@@ -2,9 +2,8 @@ package com.ssambbong.gymjjak.user.application.service;
 
 import com.ssambbong.gymjjak.user.application.command.LoginCommand;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
-import com.ssambbong.gymjjak.user.application.command.ReissueTokenCommand;
-import com.ssambbong.gymjjak.user.application.exception.UserErrorCode;
-import com.ssambbong.gymjjak.user.application.exception.UserException;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
@@ -16,8 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -107,7 +104,8 @@ public class UserCommandService implements UserCommandUseCase {
 
         return new LoginResult(
                 accessToken,
-                refreshToken
+                refreshToken,
+                user.isOnboardingCompleted()
         );
 
     }

@@ -1,8 +1,8 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.security.jwt.JwtTokenProvider;
-import com.ssambbong.gymjjak.user.application.exception.UserErrorCode;
-import com.ssambbong.gymjjak.user.application.exception.UserException;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import lombok.RequiredArgsConstructor;

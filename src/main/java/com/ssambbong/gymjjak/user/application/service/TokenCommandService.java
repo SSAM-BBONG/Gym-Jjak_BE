@@ -1,8 +1,8 @@
 package com.ssambbong.gymjjak.user.application.service;
 
 import com.ssambbong.gymjjak.user.application.command.ReissueTokenCommand;
-import com.ssambbong.gymjjak.user.application.exception.UserErrorCode;
-import com.ssambbong.gymjjak.user.application.exception.UserException;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.in.TokenCommandUsecase;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;

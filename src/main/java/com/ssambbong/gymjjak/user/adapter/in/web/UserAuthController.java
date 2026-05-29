@@ -65,7 +65,8 @@ public class UserAuthController {
                         UserResponseCode.USER_LOGIN_SUCCESS,
                         new LoginResponse(
                                 result.accessToken(),
-                                result.refreshToken()
+                                result.refreshToken(),
+                                result.onboardingCompleted()
                         )
                 ));
     }
