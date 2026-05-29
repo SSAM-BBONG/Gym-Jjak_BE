@@ -59,6 +59,8 @@ public class SecurityConfig {
                 // URL별 인증/인가 설정
                 .authorizeHttpRequests(auth -> auth
 
+                        .requestMatchers("/api/auth/logout").authenticated()
+
                         // 회원가입, 로그인, 토큰 재발급 등 인증 없이 접근 가능
                         .requestMatchers("/api/auth/**").permitAll()
 
