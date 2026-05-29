@@ -99,8 +99,7 @@ public class SecurityConfig {
                         .hasAnyAuthority("TRAINER")
 
 
-                        .requestMatchers("/api/reports/**")
-                        .hasAnyAuthority("ADMIN")
+                        .requestMatchers("/api/reports/**").authenticated()
 
                         // 일반 사용자 API
                         // 관리자가 사용자 API도 접근 가능해야 하면 ROLE_ADMIN 포함
