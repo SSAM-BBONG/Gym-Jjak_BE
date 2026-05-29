@@ -43,12 +43,8 @@ public class PtCourseController {
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
             ) {
 
-
-        // TODO: userId로 trainerProfileId, organizationId 조회 후 수정 예정
         CreatePtCourseCommand command = new CreatePtCourseCommand(
                 authUser.userId(),
-                1L,// organizationId - 임시
-                1L  ,                    // trainerProfileId - 임시
                 request.categoryId(),
                 request.tagId(),
                 request.title(),
