@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import jakarta.persistence.*;
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserJpaEntity {
+public class UserJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,15 +55,6 @@ public class UserJpaEntity {
     @Column(name = "last_login_at", columnDefinition = "DATETIME(6)")
     private LocalDateTime  lastLoginAt;
 
-    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME(6)")
-    private LocalDateTime  createdAt;
-
-    @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
-    private LocalDateTime  updatedAt;
-
-    @Column(name = "deleted_at", columnDefinition = "DATETIME(6)")
-    private LocalDateTime  deletedAt;
-
     public UserJpaEntity(
             Long id,
             String username,
@@ -72,10 +64,7 @@ public class UserJpaEntity {
             String phone,
             UserRole role,
             UserStatus status,
-            LocalDateTime  lastLoginAt,
-            LocalDateTime  createdAt,
-            LocalDateTime  updatedAt,
-            LocalDateTime deletedAt
+            LocalDateTime  lastLoginAt
     ) {
         this.id = id;
         this.username = username;
@@ -86,8 +75,9 @@ public class UserJpaEntity {
         this.role = role;
         this.status = status;
         this.lastLoginAt = lastLoginAt;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.deletedAt = deletedAt;
+    }
+
+    public void updateLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = lastLoginAt;
     }
 }

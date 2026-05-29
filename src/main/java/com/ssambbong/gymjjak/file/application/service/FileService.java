@@ -10,7 +10,9 @@ import com.ssambbong.gymjjak.file.domain.repository.FileRepository;
 import com.ssambbong.gymjjak.file.domain.repository.FileStoragePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -54,16 +56,27 @@ public class FileService implements FileUseCase {
     @Transactional(readOnly = true)
     public String getPresignedUrl(Long fileId) {
         File file = fileRepository.findById(fileId)
-                .orElseThrow(FileNotFoundException::new);
+                .orElseThrow(() -> new FileNotFoundException(fileId));
         return fileStoragePort.getPresignedUrl(file.getFileUrl());
     }
 
     @Override
     @Transactional
     public void deleteFile(Long fileId) {
-        fileRepository.findById(fileId)
+        boolean deleted = fileRepository.deleteById(fileId);
+        if (!deleted) {
+            throw new FileNotFoundException(fileId);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteFromStorage(Long fileId) {
+        // REQUIRED: 외부 트랜잭션에 합류해 1차 캐시에서 엔티티를 조회
+        // (REQUIRES_NEW 사용 시 외부 트랜잭션의 미커밋 데이터를 볼 수 없어 FileNotFoundException 발생)
+        File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new FileNotFoundException(fileId));
-        fileRepository.deleteById(fileId);
+        fileStoragePort.delete(file.getFileUrl());
     }
 
     // uploadFile, replaceFile 공통 로직
@@ -95,7 +108,7 @@ public class FileService implements FileUseCase {
         // 4. DB 저장 → 실패 시 S3 파일 롤백
         try {
             return fileRepository.save(file).getFileId();
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
             log.error("DB 저장 실패 → S3 파일 롤백 - key: {}", key);
             fileStoragePort.delete(key);
             throw new FileUploadException(e);

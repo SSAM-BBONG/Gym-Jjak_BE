@@ -5,7 +5,7 @@ import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.organization.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.application.service.OrganizationApplicationCommandService;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
-import com.ssambbong.gymjjak.organization.exception.DuplicateException;
+import com.ssambbong.gymjjak.organization.exception.DuplicateBusinessRegistrationNumberException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -93,7 +93,7 @@ class OrganizationApplicationCommandServiceTest {
 
         // when & then
         assertThatThrownBy(() -> organizationApplicationCommandService.createOrganizationApplication(businessLicenseFile, command))
-                .isInstanceOf(DuplicateException.class);
+                .isInstanceOf(DuplicateBusinessRegistrationNumberException.class);
 
         verify(fileUseCase, never()).uploadFile(any(), any(), any());
         verify(organizationApplicationRepository, never()).save(any());

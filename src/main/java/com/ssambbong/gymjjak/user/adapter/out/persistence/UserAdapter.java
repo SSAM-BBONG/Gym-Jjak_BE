@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.user.application.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.application.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +60,12 @@ public class UserAdapter implements UserPort {
     }
 
     @Override
+    public Optional<User> findById(Long userId) {
+        return springDataUserRepository.findById(userId)
+                .map(userPersistenceMapper::toDomain);
+    }
+
+    @Override
     public boolean matchesPassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
@@ -73,6 +81,14 @@ public class UserAdapter implements UserPort {
     }
 
     @Override
+    public void updateLastLoginAt(Long userId, LocalDateTime lastLoginAt) {
+        UserJpaEntity userJpaEntity = springDataUserRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.LOGIN_FAILED));
+
+        userJpaEntity.updateLastLoginAt(lastLoginAt);
+    }
+
+    @Override
     public void saveOrUpdateRefreshToken(Long userId, String refreshToken) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -83,5 +99,22 @@ public class UserAdapter implements UserPort {
                                 RefreshTokenJpaEntity.create(userId, refreshToken, now)
                         )
                 );
+    }
+
+
+    @Override
+    public boolean validateToken(String token) {
+        return jwtTokenProvider.validateToken(token);
+    }
+
+    @Override
+    public Long getUserId(String token) {
+        return jwtTokenProvider.getUserId(token);
+    }
+
+    @Override
+    public Optional<String> findRefreshTokenByUserId(Long userId) {
+        return springDataRefreshTokenRepository.findByUserId(userId)
+                .map(RefreshTokenJpaEntity::getRefreshToken);
     }
 }

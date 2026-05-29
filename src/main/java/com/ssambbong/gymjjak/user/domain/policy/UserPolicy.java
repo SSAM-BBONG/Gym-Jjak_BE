@@ -37,6 +37,12 @@ public class UserPolicy {
         }
     }
 
+    public void validatePasswordPolicy(String password) {
+        if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,16}$")) {
+            throw new UserException(UserErrorCode.INVALID_PASSWORD);
+        }
+    }
+
     public void validateLoginAllowed(User user) {
         if (user.getStatus() != UserStatus.ACTIVE) {
             log.warn("[UserLoginFailed] reason=restricted_status, userId={}, username={}, status={}",

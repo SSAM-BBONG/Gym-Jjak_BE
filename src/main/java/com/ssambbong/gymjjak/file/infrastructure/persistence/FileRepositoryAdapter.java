@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.file.domain.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Component
@@ -27,11 +28,8 @@ public class FileRepositoryAdapter implements FileRepository {
     }
 
     @Override
-    public void deleteById(Long fileId) {
-        springDataFileRepository.findById(fileId)
-                .ifPresent(entity -> {
-                    entity.delete();
-                    springDataFileRepository.save(entity);
-                });
+    public boolean deleteById(Long fileId) {
+        int deleted = springDataFileRepository.softDeleteById(fileId, LocalDateTime.now());
+        return deleted > 0;
     }
 }
