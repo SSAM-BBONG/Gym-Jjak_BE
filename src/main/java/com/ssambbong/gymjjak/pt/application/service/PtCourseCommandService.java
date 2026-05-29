@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
+import com.ssambbong.gymjjak.pt.domain.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.domain.repository.PtCourseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +21,17 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
     private final PtCourseRepository ptCourseRepository;
     private final FileUseCase fileUseCase;
+    private final TrainerProfileQueryPort trainerProfileQueryPort;
 
     @Override
     public Long createPtCourse(MultipartFile thumbnail, CreatePtCourseCommand command) {
 
         log.debug("[PtCourseCreate] categoryId={}, tagId={}, price={}, totalSessionCount={}",
                 command.categoryId(), command.tagId(), command.price(), command.totalSessionCount());
+
+        // userId로 trainerProfileId, organizationId 조회
+        TrainerProfileQueryPort.TrainerInfo trainerInfo =
+                trainerProfileQueryPort.findByUserId(command.userId());
 
         // 썸네일 파일 업로드
         Long thumbnailFileId = null;
@@ -35,8 +41,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         // 도메인 객체 생성
         PtCourse ptCourse = PtCourse.create(
-                command.organizationId(),
-                command.trainerProfileId(),
+                trainerInfo.organizationId(),
+                trainerInfo.trainerProfileId(),
                 command.categoryId(),
                 command.tagId(),
                 thumbnailFileId,
@@ -45,6 +51,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 command.price(),
                 command.totalSessionCount()
         );
+
         // 저장 후 id 반환
         PtCourse saved = ptCourseRepository.save(ptCourse);
         log.info("[PtCourseCreate] ptCourseId={}", saved.getId());

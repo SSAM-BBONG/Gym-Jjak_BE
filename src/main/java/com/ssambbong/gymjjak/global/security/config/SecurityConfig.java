@@ -77,13 +77,10 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/onboarding/**")
                         .hasAnyAuthority("USER", "ADMIN")
-
-
+                        
                         // 신고 관리
                         .requestMatchers("/api/reportgroup/**")
                         .hasAnyAuthority("ADMIN")
-                        // 임시 설정
-//                        .permitAll()
 
                         // 카테고리 API
                         .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")

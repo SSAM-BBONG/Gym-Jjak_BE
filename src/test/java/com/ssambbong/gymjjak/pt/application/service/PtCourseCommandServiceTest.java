@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
+import com.ssambbong.gymjjak.pt.domain.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.domain.repository.PtCourseRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ public class PtCourseCommandServiceTest {
     @Mock
     private FileUseCase fileUseCase;
 
+    @Mock
+    private TrainerProfileQueryPort trainerProfileQueryPort;
+
     @InjectMocks
     private PtCourseCommandService ptCourseCommandService;
 
@@ -38,8 +42,6 @@ public class PtCourseCommandServiceTest {
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
                 1L,                                     // userId
-                1L,                                     // organizationId
-                1L,                                     // trainerProfileId
                 1L,                                     // categoryId
                 1L,                                     // tagId
                 "체계적인 가슴 집중 PT",                 // title
@@ -47,6 +49,10 @@ public class PtCourseCommandServiceTest {
                 50000,                                  // price
                 12                                      // totalSessionCount
         );
+
+        // TrainerInfo Mock 설정
+        when(trainerProfileQueryPort.findByUserId(1L))
+                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         PtCourse savedPtCourse = PtCourse.restore(
                 1L, 1L, 1L, 1L, 1L, null,
@@ -75,11 +81,15 @@ public class PtCourseCommandServiceTest {
         when(thumbnail.isEmpty()).thenReturn(false);
 
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, 1L, 1L,
+                1L, 1L, 1L,
                 "체계적인 가슴 집중 PT",
                 "가슴 근육 발달에 특화된 12주 프로그램",
                 50000, 12
         );
+
+        // TrainerInfo Mock 설정
+        when(trainerProfileQueryPort.findByUserId(1L))
+                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         when(fileUseCase.uploadFile(thumbnail, 1L, FileType.COURSE_THUMBNAIL)).thenReturn(99L);
 
@@ -107,10 +117,14 @@ public class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, 1L, 1L,
+                1L, 1L, 1L,
                 "",
                 "설명", 5000, 12
         );
+
+        // TrainerInfo Mock 설정
+        when(trainerProfileQueryPort.findByUserId(1L))
+                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
@@ -125,10 +139,14 @@ public class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, 1L, 1L,
+                1L, 1L, 1L,
                 "PT 강습 제목", "설명",
                 -1, 12
         );
+
+        // TrainerInfo Mock 설정
+        when(trainerProfileQueryPort.findByUserId(1L))
+                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
@@ -143,10 +161,14 @@ public class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, 1L, 1L,
+                1L, 1L, 1L,
                 "PT 강습 제목", "설명",
                 50000, 0
         );
+
+        // TrainerInfo Mock 설정
+        when(trainerProfileQueryPort.findByUserId(1L))
+                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
