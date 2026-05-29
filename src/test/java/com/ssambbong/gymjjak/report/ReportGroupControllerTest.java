@@ -58,7 +58,7 @@ public class ReportGroupControllerTest {
             "트레이너 현자",
             LocalDateTime.of(2026, 5,28,17,10),
             3,
-            ReportGroupStatus.PENDING,
+            ReportGroupReviewStatus.PENDING,
             ReportNavigationType.PAGE
     );
 
@@ -128,10 +128,10 @@ public class ReportGroupControllerTest {
         );
         AdminReportDetailResult detailResult = new AdminReportDetailResult(
                 1L,
-                ReportGroupStatus.PENDING,
+                ReportGroupReviewStatus.PENDING,
                 List.of(report1, report2)
         );
-        BDDMockito.given(reportQueryUseCase.findReportDetail(999L))
+        BDDMockito.given(reportQueryUseCase.findReportDetail(1L))
                         .willReturn(detailResult);
 
         // when & then
@@ -169,7 +169,7 @@ public class ReportGroupControllerTest {
         );
         AdminReportDetailResult detailResult = new AdminReportDetailResult(
                 1L,
-                ReportGroupStatus.PENDING,
+                ReportGroupReviewStatus.PENDING,
                 List.of(report1, report2)
         );
         BDDMockito.given(reportQueryUseCase.findReportDetail(999L))
