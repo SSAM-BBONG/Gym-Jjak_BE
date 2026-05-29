@@ -72,6 +72,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/token/validate").authenticated()
 
+                        .requestMatchers("/api/onboarding/**")
+                        .hasAnyAuthority("USER", "ADMIN")
 
 
                         // 신고 관리
@@ -79,9 +81,6 @@ public class SecurityConfig {
                         .hasAnyAuthority("ADMIN")
                         // 임시 설정
 //                        .permitAll()
-
-                        .requestMatchers("/api/{reportGroupId}/**")
-                        .hasAnyAuthority("ADMIN")
 
                         .requestMatchers("/api/reports/**")
                         .hasAnyAuthority("ADMIN")
