@@ -101,7 +101,7 @@ public class ReportGroupController {
                 reportGroupId, reportId, authUser.userId()
         ));
 
-        return ResponseEntity.status(HttpStatus.OK).body(
+        return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         ReportResponseCode.APPROVE_REPORT_SUCCESS,
                         null
@@ -124,7 +124,7 @@ public class ReportGroupController {
                 reportGroupId, reportId, authUser.userId()
         ));
 
-        return ResponseEntity.status(HttpStatus.OK).body(
+        return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         ReportResponseCode.REJECT_REPORT_SUCCESS,
                         null

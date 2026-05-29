@@ -13,5 +13,6 @@ public interface ReportRepository {
 
     List<Report> findAllByReportGroupId(Long reportGroupId);
 
-    boolean existsByReportIdAndReportGroupId(Long reportId, Long reportGroupId);
+    // 중복 신고 검증
+    boolean existsByReporterIdAndReportGroupId(Long reporterId, Long reportGroupId);
 }

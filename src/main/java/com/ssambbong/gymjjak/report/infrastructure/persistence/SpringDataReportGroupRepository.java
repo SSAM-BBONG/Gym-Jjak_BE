@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface SpringDataReportGroupRepository extends JpaRepository<ReportGroupJpaEntity, Long> {
 
@@ -17,4 +18,9 @@ public interface SpringDataReportGroupRepository extends JpaRepository<ReportGro
             Pageable pageable
     );
 
+    // 타겟 타입, 타겟 번호로 신고 그룹 조회
+    Optional<ReportGroupJpaEntity> findByTargetTypeAndTargetId(ReportTargetType targetType, Long targetId);
+
+    // 신고 번호 존재 여부 확인
+    boolean existsByReportNumber(String reportNumber);
 }
