@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.user.domain.model;
 
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
@@ -16,6 +18,7 @@ public class User {
     private String phone;
     private UserRole role;
     private UserStatus status;
+    private boolean onboardingCompleted;
     private LocalDateTime  lastLoginAt;
     private final LocalDateTime  createdAt;
     private LocalDateTime  updatedAt;
@@ -30,6 +33,7 @@ public class User {
             String phone,
             UserRole role,
             UserStatus status,
+            boolean onboardingCompleted,
             LocalDateTime  lastLoginAt,
             LocalDateTime  createdAt,
             LocalDateTime  updatedAt,
@@ -43,6 +47,7 @@ public class User {
         this.phone = validateRequired(phone, "phone");
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.status = Objects.requireNonNull(status, "status는 필수입니다.");
+        this.onboardingCompleted = onboardingCompleted;
         this.lastLoginAt = lastLoginAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -65,6 +70,7 @@ public class User {
                 phone,
                 UserRole.USER,
                 UserStatus.ACTIVE,
+                false,
                 null,
                 null,
                 null,
@@ -81,6 +87,7 @@ public class User {
             String phone,
             UserRole role,
             UserStatus status,
+            boolean onboardingCompleted,
             LocalDateTime  lastLoginAt,
             LocalDateTime  createdAt,
             LocalDateTime  updatedAt,
@@ -95,11 +102,20 @@ public class User {
                 phone,
                 role,
                 status,
+                onboardingCompleted,
                 lastLoginAt,
                 createdAt,
                 updatedAt,
                 deletedAt
         );
+    }
+
+    public void completeOnboarding() {
+        if (this.onboardingCompleted) {
+            throw new UserException(UserErrorCode.ONBOARDING_ALREADY_COMPLETED);
+        }
+
+        this.onboardingCompleted = true;
     }
 
     public void updateProfile(
@@ -178,6 +194,10 @@ public class User {
 
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE && !isWithdrawn();
+    }
+
+    public boolean isOnboardingCompleted() {
+        return onboardingCompleted;
     }
 
     public boolean isSevenDaysSuspended() {

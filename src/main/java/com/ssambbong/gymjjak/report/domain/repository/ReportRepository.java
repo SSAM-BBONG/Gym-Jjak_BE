@@ -12,4 +12,7 @@ public interface ReportRepository {
     Report save(Report report);
 
     List<Report> findAllByReportGroupId(Long reportGroupId);
+
+    // 중복 신고 검증
+    boolean existsByReporterIdAndReportGroupId(Long reporterId, Long reportGroupId);
 }

@@ -133,10 +133,25 @@ public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
                 this.blogUrl,
                 this.facilityPhone,
                 this.status,
-                this.rejectReason,
                 this.getCreatedAt(),
-                this.getUpdatedAt()
+                this.getUpdatedAt(),
+                this.rejectReason,
+                this.reviewedBy,
+                this.reviewedAt
         );
     }
 
+    // OrganizationApplicationJpaEntity에 추가
+    public void approve(Long reviewedBy, LocalDateTime reviewedAt) {
+        this.status = OrganizationApplicationStatus.ACCEPTED;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+    }
+
+    public void reject(Long reviewedBy, LocalDateTime reviewedAt, String rejectReason) {
+        this.status = OrganizationApplicationStatus.REJECTED;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+        this.rejectReason = rejectReason;
+    }
 }

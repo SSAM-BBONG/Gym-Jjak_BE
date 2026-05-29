@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.organization.infrastructure.persistence;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
+import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -63,5 +64,25 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
         return springDataOrganizationApplicationRepository.findAllByStatus(status).stream()
                 .map(OrganizationApplicationJpaEntity::toDomain)
                 .toList();
+    }
+
+    @Override
+    public void approve(OrganizationApplication organizationApplication) {
+
+        OrganizationApplicationJpaEntity entity = springDataOrganizationApplicationRepository
+                .findById(organizationApplication.getOrganizationApplicationId())
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        entity.approve(organizationApplication.getReviewedBy(), organizationApplication.getReviewedAt());
+    }
+
+    @Override
+    public void reject(OrganizationApplication organizationApplication) {
+
+        OrganizationApplicationJpaEntity entity = springDataOrganizationApplicationRepository
+                .findById(organizationApplication.getOrganizationApplicationId())
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        entity.reject(organizationApplication.getReviewedBy(), organizationApplication.getReviewedAt(), organizationApplication.getRejectReason());
     }
 }

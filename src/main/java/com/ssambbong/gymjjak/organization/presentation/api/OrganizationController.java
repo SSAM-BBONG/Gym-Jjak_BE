@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplic
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.presentation.api.request.OrganizationApplicationCreateRequest;
 import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.organization.presentation.api.request.RejectOrganizationApplicationRequest;
 import com.ssambbong.gymjjak.organization.presentation.api.response.FindAllOrganizationApplicationsResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.FindMyOrganizationApplicationResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.FindOrganizationApplicationDetailsResponse;
@@ -17,13 +18,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,7 +49,7 @@ public class OrganizationController {
             @ApiResponse(responseCode = "409", description = "이미 등록된 사업자등록번호",
                     content = @Content(schema = @Schema()))
     })
-    @RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
             encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)))
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public GlobalApiResponse<OrganizationApplicationCreateResponse> createOrganizationApplication(
@@ -188,4 +190,47 @@ public class OrganizationController {
         );
     }
 
+    @Operation(summary = "조직 신청 승인", description = "관리자가 조직 신청을 승인합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "승인 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "신청 내역 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{applicationId}/approve")
+    public GlobalApiResponse<Void> approveOrganizationApplication(
+            @PathVariable Long applicationId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+
+        organizationApplicationCommandUsecase.approveOrganizationApplication(applicationId, authUser.userId());
+
+        return GlobalApiResponse
+                .ok(OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_APPROVED, null);
+    }
+
+    @Operation(summary = "조직 신청 반려", description = "관리자가 조직 신청을 반려합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "반려 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "신청 내역 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{applicationId}/reject")
+    public GlobalApiResponse<Void> rejectOrganizationApplication(
+            @PathVariable Long applicationId,
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody @Valid RejectOrganizationApplicationRequest request
+    ) {
+        organizationApplicationCommandUsecase.rejectOrganizationApplication(
+                applicationId, authUser.userId(), request.rejectReason());
+        return GlobalApiResponse.ok(
+                OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_REJECTED, null);
+    }
 }

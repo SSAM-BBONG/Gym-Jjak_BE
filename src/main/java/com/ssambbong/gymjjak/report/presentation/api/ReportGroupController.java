@@ -7,8 +7,8 @@ import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
 import com.ssambbong.gymjjak.report.application.query.AdminReportDetailResult;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
-import com.ssambbong.gymjjak.report.application.usecase.ReportCommandUseCase;
-import com.ssambbong.gymjjak.report.application.usecase.ReportQueryUseCase;
+import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCase;
+import com.ssambbong.gymjjak.report.application.usecase.ReportGroupQueryUseCase;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportDetailResponse;
 import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportListResponse;
@@ -25,11 +25,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "report / Report_Group", description = "관리자 신고그룹 관리 REST-API")
+@Tag(name = "Report_Group", description = "관리자 신고그룹 관리 REST-API")
 @RestController
 @RequestMapping("/api/reportgroup")
 @RequiredArgsConstructor
@@ -37,11 +36,11 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class ReportGroupController {
 
-    private final ReportCommandUseCase reportCommandUseCase;
+    private final ReportGroupCommandUseCase reportGroupCommandUseCase;
 
-    private final ReportQueryUseCase reportQueryUseCase;
+    private final ReportGroupQueryUseCase reportGroupQueryUseCase;
 
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "타입별 신고 그룹을 조회", description = "관리자가 targetType 기준으로 신고 그룹 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 목록 조회 성공"),
@@ -56,7 +55,7 @@ public class ReportGroupController {
     ) {
         AdminReportListQuery query = new AdminReportListQuery(targetType, page, size);
 
-        AdminReportListResult result = reportQueryUseCase.findReportGroups(query);
+        AdminReportListResult result = reportGroupQueryUseCase.findReportGroups(query);
 
         AdminReportListResponse response = AdminReportListResponse.from(result);
 
@@ -68,7 +67,7 @@ public class ReportGroupController {
         );
     }
 
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "신고 사유 상세 조회", description = "관리자가 특정 신고 그룹의 신고 사유 상세 내역을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 사유 상세 조회 성공"),
@@ -77,7 +76,7 @@ public class ReportGroupController {
     @GetMapping("/detail/{reportGroupId}")
     public ResponseEntity<GlobalApiResponse<AdminReportDetailResponse>> findReportDetails(@PathVariable Long reportGroupId) {
 
-        AdminReportDetailResult result = reportQueryUseCase.findReportDetail(reportGroupId);
+        AdminReportDetailResult result = reportGroupQueryUseCase.findReportDetail(reportGroupId);
 
         AdminReportDetailResponse response = AdminReportDetailResponse.from(result);
 
@@ -88,7 +87,7 @@ public class ReportGroupController {
                 )
         );
     }
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "신고 승인 처리", description = "관리자가 특정 신고를 승인한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 승인 처리 성공"),
@@ -99,11 +98,11 @@ public class ReportGroupController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long reportGroupId, @PathVariable Long reportId) {
 
-        reportCommandUseCase.approveReport(new ApproveReportCommand(
+        reportGroupCommandUseCase.approveReport(new ApproveReportCommand(
                 reportGroupId, reportId, authUser.userId()
         ));
 
-        return ResponseEntity.status(HttpStatus.OK).body(
+        return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         ReportResponseCode.APPROVE_REPORT_SUCCESS,
                         null
@@ -111,7 +110,7 @@ public class ReportGroupController {
         );
     }
 
-    //    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "신고 반려 처리", description = "관리자가 특정 신고를 반려한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 반려 처리 성공"),
@@ -122,11 +121,11 @@ public class ReportGroupController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long reportGroupId, @PathVariable Long reportId) {
 
-        reportCommandUseCase.rejectReport(new RejectReportCommand(
+        reportGroupCommandUseCase.rejectReport(new RejectReportCommand(
                 reportGroupId, reportId, authUser.userId()
         ));
 
-        return ResponseEntity.status(HttpStatus.OK).body(
+        return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         ReportResponseCode.REJECT_REPORT_SUCCESS,
                         null

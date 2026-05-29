@@ -1,11 +1,13 @@
 package com.ssambbong.gymjjak.user.adapter.in.web;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
+import com.ssambbong.gymjjak.global.security.principal.AuthUser;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.LoginRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.ReissueTokenRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.LoginResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.ReissueTokenResponse;
 import com.ssambbong.gymjjak.user.application.command.LoginCommand;
+import com.ssambbong.gymjjak.user.application.command.LogoutCommand;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
 import com.ssambbong.gymjjak.user.application.command.ReissueTokenCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
@@ -18,6 +20,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,25 +69,22 @@ public class UserAuthController {
                         UserResponseCode.USER_LOGIN_SUCCESS,
                         new LoginResponse(
                                 result.accessToken(),
-                                result.refreshToken()
+                                result.refreshToken(),
+                                result.onboardingCompleted()
                         )
                 ));
     }
 
-    @PostMapping("/token/reissue")
-    @Operation(summary = "AccessToken 재발급", description = "RefreshToken을 검증한 뒤 새로운 AccessToken을 발급한다.")
-    public ResponseEntity<GlobalApiResponse<ReissueTokenResponse>> reissueAccessToken(
-            @Valid @RequestBody ReissueTokenRequest request
-    ) {
-        String accessToken = userCommandUseCase.reissueAccessToken(
-                new ReissueTokenCommand(request.refreshToken())
-        );
+    @PostMapping("/logout")
+    public ResponseEntity<GlobalApiResponse<Void>> logout( @AuthenticationPrincipal AuthUser authUser) {
 
-        return ResponseEntity.ok(
-                GlobalApiResponse.ok(
-                        UserResponseCode.ACCESS_TOKEN_REISSUED,
-                        new ReissueTokenResponse(accessToken)
-                )
-        );
+        userCommandUseCase.logout(new LogoutCommand(authUser.userId()));
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(GlobalApiResponse.ok(
+                        UserResponseCode.USER_LOGOUT_SUCCESS
+                ));
+
     }
+
 }

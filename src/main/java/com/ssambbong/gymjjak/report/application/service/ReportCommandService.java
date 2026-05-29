@@ -1,12 +1,14 @@
 package com.ssambbong.gymjjak.report.application.service;
 
-import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
-import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
+import com.ssambbong.gymjjak.report.application.policy.ReportNumberGenerator;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionTargetPort;
+import com.ssambbong.gymjjak.report.application.port.ReportTargetQueryPort;
+import com.ssambbong.gymjjak.report.application.port.ReportTargetSnapshot;
+import com.ssambbong.gymjjak.report.application.usecase.CreateReportCommand;
 import com.ssambbong.gymjjak.report.application.usecase.ReportCommandUseCase;
-import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
-import com.ssambbong.gymjjak.report.domain.exception.ReportNotFoundException;
+import com.ssambbong.gymjjak.report.domain.exception.DuplicateReportException;
+import com.ssambbong.gymjjak.report.domain.exception.SelfReportNotAllowedException;
 import com.ssambbong.gymjjak.report.domain.model.Report;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
@@ -18,78 +20,148 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional
-@Slf4j
 public class ReportCommandService implements ReportCommandUseCase {
 
     private final ReportRepository reportRepository;
     private final ReportGroupRepository reportGroupRepository;
-    private final ReportSanctionTargetPort  reportSanctionTargetPort;
+    private final ReportTargetQueryPort reportTargetQueryPort;
+    private final ReportSanctionTargetPort reportSanctionTargetPort;
+    private final ReportNumberGenerator reportNumberGenerator;
 
     @Override
-    public void approveReport(ApproveReportCommand command) {
-        Report report = getReport(command.reportId());
+    public void createReport(CreateReportCommand command) {
 
-        report.validateReportGroupId(command.reportGroupId());
+        log.info("[ReportCommandService] 신고 생성 시작!");
+        // 신고 스냅샷 저장
+        // 신고 대상 존재 여부 검증
+        ReportTargetSnapshot snapshot = getTargetSnapshot(command);
 
-        report.approve(command.adminId(), LocalDateTime.now());
+        // 본인 신고 방지
+        validateNotSelfReport(command.reporterId(), snapshot.targetOwnerId());
+
+        // 기존에 생성된 신고그룹 존재 여부 검증
+        Optional<ReportGroup> reportGroupOptional =
+                reportGroupRepository.findByTargetTypeAndTargetId(
+                        command.targetType(),
+                        command.targetId()
+                );
+
+        ReportGroup reportGroup;
+        ReportGroupSanctionStatus previousSanctionStatus;
+
+        // 이미 존재
+        if (reportGroupOptional.isPresent()) {
+            reportGroup = reportGroupOptional.get();
+
+            // 중복 신고 검증
+            validateDuplicateReport(command.reporterId(), reportGroup.getReportGroupId());
+
+            // 현재 제재 상태 저장
+            previousSanctionStatus = reportGroup.getSanctionStatus();
+
+            // 누적 신고 수, 유효 신고 수 증가
+            // 검토 상태 Pending 상태로 변경
+            reportGroup.registerNewReport();
+
+            // 검토 상태 재계산
+            reportGroup.syncAutoSanctionStatus();
+        } else {
+            // 새로운 신고 그룹 생성
+            reportGroup = createNewReportGroup(command, snapshot);
+            // 새로운 그룹 검토 상태 NONE으로
+            previousSanctionStatus = ReportGroupSanctionStatus.NONE;
+            // 자동 제재 대상인지 검증
+            reportGroup.syncAutoSanctionStatus();
+        }
+
+        // 저장된 신고 그룹 id 가져오기
+        ReportGroup savedReportGroup = reportGroupRepository.save(reportGroup);
+
+        // 저장된 신고그룹 ID를 사용해 실제 개별 신고를 생성한다.
+        Report report = createNewReport(command, savedReportGroup.getReportGroupId());
+
+        // 신고 저장
         reportRepository.save(report);
 
-        ReportGroup reportGroup = getReportGroup(command.reportGroupId());
-        List<Report> reports = reportRepository.findAllByReportGroupId(command.reportGroupId());
+        applyAutoBlindIfNeeded(previousSanctionStatus, savedReportGroup);
 
 
-        reportGroup.recalculateReviewStatus(reports);
-        reportGroup.syncAutoSanctionStatus();
-        reportGroup.markProcessedBy(command.adminId());
-
-        reportGroupRepository.save(reportGroup);
     }
 
-    @Override
-    public void rejectReport(RejectReportCommand command) {
-        Report report = getReport(command.reportId());
+    private ReportTargetSnapshot getTargetSnapshot(CreateReportCommand command) {
+        return reportTargetQueryPort.getSnapshot(
+                command.targetType(),
+                command.targetId()
+        );
+    }
 
-        report.validateReportGroupId(command.reportGroupId());
+    // 본인 신고 방지
+    private void validateNotSelfReport(Long reporterId, Long targetOwnerId) {
+        if (reporterId.equals(targetOwnerId)) {
+            throw new SelfReportNotAllowedException(reporterId);
+        }
+    }
 
-        report.reject(command.adminId(), LocalDateTime.now());
-        reportRepository.save(report);
+    // 중복 신고 검증
+    private void validateDuplicateReport(Long reporterId, Long reportGroupId) {
+        boolean exists = reportRepository.existsByReporterIdAndReportGroupId(reporterId, reportGroupId);
 
-        ReportGroup reportGroup = getReportGroup(command.reportGroupId());
+        if (exists) {
+            throw new DuplicateReportException(reporterId, reportGroupId);
+        }
+    }
 
-        ReportGroupSanctionStatus previousSanctionStatus = reportGroup.getSanctionStatus();
+    private ReportGroup createNewReportGroup(
+            CreateReportCommand command,
+            ReportTargetSnapshot snapshot
+    ) {
+        return ReportGroup.create(
+                generateUniqueReportNumber(),
+                command.targetType(),
+                command.targetId(),
+                snapshot.targetOwnerId(),
+                snapshot.title(),
+                snapshot.content(),
+                snapshot.fileUrl(),
+                LocalDateTime.now()
+        );
+    }
 
-        reportGroup.decreaseEffectiveReportCount();
+    private Report createNewReport(CreateReportCommand command, Long reportGroupId) {
+        return Report.create(
+                reportGroupId,
+                command.reporterId(),
+                command.reason(),
+                command.detail(),
+                LocalDateTime.now()
+        );
+    }
 
-        List<Report> reports = reportRepository.findAllByReportGroupId(command.reportGroupId());
-
-        reportGroup.recalculateReviewStatus(reports);
-        reportGroup.syncAutoSanctionStatus();
-        reportGroup.markProcessedBy(command.adminId());
-
-        reportGroupRepository.save(reportGroup);
-
-        if (previousSanctionStatus == ReportGroupSanctionStatus.AUTO_BLINDED
-                && reportGroup.getSanctionStatus() == ReportGroupSanctionStatus.NONE) {
+    private void applyAutoBlindIfNeeded(
+            ReportGroupSanctionStatus previousSanctionStatus,
+            ReportGroup reportGroup
+    ) {
+        if (previousSanctionStatus == ReportGroupSanctionStatus.NONE
+                && reportGroup.getSanctionStatus() == ReportGroupSanctionStatus.AUTO_BLINDED) {
             reportSanctionTargetPort.changeAutoBlind(
                     reportGroup.getTargetType(),
                     reportGroup.getTargetId(),
-                    ReportSanctionAction.RELEASE_AUTO_BLIND
+                    ReportSanctionAction.APPLY_AUTO_BLIND
             );
         }
     }
 
-    private Report getReport(Long reportId) {
-        return reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportNotFoundException(reportId));
-    }
-
-    private ReportGroup getReportGroup(Long reportGroupId) {
-        return reportGroupRepository.findById(reportGroupId)
-                .orElseThrow(() -> new ReportGroupNotFoundException(reportGroupId));
+    private String generateUniqueReportNumber() {
+        String reportNumber;
+        do {
+            reportNumber = reportNumberGenerator.generate();
+        } while (reportGroupRepository.existsByReportNumber(reportNumber));
+        return reportNumber;
     }
 }

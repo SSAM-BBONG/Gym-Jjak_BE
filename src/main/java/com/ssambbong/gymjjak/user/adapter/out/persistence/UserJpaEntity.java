@@ -52,6 +52,9 @@ public class UserJpaEntity extends BaseTimeEntity {
     @Column(name = "status", nullable = false, length = 30)
     private UserStatus status;
 
+    @Column(name = "onboarding_completed", nullable = false)
+    private boolean onboardingCompleted;
+
     @Column(name = "last_login_at", columnDefinition = "DATETIME(6)")
     private LocalDateTime  lastLoginAt;
 
@@ -64,6 +67,7 @@ public class UserJpaEntity extends BaseTimeEntity {
             String phone,
             UserRole role,
             UserStatus status,
+            boolean onboardingCompleted,
             LocalDateTime  lastLoginAt
     ) {
         this.id = id;
@@ -74,10 +78,15 @@ public class UserJpaEntity extends BaseTimeEntity {
         this.phone = phone;
         this.role = role;
         this.status = status;
+        this.onboardingCompleted = onboardingCompleted;
         this.lastLoginAt = lastLoginAt;
     }
 
     public void updateLastLoginAt(LocalDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
+    }
+
+    public void completeOnboarding() {
+        this.onboardingCompleted = true;
     }
 }

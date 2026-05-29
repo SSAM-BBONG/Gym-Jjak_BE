@@ -111,6 +111,19 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
         );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ReportGroup> findByTargetTypeAndTargetId(ReportTargetType targetType, Long targetId) {
+        return reportGroupRepository.findByTargetTypeAndTargetId(targetType, targetId)
+                .map(reportGroupPersistenceMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByReportNumber(String reportNumber) {
+        return reportGroupRepository.existsByReportNumber(reportNumber);
+    }
+
     private AdminReportReasonItem toAdminReportReasonItem(ReportJpaEntity entity) {
 
         String reporterUsername = userQueryPort.findUserProfile(entity.getReporterId())

@@ -19,4 +19,8 @@ public interface OrganizationApplicationRepository {
     Optional<OrganizationApplication> findById(Long organizationApplicationId);
 
     List<OrganizationApplication> findAllByStatus(OrganizationApplicationStatus status);
+
+    void approve(OrganizationApplication organizationApplication);
+
+    void reject(OrganizationApplication organizationApplication);
 }
