@@ -5,12 +5,16 @@ import com.ssambbong.gymjjak.pt.domain.repository.PtCourseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class PtCourseRepositoryAdapter implements PtCourseRepository {
 
     private final SpringDataPtCourseRepository repository;
 
+    // pt 등록
     @Override
     public PtCourse save(PtCourse ptCourse) {
         PtCourseJpaEntity entity = new PtCourseJpaEntity(
@@ -28,6 +32,22 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
                 ptCourse.getStatus()
         );
         return toDomain(repository.save(entity));
+    }
+
+    // pt 상세 조회
+    @Override
+    public Optional<PtCourse> findById(Long id) {
+        return repository.findById(id)
+                .map(entity -> toDomain(entity));
+    }
+
+    // pt 목록 조회
+    @Override
+    public List<PtCourse> findAll() {
+        return repository.findAll()
+                .stream()
+                .map(entity -> toDomain(entity))
+                .toList();
     }
 
     // JpaEntity → Domain 변환. RepositoryAdapter가 변환 책임 담당
