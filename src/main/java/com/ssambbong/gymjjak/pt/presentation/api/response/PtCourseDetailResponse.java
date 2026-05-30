@@ -4,9 +4,10 @@ import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-// PT 강습 목록 카드 응답 DTO
-public record PtCourseViewResponse(
+// PT 강습 상세 응답 DTO
+public record PtCourseDetailResponse(
 
+        // ── 기본 PT 정보 ──
         @Schema(description = "PT 강습 ID", example = "1")
         Long ptCourseId,
 
@@ -22,6 +23,9 @@ public record PtCourseViewResponse(
         @Schema(description = "제목", example = "맞춤 PT 1개월 과정")
         String title,
 
+        @Schema(description = "소개")
+        String description,
+
         @Schema(description = "가격", example = "350000")
         int price,
 
@@ -31,20 +35,37 @@ public record PtCourseViewResponse(
         @Schema(description = "상태", example = "VISIBLE")
         PtCourseStatus status,
 
+        // ── 조직 정보 ──
+        @Schema(description = "조직 ID", example = "1")
+        Long organizationId,
+
         @Schema(description = "조직명", example = "짐짝피트니스 강남점")
         String organizationName,
 
         @Schema(description = "조직 주소", example = "서울특별시 강남구 테헤란로 123")
         String organizationAddress,
 
-        @Schema(description = "위도", example = "37.5007")
-        Double latitude,
+        @Schema(description = "조직 전화번호", example = "02-1234-5678")
+        String organizationPhone,
 
-        @Schema(description = "경도", example = "127.0365")
-        Double longitude,
+        @Schema(description = "웹사이트 URL")
+        String websiteUrl,
+
+        @Schema(description = "인스타그램 URL")
+        String instagramUrl,
+
+        // ── 트레이너 정보 ──
+        @Schema(description = "트레이너 프로필 ID", example = "1")
+        Long trainerProfileId,
 
         @Schema(description = "트레이너 이름", example = "트레이너01")
         String trainerName,
+
+        @Schema(description = "트레이너 경력", example = "4년차 / 체형교정 전문")
+        String trainerSpec,
+
+        @Schema(description = "트레이너 소개")
+        String trainerIntroduction,
 
         @Schema(description = "평균 평점", example = "4.6")
         Double averageRating,
@@ -53,21 +74,27 @@ public record PtCourseViewResponse(
         int reviewCount
 
 ) {
-    public static PtCourseViewResponse from(PtCourseQueryUseCase.PtCourseListView view) {
-        return new PtCourseViewResponse(
+    public static PtCourseDetailResponse from(PtCourseQueryUseCase.PtCourseDetailView view) {
+        return new PtCourseDetailResponse(
                 view.ptCourseId(),
                 view.categoryName(),
                 view.tagId(),
                 view.thumbnailUrl(),
                 view.title(),
+                view.description(),
                 view.price(),
                 view.totalSessionCount(),
                 view.status(),
+                view.organizationId(),
                 view.organizationName(),
                 view.organizationAddress(),
-                view.latitude(),
-                view.longitude(),
+                view.organizationPhone(),
+                view.websiteUrl(),
+                view.instagramUrl(),
+                view.trainerProfileId(),
                 view.trainerName(),
+                view.trainerSpec(),
+                view.trainerIntroduction(),
                 view.averageRating(),
                 view.reviewCount()
         );

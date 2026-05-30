@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.pt.domain.port;
+package com.ssambbong.gymjjak.pt.application.port;
 
 // 트레이너 프로필 조회 Port
 public interface TrainerProfileQueryPort {
