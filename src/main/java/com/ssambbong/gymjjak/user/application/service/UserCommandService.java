@@ -106,6 +106,7 @@ public class UserCommandService implements UserCommandUseCase {
         return new LoginResult(
                 accessToken,
                 refreshToken,
+                user.getRole().name(),
                 user.isOnboardingCompleted()
         );
 
