@@ -61,11 +61,13 @@ public class PtCourseController {
             description = "VISIBLE 상태의 PT 강습 목록을 페이지네이션으로 조회한다.")
     @GetMapping
     public ResponseEntity<GlobalApiResponse<?>> findAllPtCourses(
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long tagId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "20") int size
     ) {
         PtCoursePageResponse response = PtCoursePageResponse.from(
-                ptCourseQueryUseCase.findAllPtCourses(page, size));
+                ptCourseQueryUseCase.findAllPtCourses(categoryId, tagId, page, size));
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_LIST, response));
     }

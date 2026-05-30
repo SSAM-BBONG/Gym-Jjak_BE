@@ -50,10 +50,9 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
     }
 
     @Override
-    public PtCoursePage findAllVisible(int page, int size) {
-        Page<PtCourseJpaEntity> result = repository
-                .findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
-                        PtCourseStatus.VISIBLE, PageRequest.of(page, size));
+    public PtCoursePage findAllVisible(Long categoryId, Long tagId, int page, int size) {
+        Page<PtCourseJpaEntity> result = repository.findAllVisibleWithFilters(
+                categoryId, tagId, PageRequest.of(page, size));
         return new PtCoursePage(
                 result.getContent().stream().map(this::toDomain).toList(),
                 result.getTotalElements()

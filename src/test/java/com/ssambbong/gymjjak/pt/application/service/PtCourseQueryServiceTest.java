@@ -65,13 +65,13 @@ class PtCourseQueryServiceTest {
     void findAllPtCourses_success() {
         // given
         PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
-        when(ptCourseRepository.findAllVisible(0, 10))
+        when(ptCourseRepository.findAllVisible(null, null, 0, 20))
                 .thenReturn(new PtCourseRepository.PtCoursePage(List.of(ptCourse), 1L));
         stubCategoryAndEnrich();
 
         // when
         PtCourseQueryUseCase.PtCoursePageResult result =
-                ptCourseQueryService.findAllPtCourses(0, 10);
+                ptCourseQueryService.findAllPtCourses(null, null, 0, 20);
 
         // then
         assertEquals(1, result.content().size());
@@ -80,20 +80,20 @@ class PtCourseQueryServiceTest {
         assertEquals("헬스", result.content().get(0).categoryName());
         assertEquals("짐짝피트니스", result.content().get(0).organizationName());
         assertEquals("트레이너01", result.content().get(0).trainerName());
-        verify(ptCourseRepository).findAllVisible(0, 10);
+        verify(ptCourseRepository).findAllVisible(null, null, 0, 20);
     }
 
     @Test
     @DisplayName("PT 강습이 없으면 빈 목록을 반환해야 한다")
     void findAllPtCourses_empty() {
         // given
-        when(ptCourseRepository.findAllVisible(0, 10))
+        when(ptCourseRepository.findAllVisible(null, null, 0, 20))
                 .thenReturn(new PtCourseRepository.PtCoursePage(List.of(), 0L));
         when(categoryQueryUseCase.handle()).thenReturn(List.of());
 
         // when
         PtCourseQueryUseCase.PtCoursePageResult result =
-                ptCourseQueryService.findAllPtCourses(0, 10);
+                ptCourseQueryService.findAllPtCourses(null, null, 0, 20);
 
         // then
         assertTrue(result.content().isEmpty());
