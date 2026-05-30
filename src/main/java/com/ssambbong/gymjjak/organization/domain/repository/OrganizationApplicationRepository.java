@@ -23,4 +23,8 @@ public interface OrganizationApplicationRepository {
     void approve(OrganizationApplication organizationApplication);
 
     void reject(OrganizationApplication organizationApplication);
+
+    void cancel(OrganizationApplication organizationApplication);
+
+    Optional<OrganizationApplication> findByIdAndApplicantUserId(Long organizationApplicationId, Long applicantId);
 }

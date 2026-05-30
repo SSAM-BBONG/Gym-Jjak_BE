@@ -85,4 +85,24 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
 
         entity.reject(organizationApplication.getReviewedBy(), organizationApplication.getReviewedAt(), organizationApplication.getRejectReason());
     }
+
+    @Override
+    public Optional<OrganizationApplication> findByIdAndApplicantUserId(Long organizationApplicationId, Long applicantId) {
+
+        return springDataOrganizationApplicationRepository
+                .findByOrganizationApplicationIdAndApplicantUserId(organizationApplicationId, applicantId)
+                .map(OrganizationApplicationJpaEntity::toDomain);
+    }
+
+    @Override
+    public void cancel(OrganizationApplication organizationApplication) {
+
+        OrganizationApplicationJpaEntity entity = springDataOrganizationApplicationRepository
+                .findById(organizationApplication.getOrganizationApplicationId())
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        entity.cancel();
+
+    }
+
 }
