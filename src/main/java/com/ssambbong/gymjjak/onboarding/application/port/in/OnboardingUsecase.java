@@ -1,8 +1,11 @@
 package com.ssambbong.gymjjak.onboarding.application.port.in;
 
 import com.ssambbong.gymjjak.onboarding.application.command.RegisterOnboardingCommand;
+import com.ssambbong.gymjjak.onboarding.application.result.MyOnboardingResult;
 
 public interface OnboardingUsecase {
 
-    void complete(RegisterOnboardingCommand command);
+    void register(RegisterOnboardingCommand command);
+
+    MyOnboardingResult getMyOnboarding(Long userId);
 }
