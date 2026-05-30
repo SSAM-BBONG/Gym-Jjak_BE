@@ -1,4 +1,43 @@
 SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE system_logs;
+TRUNCATE TABLE admin_action_logs;
+TRUNCATE TABLE blacklists;
+TRUNCATE TABLE notifications;
+TRUNCATE TABLE reports;
+TRUNCATE TABLE report_groups;
+TRUNCATE TABLE chat_messages;
+TRUNCATE TABLE chat_rooms;
+TRUNCATE TABLE post_likes;
+TRUNCATE TABLE comments;
+TRUNCATE TABLE posts;
+TRUNCATE TABLE workout_diaries;
+TRUNCATE TABLE calendar_entries;
+TRUNCATE TABLE trainer_reviews;
+TRUNCATE TABLE feedback_media;
+TRUNCATE TABLE feedbacks;
+TRUNCATE TABLE pt_reservations;
+TRUNCATE TABLE pt_curriculums;
+TRUNCATE TABLE pt_course_schedules;
+TRUNCATE TABLE pt_courses;
+TRUNCATE TABLE organization_trainers;
+TRUNCATE TABLE trainer_awards;
+TRUNCATE TABLE trainer_certifications;
+TRUNCATE TABLE trainer_application_awards;
+TRUNCATE TABLE trainer_application_certifications;
+TRUNCATE TABLE trainer_profiles;
+TRUNCATE TABLE trainer_applications;
+TRUNCATE TABLE organizations;
+TRUNCATE TABLE organization_applications;
+TRUNCATE TABLE onboarding_surveys;
+TRUNCATE TABLE refresh_tokens;
+TRUNCATE TABLE files;
+TRUNCATE TABLE tags;
+TRUNCATE TABLE categories;
+TRUNCATE TABLE regions;
+TRUNCATE TABLE users;
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- ---------------------------------------------------------
 -- 1. 기초 메타 데이터 (지역, 카테고리, 태그)
