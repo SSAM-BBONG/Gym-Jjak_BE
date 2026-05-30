@@ -55,4 +55,5 @@ services:
       - "${BACKEND_PORT}:8080"
 # Docker 영구 저장소 설정
 volumes:
-  gymjjak-mysql-data:
+  mysql-data:
+    name: gymjjak-mysql-data
