@@ -231,6 +231,7 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
             LocalDateTime latestReportedAt
     ) {
         return new AdminReportListItem(
+                entity.getReportGroupId(),
                 entity.getReportNumber(),
                 entity.getTargetType(),
                 entity.getTargetId(),
