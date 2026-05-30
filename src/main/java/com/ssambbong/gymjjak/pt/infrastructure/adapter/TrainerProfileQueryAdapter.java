@@ -1,8 +1,6 @@
 package com.ssambbong.gymjjak.pt.infrastructure.adapter;
 
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
-import com.ssambbong.gymjjak.pt.domain.port.TrainerProfileQueryPort;
-import com.ssambbong.gymjjak.pt.domain.repository.PtCourseRepository;
+import com.ssambbong.gymjjak.pt.application.port.TrainerProfileQueryPort;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

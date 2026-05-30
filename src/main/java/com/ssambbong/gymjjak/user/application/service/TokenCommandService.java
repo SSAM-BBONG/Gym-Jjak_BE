@@ -27,6 +27,11 @@ public class TokenCommandService implements TokenCommandUsecase {
 
         log.info("[토큰 재발급] AccessToken 재발급 요청 시작");
 
+        if (refreshToken == null || refreshToken.isBlank()) {
+            log.warn("[토큰 재발급] RefreshToken이 요청에 존재하지 않음");
+            throw new UserException(UserErrorCode.REFRESH_TOKEN_NOT_FOUND);
+        }
+
         // 1. refreshToken 자체가 유효한 JWT인지 검증
         if (!tokenPort.validateToken(refreshToken)) {
             log.warn("[토큰 재발급] 유효하지 않은 RefreshToken");

@@ -14,5 +14,10 @@ public interface PtCourseRepository {
     Optional<PtCourse> findById(Long id);
 
     // 목록 조회
-    List<PtCourse> findAll();
+    List<PtCourse> findAllOrderByCreatedAtDesc();
+
+    // 페이지네이션 목록 조회 (VISIBLE 상태만)
+    PtCoursePage findAllVisible(int page, int size);
+
+    record PtCoursePage(List<PtCourse> content, long totalElements) {}
 }

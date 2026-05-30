@@ -56,4 +56,3 @@ services:
 # Docker 영구 저장소 설정
 volumes:
   mysql-data:
-    name: gymjjak-mysql-data

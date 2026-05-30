@@ -10,4 +10,6 @@ public interface OrganizationApplicationCommandUsecase {
     void approveOrganizationApplication(Long organizationApplicationId, Long reviewedBy);
 
     void rejectOrganizationApplication(Long organizationApplicationId, Long reviewedBy, String rejectReason);
+
+    void cancelOrganizationApplication(Long organizationApplicationId, Long applicantId);
 }

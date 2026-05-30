@@ -1,5 +1,8 @@
 package com.ssambbong.gymjjak.organization.domain.model;
 
+import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationCannotCancelException;
+import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationCannotReviewException;
+import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationErrorCode;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -191,6 +194,11 @@ public class OrganizationApplication {
     }
 
     public OrganizationApplication approve(Long reviewedBy) {
+        switch (this.status) {
+            case ACCEPTED -> throw new OrganizationApplicationCannotReviewException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_ACCEPTED);
+            case REJECTED -> throw new OrganizationApplicationCannotReviewException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_REJECTED);
+            case CANCELLED -> throw new OrganizationApplicationCannotReviewException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_CANCELLED);
+        }
         return new OrganizationApplication(
                 this.organizationApplicationId,
                 this.applicantUserId,
@@ -220,6 +228,11 @@ public class OrganizationApplication {
     }
 
     public OrganizationApplication reject(Long reviewedBy, String rejectReason) {
+        switch (this.status) {
+            case ACCEPTED -> throw new OrganizationApplicationCannotReviewException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_ACCEPTED);
+            case REJECTED -> throw new OrganizationApplicationCannotReviewException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_REJECTED);
+            case CANCELLED -> throw new OrganizationApplicationCannotReviewException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_CANCELLED);
+        }
         return new OrganizationApplication(
                 this.organizationApplicationId,
                 this.applicantUserId,
@@ -245,6 +258,40 @@ public class OrganizationApplication {
                 rejectReason,
                 reviewedBy,
                 LocalDateTime.now()
+        );
+    }
+
+    public OrganizationApplication cancel() {
+        switch (this.status) {
+            case ACCEPTED -> throw new OrganizationApplicationCannotCancelException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_ACCEPTED);
+            case REJECTED -> throw new OrganizationApplicationCannotCancelException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_REJECTED);
+            case CANCELLED -> throw new OrganizationApplicationCannotCancelException(OrganizationApplicationErrorCode.ORGANIZATION_APPLICATION_ALREADY_CANCELLED);
+        }
+        return new OrganizationApplication(
+                this.organizationApplicationId,
+                this.applicantUserId,
+                this.requestedLoginId,
+                this.businessLicenseFileId,
+                this.businessRegistrationNumber,
+                this.businessName,
+                this.representativeName,
+                this.representativePhone,
+                this.openingDate,
+                this.roadAddress,
+                this.jibunAddress,
+                this.detailAddress,
+                this.latitude,
+                this.longitude,
+                this.websiteUrl,
+                this.instagramUrl,
+                this.blogUrl,
+                this.facilityPhone,
+                OrganizationApplicationStatus.CANCELLED,
+                this.createdAt,
+                this.updatedAt,
+                null,
+                null,
+                null
         );
     }
 

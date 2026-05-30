@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.pt.application.service;
 
+import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.pt.application.port.PtCourseEnrichQueryPort;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -20,57 +24,113 @@ import java.util.List;
 public class PtCourseQueryService implements PtCourseQueryUseCase {
 
     private final PtCourseRepository ptCourseRepository;
+    private final CategoryQueryUseCase categoryQueryUseCase;
+    private final PtCourseEnrichQueryPort enrichQueryPort;
     private final FileUseCase fileUseCase;
 
-    // 목록 조회
     @Override
-    public List<PtCourseView> findAllPtCourses() {
-        log.debug("[PTCourseList] 목록 조회 시작");
+    public PtCoursePageResult findAllPtCourses(int page, int size) {
+        log.debug("[PtCourseList] 목록 조회 시작 - page={}, size={}", page, size);
 
-        List<PtCourseView> result = ptCourseRepository.findAll()
-                .stream()
-                .filter(ptCourse -> ptCourse.getStatus() == PtCourseStatus.VISIBLE)
-                .map(this::toView)
+        Map<Long, String> categoryMap = buildCategoryMap();
+        PtCourseRepository.PtCoursePage ptCoursePage = ptCourseRepository.findAllVisible(page, size);
+
+        List<PtCourseListView> content = ptCoursePage.content().stream()
+                .map(ptCourse -> toListView(ptCourse, categoryMap))
                 .toList();
 
-        log.info("[PtCourseList] 조회된 PT 강습 수={}", result.size());
-        return result;
+        int totalPages = (int) Math.ceil((double) ptCoursePage.totalElements() / size);
+
+        log.info("[PtCourseList] 조회된 PT 강습 수={}, 전체={}", content.size(), ptCoursePage.totalElements());
+        return new PtCoursePageResult(content, ptCoursePage.totalElements(), totalPages, page, size);
     }
 
-    // 상세 조회
     @Override
-    public PtCourseView findPtCourseDetail(Long ptCourseId) {
+    public PtCourseDetailView findPtCourseDetail(Long ptCourseId) {
         log.debug("[PtCourseDetail] ptCourseId={}", ptCourseId);
 
         PtCourse ptCourse = ptCourseRepository.findById(ptCourseId)
                 .orElseThrow(PtCourseNotFoundException::new);
 
-        // visible 확인
         if (ptCourse.getStatus() != PtCourseStatus.VISIBLE) {
             throw new PtCourseNotFoundException();
         }
 
+        Map<Long, String> categoryMap = buildCategoryMap();
+
         log.info("[PtCourseDetail] ptCourseId={} 조회 완료", ptCourseId);
-        return toView(ptCourse);
+        return toDetailView(ptCourse, categoryMap);
     }
 
-    // PtCourse -> PtCourseView 반환
-    private PtCourseView toView(PtCourse ptCourse) {
-        // thumbnailFileId가 있으면 Presigned URL 발급
+    private Map<Long, String> buildCategoryMap() {
+        return categoryQueryUseCase.handle().stream()
+                .collect(Collectors.toMap(
+                        CategoryQueryUseCase.CategoryView::categoryId,
+                        CategoryQueryUseCase.CategoryView::name
+                ));
+    }
+
+    private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap) {
         String thumbnailUrl = ptCourse.getThumbnailFileId() != null
                 ? fileUseCase.getPresignedUrl(ptCourse.getThumbnailFileId())
                 : null;
 
-        return new PtCourseView(
+        PtCourseEnrichQueryPort.OrganizationInfo org =
+                enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
+        PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
+                enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
+
+        return new PtCourseListView(
                 ptCourse.getId(),
-                ptCourse.getCategoryId(),
+                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
+                ptCourse.getTagId(),
+                thumbnailUrl,
+                ptCourse.getTitle(),
+                ptCourse.getPrice(),
+                ptCourse.getTotalSessionCount(),
+                ptCourse.getStatus(),
+                org.name(),
+                org.address(),
+                org.latitude(),
+                org.longitude(),
+                trainer.name(),
+                trainer.averageRating(),
+                trainer.reviewCount()
+        );
+    }
+
+    private PtCourseDetailView toDetailView(PtCourse ptCourse, Map<Long, String> categoryMap) {
+        String thumbnailUrl = ptCourse.getThumbnailFileId() != null
+                ? fileUseCase.getPresignedUrl(ptCourse.getThumbnailFileId())
+                : null;
+
+        PtCourseEnrichQueryPort.OrganizationInfo org =
+                enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
+        PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
+                enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
+
+        return new PtCourseDetailView(
+                ptCourse.getId(),
+                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                 ptCourse.getTagId(),
                 thumbnailUrl,
                 ptCourse.getTitle(),
                 ptCourse.getDescription(),
                 ptCourse.getPrice(),
                 ptCourse.getTotalSessionCount(),
-                ptCourse.getStatus()
+                ptCourse.getStatus(),
+                ptCourse.getOrganizationId(),
+                org.name(),
+                org.address(),
+                org.phone(),
+                org.websiteUrl(),
+                org.instagramUrl(),
+                ptCourse.getTrainerProfileId(),
+                trainer.name(),
+                trainer.spec(),
+                trainer.introduction(),
+                trainer.averageRating(),
+                trainer.reviewCount()
         );
     }
 }

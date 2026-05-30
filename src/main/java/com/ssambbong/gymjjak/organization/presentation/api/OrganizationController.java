@@ -230,7 +230,31 @@ public class OrganizationController {
     ) {
         organizationApplicationCommandUsecase.rejectOrganizationApplication(
                 applicationId, authUser.userId(), request.rejectReason());
+
         return GlobalApiResponse.ok(
                 OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_REJECTED, null);
+    }
+
+    @Operation(summary = "조직 신청 취소", description = "사용자가 본인의 조직 신청을 취소합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "취소 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "신청 내역을 찾을 수 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "취소할 수 없는 상태의 신청",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/{applicationId}/cancel")
+    public GlobalApiResponse<Void> cancelOrganizationApplication(
+            @PathVariable Long applicationId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+
+        organizationApplicationCommandUsecase.cancelOrganizationApplication(applicationId, authUser.userId());
+
+        return GlobalApiResponse.ok(
+                OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_CANCEL,null);
     }
 }
