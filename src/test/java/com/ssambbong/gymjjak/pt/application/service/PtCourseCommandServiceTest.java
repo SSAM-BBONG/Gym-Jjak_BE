@@ -6,7 +6,7 @@ import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
-import com.ssambbong.gymjjak.pt.domain.port.TrainerProfileQueryPort;
+import com.ssambbong.gymjjak.pt.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.domain.repository.PtCourseRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -91,7 +91,7 @@ public class PtCourseCommandServiceTest {
         when(trainerProfileQueryPort.findByUserId(1L))
                 .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
-        when(fileUseCase.uploadFile(thumbnail, 1L, FileType.COURSE_THUMBNAIL)).thenReturn(99L);
+        when(fileUseCase.uploadFile(thumbnail, 1L, FileType.PT_THUMBNAIL)).thenReturn(99L);
 
         PtCourse savedPtCourse = PtCourse.restore(
                 1L, 1L, 1L, 1L, 1L, 99L,
@@ -107,7 +107,7 @@ public class PtCourseCommandServiceTest {
 
         // then
         assertEquals(1L, ptCourseId);
-        verify(fileUseCase).uploadFile(thumbnail, 1L, FileType.COURSE_THUMBNAIL); // 파일 업로드 호출됨
+        verify(fileUseCase).uploadFile(thumbnail, 1L, FileType.PT_THUMBNAIL); // 파일 업로드 호출됨
         verify(ptCourseRepository).save(any(PtCourse.class));
     }
 

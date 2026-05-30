@@ -1,8 +1,11 @@
 package com.ssambbong.gymjjak.pt.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
+import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.domain.repository.PtCourseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,7 +17,6 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
 
     private final SpringDataPtCourseRepository repository;
 
-    // pt 등록
     @Override
     public PtCourse save(PtCourse ptCourse) {
         PtCourseJpaEntity entity = new PtCourseJpaEntity(
@@ -34,14 +36,11 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         return toDomain(repository.save(entity));
     }
 
-    // pt 상세 조회
     @Override
     public Optional<PtCourse> findById(Long id) {
-        return repository.findById(id)
-                .map(entity -> toDomain(entity));
+        return repository.findById(id).map(this::toDomain);
     }
 
-    // pt 목록 조회
     @Override
     public List<PtCourse> findAllOrderByCreatedAtDesc() {
         return repository.findAllByOrderByCreatedAtDesc()
@@ -50,7 +49,17 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
                 .toList();
     }
 
-    // JpaEntity → Domain 변환. RepositoryAdapter가 변환 책임 담당
+    @Override
+    public PtCoursePage findAllVisible(int page, int size) {
+        Page<PtCourseJpaEntity> result = repository
+                .findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
+                        PtCourseStatus.VISIBLE, PageRequest.of(page, size));
+        return new PtCoursePage(
+                result.getContent().stream().map(this::toDomain).toList(),
+                result.getTotalElements()
+        );
+    }
+
     private PtCourse toDomain(PtCourseJpaEntity entity) {
         return PtCourse.restore(
                 entity.getId(),

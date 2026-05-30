@@ -5,7 +5,7 @@ import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
-import com.ssambbong.gymjjak.pt.domain.port.TrainerProfileQueryPort;
+import com.ssambbong.gymjjak.pt.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.domain.repository.PtCourseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
