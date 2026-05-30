@@ -70,6 +70,8 @@ public class OnboardingController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "온보딩 조회", description = "로그인한 사용자의 온보딩 설문 정보와 선호 지역을 조회한다."
+    )
     public ResponseEntity<GlobalApiResponse<MyOnboardingResponse>> getMyOnboarding(
             @AuthenticationPrincipal AuthUser authUser
     ) {
