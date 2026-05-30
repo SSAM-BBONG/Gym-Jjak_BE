@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.report.infrastructure.policy;
 
+import com.github.f4b6a3.tsid.TsidCreator;
 import com.ssambbong.gymjjak.report.application.policy.ReportNumberGenerator;
 import org.springframework.stereotype.Component;
 
@@ -11,19 +12,9 @@ import java.util.UUID;
 @Component
 public class DefaultReportNumberGenerator implements ReportNumberGenerator {
 
-    private static final String CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final int LENGTH = 6;
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     @Override
     public String generate() {
-        StringBuilder sb = new StringBuilder("RPT-");
-
-        for (int i = 0; i < LENGTH; i++) {
-            int index = RANDOM.nextInt(CHARACTERS.length());
-            sb.append(CHARACTERS.charAt(index));
-        }
-
-        return sb.toString();
+        // TSID 생성 (13자리 문자열 반환)
+        return TsidCreator.getTsid().toString();
     }
 }

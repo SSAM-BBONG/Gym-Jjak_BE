@@ -7,7 +7,27 @@ import org.mapstruct.Mapper;
 @Mapper(config = MapStructConfig.class)
 public interface ReportGroupPersistenceMapper {
 
-    ReportGroupJpaEntity toEntity(ReportGroup reportGroup);
+    default ReportGroupJpaEntity toEntity(ReportGroup reportGroup) {
+        if (reportGroup == null) {
+            return null;
+        }
+
+        return ReportGroupJpaEntity.of(
+                reportGroup.getReportGroupId(),
+                reportGroup.getReportNumber(),
+                reportGroup.getTargetType(),
+                reportGroup.getTargetId(),
+                reportGroup.getTargetOwnerId(),
+                reportGroup.getSnapshotTitle(),
+                reportGroup.getSnapshotContent(),
+                reportGroup.getSnapshotFileUrl(),
+                reportGroup.getTotalReportCount(),
+                reportGroup.getEffectiveReportCount(),
+                reportGroup.getReviewStatus(),
+                reportGroup.getSanctionStatus(),
+                reportGroup.getProcessedBy()
+        );
+    }
 
     default ReportGroup toDomain(ReportGroupJpaEntity entity) {
         return ReportGroup.reconstruct(

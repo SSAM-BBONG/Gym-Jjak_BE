@@ -37,15 +37,17 @@ public class ReportCommandService implements ReportCommandUseCase {
     @Override
     public void createReport(CreateReportCommand command) {
 
-        log.info("[ReportCommandService] 신고 생성 시작!");
-        // 신고 스냅샷 저장
-        // 신고 대상 존재 여부 검증
+        log.info("[ReportCommand] 신고 생성 시작 - reporterId: {}, targetType: {}, targetId: {}",
+                command.reporterId(), command.targetType(), command.targetId());
+
+        // 1. 신고 스냅샷 가져오기
+        log.debug("[ReportCommand] 타겟 스냅샷 조회 요청");
         ReportTargetSnapshot snapshot = getTargetSnapshot(command);
 
-        // 본인 신고 방지
+        // 2. 본인 신고 방지 검증
         validateNotSelfReport(command.reporterId(), snapshot.targetOwnerId());
 
-        // 기존에 생성된 신고그룹 존재 여부 검증
+        // 3, 기존 신고 그룹 조회
         Optional<ReportGroup> reportGroupOptional =
                 reportGroupRepository.findByTargetTypeAndTargetId(
                         command.targetType(),
@@ -58,20 +60,20 @@ public class ReportCommandService implements ReportCommandUseCase {
         // 이미 존재
         if (reportGroupOptional.isPresent()) {
             reportGroup = reportGroupOptional.get();
+            log.debug("[ReportCommand] 기존 신고 그룹 존재 - reportGroupId: {}", reportGroup.getReportGroupId());
 
-            // 중복 신고 검증
+            // 4. 중복 신고 검증
             validateDuplicateReport(command.reporterId(), reportGroup.getReportGroupId());
-
             // 현재 제재 상태 저장
             previousSanctionStatus = reportGroup.getSanctionStatus();
 
-            // 누적 신고 수, 유효 신고 수 증가
-            // 검토 상태 Pending 상태로 변경
+            // 상태 변경은 도메인 객체에게 위임
+            // 누적 신고 수, 유효 신고 수 증가, 상태 변경
             reportGroup.registerNewReport();
-
             // 검토 상태 재계산
             reportGroup.syncAutoSanctionStatus();
         } else {
+            log.debug("[ReportCommand] 새로운 신고 그룹 생성 진행");
             // 새로운 신고 그룹 생성
             reportGroup = createNewReportGroup(command, snapshot);
             // 새로운 그룹 검토 상태 NONE으로
@@ -80,15 +82,17 @@ public class ReportCommandService implements ReportCommandUseCase {
             reportGroup.syncAutoSanctionStatus();
         }
 
+        // 5. DB 저장! -> 여기서부터 인프라 계층으로 위임
         // 저장된 신고 그룹 id 가져오기
         ReportGroup savedReportGroup = reportGroupRepository.save(reportGroup);
-
         // 저장된 신고그룹 ID를 사용해 실제 개별 신고를 생성한다.
         Report report = createNewReport(command, savedReportGroup.getReportGroupId());
-
         // 신고 저장
         reportRepository.save(report);
+        log.info("[ReportCommand] 신고 저장 완료 - reportId: {}, reportGroupId: {}",
+                report.getReportId(), savedReportGroup.getReportGroupId());
 
+        // 6. 자동 제재 여부 확인 및 실행
         applyAutoBlindIfNeeded(previousSanctionStatus, savedReportGroup);
 
 
@@ -104,15 +108,16 @@ public class ReportCommandService implements ReportCommandUseCase {
     // 본인 신고 방지
     private void validateNotSelfReport(Long reporterId, Long targetOwnerId) {
         if (reporterId.equals(targetOwnerId)) {
+            log.warn("[ReportCommand] 본인 신고 시도 감지 - reporterId: {}", reporterId);
             throw new SelfReportNotAllowedException(reporterId);
         }
     }
 
-    // 중복 신고 검증
+    // 중복 신고 방지
     private void validateDuplicateReport(Long reporterId, Long reportGroupId) {
         boolean exists = reportRepository.existsByReporterIdAndReportGroupId(reporterId, reportGroupId);
-
         if (exists) {
+            log.warn("[ReportCommand] 중복 신고 시도 감지 - reporterId: {}, reportGroupId: {}", reporterId, reportGroupId);
             throw new DuplicateReportException(reporterId, reportGroupId);
         }
     }
@@ -121,8 +126,11 @@ public class ReportCommandService implements ReportCommandUseCase {
             CreateReportCommand command,
             ReportTargetSnapshot snapshot
     ) {
+        String uniqueReportNumber = reportNumberGenerator.generate();
+        log.debug("[ReportCommand] 신규 신고 번호 발급 완료: {}", uniqueReportNumber);
+
         return ReportGroup.create(
-                generateUniqueReportNumber(),
+                uniqueReportNumber, // 발급받은 13자리 TSID 삽입
                 command.targetType(),
                 command.targetId(),
                 snapshot.targetOwnerId(),
@@ -133,7 +141,8 @@ public class ReportCommandService implements ReportCommandUseCase {
         );
     }
 
-    private Report createNewReport(CreateReportCommand command, Long reportGroupId) {
+    private Report createNewReport(
+            CreateReportCommand command, Long reportGroupId) {
         return Report.create(
                 reportGroupId,
                 command.reporterId(),
@@ -143,12 +152,20 @@ public class ReportCommandService implements ReportCommandUseCase {
         );
     }
 
+
+    /**
+     *
+     * @param previousSanctionStatus : 이전 상태
+     * @param reportGroup : 신고 당한 신고 그룹
+     */
     private void applyAutoBlindIfNeeded(
             ReportGroupSanctionStatus previousSanctionStatus,
             ReportGroup reportGroup
     ) {
         if (previousSanctionStatus == ReportGroupSanctionStatus.NONE
                 && reportGroup.getSanctionStatus() == ReportGroupSanctionStatus.AUTO_BLINDED) {
+            log.debug("[createReport] 신고 5회 등록! None -> Auto Blind 변경 요청 요청 발생, 신고 적용 그룹 ID : {}",
+                    reportGroup.getReportGroupId());
             reportSanctionTargetPort.changeAutoBlind(
                     reportGroup.getTargetType(),
                     reportGroup.getTargetId(),

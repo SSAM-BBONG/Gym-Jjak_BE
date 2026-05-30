@@ -7,7 +7,22 @@ import org.mapstruct.Mapper;
 @Mapper(config = MapStructConfig.class)
 public interface ReportPersistenceMapper {
 
-    ReportJpaEntity toEntity(Report report);
+    default ReportJpaEntity toEntity(Report report) {
+        if (report == null) {
+            return null;
+        }
+
+        return ReportJpaEntity.of(
+                report.getReportId(),
+                report.getReportGroupId(),
+                report.getReporterId(),
+                report.getReason(),
+                report.getDetail(),
+                report.getStatus(),
+                report.getProcessedBy(),
+                report.getProcessedAt()
+        );
+    }
 
     default Report toDomain(ReportJpaEntity entity) {
         return Report.reconstruct(
