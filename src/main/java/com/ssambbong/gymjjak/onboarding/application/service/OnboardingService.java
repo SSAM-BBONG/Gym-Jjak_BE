@@ -2,7 +2,11 @@ package com.ssambbong.gymjjak.onboarding.application.service;
 
 import com.ssambbong.gymjjak.onboarding.application.command.RegisterOnboardingCommand;
 import com.ssambbong.gymjjak.onboarding.application.port.in.OnboardingUsecase;
+import com.ssambbong.gymjjak.onboarding.application.port.out.MyOnboardingView;
 import com.ssambbong.gymjjak.onboarding.application.port.out.OnboardingPort;
+import com.ssambbong.gymjjak.onboarding.application.result.MyOnboardingResult;
+import com.ssambbong.gymjjak.onboarding.domain.exception.OnboardingErrorCode;
+import com.ssambbong.gymjjak.onboarding.domain.exception.OnboardingException;
 import com.ssambbong.gymjjak.onboarding.domain.model.OnboardingSurvey;
 import com.ssambbong.gymjjak.onboarding.domain.model.Region;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
@@ -21,12 +25,12 @@ public class OnboardingService implements OnboardingUsecase {
     private final OnboardingPort onboardingPort;
 
     @Override
-    public void complete(RegisterOnboardingCommand command) {
+    public void register(RegisterOnboardingCommand command) {
         log.info("[onboarding] 온보딩 등록 처리 시작. userId={}", command.userId());
 
         if (onboardingPort.existsByUserId(command.userId())) {
             log.warn("[onboarding] 온보딩 중복 등록 시도. userId={}", command.userId());
-            throw new UserException(UserErrorCode.ONBOARDING_ALREADY_COMPLETED);
+            throw new OnboardingException(OnboardingErrorCode.ONBOARDING_ALREADY_COMPLETED);
         }
 
         Region region = Region.create(
@@ -69,5 +73,30 @@ public class OnboardingService implements OnboardingUsecase {
 
         onboardingPort.completeUserOnboarding(command.userId());
         log.info("[onboarding] 사용자 온보딩 완료 상태 변경 완료. userId={}", command.userId());
+    }
+
+    @Override
+    public MyOnboardingResult getMyOnboarding(Long userId) {
+        MyOnboardingView view = onboardingPort.findMyOnboardingByUserId(userId)
+                .orElseThrow(() -> new OnboardingException(OnboardingErrorCode.ONBOARDING_NOT_FOUND));
+
+        return new MyOnboardingResult(
+                view.onboardingId(),
+                view.exerciseGoal(),
+                view.exercisePeriod(),
+                view.exerciseFrequency(),
+                view.preferredExercise(),
+                new MyOnboardingResult.RegionResult(
+                        view.regionId(),
+                        view.sido(),
+                        view.sigungu(),
+                        view.eupmyeondong(),
+                        view.fullName(),
+                        view.latitude(),
+                        view.longitude()
+                ),
+                view.height(),
+                view.weight()
+        );
     }
 }

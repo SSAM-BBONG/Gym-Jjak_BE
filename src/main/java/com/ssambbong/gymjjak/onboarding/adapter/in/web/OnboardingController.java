@@ -4,10 +4,12 @@ package com.ssambbong.gymjjak.onboarding.adapter.in.web;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.security.principal.AuthUser;
 import com.ssambbong.gymjjak.onboarding.adapter.in.web.request.CompleteOnboardingRequest;
+import com.ssambbong.gymjjak.onboarding.adapter.in.web.response.MyOnboardingResponse;
 import com.ssambbong.gymjjak.onboarding.adapter.in.web.response.OnboardingResponseCode;
 import com.ssambbong.gymjjak.onboarding.application.command.RegionCommand;
 import com.ssambbong.gymjjak.onboarding.application.command.RegisterOnboardingCommand;
 import com.ssambbong.gymjjak.onboarding.application.port.in.OnboardingUsecase;
+import com.ssambbong.gymjjak.onboarding.application.result.MyOnboardingResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,7 +42,7 @@ public class OnboardingController {
                 authUser.userId(),
                 authUser.username());
 
-        onboardingUsecase.complete(new RegisterOnboardingCommand(
+        onboardingUsecase.register(new RegisterOnboardingCommand(
                 authUser.userId(),
                 request.exerciseGoal(),
                 request.exercisePeriod(),
@@ -65,5 +67,19 @@ public class OnboardingController {
                 .body(GlobalApiResponse.created(
                         OnboardingResponseCode.ONBOARDING_CREATED
                 ));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<GlobalApiResponse<MyOnboardingResponse>> getMyOnboarding(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        MyOnboardingResult result = onboardingUsecase.getMyOnboarding(authUser.userId());
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        OnboardingResponseCode.ONBOARDING_FOUND,
+                        MyOnboardingResponse.from(result)
+                )
+        );
     }
 }
