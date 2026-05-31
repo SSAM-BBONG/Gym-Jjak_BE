@@ -78,6 +78,8 @@ public class PtCourseController {
         PtCourseDetailResponse response = PtCourseDetailResponse.from(
                 ptCourseQueryUseCase.findPtCourseDetail(ptCourseId));
         return ResponseEntity.ok(
-                GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_DETAIL, response));
+                GlobalApiResponse.ok(
+                        PtCourseResponseCode.PT_COURSE_DETAIL,
+                        response));
     }
 }
