@@ -62,7 +62,7 @@ public class PtCourseController {
     @GetMapping
     public ResponseEntity<GlobalApiResponse<?>> findAllPtCourses(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "20") int size
     ) {
         PtCoursePageResponse response = PtCoursePageResponse.from(
                 ptCourseQueryUseCase.findAllPtCourses(page, size));

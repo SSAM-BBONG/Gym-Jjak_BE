@@ -130,7 +130,11 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 trainer.spec(),
                 trainer.introduction(),
                 trainer.averageRating(),
-                trainer.reviewCount()
+                trainer.reviewCount(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of()
         );
     }
 }

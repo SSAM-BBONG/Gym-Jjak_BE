@@ -66,6 +66,11 @@ public interface PtCourseQueryUseCase {
             String trainerSpec,
             String trainerIntroduction,
             Double averageRating,
-            int reviewCount
+            int reviewCount,
+            // 미구현 (빈 배열 반환)
+            List<Object> certifications,
+            List<Object> awards,
+            List<Object> curriculums,
+            List<Object> recentReviews
     ) {}
 }
