@@ -54,7 +54,7 @@ class PtCourseQueryServiceTest {
         );
         when(enrichQueryPort.findTrainerProfileById(anyLong())).thenReturn(
                 new PtCourseEnrichQueryPort.TrainerDisplayInfo(
-                        "트레이너01", "4년차", "안전하게 지도합니다.", 4.6, 1)
+                        "트레이너01", "4년차", "안전하게 지도합니다.", 4.6, 1, null)
         );
     }
 

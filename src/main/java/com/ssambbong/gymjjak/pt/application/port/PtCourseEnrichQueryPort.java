@@ -26,6 +26,7 @@ public interface PtCourseEnrichQueryPort {
             String spec,
             String introduction,
             Double averageRating,
-            int reviewCount
+            int reviewCount,
+            Long profileFileId   // 프로필 이미지 파일 ID (null 가능)
     ) {}
 }
