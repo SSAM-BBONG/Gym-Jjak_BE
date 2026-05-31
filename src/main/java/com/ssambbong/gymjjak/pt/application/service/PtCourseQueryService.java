@@ -29,12 +29,11 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final FileUseCase fileUseCase;
 
     @Override
-    public PtCoursePageResult findAllPtCourses(Long categoryId, Long tagId, int page, int size) {
-        log.debug("[PtCourseList] 목록 조회 시작 - categoryId={}, tagId={}, page={}, size={}",
-                categoryId, tagId, page, size);
+    public PtCoursePageResult findAllPtCourses(int page, int size) {
+        log.debug("[PtCourseList] 목록 조회 시작 - page={}, size={}", page, size);
 
         Map<Long, String> categoryMap = buildCategoryMap();
-        PtCourseRepository.PtCoursePage ptCoursePage = ptCourseRepository.findAllVisible(categoryId, tagId, page, size);
+        PtCourseRepository.PtCoursePage ptCoursePage = ptCourseRepository.findAllVisible(page, size);
 
         List<PtCourseListView> content = ptCoursePage.content().stream()
                 .map(ptCourse -> toListView(ptCourse, categoryMap))
@@ -131,7 +130,11 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 trainer.spec(),
                 trainer.introduction(),
                 trainer.averageRating(),
-                trainer.reviewCount()
+                trainer.reviewCount(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of()
         );
     }
 }

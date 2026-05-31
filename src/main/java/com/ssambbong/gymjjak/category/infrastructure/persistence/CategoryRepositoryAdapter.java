@@ -59,4 +59,10 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
     public boolean existsByName(String name) {
         return repository.existsByName(name);
     }
+
+    // PT 강습 사용 개수
+    @Override
+    public long countPtCoursesByCategoryId(Long categoryId) {
+        return repository.countPtCoursesByCategoryId(categoryId);
+    }
 }

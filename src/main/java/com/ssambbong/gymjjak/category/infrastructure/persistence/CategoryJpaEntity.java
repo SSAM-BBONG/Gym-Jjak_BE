@@ -45,7 +45,7 @@ public class CategoryJpaEntity {
 
     // 조회. DB에서 꺼낸 JpaEntity -> domain Model 변환 (서비스는 JpaEntity 몰라야 하므로)
     public Category toDomain() {
-        return Category.restore(id, name);
+        return Category.restore(id, name, createdAt);
     }
 
     // 카테고리 이름 수정. 도메인 행위가 아니라 DB 저장 상태 변경용

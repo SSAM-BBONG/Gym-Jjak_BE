@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.category.application.usecase;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CategoryQueryUseCase {
@@ -8,8 +9,8 @@ public interface CategoryQueryUseCase {
 
     record CategoryView(
             Long categoryId,
-            String name
-    ) {
-
-    }
+            String name,
+            LocalDateTime createdAt,
+            long usageCount
+    ) {}
 }

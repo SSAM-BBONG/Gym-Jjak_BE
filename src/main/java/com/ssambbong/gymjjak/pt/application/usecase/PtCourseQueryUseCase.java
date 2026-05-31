@@ -6,8 +6,8 @@ import java.util.List;
 
 public interface PtCourseQueryUseCase {
 
-    // 목록 조회 (페이지네이션, 필터 선택)
-    PtCoursePageResult findAllPtCourses(Long categoryId, Long tagId, int page, int size);
+    // 목록 조회 (페이지네이션)
+    PtCoursePageResult findAllPtCourses(int page, int size);
 
     // 상세 조회
     PtCourseDetailView findPtCourseDetail(Long ptCourseId);
@@ -66,6 +66,11 @@ public interface PtCourseQueryUseCase {
             String trainerSpec,
             String trainerIntroduction,
             Double averageRating,
-            int reviewCount
+            int reviewCount,
+            // 미구현 (빈 배열 반환)
+            List<Object> certifications,
+            List<Object> awards,
+            List<Object> curriculums,
+            List<Object> recentReviews
     ) {}
 }
