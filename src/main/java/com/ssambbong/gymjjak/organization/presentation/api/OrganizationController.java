@@ -205,7 +205,7 @@ public class OrganizationController {
             @ApiResponse(responseCode = "404", description = "신청 내역 없음",
                     content = @Content(schema = @Schema()))
     })
-    // @PreAuthorize("hasAuthority('ADMIN')")  // TODO: 테스트 후 주석 해제
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{applicationId}/approve")
     public ResponseEntity<GlobalApiResponse<Void>> approveOrganizationApplication(
             @PathVariable Long applicationId,
@@ -227,7 +227,7 @@ public class OrganizationController {
             @ApiResponse(responseCode = "404", description = "신청 내역 없음",
                     content = @Content(schema = @Schema()))
     })
-    // @PreAuthorize("hasAuthority('ADMIN')")  // TODO: 테스트 후 주석 해제
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{applicationId}/reject")
     public ResponseEntity<GlobalApiResponse<Void>> rejectOrganizationApplication(
             @PathVariable Long applicationId,
