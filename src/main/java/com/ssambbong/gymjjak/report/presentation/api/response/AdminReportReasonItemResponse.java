@@ -23,6 +23,7 @@ public record AdminReportReasonItemResponse(
         LocalDateTime reportedAt,
         String status
 ) {
+    // 신고 상세 조회 반환용 Builder
     public static  AdminReportReasonItemResponse from(AdminReportReasonItem item){
         return AdminReportReasonItemResponse.builder()
                 .reportId(item.reportId())
