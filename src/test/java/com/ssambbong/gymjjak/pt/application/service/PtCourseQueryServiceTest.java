@@ -45,7 +45,7 @@ class PtCourseQueryServiceTest {
 
     private void stubCategoryAndEnrich() {
         when(categoryQueryUseCase.handle()).thenReturn(
-                List.of(new CategoryQueryUseCase.CategoryView(1L, "헬스"))
+                List.of(new CategoryQueryUseCase.CategoryView(1L, "헬스", null, 0L))
         );
         when(enrichQueryPort.findOrganizationById(anyLong())).thenReturn(
                 new PtCourseEnrichQueryPort.OrganizationInfo(
