@@ -4,14 +4,13 @@ import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.security.principal.AuthUser;
 import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
 import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
-import com.ssambbong.gymjjak.report.application.query.AdminReportDetailResult;
-import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
-import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
+import com.ssambbong.gymjjak.report.application.query.*;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCase;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupQueryUseCase;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportDetailResponse;
 import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportListResponse;
+import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportReasonItemResponse;
 import com.ssambbong.gymjjak.report.presentation.api.response.ReportResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -94,18 +93,20 @@ public class ReportGroupController {
             @ApiResponse(responseCode = "404", description = "신고를 찾을 수 없음")
     })
     @PatchMapping("/{reportGroupId}/reports/{reportId}/approve")
-    public ResponseEntity<GlobalApiResponse<Void>> approveReport(
+    public ResponseEntity<GlobalApiResponse<AdminReportReasonItemResponse>> approveReport(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long reportGroupId, @PathVariable Long reportId) {
 
-        reportGroupCommandUseCase.approveReport(new ApproveReportCommand(
+        AdminReportReasonItem result = reportGroupCommandUseCase.approveReport(new ApproveReportCommand(
                 reportGroupId, reportId, authUser.userId()
         ));
+
+        AdminReportReasonItemResponse  response = AdminReportReasonItemResponse.from(result);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         ReportResponseCode.APPROVE_REPORT_SUCCESS,
-                        null
+                        response
                 )
         );
     }
@@ -117,18 +118,20 @@ public class ReportGroupController {
             @ApiResponse(responseCode = "404", description = "신고를 찾을 수 없음")
     })
     @PatchMapping("/{reportGroupId}/reports/{reportId}/reject")
-    public ResponseEntity<GlobalApiResponse<Void>> rejectReport(
+    public ResponseEntity<GlobalApiResponse<AdminReportReasonItemResponse>> rejectReport(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long reportGroupId, @PathVariable Long reportId) {
 
-        reportGroupCommandUseCase.rejectReport(new RejectReportCommand(
+        AdminReportReasonItem result = reportGroupCommandUseCase.rejectReport(new RejectReportCommand(
                 reportGroupId, reportId, authUser.userId()
         ));
+
+        AdminReportReasonItemResponse  response = AdminReportReasonItemResponse.from(result);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         ReportResponseCode.REJECT_REPORT_SUCCESS,
-                        null
+                        response
                 )
         );
     }
