@@ -46,6 +46,9 @@ public record PtCourseViewResponse(
         @Schema(description = "트레이너 이름", example = "트레이너01")
         String trainerName,
 
+        @Schema(description = "트레이너 프로필 이미지 URL")
+        String trainerProfileImageUrl,
+
         @Schema(description = "평균 평점", example = "4.6")
         Double averageRating,
 
@@ -68,6 +71,7 @@ public record PtCourseViewResponse(
                 view.latitude(),
                 view.longitude(),
                 view.trainerName(),
+                view.trainerProfileImageUrl(),
                 view.averageRating(),
                 view.reviewCount()
         );

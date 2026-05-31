@@ -63,6 +63,9 @@ public record PtCourseDetailResponse(
         @Schema(description = "트레이너 이름", example = "트레이너01")
         String trainerName,
 
+        @Schema(description = "트레이너 프로필 이미지 URL")
+        String trainerProfileImageUrl,
+
         @Schema(description = "트레이너 경력", example = "4년차 / 체형교정 전문")
         String trainerSpec,
 
@@ -107,6 +110,7 @@ public record PtCourseDetailResponse(
                 view.instagramUrl(),
                 view.trainerProfileId(),
                 view.trainerName(),
+                view.trainerProfileImageUrl(),
                 view.trainerSpec(),
                 view.trainerIntroduction(),
                 view.averageRating(),
