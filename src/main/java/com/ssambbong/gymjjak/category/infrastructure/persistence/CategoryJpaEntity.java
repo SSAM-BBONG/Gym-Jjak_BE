@@ -52,4 +52,9 @@ public class CategoryJpaEntity {
     public void changeName(String name) {
         this.name = name;
     }
+
+    // 소프트 딜리트
+    public void softDelete() {
+        this.deletedAt = java.time.LocalDateTime.now();
+    }
 }

@@ -38,26 +38,28 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
         return repository.findById(id).map(CategoryJpaEntity::toDomain);
     }
 
-    // 목록 조회
+    // 목록 조회 (삭제되지 않은 것만)
     @Override
     public List<Category> findAll() {
-        // List<CategoryJpaEntity> -> List<Category> 변환
-        return repository.findAll()
+        return repository.findAllByDeletedAtIsNull()
                 .stream()
                 .map(CategoryJpaEntity::toDomain)
                 .toList();
     }
 
-    // 삭제
+    // 소프트 딜리트
     @Override
     public void deleteById(Long id) {
-        repository.deleteById(id);
+        repository.findById(id).ifPresent(entity -> {
+            entity.softDelete();
+            repository.save(entity);
+        });
     }
 
-    // 중복 여부
+    // 중복 여부 (삭제되지 않은 것만)
     @Override
     public boolean existsByName(String name) {
-        return repository.existsByName(name);
+        return repository.existsByNameAndDeletedAtIsNull(name);
     }
 
     // PT 강습 사용 개수
