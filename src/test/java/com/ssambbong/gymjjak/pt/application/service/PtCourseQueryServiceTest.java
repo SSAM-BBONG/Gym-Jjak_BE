@@ -45,7 +45,7 @@ class PtCourseQueryServiceTest {
 
     private void stubCategoryAndEnrich() {
         when(categoryQueryUseCase.handle()).thenReturn(
-                List.of(new CategoryQueryUseCase.CategoryView(1L, "헬스"))
+                List.of(new CategoryQueryUseCase.CategoryView(1L, "헬스", null, 0L))
         );
         when(enrichQueryPort.findOrganizationById(anyLong())).thenReturn(
                 new PtCourseEnrichQueryPort.OrganizationInfo(
@@ -54,7 +54,7 @@ class PtCourseQueryServiceTest {
         );
         when(enrichQueryPort.findTrainerProfileById(anyLong())).thenReturn(
                 new PtCourseEnrichQueryPort.TrainerDisplayInfo(
-                        "트레이너01", "4년차", "안전하게 지도합니다.", 4.6, 1)
+                        "트레이너01", "4년차", "안전하게 지도합니다.", 4.6, 1, null)
         );
     }
 
@@ -65,13 +65,13 @@ class PtCourseQueryServiceTest {
     void findAllPtCourses_success() {
         // given
         PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
-        when(ptCourseRepository.findAllVisible(0, 10))
+        when(ptCourseRepository.findAllVisible(0, 20))
                 .thenReturn(new PtCourseRepository.PtCoursePage(List.of(ptCourse), 1L));
         stubCategoryAndEnrich();
 
         // when
         PtCourseQueryUseCase.PtCoursePageResult result =
-                ptCourseQueryService.findAllPtCourses(0, 10);
+                ptCourseQueryService.findAllPtCourses(0, 20);
 
         // then
         assertEquals(1, result.content().size());
@@ -80,20 +80,20 @@ class PtCourseQueryServiceTest {
         assertEquals("헬스", result.content().get(0).categoryName());
         assertEquals("짐짝피트니스", result.content().get(0).organizationName());
         assertEquals("트레이너01", result.content().get(0).trainerName());
-        verify(ptCourseRepository).findAllVisible(0, 10);
+        verify(ptCourseRepository).findAllVisible(0, 20);
     }
 
     @Test
     @DisplayName("PT 강습이 없으면 빈 목록을 반환해야 한다")
     void findAllPtCourses_empty() {
         // given
-        when(ptCourseRepository.findAllVisible(0, 10))
+        when(ptCourseRepository.findAllVisible(0, 20))
                 .thenReturn(new PtCourseRepository.PtCoursePage(List.of(), 0L));
         when(categoryQueryUseCase.handle()).thenReturn(List.of());
 
         // when
         PtCourseQueryUseCase.PtCoursePageResult result =
-                ptCourseQueryService.findAllPtCourses(0, 10);
+                ptCourseQueryService.findAllPtCourses(0, 20);
 
         // then
         assertTrue(result.content().isEmpty());

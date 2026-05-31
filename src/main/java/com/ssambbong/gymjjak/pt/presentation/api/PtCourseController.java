@@ -34,7 +34,7 @@ public class PtCourseController {
     @PreAuthorize("hasAuthority('TRAINER')")
     @Operation(summary = "PT 강습 등록", description = "조직 소속 트레이너가 PT 강습을 등록한다.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<GlobalApiResponse<?>> createPtCourse(
+    public ResponseEntity<GlobalApiResponse<CreatePtCourseResponse>> createPtCourse(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestPart("data") @Valid CreatePtCourseRequest request,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
@@ -60,9 +60,9 @@ public class PtCourseController {
     @Operation(summary = "PT 강습 목록 조회",
             description = "VISIBLE 상태의 PT 강습 목록을 페이지네이션으로 조회한다.")
     @GetMapping
-    public ResponseEntity<GlobalApiResponse<?>> findAllPtCourses(
+    public ResponseEntity<GlobalApiResponse<PtCoursePageResponse>> findAllPtCourses(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "20") int size
     ) {
         PtCoursePageResponse response = PtCoursePageResponse.from(
                 ptCourseQueryUseCase.findAllPtCourses(page, size));
@@ -74,10 +74,12 @@ public class PtCourseController {
     @Operation(summary = "PT 강습 상세 조회",
             description = "VISIBLE 상태의 PT 강습 상세 정보를 조회한다.")
     @GetMapping("/{ptCourseId}")
-    public ResponseEntity<GlobalApiResponse<?>> findPtCourse(@PathVariable Long ptCourseId) {
+    public ResponseEntity<GlobalApiResponse<PtCourseDetailResponse>> findPtCourse(@PathVariable Long ptCourseId) {
         PtCourseDetailResponse response = PtCourseDetailResponse.from(
                 ptCourseQueryUseCase.findPtCourseDetail(ptCourseId));
         return ResponseEntity.ok(
-                GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_DETAIL, response));
+                GlobalApiResponse.ok(
+                        PtCourseResponseCode.PT_COURSE_DETAIL,
+                        response));
     }
 }

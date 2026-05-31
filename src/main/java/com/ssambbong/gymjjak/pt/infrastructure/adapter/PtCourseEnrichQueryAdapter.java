@@ -42,7 +42,7 @@ public class PtCourseEnrichQueryAdapter implements PtCourseEnrichQueryPort {
     public TrainerDisplayInfo findTrainerProfileById(Long trainerProfileId) {
         Object[] result = (Object[]) em.createNativeQuery("""
                 SELECT tp.display_name, tp.spec, tp.introduction,
-                       tp.average_rating, tp.review_count
+                       tp.average_rating, tp.review_count, tp.profile_file_id
                 FROM trainer_profiles tp
                 WHERE tp.trainer_profile_id = :trainerProfileId
                 """)
@@ -54,7 +54,8 @@ public class PtCourseEnrichQueryAdapter implements PtCourseEnrichQueryPort {
                 (String) result[1],
                 (String) result[2],
                 result[3] != null ? ((Number) result[3]).doubleValue() : null,
-                result[4] != null ? ((Number) result[4]).intValue() : 0
+                result[4] != null ? ((Number) result[4]).intValue() : 0,
+                result[5] != null ? ((Number) result[5]).longValue() : null
         );
     }
 }

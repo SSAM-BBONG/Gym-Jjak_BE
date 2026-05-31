@@ -80,6 +80,10 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
 
+        String trainerProfileImageUrl = trainer.profileFileId() != null
+                ? fileUseCase.getPresignedUrl(trainer.profileFileId())
+                : null;
+
         return new PtCourseListView(
                 ptCourse.getId(),
                 categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
@@ -94,6 +98,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 org.latitude(),
                 org.longitude(),
                 trainer.name(),
+                trainerProfileImageUrl,
                 trainer.averageRating(),
                 trainer.reviewCount()
         );
@@ -108,6 +113,10 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
+
+        String trainerProfileImageUrl = trainer.profileFileId() != null
+                ? fileUseCase.getPresignedUrl(trainer.profileFileId())
+                : null;
 
         return new PtCourseDetailView(
                 ptCourse.getId(),
@@ -127,10 +136,15 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 org.instagramUrl(),
                 ptCourse.getTrainerProfileId(),
                 trainer.name(),
+                trainerProfileImageUrl,
                 trainer.spec(),
                 trainer.introduction(),
                 trainer.averageRating(),
-                trainer.reviewCount()
+                trainer.reviewCount(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of()
         );
     }
 }

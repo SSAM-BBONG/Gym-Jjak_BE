@@ -38,6 +38,7 @@ public interface PtCourseQueryUseCase {
             Double longitude,
             // 트레이너
             String trainerName,
+            String trainerProfileImageUrl,
             Double averageRating,
             int reviewCount
     ) {}
@@ -63,9 +64,15 @@ public interface PtCourseQueryUseCase {
             // 트레이너
             Long trainerProfileId,
             String trainerName,
+            String trainerProfileImageUrl,
             String trainerSpec,
             String trainerIntroduction,
             Double averageRating,
-            int reviewCount
+            int reviewCount,
+            // 미구현 (빈 배열 반환)
+            List<Object> certifications,
+            List<Object> awards,
+            List<Object> curriculums,
+            List<Object> recentReviews
     ) {}
 }

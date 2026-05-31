@@ -46,6 +46,9 @@ public class ReportGroupControllerTest {
     private ReportGroupQueryUseCase reportGroupQueryUseCase;
 
     @MockitoBean
+    private ReportGroupCommandUseCase reportGroupCommandUseCase;
+
+    @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockitoBean

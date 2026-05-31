@@ -19,8 +19,8 @@ import java.util.List;
 public enum FilePolicy {
 
     // 이미지 정책: jpg, jpeg, png, webp 허용 / 최대 10MB
-    TRAINER_PROFILE(
-            FileType.TRAINER_PROFILE,
+    PROFILE_IMAGE(
+            FileType.PROFILE_IMAGE,
             List.of("image/jpeg", "image/png", "image/webp"),
             10 * 1024 * 1024L
     ),

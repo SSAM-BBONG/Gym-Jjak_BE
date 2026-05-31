@@ -1,8 +1,3 @@
--- gymjjak reduced dummy data
--- 일반 유저 10명, 트레이너 5명, 조직 1개, 관리자 2명 기준
--- MySQL Workbench Safe Update Mode 에러 방지를 위해 DELETE 대신 TRUNCATE 사용
--- TRUNCATE는 컬럼을 삭제하지 않고 테이블의 데이터만 초기화합니다.
-USE gymjjak_db;
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE system_logs;
 TRUNCATE TABLE admin_action_logs;
@@ -42,548 +37,284 @@ TRUNCATE TABLE regions;
 TRUNCATE TABLE users;
 SET FOREIGN_KEY_CHECKS = 1;
 
-INSERT INTO users (user_id, username, password, name, nickname, phone, role, status, last_login_at, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                            (1, 'user01@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자01', 'user01', '010-1000-0001', 'USER', 'ACTIVE', '2026-05-11 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (2, 'user02@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자02', 'user02', '010-1000-0002', 'USER', 'ACTIVE', '2026-05-12 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (3, 'user03@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자03', 'user03', '010-1000-0003', 'USER', 'ACTIVE', '2026-05-13 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (4, 'user04@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자04', 'user04', '010-1000-0004', 'USER', 'ACTIVE', '2026-05-14 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (5, 'user05@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자05', 'user05', '010-1000-0005', 'USER', 'ACTIVE', '2026-05-15 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (6, 'user06@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자06', 'user06', '010-1000-0006', 'USER', 'ACTIVE', '2026-05-16 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (7, 'user07@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자07', 'user07', '010-1000-0007', 'USER', 'ACTIVE', '2026-05-17 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (8, 'user08@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자08', 'user08', '010-1000-0008', 'USER', 'ACTIVE', '2026-05-18 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (9, 'user09@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자09', 'user09', '010-1000-0009', 'USER', 'ACTIVE', '2026-05-19 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (10, 'user10@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '사용자10', 'user10', '010-1000-0010', 'USER', 'ACTIVE', '2026-05-20 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (11, 'trainer01@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '트레이너01', 'trainer01', '010-2000-0001', 'TRAINER', 'ACTIVE', '2026-05-16 10:00:00.000000', '2026-04-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (12, 'trainer02@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '트레이너02', 'trainer02', '010-2000-0002', 'TRAINER', 'ACTIVE', '2026-05-17 10:00:00.000000', '2026-04-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (13, 'trainer03@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '트레이너03', 'trainer03', '010-2000-0003', 'TRAINER', 'ACTIVE', '2026-05-18 10:00:00.000000', '2026-04-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (14, 'trainer04@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '트레이너04', 'trainer04', '010-2000-0004', 'TRAINER', 'ACTIVE', '2026-05-19 10:00:00.000000', '2026-04-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (15, 'trainer05@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '트레이너05', 'trainer05', '010-2000-0005', 'TRAINER', 'ACTIVE', '2026-05-20 10:00:00.000000', '2026-04-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (16, 'org01@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '짐짝피트니스', 'gymjjak-fit', '010-3000-0001', 'ORGANIZATION', 'ACTIVE', '2026-05-22 10:00:00.000000', '2026-04-03 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (17, 'admin01@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '관리자01', 'admin01', '010-9000-0001', 'ADMIN', 'ACTIVE', '2026-05-27 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                            (18, 'admin02@gymjjak.test', '$2a$10$7EqJtq98hPqEX7fNZaFWoOHIhi7JgGOavOWXnOLaIknfEW9yD7wpe', '관리자02', 'admin02', '010-9000-0002', 'ADMIN', 'ACTIVE', '2026-05-26 10:00:00.000000', '2026-04-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+SET FOREIGN_KEY_CHECKS = 0;
 
-INSERT INTO regions (region_id, sido, sigungu, eupmyeondong, full_name, latitude, longitude) VALUES
-                                                                                                 (1, '서울특별시', '강남구', '역삼동', '서울특별시 강남구 역삼동', 37.5007, 127.0365),
-                                                                                                 (2, '서울특별시', '송파구', '잠실동', '서울특별시 송파구 잠실동', 37.5133, 127.1002),
-                                                                                                 (3, '경기도', '성남시 분당구', '정자동', '경기도 성남시 분당구 정자동', 37.3596, 127.1054),
-                                                                                                 (4, '인천광역시', '연수구', '송도동', '인천광역시 연수구 송도동', 37.3839, 126.6433),
-                                                                                                 (5, '서울특별시', '마포구', '상암동', '서울특별시 마포구 상암동', 37.5794, 126.889);
+-- ---------------------------------------------------------
+-- 1. 기초 메타 데이터 (지역, 카테고리, 태그)
+-- ---------------------------------------------------------
+INSERT INTO regions (sido, sigungu, eupmyeondong, full_name, latitude, longitude)
+VALUES ('경기도', '성남시 수정구', '양지동', '경기도 성남시 수정구 양지동', 37.4609960, 127.1651358);
 
-INSERT INTO categories (category_id, name, created_at, updated_at, deleted_at) VALUES
-                                                                                   (1, '헬스', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                   (2, '필라테스', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                   (3, '요가', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                   (4, '크로스핏', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                   (5, '재활운동', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+INSERT INTO categories (name) VALUES ('다이어트'), ('근력 향상'), ('체형 교정'), ('재활');
+INSERT INTO tags (name) VALUES ('오운완'), ('바디프로필'), ('비포애프터'), ('식단관리');
 
-INSERT INTO tags (tag_id, name, created_at, updated_at, deleted_at) VALUES
-                                                                        (1, '다이어트', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                        (2, '근력향상', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                        (3, '체형교정', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                        (4, '초보환영', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                        (5, '바디프로필', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+-- ---------------------------------------------------------
+-- 2. 유저 (Users)
+-- ID 19~21: 헬스장 원장 (USER) / ID 22~24: 조직 전용 계정 (ORGANIZATION)
+-- ---------------------------------------------------------
+INSERT INTO users (username, password, name, nickname, phone, role, status, onboarding_completed) VALUES
+                                                                                                      ('user01@test.com', 'hashed_pwd', '유저1', '닉네임1', '010-0000-0001', 'USER', 'ACTIVE', TRUE),
+                                                                                                      ('user02@test.com', 'hashed_pwd', '유저2', '닉네임2', '010-0000-0002', 'USER', 'ACTIVE', TRUE),
+                                                                                                      ('user03@test.com', 'hashed_pwd', '유저3', '닉네임3', '010-0000-0003', 'USER', 'ACTIVE', TRUE),
+                                                                                                      ('user04@test.com', 'hashed_pwd', '유저4', '닉네임4', '010-0000-0004', 'USER', 'ACTIVE', TRUE),
+                                                                                                      ('user05@test.com', 'hashed_pwd', '유저5', '닉네임5', '010-0000-0005', 'USER', 'ACTIVE', TRUE),
+                                                                                                      ('user06@test.com', 'hashed_pwd', '유저6', '닉네임6', '010-0000-0006', 'USER', 'ACTIVE', FALSE),
+                                                                                                      ('user07@test.com', 'hashed_pwd', '유저7', '닉네임7', '010-0000-0007', 'USER', 'ACTIVE', FALSE),
+                                                                                                      ('user08@test.com', 'hashed_pwd', '유저8', '닉네임8', '010-0000-0008', 'USER', 'ACTIVE', FALSE),
+                                                                                                      ('user09@test.com', 'hashed_pwd', '유저9', '닉네임9', '010-0000-0009', 'USER', 'ACTIVE', FALSE),
+                                                                                                      ('user10@test.com', 'hashed_pwd', '유저10', '닉네임10', '010-0000-0010', 'USER', 'ACTIVE', FALSE),
+                                                                                                      ('trainer01@test.com', 'hashed_pwd', '트레이너1', '득근맨', '010-1111-0001', 'TRAINER', 'ACTIVE', TRUE),
+                                                                                                      ('trainer02@test.com', 'hashed_pwd', '트레이너2', '헬창인생', '010-1111-0002', 'TRAINER', 'ACTIVE', TRUE),
+                                                                                                      ('trainer03@test.com', 'hashed_pwd', '트레이너3', '바프장인', '010-1111-0003', 'TRAINER', 'ACTIVE', TRUE),
+                                                                                                      ('trainer04@test.com', 'hashed_pwd', '트레이너4', '재활마스터', '010-1111-0004', 'TRAINER', 'ACTIVE', TRUE),
+                                                                                                      ('trainer05@test.com', 'hashed_pwd', '트레이너5', '다이어터', '010-1111-0005', 'TRAINER', 'ACTIVE', TRUE),
+                                                                                                      ('trainer06@test.com', 'hashed_pwd', '트레이너6', '운동은밥', '010-1111-0006', 'TRAINER', 'ACTIVE', TRUE),
+                                                                                                      ('admin01@test.com', 'hashed_pwd', '관리자1', '어드민1', '010-9999-0001', 'ADMIN', 'ACTIVE', TRUE),
+                                                                                                      ('admin02@test.com', 'hashed_pwd', '관리자2', '어드민2', '010-9999-0002', 'ADMIN', 'ACTIVE', TRUE),
+                                                                                                      ('owner01@test.com', 'hashed_pwd', '원장1', '짐잭대표1', '010-2222-0001', 'USER', 'ACTIVE', TRUE),
+                                                                                                      ('owner02@test.com', 'hashed_pwd', '원장2', '짐잭대표2', '010-2222-0002', 'USER', 'ACTIVE', TRUE),
+                                                                                                      ('owner03@test.com', 'hashed_pwd', '원장3', '짐잭대표3', '010-2222-0003', 'USER', 'ACTIVE', TRUE),
+                                                                                                      ('org01@test.com', 'hashed_pwd', '조직계정1', '조직계정1', '010-3333-0001', 'ORGANIZATION', 'ACTIVE', TRUE),
+                                                                                                      ('org02@test.com', 'hashed_pwd', '조직계정2', '조직계정2', '010-3333-0002', 'ORGANIZATION', 'ACTIVE', TRUE),
+                                                                                                      ('org03@test.com', 'hashed_pwd', '조직계정3', '조직계정3', '010-3333-0003', 'ORGANIZATION', 'ACTIVE', TRUE);
 
-INSERT INTO files (file_id, uploader_id, original_name, stored_name, file_url, content_type, file_size, file_type, status, created_at, deleted_at) VALUES
-                                                                                                                                                       (1, 2, 'dummy_file_01.jpg', 'stored_dummy_file_01.jpg', 'https://cdn.gymjjak.test/files/dummy_file_01.jpg', 'image/jpeg', 101024, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (2, 3, 'dummy_file_02.jpg', 'stored_dummy_file_02.jpg', 'https://cdn.gymjjak.test/files/dummy_file_02.jpg', 'image/jpeg', 102048, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (3, 4, 'dummy_file_03.jpg', 'stored_dummy_file_03.jpg', 'https://cdn.gymjjak.test/files/dummy_file_03.jpg', 'image/jpeg', 103072, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (4, 5, 'dummy_file_04.jpg', 'stored_dummy_file_04.jpg', 'https://cdn.gymjjak.test/files/dummy_file_04.jpg', 'image/jpeg', 104096, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (5, 6, 'dummy_file_05.jpg', 'stored_dummy_file_05.jpg', 'https://cdn.gymjjak.test/files/dummy_file_05.jpg', 'image/jpeg', 105120, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (6, 7, 'dummy_file_06.jpg', 'stored_dummy_file_06.jpg', 'https://cdn.gymjjak.test/files/dummy_file_06.jpg', 'image/jpeg', 106144, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (7, 8, 'dummy_file_07.jpg', 'stored_dummy_file_07.jpg', 'https://cdn.gymjjak.test/files/dummy_file_07.jpg', 'image/jpeg', 107168, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (8, 9, 'dummy_file_08.jpg', 'stored_dummy_file_08.jpg', 'https://cdn.gymjjak.test/files/dummy_file_08.jpg', 'image/jpeg', 108192, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (9, 10, 'dummy_file_09.jpg', 'stored_dummy_file_09.jpg', 'https://cdn.gymjjak.test/files/dummy_file_09.jpg', 'image/jpeg', 109216, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (10, 11, 'dummy_file_10.jpg', 'stored_dummy_file_10.jpg', 'https://cdn.gymjjak.test/files/dummy_file_10.jpg', 'image/jpeg', 110240, 'PROFILE_IMAGE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (11, 12, 'dummy_file_11.jpg', 'stored_dummy_file_11.jpg', 'https://cdn.gymjjak.test/files/dummy_file_11.jpg', 'image/jpeg', 111264, 'BUSINESS_LICENSE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (12, 13, 'dummy_file_12.jpg', 'stored_dummy_file_12.jpg', 'https://cdn.gymjjak.test/files/dummy_file_12.jpg', 'image/jpeg', 112288, 'BUSINESS_LICENSE', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (13, 14, 'dummy_file_13.jpg', 'stored_dummy_file_13.jpg', 'https://cdn.gymjjak.test/files/dummy_file_13.jpg', 'image/jpeg', 113312, 'TRAINER_CERTIFICATION', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (14, 15, 'dummy_file_14.jpg', 'stored_dummy_file_14.jpg', 'https://cdn.gymjjak.test/files/dummy_file_14.jpg', 'image/jpeg', 114336, 'TRAINER_CERTIFICATION', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (15, 16, 'dummy_file_15.jpg', 'stored_dummy_file_15.jpg', 'https://cdn.gymjjak.test/files/dummy_file_15.jpg', 'image/jpeg', 115360, 'TRAINER_CERTIFICATION', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (16, 17, 'dummy_file_16.jpg', 'stored_dummy_file_16.jpg', 'https://cdn.gymjjak.test/files/dummy_file_16.jpg', 'image/jpeg', 116384, 'TRAINER_CERTIFICATION', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (17, 18, 'dummy_file_17.jpg', 'stored_dummy_file_17.jpg', 'https://cdn.gymjjak.test/files/dummy_file_17.jpg', 'image/jpeg', 117408, 'TRAINER_CERTIFICATION', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (18, 1, 'dummy_file_18.jpg', 'stored_dummy_file_18.jpg', 'https://cdn.gymjjak.test/files/dummy_file_18.jpg', 'image/jpeg', 118432, 'TRAINER_CERTIFICATION', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (19, 2, 'dummy_file_19.jpg', 'stored_dummy_file_19.jpg', 'https://cdn.gymjjak.test/files/dummy_file_19.jpg', 'image/jpeg', 119456, 'TRAINER_CERTIFICATION', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (20, 3, 'dummy_file_20.jpg', 'stored_dummy_file_20.jpg', 'https://cdn.gymjjak.test/files/dummy_file_20.jpg', 'image/jpeg', 120480, 'TRAINER_CERTIFICATION', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (21, 4, 'dummy_file_21.jpg', 'stored_dummy_file_21.jpg', 'https://cdn.gymjjak.test/files/dummy_file_21.jpg', 'image/jpeg', 121504, 'PT_THUMBNAIL', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (22, 5, 'dummy_file_22.jpg', 'stored_dummy_file_22.jpg', 'https://cdn.gymjjak.test/files/dummy_file_22.jpg', 'image/jpeg', 122528, 'PT_THUMBNAIL', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (23, 6, 'dummy_file_23.jpg', 'stored_dummy_file_23.jpg', 'https://cdn.gymjjak.test/files/dummy_file_23.jpg', 'image/jpeg', 123552, 'PT_THUMBNAIL', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (24, 7, 'dummy_file_24.jpg', 'stored_dummy_file_24.jpg', 'https://cdn.gymjjak.test/files/dummy_file_24.jpg', 'image/jpeg', 124576, 'PT_THUMBNAIL', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (25, 8, 'dummy_file_25.jpg', 'stored_dummy_file_25.jpg', 'https://cdn.gymjjak.test/files/dummy_file_25.jpg', 'image/jpeg', 125600, 'PT_THUMBNAIL', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (26, 9, 'dummy_file_26.jpg', 'stored_dummy_file_26.jpg', 'https://cdn.gymjjak.test/files/dummy_file_26.jpg', 'image/jpeg', 126624, 'FEEDBACK_MEDIA', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (27, 10, 'dummy_file_27.jpg', 'stored_dummy_file_27.jpg', 'https://cdn.gymjjak.test/files/dummy_file_27.jpg', 'image/jpeg', 127648, 'FEEDBACK_MEDIA', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (28, 11, 'dummy_file_28.jpg', 'stored_dummy_file_28.jpg', 'https://cdn.gymjjak.test/files/dummy_file_28.jpg', 'image/jpeg', 128672, 'FEEDBACK_MEDIA', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (29, 12, 'dummy_file_29.jpg', 'stored_dummy_file_29.jpg', 'https://cdn.gymjjak.test/files/dummy_file_29.jpg', 'image/jpeg', 129696, 'FEEDBACK_MEDIA', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (30, 13, 'dummy_file_30.jpg', 'stored_dummy_file_30.jpg', 'https://cdn.gymjjak.test/files/dummy_file_30.jpg', 'image/jpeg', 130720, 'FEEDBACK_MEDIA', 'ACTIVE', '2026-05-28 10:00:00.000000', NULL);
+INSERT INTO refresh_tokens (user_id, refresh_token) VALUES
+                                                        (1, 'dummy_refresh_token_for_user01'), (11, 'dummy_refresh_token_for_trainer01');
 
-INSERT INTO onboarding_surveys (onboarding_id, user_id, exercise_goal, exercise_period, exercise_frequency, preferred_exercise, preferred_region_id, height, weight, created_at, updated_at) VALUES
-                                                                                                                                                                                                 (1, 1, '다이어트', '3개월 미만', '주 3회', '헬스', 1, 166, 61, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (2, 2, '근력 향상', '3개월 미만', '주 4회', '헬스', 2, 167, 62, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (3, 3, '체형 교정', '3개월 미만', '주 5회', '헬스', 3, 168, 63, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (4, 4, '건강 관리', '3개월 미만', '주 2회', '헬스', 4, 169, 64, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (5, 5, '체력 향상', '3개월 미만', '주 3회', '헬스', 5, 170, 65, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (6, 6, '다이어트', '3개월 미만', '주 4회', '헬스', 1, 171, 66, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (7, 7, '근력 향상', '3개월 미만', '주 5회', '헬스', 2, 172, 67, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (8, 8, '체형 교정', '3개월 미만', '주 2회', '헬스', 3, 173, 68, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (9, 9, '건강 관리', '3개월 미만', '주 3회', '헬스', 4, 174, 69, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                 (10, 10, '체력 향상', '3개월 미만', '주 4회', '헬스', 5, 175, 70, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000');
+-- ---------------------------------------------------------
+-- 3. 온보딩 설문 (Onboarding Surveys)
+-- ---------------------------------------------------------
+INSERT INTO onboarding_surveys (user_id, exercise_goal, exercise_period, exercise_frequency, preferred_exercise, preferred_region_id, height, weight) VALUES
+                                                                                                                                                          (1, '다이어트', '3_MONTHS', 'WEEKLY_3', '웨이트 트레이닝', 1, 175.5, 75.0),
+                                                                                                                                                          (2, '근력증가', '6_MONTHS', 'WEEKLY_5', '크로스핏', 1, 180.0, 80.0),
+                                                                                                                                                          (3, '체력증진', '1_MONTH', 'WEEKLY_2', '필라테스', 1, 160.0, 50.0),
+                                                                                                                                                          (4, '재활', '1_YEAR', 'WEEKLY_1', '요가', 1, NULL, NULL),
+                                                                                                                                                          (5, '바디프로필', '6_MONTHS', 'EVERYDAY', '웨이트 트레이닝', 1, 170.0, 65.0);
 
-INSERT INTO organization_applications (organization_application_id, applicant_user_id, requested_login_id, business_license_file_id, business_registration_number, business_name, representative_name, representative_phone, opening_date, road_address, jibun_address, detail_address, latitude, longitude, website_url, instagram_url, blog_url, facility_phone, public_data_verified, status, reject_reason, reviewed_by, reviewed_at, created_at, updated_at) VALUES
-    (1, 16, 'gymjjakfit', 11, '123-45-67890', '짐짝피트니스 강남점', '김대표', '02-1234-5678', '2024-01-15', '서울특별시 강남구 테헤란로 123', '서울특별시 강남구 역삼동 123-45', '3층', 37.5007, 127.0365, 'https://gymjjak-fit.test', 'https://instagram.com/gymjjak_fit', NULL, '02-1234-5678', 1, 'APPROVED', NULL, 17, '2026-05-01 10:00:00.000000', '2026-04-20 10:00:00.000000', '2026-05-28 10:00:00.000000');
+-- ---------------------------------------------------------
+-- 4. 파일(Files) (올바른 file_type 적용)
+-- ---------------------------------------------------------
+INSERT INTO files (uploader_id, original_name, stored_name, file_url, content_type, file_size, file_type, status) VALUES
+                                                                                                                      (19, 'license1.pdf', 'uuid-lic1.pdf', 'https://s3.gymjjak.com/uuid-lic1.pdf', 'application/pdf', 1024, 'BUSINESS_LICENSE', 'ACTIVE'),
+                                                                                                                      (20, 'license2.pdf', 'uuid-lic2.pdf', 'https://s3.gymjjak.com/uuid-lic2.pdf', 'application/pdf', 1024, 'BUSINESS_LICENSE', 'ACTIVE'),
+                                                                                                                      (21, 'license3.pdf', 'uuid-lic3.pdf', 'https://s3.gymjjak.com/uuid-lic3.pdf', 'application/pdf', 1024, 'BUSINESS_LICENSE', 'ACTIVE'),
+                                                                                                                      (11, 'profile1.jpg', 'uuid-prof1.jpg', 'https://s3.gymjjak.com/uuid-prof1.jpg', 'image/jpeg', 2048, 'PROFILE_IMAGE', 'ACTIVE'),
+                                                                                                                      (12, 'profile2.jpg', 'uuid-prof2.jpg', 'https://s3.gymjjak.com/uuid-prof2.jpg', 'image/jpeg', 2048, 'PROFILE_IMAGE', 'ACTIVE'),
+                                                                                                                      (13, 'profile3.jpg', 'uuid-prof3.jpg', 'https://s3.gymjjak.com/uuid-prof3.jpg', 'image/jpeg', 2048, 'PROFILE_IMAGE', 'ACTIVE'),
+                                                                                                                      (14, 'profile4.jpg', 'uuid-prof4.jpg', 'https://s3.gymjjak.com/uuid-prof4.jpg', 'image/jpeg', 2048, 'PROFILE_IMAGE', 'ACTIVE'),
+                                                                                                                      (15, 'profile5.jpg', 'uuid-prof5.jpg', 'https://s3.gymjjak.com/uuid-prof5.jpg', 'image/jpeg', 2048, 'PROFILE_IMAGE', 'ACTIVE'),
+                                                                                                                      (16, 'profile6.jpg', 'uuid-prof6.jpg', 'https://s3.gymjjak.com/uuid-prof6.jpg', 'image/jpeg', 2048, 'PROFILE_IMAGE', 'ACTIVE'),
+                                                                                                                      (11, 'thumb1.jpg', 'uuid-thumb1.jpg', 'https://s3.gymjjak.com/uuid-thumb1.jpg', 'image/jpeg', 3072, 'PT_THUMBNAIL', 'ACTIVE'),
+                                                                                                                      (12, 'thumb2.jpg', 'uuid-thumb2.jpg', 'https://s3.gymjjak.com/uuid-thumb2.jpg', 'image/jpeg', 3072, 'PT_THUMBNAIL', 'ACTIVE'),
+                                                                                                                      (13, 'thumb3.jpg', 'uuid-thumb3.jpg', 'https://s3.gymjjak.com/uuid-thumb3.jpg', 'image/jpeg', 3072, 'PT_THUMBNAIL', 'ACTIVE'),
+                                                                                                                      (14, 'thumb4.jpg', 'uuid-thumb4.jpg', 'https://s3.gymjjak.com/uuid-thumb4.jpg', 'image/jpeg', 3072, 'PT_THUMBNAIL', 'ACTIVE'),
+                                                                                                                      (15, 'thumb5.jpg', 'uuid-thumb5.jpg', 'https://s3.gymjjak.com/uuid-thumb5.jpg', 'image/jpeg', 3072, 'PT_THUMBNAIL', 'ACTIVE'),
+                                                                                                                      (16, 'thumb6.jpg', 'uuid-thumb6.jpg', 'https://s3.gymjjak.com/uuid-thumb6.jpg', 'image/jpeg', 3072, 'PT_THUMBNAIL', 'ACTIVE'),
+                                                                                                                      (1, 'feedback_vid1.mp4', 'uuid-fb1.mp4', 'https://s3.gymjjak.com/uuid-fb1.mp4', 'video/mp4', 15000, 'FEEDBACK_VIDEO', 'ACTIVE');
 
-INSERT INTO organizations (organization_id, organization_account_id, owner_user_id, application_id, business_license_file_id, business_registration_number, business_name, representative_name, representative_phone, opening_date, road_address, jibun_address, detail_address, latitude, longitude, website_url, instagram_url, blog_url, facility_phone, status, created_at, updated_at, deleted_at) VALUES
-    (1, 16, 16, 1, 11, '123-45-67890', '짐짝피트니스 강남점', '김대표', '02-1234-5678', '2024-01-15', '서울특별시 강남구 테헤란로 123', '서울특별시 강남구 역삼동 123-45', '3층', 37.5007, 127.0365, 'https://gymjjak-fit.test', 'https://instagram.com/gymjjak_fit', NULL, '02-1234-5678', 'ACTIVE', '2026-05-01 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+-- ---------------------------------------------------------
+-- 5. 조직 (Organization Applications & Organizations) (status = 'ACCEPTED')
+-- ---------------------------------------------------------
+INSERT INTO organization_applications (applicant_user_id, requested_login_id, business_license_file_id, business_registration_number, business_name, representative_name, representative_phone, opening_date, road_address, latitude, longitude, status) VALUES
+                                                                                                                                                                                                                                                             (19, 'org01@test.com', 1, '111-11-11111', '짐잭피트니스 본점', '원장1', '010-2222-0001', '2020-01-01', '경기 성남시 수정구 양지동 212', 37.4609960, 127.1651358, 'ACCEPTED'),
+                                                                                                                                                                                                                                                             (20, 'org02@test.com', 2, '222-22-22222', '짐잭피트니스 남한산성점', '원장2', '010-2222-0002', '2021-05-05', '경기 성남시 수정구 양지동 213', 37.4615000, 127.1660000, 'ACCEPTED'),
+                                                                                                                                                                                                                                                             (21, 'org03@test.com', 3, '333-33-33333', '짐잭피트니스 단대오거리점', '원장3', '010-2222-0003', '2022-10-10', '경기 성남시 수정구 양지동 214', 37.4590000, 127.1645000, 'ACCEPTED');
 
-INSERT INTO trainer_applications (trainer_application_id, user_id, profile_file_id, spec, introduction, status, reject_reason, reviewed_by, reviewed_at, created_at, updated_at) VALUES
-                                                                                                                                                                                     (1, 11, 1, '4년차 퍼스널 트레이너', '회원 목표에 맞춘 체계적인 PT를 제공합니다.', 'APPROVED', NULL, 17, '2026-05-02 10:00:00.000000', '2026-04-21 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                     (2, 12, 2, '5년차 퍼스널 트레이너', '회원 목표에 맞춘 체계적인 PT를 제공합니다.', 'APPROVED', NULL, 17, '2026-05-02 10:00:00.000000', '2026-04-21 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                     (3, 13, 3, '6년차 퍼스널 트레이너', '회원 목표에 맞춘 체계적인 PT를 제공합니다.', 'APPROVED', NULL, 17, '2026-05-02 10:00:00.000000', '2026-04-21 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                     (4, 14, 4, '7년차 퍼스널 트레이너', '회원 목표에 맞춘 체계적인 PT를 제공합니다.', 'APPROVED', NULL, 17, '2026-05-02 10:00:00.000000', '2026-04-21 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                     (5, 15, 5, '8년차 퍼스널 트레이너', '회원 목표에 맞춘 체계적인 PT를 제공합니다.', 'APPROVED', NULL, 17, '2026-05-02 10:00:00.000000', '2026-04-21 10:00:00.000000', '2026-05-28 10:00:00.000000');
+INSERT INTO organizations (organization_account_id, owner_user_id, application_id, business_license_file_id, business_registration_number, business_name, representative_name, representative_phone, opening_date, road_address, latitude, longitude, status) VALUES
+                                                                                                                                                                                                                                                                  (22, 19, 1, 1, '111-11-11111', '짐잭피트니스 본점', '원장1', '010-2222-0001', '2020-01-01', '경기 성남시 수정구 양지동 212', 37.4609960, 127.1651358, 'ACTIVE'),
+                                                                                                                                                                                                                                                                  (23, 20, 2, 2, '222-22-22222', '짐잭피트니스 남한산성점', '원장2', '010-2222-0002', '2021-05-05', '경기 성남시 수정구 양지동 213', 37.4615000, 127.1660000, 'ACTIVE'),
+                                                                                                                                                                                                                                                                  (24, 21, 3, 3, '333-33-33333', '짐잭피트니스 단대오거리점', '원장3', '010-2222-0003', '2022-10-10', '경기 성남시 수정구 양지동 214', 37.4590000, 127.1645000, 'ACTIVE');
 
-INSERT INTO trainer_profiles (trainer_profile_id, user_id, application_id, profile_file_id, display_name, spec, introduction, average_rating, review_count, status, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                                                                                            (1, 11, 1, 1, '트레이너01', '4년차 / 체형교정 전문', '초보자도 안전하게 운동할 수 있도록 지도합니다.', 4.6, 1, 'ACTIVE', '2026-05-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                                                            (2, 12, 2, 2, '트레이너02', '5년차 / 체형교정 전문', '초보자도 안전하게 운동할 수 있도록 지도합니다.', 4.7, 2, 'ACTIVE', '2026-05-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                                                            (3, 13, 3, 3, '트레이너03', '6년차 / 체형교정 전문', '초보자도 안전하게 운동할 수 있도록 지도합니다.', 4.5, 3, 'ACTIVE', '2026-05-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                                                            (4, 14, 4, 4, '트레이너04', '7년차 / 체형교정 전문', '초보자도 안전하게 운동할 수 있도록 지도합니다.', 4.6, 4, 'ACTIVE', '2026-05-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                                                            (5, 15, 5, 5, '트레이너05', '8년차 / 체형교정 전문', '초보자도 안전하게 운동할 수 있도록 지도합니다.', 4.7, 5, 'ACTIVE', '2026-05-02 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+-- ---------------------------------------------------------
+-- 6. 트레이너 프로필 및 자격증/수상 내역
+-- ---------------------------------------------------------
+INSERT INTO trainer_applications (user_id, profile_file_id, spec, introduction, status) VALUES
+                                                                                            (11, 4, '생활체육지도자 2급', '안녕하세요. 득근맨입니다.', 'APPROVED'),
+                                                                                            (12, 5, '건강운동관리사', '정확한 자세를 알려드립니다.', 'APPROVED'),
+                                                                                            (13, 6, 'NASM-CPT', '바프 전문 트레이너입니다.', 'APPROVED'),
+                                                                                            (14, 7, '재활치료사 면허', '통증 없는 운동을 지향합니다.', 'APPROVED'),
+                                                                                            (15, 8, '생활체육지도자 1급', '다이어트 확실하게 시켜드립니다.', 'APPROVED'),
+                                                                                            (16, 9, '크로스핏 레벨1', '체력 증진 전문입니다.', 'APPROVED');
 
-INSERT INTO trainer_application_certifications (trainer_application_certification_id, application_id, name, issuer, acquired_date, file_id, created_at) VALUES
-                                                                                                                                                            (1, 1, '생활스포츠지도사 2급', '문화체육관광부', '2021-03-01', 14, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                            (2, 2, '생활스포츠지도사 2급', '문화체육관광부', '2022-03-01', 15, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                            (3, 3, '생활스포츠지도사 2급', '문화체육관광부', '2023-03-01', 16, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                            (4, 4, '생활스포츠지도사 2급', '문화체육관광부', '2024-03-01', 17, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                            (5, 5, '생활스포츠지도사 2급', '문화체육관광부', '2025-03-01', 18, '2026-05-28 10:00:00.000000');
+INSERT INTO trainer_profiles (user_id, application_id, profile_file_id, display_name, spec, introduction, average_rating, review_count, status) VALUES
+                                                                                                                                                    (11, 1, 4, '득근맨', '생활체육지도자 2급', '안녕하세요. 득근맨입니다.', 4.5, 10, 'ACTIVE'),
+                                                                                                                                                    (12, 2, 5, '헬창인생', '건강운동관리사', '정확한 자세를 알려드립니다.', 4.8, 25, 'ACTIVE'),
+                                                                                                                                                    (13, 3, 6, '바프장인', 'NASM-CPT', '바프 전문 트레이너입니다.', 5.0, 50, 'ACTIVE'),
+                                                                                                                                                    (14, 4, 7, '재활마스터', '재활치료사 면허', '통증 없는 운동을 지향합니다.', 4.9, 30, 'ACTIVE'),
+                                                                                                                                                    (15, 5, 8, '다이어터', '생활체육지도자 1급', '다이어트 확실하게 시켜드립니다.', 4.2, 5, 'ACTIVE'),
+                                                                                                                                                    (16, 6, 9, '운동은밥', '크로스핏 레벨1', '체력 증진 전문입니다.', 4.7, 15, 'ACTIVE');
 
-INSERT INTO trainer_application_awards (trainer_application_award_id, application_id, competition_name, award_name, award_date, description, file_id, created_at) VALUES
-                                                                                                                                                                      (1, 1, '전국 피트니스 대회', '입상 1위', '2021-09-10', '더미 수상 경력입니다.', 19, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                      (2, 2, '전국 피트니스 대회', '입상 2위', '2022-09-10', '더미 수상 경력입니다.', 20, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                      (3, 3, '전국 피트니스 대회', '입상 3위', '2023-09-10', '더미 수상 경력입니다.', 21, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                      (4, 4, '전국 피트니스 대회', '입상 4위', '2024-09-10', '더미 수상 경력입니다.', 22, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                      (5, 5, '전국 피트니스 대회', '입상 5위', '2025-09-10', '더미 수상 경력입니다.', 23, '2026-05-28 10:00:00.000000');
+INSERT INTO trainer_application_certifications (application_id, name, issuer, acquired_date) VALUES (1, '생활체육지도자 2급', '국민체육진흥공단', '2020-05-10');
+INSERT INTO trainer_certifications (trainer_profile_id, name, issuer, acquired_date) VALUES (1, '생활체육지도자 2급', '국민체육진흥공단', '2020-05-10');
+INSERT INTO trainer_application_awards (application_id, competition_name, award_name, award_date) VALUES (3, '2023 WNGP', '스포츠모델 1위', '2023-09-15');
+INSERT INTO trainer_awards (trainer_profile_id, competition_name, award_name, award_date) VALUES (3, '2023 WNGP', '스포츠모델 1위', '2023-09-15');
+INSERT INTO organization_trainers (organization_id, trainer_profile_id, registered_by) VALUES
+                                                                                           (1, 1, 19), (1, 2, 19), (2, 3, 20), (2, 4, 20), (3, 5, 21), (3, 6, 21);
 
-INSERT INTO trainer_certifications (trainer_certification_id, trainer_profile_id, name, issuer, acquired_date, file_id, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                                                (1, 1, '생활스포츠지도사 2급', '문화체육관광부', '2021-03-01', 14, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                (2, 2, '생활스포츠지도사 2급', '문화체육관광부', '2022-03-01', 15, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                (3, 3, '생활스포츠지도사 2급', '문화체육관광부', '2023-03-01', 16, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                (4, 4, '생활스포츠지도사 2급', '문화체육관광부', '2024-03-01', 17, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                (5, 5, '생활스포츠지도사 2급', '문화체육관광부', '2025-03-01', 18, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+-- ---------------------------------------------------------
+-- 7. PT 코스 및 스케줄, 커리큘럼
+-- ---------------------------------------------------------
+INSERT INTO pt_courses (organization_id, trainer_profile_id, category_id, tag_id, thumbnail_file_id, title, description, price, total_session_count, supports_diet_log, supports_workout_log, status) VALUES
+                                                                                                                                                                                                          (1, 1, 2, 1, 10, '왕초보 탈출 30일 루틴', '웨이트 트레이닝 기초 완벽 가이드', 500000, 10, TRUE, TRUE, 'VISIBLE'),
+                                                                                                                                                                                                          (1, 2, 1, 4, 11, '10kg 감량 보장 다이어트', '체계적인 식단과 유산소 병행', 700000, 15, TRUE, TRUE, 'VISIBLE'),
+                                                                                                                                                                                                          (2, 3, 2, 2, 12, '인생 바프 만들기 프로젝트', '바프 준비를 위한 고강도 트레이닝', 1200000, 20, TRUE, TRUE, 'VISIBLE'),
+                                                                                                                                                                                                          (2, 4, 4, 3, 13, '거북목 라운드숄더 교정', '체형 교정과 통증 완화 집중', 800000, 12, FALSE, TRUE, 'VISIBLE'),
+                                                                                                                                                                                                          (3, 5, 1, 4, 14, '직장인 단기 다이어트', '바쁜 직장인을 위한 효율적인 운동', 600000, 10, TRUE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (3, 6, 2, 1, 15, '스트렝스 향상 클래스', '3대 운동 중량 증가 집중 훈련', 900000, 15, FALSE, TRUE, 'VISIBLE'),
+                                                                                                                                                                                                          (1, 1, 1, 1, 10, '한 달 20kg 감량 기적의 약물 PT', '불법 다이어트 약 처방 및 단기 속성 강제 감량', 1500000, 10, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (2, 3, 2, 2, 11, '여성 회원만 받습니다 (사심 PT)', '오빠가 친절하게 알려줄게 ^^', 50000, 10, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (3, 5, 3, 3, 12, '직장인 체형교정 8주 코스', '퇴근 후 거북목 탈출 프로젝트', 800000, 16, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (1, 2, 4, 4, 13, '수술 후 재활 전문 트레이닝', '병원 연계 안전한 재활 운동', 1200000, 20, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (2, 4, 1, 1, 14, '웨이트 트레이닝 정석 A to Z', '3대 운동 완벽 마스터', 900000, 15, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (3, 6, 2, 2, 15, '크로스핏 스타일 고강도 다이어트', '숨이 턱끝까지 차오르는 짜릿함', 700000, 12, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (1, 1, 3, 3, 10, '초보자를 위한 머신 사용법', '헬스장 기구 100% 활용하기', 400000, 8, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (2, 3, 4, 4, 11, '시니어 건강 맞춤형 PT', '50대 이상을 위한 관절 보호 운동', 850000, 15, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (3, 5, 1, 1, 12, '결혼 준비 신부 다이어트', '드레스 라인 만들기', 1100000, 20, FALSE, FALSE, 'VISIBLE'),
+                                                                                                                                                                                                          (1, 2, 2, 2, 13, '파워리프팅 입문반', '스트렝스 훈련 가이드', 950000, 10, FALSE, FALSE, 'VISIBLE');
 
-INSERT INTO trainer_awards (trainer_award_id, trainer_profile_id, competition_name, award_name, award_date, description, file_id, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                                                          (1, 1, '전국 피트니스 대회', '입상 1위', '2021-09-10', '더미 수상 경력입니다.', 19, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                          (2, 2, '전국 피트니스 대회', '입상 2위', '2022-09-10', '더미 수상 경력입니다.', 20, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                          (3, 3, '전국 피트니스 대회', '입상 3위', '2023-09-10', '더미 수상 경력입니다.', 21, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                          (4, 4, '전국 피트니스 대회', '입상 4위', '2024-09-10', '더미 수상 경력입니다.', 22, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                          (5, 5, '전국 피트니스 대회', '입상 5위', '2025-09-10', '더미 수상 경력입니다.', 23, '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+INSERT INTO pt_course_schedules (pt_course_id, day_of_week, start_time, end_time) VALUES
+                                                                                      (1, 'MONDAY', '10:00:00', '11:00:00'), (1, 'WEDNESDAY', '10:00:00', '11:00:00'),
+                                                                                      (2, 'TUESDAY', '19:00:00', '20:00:00'), (2, 'THURSDAY', '19:00:00', '20:00:00'),
+                                                                                      (3, 'SATURDAY', '14:00:00', '15:00:00'), (3, 'SUNDAY', '14:00:00', '15:00:00');
 
-INSERT INTO organization_trainers (organization_trainer_id, organization_id, trainer_profile_id, registered_by, registered_at, removed_at) VALUES
-                                                                                                                                               (1, 1, 1, 16, '2026-05-03 10:00:00.000000', NULL),
-                                                                                                                                               (2, 1, 2, 16, '2026-05-03 10:00:00.000000', NULL),
-                                                                                                                                               (3, 1, 3, 16, '2026-05-03 10:00:00.000000', NULL),
-                                                                                                                                               (4, 1, 4, 16, '2026-05-03 10:00:00.000000', NULL),
-                                                                                                                                               (5, 1, 5, 16, '2026-05-03 10:00:00.000000', NULL);
+INSERT INTO pt_curriculums (pt_course_id, session_no, title, content) VALUES
+                                                                          (1, 1, '오리엔테이션 및 체형 분석', '인바디 측정 및 기초 근력 테스트 진행'),
+                                                                          (1, 2, '스쿼트 기초', '맨몸 스쿼트 및 고관절 스트레칭, 무게중심 잡기'),
+                                                                          (2, 1, '다이어트 식단 설계', '개인 기초대사량 기반 매크로 영양소 산출'),
+                                                                          (7, 1, '약물 복용법', '식전 3알 드세요'), (8, 1, '연락처 교환', '수업 끝나고 술 한잔?'),
+                                                                          (9, 1, '체형 평가', '라운드 숄더 확인'), (10, 1, '재활 1단계', '통증 유발점 마사지'),
+                                                                          (11, 1, '데드리프트 기초', '힙힌지 만들기'), (12, 1, '체력 테스트', '버피테스트 100개'),
+                                                                          (13, 1, '머신 세팅법', '중량 설정'), (14, 1, '가동범위 체크', '고관절 움직임 확인'),
+                                                                          (15, 1, '상체 라인', '덤벨 숄더프레스'), (16, 1, '룰 미팅', '파워리프팅 대회 규정');
 
-INSERT INTO pt_courses (pt_course_id, organization_id, trainer_profile_id, category_id, tag_id, thumbnail_file_id, title, description, price, total_session_count, supports_diet_log, supports_workout_log, status, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                                                                                                                                            (1, 1, 1, 1, 1, 21, '맞춤 PT 1개월 과정', '트레이너01의 맞춤형 PT 더미 강좌입니다.', 350000, 8, 1, 1, 'VISIBLE', '2026-05-04 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                                                                                                            (2, 1, 2, 2, 2, 22, '맞춤 PT 2개월 과정', '트레이너02의 맞춤형 PT 더미 강좌입니다.', 400000, 8, 1, 1, 'VISIBLE', '2026-05-04 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                                                                                                            (3, 1, 3, 3, 3, 23, '맞춤 PT 3개월 과정', '트레이너03의 맞춤형 PT 더미 강좌입니다.', 450000, 8, 1, 1, 'VISIBLE', '2026-05-04 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                                                                                                            (4, 1, 4, 4, 4, 24, '맞춤 PT 4개월 과정', '트레이너04의 맞춤형 PT 더미 강좌입니다.', 500000, 8, 1, 1, 'VISIBLE', '2026-05-04 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                                                                                                            (5, 1, 5, 5, 5, 25, '맞춤 PT 5개월 과정', '트레이너05의 맞춤형 PT 더미 강좌입니다.', 550000, 8, 1, 1, 'VISIBLE', '2026-05-04 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+-- ---------------------------------------------------------
+-- 8. PT 예약, 피드백, 리뷰, 캘린더, 운동 일지
+-- ---------------------------------------------------------
+INSERT INTO pt_reservations (user_id, pt_course_id, organization_id, trainer_profile_id, reserved_start_at, reserved_end_at, progress_count, total_session_count, status) VALUES
+                                                                                                                                                                              (1, 1, 1, 1, '2026-06-01 10:00:00', '2026-06-01 11:00:00', 1, 10, 'COMPLETED'),
+                                                                                                                                                                              (2, 2, 1, 2, '2026-06-02 19:00:00', '2026-06-02 20:00:00', 0, 15, 'RESERVED'),
+                                                                                                                                                                              (1, 7, 1, 1, '2026-06-10 10:00:00', '2026-06-10 11:00:00', 1, 10, 'COMPLETED'),
+                                                                                                                                                                              (2, 8, 2, 3, '2026-06-11 19:00:00', '2026-06-11 20:00:00', 1, 10, 'COMPLETED'),
+                                                                                                                                                                              (3, 9, 3, 5, '2026-06-12 14:00:00', '2026-06-12 15:00:00', 1, 16, 'COMPLETED'),
+                                                                                                                                                                              (4, 10, 1, 2, '2026-06-13 15:00:00', '2026-06-13 16:00:00', 1, 20, 'COMPLETED'),
+                                                                                                                                                                              (5, 11, 2, 4, '2026-06-14 10:00:00', '2026-06-14 11:00:00', 1, 15, 'COMPLETED'),
+                                                                                                                                                                              (6, 12, 3, 6, '2026-06-15 20:00:00', '2026-06-15 21:00:00', 1, 12, 'COMPLETED'),
+                                                                                                                                                                              (7, 13, 1, 1, '2026-06-16 11:00:00', '2026-06-16 12:00:00', 1, 8, 'COMPLETED'),
+                                                                                                                                                                              (8, 14, 2, 3, '2026-06-17 13:00:00', '2026-06-17 14:00:00', 1, 15, 'COMPLETED'),
+                                                                                                                                                                              (9, 15, 3, 5, '2026-06-18 19:00:00', '2026-06-18 20:00:00', 1, 20, 'COMPLETED'),
+                                                                                                                                                                              (10, 16, 1, 2, '2026-06-19 14:00:00', '2026-06-19 15:00:00', 1, 10, 'COMPLETED');
 
-INSERT INTO pt_course_schedules (pt_course_schedule_id, pt_course_id, day_of_week, start_time, end_time, created_at, updated_at) VALUES
-                                                                                                                                     (1, 1, 'MONDAY', '10:00:00', '11:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (2, 1, 'TUESDAY', '19:00:00', '20:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (3, 2, 'TUESDAY', '10:00:00', '11:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (4, 2, 'WEDNESDAY', '19:00:00', '20:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (5, 3, 'WEDNESDAY', '10:00:00', '11:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (6, 3, 'THURSDAY', '19:00:00', '20:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (7, 4, 'THURSDAY', '10:00:00', '11:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (8, 4, 'FRIDAY', '19:00:00', '20:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (9, 5, 'FRIDAY', '10:00:00', '11:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                     (10, 5, 'MONDAY', '19:00:00', '20:00:00', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000');
+INSERT INTO feedbacks (pt_reservation_id, pt_curriculum_id, trainer_profile_id, user_id, content, status) VALUES
+                                                                                                              (1, 1, 1, 1, '오늘 첫 수업 수고 많으셨습니다. 발목 유연성 확보를 위해 꾸준히 스트레칭 해주세요!', 'ACTIVE'),
+                                                                                                              (3, 4, 1, 1, '약 꼭 제때 챙겨드세요 ^^ 그래야 단기 감량 효과 봅니다.', 'ACTIVE'),
+                                                                                                              (4, 5, 3, 2, '오늘 운동복 의상 너무 예쁘시네요. 수업에 집중하기 힘들었습니다 ^^;', 'ACTIVE'),
+                                                                                                              (5, 6, 5, 3, '라운드 숄더 개선을 위해 평소 흉추 펴는 습관 잊지마세요!', 'ACTIVE'),
+                                                                                                              (6, 7, 2, 4, '마사지 부위 폼롤러로 꼭 풀어주세요.', 'ACTIVE'),
+                                                                                                              (7, 8, 4, 5, '힙힌지 동작 완벽했습니다. 다음엔 중량 올려볼게요.', 'ACTIVE'),
+                                                                                                              (8, 9, 6, 6, '체력 진짜 좋으시네요! 다음엔 더 빡세게 갑니다.', 'ACTIVE'),
+                                                                                                              (9, 10, 1, 7, '등 운동 시 승모근 개입 안되게 주의해주세요.', 'ACTIVE'),
+                                                                                                              (10, 11, 3, 8, '어머님 오늘 무릎 괜찮으셨나요? 무리하지 않게 조절하겠습니다.', 'ACTIVE'),
+                                                                                                              (11, 12, 5, 9, '식단 지켜주셔서 감사합니다. 라인이 보이기 시작했어요.', 'ACTIVE'),
+                                                                                                              (12, 13, 2, 10, '호흡법 조금만 더 신경써주세요. 훌륭합니다.', 'ACTIVE');
 
-INSERT INTO pt_curriculums (pt_curriculum_id, pt_course_id, session_no, title, content, created_at, updated_at) VALUES
-                                                                                                                    (1, 1, 1, '1회차 커리큘럼', '1회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (2, 1, 2, '2회차 커리큘럼', '2회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (3, 1, 3, '3회차 커리큘럼', '3회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (4, 1, 4, '4회차 커리큘럼', '4회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (5, 1, 5, '5회차 커리큘럼', '5회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (6, 1, 6, '6회차 커리큘럼', '6회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (7, 1, 7, '7회차 커리큘럼', '7회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (8, 1, 8, '8회차 커리큘럼', '8회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (9, 2, 1, '1회차 커리큘럼', '1회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (10, 2, 2, '2회차 커리큘럼', '2회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (11, 2, 3, '3회차 커리큘럼', '3회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (12, 2, 4, '4회차 커리큘럼', '4회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (13, 2, 5, '5회차 커리큘럼', '5회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (14, 2, 6, '6회차 커리큘럼', '6회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (15, 2, 7, '7회차 커리큘럼', '7회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (16, 2, 8, '8회차 커리큘럼', '8회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (17, 3, 1, '1회차 커리큘럼', '1회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (18, 3, 2, '2회차 커리큘럼', '2회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (19, 3, 3, '3회차 커리큘럼', '3회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (20, 3, 4, '4회차 커리큘럼', '4회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (21, 3, 5, '5회차 커리큘럼', '5회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (22, 3, 6, '6회차 커리큘럼', '6회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (23, 3, 7, '7회차 커리큘럼', '7회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (24, 3, 8, '8회차 커리큘럼', '8회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (25, 4, 1, '1회차 커리큘럼', '1회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (26, 4, 2, '2회차 커리큘럼', '2회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (27, 4, 3, '3회차 커리큘럼', '3회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (28, 4, 4, '4회차 커리큘럼', '4회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (29, 4, 5, '5회차 커리큘럼', '5회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (30, 4, 6, '6회차 커리큘럼', '6회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (31, 4, 7, '7회차 커리큘럼', '7회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (32, 4, 8, '8회차 커리큘럼', '8회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (33, 5, 1, '1회차 커리큘럼', '1회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (34, 5, 2, '2회차 커리큘럼', '2회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (35, 5, 3, '3회차 커리큘럼', '3회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (36, 5, 4, '4회차 커리큘럼', '4회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (37, 5, 5, '5회차 커리큘럼', '5회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (38, 5, 6, '6회차 커리큘럼', '6회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (39, 5, 7, '7회차 커리큘럼', '7회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                    (40, 5, 8, '8회차 커리큘럼', '8회차 운동 자세 점검 및 단계별 훈련을 진행합니다.', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000');
+INSERT INTO feedback_media (feedback_id, file_id, media_type) VALUES (1, 16, 'VIDEO');
 
-INSERT INTO pt_reservations (pt_reservation_id, user_id, pt_course_id, organization_id, trainer_profile_id, reserved_start_at, reserved_end_at, cancelled_at, completed_at, progress_count, total_session_count, status, created_at, updated_at) VALUES
-                                                                                                                                                                                                                                                     (1, 1, 1, 1, 1, '2026-05-02 10:00:00.000000', '2026-05-02 11:00:00.000000', NULL, '2026-05-02 11:00:00.000000', 1, 8, 'COMPLETED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (2, 2, 2, 1, 2, '2026-05-03 10:00:00.000000', '2026-05-03 11:00:00.000000', NULL, '2026-05-03 11:00:00.000000', 1, 8, 'COMPLETED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (3, 3, 3, 1, 3, '2026-05-04 10:00:00.000000', '2026-05-04 11:00:00.000000', NULL, '2026-05-04 11:00:00.000000', 1, 8, 'COMPLETED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (4, 4, 4, 1, 4, '2026-05-05 10:00:00.000000', '2026-05-05 11:00:00.000000', NULL, '2026-05-05 11:00:00.000000', 1, 8, 'COMPLETED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (5, 5, 5, 1, 5, '2026-05-06 10:00:00.000000', '2026-05-06 11:00:00.000000', NULL, '2026-05-06 11:00:00.000000', 1, 8, 'COMPLETED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (6, 6, 1, 1, 1, '2026-05-07 10:00:00.000000', '2026-05-07 11:00:00.000000', NULL, NULL, 0, 8, 'RESERVED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (7, 7, 2, 1, 2, '2026-05-08 10:00:00.000000', '2026-05-08 11:00:00.000000', NULL, NULL, 0, 8, 'RESERVED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (8, 8, 3, 1, 3, '2026-05-09 10:00:00.000000', '2026-05-09 11:00:00.000000', NULL, NULL, 0, 8, 'RESERVED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (9, 9, 4, 1, 4, '2026-05-10 10:00:00.000000', '2026-05-10 11:00:00.000000', NULL, NULL, 0, 8, 'RESERVED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                                                                                     (10, 10, 5, 1, 5, '2026-05-11 10:00:00.000000', '2026-05-11 11:00:00.000000', NULL, NULL, 0, 8, 'RESERVED', '2026-05-01 09:00:00.000000', '2026-05-28 10:00:00.000000');
+INSERT INTO trainer_reviews (user_id, trainer_profile_id, pt_course_id, pt_reservation_id, rating, content, status) VALUES
+                                                                                                                        (1, 1, 1, 1, 5, '설명도 너무 잘해주시고 자세가 금방 좋아졌어요. 강력 추천합니다!', 'ACTIVE'),
+                                                                                                                        (1, 1, 7, 3, 1, '트레이너가 불법 약물을 강요합니다. 절대 가지마세요.', 'ACTIVE'),
+                                                                                                                        (2, 3, 8, 4, 1, '운동은 안가르쳐주고 계속 몸매 평가하면서 추행합니다.', 'ACTIVE'),
+                                                                                                                        (3, 5, 9, 5, 5, '거북목이 많이 좋아졌어요! 감사합니다.', 'ACTIVE'),
+                                                                                                                        (4, 2, 10, 6, 5, '무릎 통증이 사라졌습니다.', 'ACTIVE'),
+                                                                                                                        (5, 4, 11, 7, 4, '설명을 아주 잘해주십니다.', 'ACTIVE'),
+                                                                                                                        (6, 6, 12, 8, 5, '너무 힘들지만 살은 확실히 빠집니다 ㅋㅋ', 'ACTIVE'),
+                                                                                                                        (7, 1, 13, 9, 4, '기구 사용법 완벽히 익혔습니다.', 'ACTIVE'),
+                                                                                                                        (8, 3, 14, 10, 5, '부모님 끊어드렸는데 만족하십니다.', 'ACTIVE'),
+                                                                                                                        (9, 5, 15, 11, 5, '웨딩 드레스 입을 생각에 설레네요!', 'ACTIVE'),
+                                                                                                                        (10, 2, 16, 12, 4, '3대 중량 50kg 올랐습니다.', 'ACTIVE');
 
-INSERT INTO feedbacks (feedback_id, pt_reservation_id, pt_curriculum_id, trainer_profile_id, user_id, content, status, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                                               (1, 1, 1, 1, 1, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (2, 2, 9, 2, 2, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (3, 3, 17, 3, 3, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (4, 4, 25, 4, 4, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (5, 5, 33, 5, 5, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (6, 6, 1, 1, 6, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (7, 7, 9, 2, 7, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (8, 8, 17, 3, 8, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (9, 9, 25, 4, 9, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                               (10, 10, 33, 5, 10, '운동 수행 자세와 다음 회차 보완점을 정리한 피드백입니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+INSERT INTO calendar_entries (user_id, entry_type, target_id, title, entry_date) VALUES
+    (1, 'PT', 1, '스쿼트 기초 수업 (득근맨 트레이너)', '2026-06-01');
 
-INSERT INTO feedback_media (feedback_media_id, feedback_id, file_id, media_type, created_at) VALUES
-                                                                                                 (1, 1, 26, 'BEFORE', '2026-05-28 10:00:00.000000'),
-                                                                                                 (2, 2, 27, 'AFTER', '2026-05-28 10:00:00.000000'),
-                                                                                                 (3, 3, 28, 'BEFORE', '2026-05-28 10:00:00.000000'),
-                                                                                                 (4, 4, 29, 'AFTER', '2026-05-28 10:00:00.000000'),
-                                                                                                 (5, 5, 30, 'BEFORE', '2026-05-28 10:00:00.000000');
+INSERT INTO workout_diaries (user_id, category_id, feedback_id, title, content, diary_date) VALUES
+    (1, 2, 1, '오운완 - 하체 부수는 날', '스쿼트 50kg 5x5 성공! 강사님이 알려주신 폼 롤러로 풀고 시작함.', '2026-06-01');
 
-INSERT INTO trainer_reviews (trainer_review_id, user_id, trainer_profile_id, pt_course_id, pt_reservation_id, rating, content, status, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                                                               (1, 1, 1, 1, 1, 5, '친절하고 체계적인 수업이었습니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                               (2, 2, 2, 2, 2, 4, '친절하고 체계적인 수업이었습니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                               (3, 3, 3, 3, 3, 5, '친절하고 체계적인 수업이었습니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                               (4, 4, 4, 4, 4, 4, '친절하고 체계적인 수업이었습니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                                               (5, 5, 5, 5, 5, 5, '친절하고 체계적인 수업이었습니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+-- ---------------------------------------------------------
+-- 9. 커뮤니티 (게시글, 댓글, 좋아요)
+-- ---------------------------------------------------------
+INSERT INTO posts (user_id, post_type, title, content, view_count, like_count, comment_count, status) VALUES
+                                                                                                          (1, 'NORMAL', '요즘 다이어트 식단 공유해요~', '아침엔 오트밀, 점심엔 닭가슴살 볶음밥 먹고 있습니다.', 125, 2, 1, 'VISIBLE'),
+                                                                                                          (13, 'NORMAL', '바디프로필 D-30 꿀팁', '수분 조절은 필수입니다. 멘탈 관리 잘하세요!', 340, 15, 0, 'VISIBLE'),
+                                                                                                          (1, 'NORMAL', '도박 사이트 가입하세요', '추천인 코드: xyz ...', 10, 0, 0, 'VISIBLE'),
+                                                                                                          (2, 'NORMAL', '진짜 짜증나네', '헬스장 기구 독점하는 새끼들 뚝배기 깨고싶다', 15, 0, 0, 'VISIBLE'),
+                                                                                                          (3, 'NORMAL', '오늘 등 운동 루틴 공유', '풀업 5세트, 랫풀다운 5세트...', 20, 5, 0, 'VISIBLE'),
+                                                                                                          (4, 'NORMAL', '닭가슴살 질릴 때 꿀팁', '스리라차 소스가 최고입니다.', 50, 10, 0, 'VISIBLE'),
+                                                                                                          (5, 'NORMAL', '운동 파트너 구해요 (성남)', '저녁 8시 을지대 근처에서 같이 하실 분!', 30, 2, 0, 'VISIBLE'),
+                                                                                                          (6, 'NORMAL', '인바디 결과 충격이네요', '체지방률 30% 실화입니까...', 100, 4, 0, 'VISIBLE'),
+                                                                                                          (7, 'NORMAL', '바프 준비 1일차', '식단 기록용으로 매일 올릴 예정입니다.', 12, 1, 0, 'VISIBLE'),
+                                                                                                          (8, 'NORMAL', '스트랩 추천 좀 해주세요', '베르사그립 살까요? wsf 살까요?', 45, 0, 0, 'VISIBLE'),
+                                                                                                          (9, 'NORMAL', '오늘 하체 완료', '오운완! 다리가 후들거리네요.', 80, 12, 0, 'VISIBLE'),
+                                                                                                          (10, 'NORMAL', '운동 휴식일엔 뭐하시나요?', '저는 폼롤러로 마사지만 해줍니다.', 22, 3, 0, 'VISIBLE');
 
-INSERT INTO calendar_entries (calendar_entry_id, user_id, entry_type, target_id, title, entry_date, sticker_type, created_at) VALUES
-                                                                                                                                  (1, 1, 'PT_RESERVATION', 1, 'PT 예약 1', '2026-05-02', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (2, 2, 'PT_RESERVATION', 2, 'PT 예약 2', '2026-05-03', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (3, 3, 'PT_RESERVATION', 3, 'PT 예약 3', '2026-05-04', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (4, 4, 'PT_RESERVATION', 4, 'PT 예약 4', '2026-05-05', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (5, 5, 'PT_RESERVATION', 5, 'PT 예약 5', '2026-05-06', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (6, 6, 'PT_RESERVATION', 6, 'PT 예약 6', '2026-05-07', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (7, 7, 'PT_RESERVATION', 7, 'PT 예약 7', '2026-05-08', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (8, 8, 'PT_RESERVATION', 8, 'PT 예약 8', '2026-05-09', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (9, 9, 'PT_RESERVATION', 9, 'PT 예약 9', '2026-05-10', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (10, 10, 'PT_RESERVATION', 10, 'PT 예약 10', '2026-05-11', 'DUMBBELL', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (11, 1, 'WORKOUT_DIARY', 1, '운동일지 1', '2026-05-06', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (12, 2, 'WORKOUT_DIARY', 2, '운동일지 2', '2026-05-07', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (13, 3, 'WORKOUT_DIARY', 3, '운동일지 3', '2026-05-08', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (14, 4, 'WORKOUT_DIARY', 4, '운동일지 4', '2026-05-09', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (15, 5, 'WORKOUT_DIARY', 5, '운동일지 5', '2026-05-10', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (16, 6, 'WORKOUT_DIARY', 6, '운동일지 6', '2026-05-11', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (17, 7, 'WORKOUT_DIARY', 7, '운동일지 7', '2026-05-12', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (18, 8, 'WORKOUT_DIARY', 8, '운동일지 8', '2026-05-13', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (19, 9, 'WORKOUT_DIARY', 9, '운동일지 9', '2026-05-14', 'CHECK', '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (20, 10, 'WORKOUT_DIARY', 10, '운동일지 10', '2026-05-15', 'CHECK', '2026-05-28 10:00:00.000000');
+INSERT INTO comments (post_id, user_id, content, status) VALUES
+                                                             (1, 2, '오트밀 레시피 궁금해요!', 'ACTIVE'),
+                                                             (3, 4, '불법 스포츠 토토 사이트 -> http://...', 'ACTIVE'),
+                                                             (4, 5, '글쓴이 진짜 ㅄ인가 ㅋㅋ 맛알못이네', 'ACTIVE'),
+                                                             (5, 1, '저요! 쪽지 드렸습니다.', 'ACTIVE'),
+                                                             (6, 2, '할 수 있습니다! 화이팅!', 'ACTIVE'),
+                                                             (7, 3, '응원합니다. 득근하세요.', 'ACTIVE'),
+                                                             (8, 4, '저는 베르사그립 강력 추천이요.', 'ACTIVE'),
+                                                             (9, 5, '수고하셨습니다~', 'ACTIVE'),
+                                                             (10, 6, '저도 폼롤러하고 푹 쉽니다.', 'ACTIVE'),
+                                                             (3, 7, '루틴 좋네요 참고하겠습니다.', 'ACTIVE'),
+                                                             (4, 8, '스리라차 최고죠 ㅎㅎ', 'ACTIVE');
 
-INSERT INTO workout_diaries (workout_diary_id, user_id, category_id, feedback_id, title, content, diary_date, status, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                                              (1, 1, 1, 1, '운동일지 1', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-06', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (2, 2, 2, 2, '운동일지 2', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-07', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (3, 3, 3, 3, '운동일지 3', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-08', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (4, 4, 4, 4, '운동일지 4', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-09', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (5, 5, 5, 5, '운동일지 5', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-10', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (6, 6, 1, 6, '운동일지 6', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-11', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (7, 7, 2, 7, '운동일지 7', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-12', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (8, 8, 3, 8, '운동일지 8', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-13', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (9, 9, 4, 9, '운동일지 9', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-14', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                              (10, 10, 5, 10, '운동일지 10', '스쿼트, 벤치프레스, 유산소를 진행했습니다.', '2026-05-15', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+INSERT INTO post_likes (post_id, user_id) VALUES (1, 2), (1, 3);
 
-INSERT INTO posts (post_id, user_id, post_type, title, content, view_count, like_count, comment_count, status, created_at, updated_at, deleted_at) VALUES
-                                                                                                                                                       (1, 1, 'NORMAL', '운동 질문 1', '오늘 운동 루틴에 대한 더미 게시글입니다.', 11, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (2, 2, 'NORMAL', '운동 질문 2', '오늘 운동 루틴에 대한 더미 게시글입니다.', 12, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (3, 3, 'NORMAL', '운동 질문 3', '오늘 운동 루틴에 대한 더미 게시글입니다.', 13, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (4, 4, 'NORMAL', '운동 질문 4', '오늘 운동 루틴에 대한 더미 게시글입니다.', 14, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (5, 5, 'NORMAL', '운동 질문 5', '오늘 운동 루틴에 대한 더미 게시글입니다.', 15, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (6, 6, 'NORMAL', '운동 질문 6', '오늘 운동 루틴에 대한 더미 게시글입니다.', 16, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (7, 7, 'NORMAL', '운동 질문 7', '오늘 운동 루틴에 대한 더미 게시글입니다.', 17, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (8, 8, 'NORMAL', '운동 질문 8', '오늘 운동 루틴에 대한 더미 게시글입니다.', 18, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (9, 9, 'NORMAL', '운동 질문 9', '오늘 운동 루틴에 대한 더미 게시글입니다.', 19, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                                       (10, 10, 'NORMAL', '운동 질문 10', '오늘 운동 루틴에 대한 더미 게시글입니다.', 20, 2, 2, 'VISIBLE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+-- ---------------------------------------------------------
+-- 10. 채팅 (채팅방 및 메시지)
+-- ---------------------------------------------------------
+INSERT INTO chat_rooms (user_id, trainer_profile_id, pt_course_id, status) VALUES (1, 1, 1, 'ACTIVE');
+INSERT INTO chat_messages (chat_room_id, sender_id, content) VALUES
+                                                                 (1, 1, '트레이너님 안녕하세요! 내일 준비물 따로 있을까요?'),
+                                                                 (1, 11, '유저1님 안녕하세요! 개인 실내 운동화랑 개인 물통만 챙겨와주시면 됩니다^^');
 
-INSERT INTO comments (comment_id, post_id, user_id, content, status, created_at, updated_at, deleted_at) VALUES
-                                                                                                             (1, 1, 2, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (2, 2, 3, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (3, 3, 4, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (4, 4, 5, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (5, 5, 6, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (6, 6, 7, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (7, 7, 8, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (8, 8, 9, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (9, 9, 10, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (10, 10, 1, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (11, 1, 2, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (12, 2, 3, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (13, 3, 4, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (14, 4, 5, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (15, 5, 6, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (16, 6, 7, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (17, 7, 8, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (18, 8, 9, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (19, 9, 10, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                             (20, 10, 1, '좋은 정보 감사합니다.', 'ACTIVE', '2026-05-28 10:00:00.000000', '2026-05-28 10:00:00.000000', NULL);
+-- ---------------------------------------------------------
+-- 11. 신고, 블랙리스트, 관리자 액션 로그, 알림, 시스템 로그
+-- ---------------------------------------------------------
+INSERT INTO report_groups (report_number, target_type, target_id, target_owner_id, snapshot_title, snapshot_content, snapshot_file_url, total_report_count, effective_report_count, review_status) VALUES
+                                                                                                                                                                                                       ('REP-202606-001', 'POST', 1, 1, NULL, NULL, NULL, 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-P01', 'POST', 3, 1, '도박 사이트 가입하세요', '추천인 코드: xyz ...', NULL, 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-P02', 'POST', 4, 2, '진짜 짜증나네', '헬스장 기구 독점하는 새끼들 뚝배기 깨고싶다', NULL, 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-C01', 'COMMENT', 2, 4, NULL, '불법 스포츠 토토 사이트 -> http://...', NULL, 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-C02', 'COMMENT', 3, 5, NULL, '글쓴이 진짜 ㅄ인가 ㅋㅋ 맛알못이네', NULL, 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-T01', 'PT_COURSE', 7, 11, '한 달 20kg 감량 기적의 약물 PT', '불법 다이어트 약 처방 및 단기 속성 강제 감량', 'https://s3.gymjjak.com/uuid-thumb1.jpg', 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-T02', 'PT_COURSE', 8, 13, '여성 회원만 받습니다 (사심 PT)', '오빠가 친절하게 알려줄게 ^^', 'https://s3.gymjjak.com/uuid-thumb3.jpg', 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-R01', 'TRAINER_REVIEW', 2, 1, NULL, '트레이너가 불법 약물을 강요합니다. 절대 가지마세요.', NULL, 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-R02', 'TRAINER_REVIEW', 3, 2, NULL, '운동은 안가르쳐주고 계속 몸매 평가하면서 추행합니다.', NULL, 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-F01', 'FEEDBACK', 2, 11, NULL, '약 꼭 제때 챙겨드세요 ^^ 그래야 단기 감량 효과 봅니다.', 'https://s3.gymjjak.com/uuid-fb1.mp4', 1, 1, 'PENDING'),
+                                                                                                                                                                                                       ('REP-202606-F02', 'FEEDBACK', 3, 13, NULL, '오늘 운동복 의상 너무 예쁘시네요. 수업에 집중하기 힘들었습니다 ^^;', NULL, 1, 1, 'PENDING');
 
-INSERT INTO post_likes (like_id, post_id, user_id, created_at) VALUES
-                                                                   (1, 1, 2, '2026-05-28 10:00:00.000000'),
-                                                                   (2, 1, 6, '2026-05-28 10:00:00.000000'),
-                                                                   (3, 2, 3, '2026-05-28 10:00:00.000000'),
-                                                                   (4, 2, 7, '2026-05-28 10:00:00.000000'),
-                                                                   (5, 3, 4, '2026-05-28 10:00:00.000000'),
-                                                                   (6, 3, 8, '2026-05-28 10:00:00.000000'),
-                                                                   (7, 4, 5, '2026-05-28 10:00:00.000000'),
-                                                                   (8, 4, 9, '2026-05-28 10:00:00.000000'),
-                                                                   (9, 5, 6, '2026-05-28 10:00:00.000000'),
-                                                                   (10, 5, 10, '2026-05-28 10:00:00.000000'),
-                                                                   (11, 6, 7, '2026-05-28 10:00:00.000000'),
-                                                                   (12, 6, 1, '2026-05-28 10:00:00.000000'),
-                                                                   (13, 7, 8, '2026-05-28 10:00:00.000000'),
-                                                                   (14, 7, 2, '2026-05-28 10:00:00.000000'),
-                                                                   (15, 8, 9, '2026-05-28 10:00:00.000000'),
-                                                                   (16, 8, 3, '2026-05-28 10:00:00.000000'),
-                                                                   (17, 9, 10, '2026-05-28 10:00:00.000000'),
-                                                                   (18, 9, 4, '2026-05-28 10:00:00.000000'),
-                                                                   (19, 10, 1, '2026-05-28 10:00:00.000000'),
-                                                                   (20, 10, 5, '2026-05-28 10:00:00.000000');
+-- (올바른 reason enum으로 변경하여 INSERT)
+INSERT INTO reports (report_group_id, reporter_id, reason, detail, status) VALUES
+                                                                               (1, 3, 'SPAM', '광고성 게시글인 것 같습니다.', 'PENDING'),
+                                                                               (2, 5, 'SPAM', '불법 도박 사이트 광고입니다.', 'PENDING'),
+                                                                               (3, 6, 'ABUSE', '심한 욕설 및 혐오 조장', 'PENDING'),
+                                                                               (4, 1, 'SPAM', '스팸성 외부 링크 유도 댓글', 'PENDING'),
+                                                                               (5, 2, 'ABUSE', '비하 발언 및 인신 공격', 'PENDING'),
+                                                                               (6, 3, 'ETC', '약사법 위반 약물 강요 의심', 'PENDING'),
+                                                                               (7, 4, 'SEXUAL_CONTENT', '강좌 설명이 불쾌합니다.', 'PENDING'),
+                                                                               (8, 11, 'ETC', '악의적인 허위 리뷰 작성으로 업무 방해', 'PENDING'),
+                                                                               (9, 13, 'ABUSE', '명예 훼손성 악플 리뷰', 'PENDING'),
+                                                                               (10, 1, 'ETC', '피드백으로 불법 다이어트 약 복용 지시', 'PENDING'),
+                                                                               (11, 2, 'SEXUAL_CONTENT', '성적 수치심을 유발하는 피드백 멘트', 'PENDING');
 
-INSERT INTO chat_rooms (chat_room_id, user_id, trainer_profile_id, pt_course_id, user_left, trainer_left, status, created_at, closed_at, updated_at) VALUES
-                                                                                                                                                         (1, 1, 1, 1, 0, 0, 'ACTIVE', '2026-05-10 10:00:00.000000', NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                         (2, 2, 2, 2, 0, 0, 'ACTIVE', '2026-05-10 10:00:00.000000', NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                         (3, 3, 3, 3, 0, 0, 'ACTIVE', '2026-05-10 10:00:00.000000', NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                         (4, 4, 4, 4, 0, 0, 'ACTIVE', '2026-05-10 10:00:00.000000', NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                                         (5, 5, 5, 5, 0, 0, 'ACTIVE', '2026-05-10 10:00:00.000000', NULL, '2026-05-28 10:00:00.000000');
+INSERT INTO blacklists (user_id, admin_id, type, reason, source_type) VALUES
+    (10, 17, 'SUSPENSION', '불법 도박 사이트 지속적 광고 도배', 'ADMIN');
+INSERT INTO admin_action_logs (actor_type, admin_id, action_type, target_type, target_id, description) VALUES
+    ('ADMIN', 17, 'BAN_USER', 'USER', 10, '악성 유저(user10) 영구 정지 처리');
+INSERT INTO notifications (receiver_id, notification_type, title, target_type, target_id) VALUES
+    (1, 'CHAT', '득근맨 트레이너님으로부터 새 메시지가 도착했습니다.', 'CHAT_ROOM', 1);
+INSERT INTO system_logs (trace_id, log_level, request_uri, message) VALUES
+    ('trace-start-xyz123', 'INFO', '/api/v1/health', 'GymJjak System Application Started Successfully.');
 
-INSERT INTO chat_messages (chat_message_id, chat_room_id, sender_id, content, created_at) VALUES
-                                                                                              (1, 1, 1, '상담 메시지 1입니다.', '2026-05-11 10:05:00.000000'),
-                                                                                              (2, 1, 11, '상담 메시지 2입니다.', '2026-05-11 10:10:00.000000'),
-                                                                                              (3, 1, 1, '상담 메시지 3입니다.', '2026-05-11 10:15:00.000000'),
-                                                                                              (4, 1, 11, '상담 메시지 4입니다.', '2026-05-11 10:20:00.000000'),
-                                                                                              (5, 1, 1, '상담 메시지 5입니다.', '2026-05-11 10:25:00.000000'),
-                                                                                              (6, 2, 2, '상담 메시지 1입니다.', '2026-05-12 10:05:00.000000'),
-                                                                                              (7, 2, 12, '상담 메시지 2입니다.', '2026-05-12 10:10:00.000000'),
-                                                                                              (8, 2, 2, '상담 메시지 3입니다.', '2026-05-12 10:15:00.000000'),
-                                                                                              (9, 2, 12, '상담 메시지 4입니다.', '2026-05-12 10:20:00.000000'),
-                                                                                              (10, 2, 2, '상담 메시지 5입니다.', '2026-05-12 10:25:00.000000'),
-                                                                                              (11, 3, 3, '상담 메시지 1입니다.', '2026-05-13 10:05:00.000000'),
-                                                                                              (12, 3, 13, '상담 메시지 2입니다.', '2026-05-13 10:10:00.000000'),
-                                                                                              (13, 3, 3, '상담 메시지 3입니다.', '2026-05-13 10:15:00.000000'),
-                                                                                              (14, 3, 13, '상담 메시지 4입니다.', '2026-05-13 10:20:00.000000'),
-                                                                                              (15, 3, 3, '상담 메시지 5입니다.', '2026-05-13 10:25:00.000000'),
-                                                                                              (16, 4, 4, '상담 메시지 1입니다.', '2026-05-14 10:05:00.000000'),
-                                                                                              (17, 4, 14, '상담 메시지 2입니다.', '2026-05-14 10:10:00.000000'),
-                                                                                              (18, 4, 4, '상담 메시지 3입니다.', '2026-05-14 10:15:00.000000'),
-                                                                                              (19, 4, 14, '상담 메시지 4입니다.', '2026-05-14 10:20:00.000000'),
-                                                                                              (20, 4, 4, '상담 메시지 5입니다.', '2026-05-14 10:25:00.000000'),
-                                                                                              (21, 5, 5, '상담 메시지 1입니다.', '2026-05-15 10:05:00.000000'),
-                                                                                              (22, 5, 15, '상담 메시지 2입니다.', '2026-05-15 10:10:00.000000'),
-                                                                                              (23, 5, 5, '상담 메시지 3입니다.', '2026-05-15 10:15:00.000000'),
-                                                                                              (24, 5, 15, '상담 메시지 4입니다.', '2026-05-15 10:20:00.000000'),
-                                                                                              (25, 5, 5, '상담 메시지 5입니다.', '2026-05-15 10:25:00.000000');
-
-INSERT INTO report_groups (
-    report_group_id,
-    report_number,
-    target_type,
-    target_id,
-    target_owner_id,
-    snapshot_title,
-    snapshot_content,
-    snapshot_file_url,
-    total_report_count,
-    effective_report_count,
-    review_status,
-    sanction_status,
-    processed_by,
-    created_at,
-    updated_at,
-    deleted_at
-) VALUES
-      (
-          1,
-          'RPT-202605-0001',
-          'POST',
-          1,
-          1,
-          '신고 대상 제목 1',
-          '신고 대상 내용 스냅샷입니다.',
-          NULL,
-          2,
-          2,
-          'PENDING',
-          'NONE',
-          NULL,
-          '2026-05-28 10:00:00.000000',
-          '2026-05-28 10:00:00.000000',
-          NULL
-      ),
-      (
-          2,
-          'RPT-202605-0002',
-          'POST',
-          2,
-          2,
-          '신고 대상 제목 2',
-          '신고 대상 내용 스냅샷입니다.',
-          NULL,
-          2,
-          2,
-          'PENDING',
-          'NONE',
-          NULL,
-          '2026-05-28 10:00:00.000000',
-          '2026-05-28 10:00:00.000000',
-          NULL
-      ),
-      (
-          3,
-          'RPT-202605-0003',
-          'POST',
-          3,
-          3,
-          '신고 대상 제목 3',
-          '신고 대상 내용 스냅샷입니다.',
-          NULL,
-          2,
-          2,
-          'PENDING',
-          'NONE',
-          NULL,
-          '2026-05-28 10:00:00.000000',
-          '2026-05-28 10:00:00.000000',
-          NULL
-      ),
-      (
-          4,
-          'RPT-202605-0004',
-          'COMMENT',
-          4,
-          4,
-          '신고 대상 제목 4',
-          '신고 대상 내용 스냅샷입니다.',
-          NULL,
-          2,
-          2,
-          'PENDING',
-          'NONE',
-          NULL,
-          '2026-05-28 10:00:00.000000',
-          '2026-05-28 10:00:00.000000',
-          NULL
-      ),
-      (
-          5,
-          'RPT-202605-0005',
-          'COMMENT',
-          5,
-          5,
-          '신고 대상 제목 5',
-          '신고 대상 내용 스냅샷입니다.',
-          NULL,
-          2,
-          2,
-          'PENDING',
-          'NONE',
-          NULL,
-          '2026-05-28 10:00:00.000000',
-          '2026-05-28 10:00:00.000000',
-          NULL
-      );
-
-INSERT INTO reports (report_id, report_group_id, reporter_id, reason, detail, status, processed_by, processed_at, created_at) VALUES
-                                                                                                                                  (1, 1, 4, 'SPAM', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (2, 2, 5, 'ABUSE', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (3, 3, 6, 'INAPPROPRIATE', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (4, 4, 7, 'FALSE_INFO', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (5, 5, 8, 'ETC', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (6, 1, 9, 'SPAM', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (7, 2, 10, 'ABUSE', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (8, 3, 1, 'INAPPROPRIATE', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (9, 4, 2, 'FALSE_INFO', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000'),
-                                                                                                                                  (10, 5, 3, 'ETC', '커뮤니티 운영 정책 위반으로 신고합니다.', 'PENDING', NULL, NULL, '2026-05-28 10:00:00.000000');
-
-INSERT INTO notifications (notification_id, receiver_id, notification_type, title, target_type, target_id, read_at, created_at, deleted_at, expires_at) VALUES
-                                                                                                                                                            (1, 1, 'PT_RESERVED', '알림 제목 1', 'PT_COURSE', 1, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (2, 2, 'FEEDBACK_CREATED', '알림 제목 2', 'FEEDBACK', 2, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (3, 3, 'REPORT_PROCESSED', '알림 제목 3', 'REPORT_GROUP', 3, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (4, 4, 'TRAINER_APPROVED', '알림 제목 4', 'ORGANIZATION', 4, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (5, 5, 'CHAT_MESSAGE', '알림 제목 5', 'CHAT_ROOM', 5, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (6, 6, 'PT_RESERVED', '알림 제목 6', 'PT_COURSE', 1, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (7, 7, 'FEEDBACK_CREATED', '알림 제목 7', 'FEEDBACK', 2, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (8, 8, 'REPORT_PROCESSED', '알림 제목 8', 'REPORT_GROUP', 3, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (9, 9, 'TRAINER_APPROVED', '알림 제목 9', 'ORGANIZATION', 4, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (10, 10, 'CHAT_MESSAGE', '알림 제목 10', 'CHAT_ROOM', 5, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (11, 11, 'PT_RESERVED', '알림 제목 11', 'PT_COURSE', 1, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (12, 12, 'FEEDBACK_CREATED', '알림 제목 12', 'FEEDBACK', 2, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (13, 13, 'REPORT_PROCESSED', '알림 제목 13', 'REPORT_GROUP', 3, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (14, 14, 'TRAINER_APPROVED', '알림 제목 14', 'ORGANIZATION', 4, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (15, 15, 'CHAT_MESSAGE', '알림 제목 15', 'CHAT_ROOM', 5, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (16, 16, 'PT_RESERVED', '알림 제목 16', 'PT_COURSE', 1, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (17, 17, 'FEEDBACK_CREATED', '알림 제목 17', 'FEEDBACK', 2, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (18, 18, 'REPORT_PROCESSED', '알림 제목 18', 'REPORT_GROUP', 3, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (19, 1, 'TRAINER_APPROVED', '알림 제목 19', 'ORGANIZATION', 4, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000'),
-                                                                                                                                                            (20, 2, 'CHAT_MESSAGE', '알림 제목 20', 'CHAT_ROOM', 5, NULL, '2026-05-28 10:00:00.000000', NULL, '2026-06-30 23:59:59.000000');
-
-INSERT INTO blacklists (blacklist_id, user_id, admin_id, type, reason, ended_at, status, source_type, created_at, deleted_at) VALUES
-                                                                                                                                  (1, 9, 17, 'SUSPEND_7_DAYS', '반복 신고 누적', '2026-06-28 00:00:00.000000', 'ACTIVE', 'ADMIN', '2026-05-28 10:00:00.000000', NULL),
-                                                                                                                                  (2, 10, 18, 'PERMANENT', '운영 정책 위반 경고', NULL, 'ACTIVE', 'SYSTEM', '2026-05-28 10:00:00.000000', NULL);
-
-INSERT INTO admin_action_logs (action_log_id, actor_type, admin_id, action_type, target_type, target_id, before_status, after_status, description, ip_address, trace_id, created_at) VALUES
-                                                                                                                                                                                         (1, 'ADMIN', 17, 'USER_SUSPEND', 'USER', 1, NULL, 'RESOLVED', '관리자 액션 로그 1', '192.168.0.1', 'trace-admin-0001', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (2, 'ADMIN', 18, 'REPORT_APPROVE', 'REPORT_GROUP', 2, NULL, 'REJECTED', '관리자 액션 로그 2', '192.168.0.2', 'trace-admin-0002', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (3, 'ADMIN', 17, 'REPORT_REJECT', 'POST', 3, NULL, 'RESOLVED', '관리자 액션 로그 3', '192.168.0.3', 'trace-admin-0003', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (4, 'ADMIN', 18, 'TARGET_BLIND', 'COMMENT', 4, NULL, 'REJECTED', '관리자 액션 로그 4', '192.168.0.4', 'trace-admin-0004', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (5, 'ADMIN', 17, 'BLACKLIST_RELEASE', 'BLACKLIST', 5, NULL, 'RESOLVED', '관리자 액션 로그 5', '192.168.0.5', 'trace-admin-0005', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (6, 'ADMIN', 18, 'USER_SUSPEND', 'USER', 6, NULL, 'REJECTED', '관리자 액션 로그 6', '192.168.0.6', 'trace-admin-0006', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (7, 'ADMIN', 17, 'REPORT_APPROVE', 'REPORT_GROUP', 7, NULL, 'RESOLVED', '관리자 액션 로그 7', '192.168.0.7', 'trace-admin-0007', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (8, 'ADMIN', 18, 'REPORT_REJECT', 'POST', 8, NULL, 'REJECTED', '관리자 액션 로그 8', '192.168.0.8', 'trace-admin-0008', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (9, 'ADMIN', 17, 'TARGET_BLIND', 'COMMENT', 9, NULL, 'RESOLVED', '관리자 액션 로그 9', '192.168.0.9', 'trace-admin-0009', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                                         (10, 'ADMIN', 18, 'BLACKLIST_RELEASE', 'BLACKLIST', 10, NULL, 'REJECTED', '관리자 액션 로그 10', '192.168.0.10', 'trace-admin-0010', '2026-05-28 10:00:00.000000');
-
-INSERT INTO system_logs (system_log_id, trace_id, log_level, request_uri, http_method, remote_addr, user_id, message, exception_class, stack_trace, created_at) VALUES
-                                                                                                                                                                    (1, 'trace-000001', 'WARN', '/api/dummy', 'GET', '192.168.0.1', 1, 'WARN 로그 메시지 1', 'java.lang.IllegalArgumentException', 'java.lang.IllegalArgumentException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:1)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (2, 'trace-000002', 'WARN', '/api/dummy', 'POST', '192.168.0.2', 2, 'WARN 로그 메시지 2', 'java.lang.IllegalArgumentException', 'java.lang.IllegalArgumentException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:2)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (3, 'trace-000003', 'ERROR', '/api/dummy', 'GET', '192.168.0.3', 3, 'ERROR 로그 메시지 3', 'java.lang.NullPointerException', 'java.lang.NullPointerException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:3)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (4, 'trace-000004', 'WARN', '/api/dummy', 'POST', '192.168.0.4', 4, 'WARN 로그 메시지 4', 'java.lang.IllegalArgumentException', 'java.lang.IllegalArgumentException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:4)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (5, 'trace-000005', 'WARN', '/api/dummy', 'GET', '192.168.0.5', 5, 'WARN 로그 메시지 5', 'java.lang.IllegalArgumentException', 'java.lang.IllegalArgumentException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:5)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (6, 'trace-000006', 'ERROR', '/api/dummy', 'POST', '192.168.0.6', 6, 'ERROR 로그 메시지 6', 'java.lang.NullPointerException', 'java.lang.NullPointerException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:6)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (7, 'trace-000007', 'WARN', '/api/dummy', 'GET', '192.168.0.7', 7, 'WARN 로그 메시지 7', 'java.lang.IllegalArgumentException', 'java.lang.IllegalArgumentException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:7)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (8, 'trace-000008', 'WARN', '/api/dummy', 'POST', '192.168.0.8', 8, 'WARN 로그 메시지 8', 'java.lang.IllegalArgumentException', 'java.lang.IllegalArgumentException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:8)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (9, 'trace-000009', 'ERROR', '/api/dummy', 'GET', '192.168.0.9', 9, 'ERROR 로그 메시지 9', 'java.lang.NullPointerException', 'java.lang.NullPointerException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:9)', '2026-05-28 10:00:00.000000'),
-                                                                                                                                                                    (10, 'trace-000010', 'WARN', '/api/dummy', 'POST', '192.168.0.10', 10, 'WARN 로그 메시지 10', 'java.lang.IllegalArgumentException', 'java.lang.IllegalArgumentException: 더미 예외 스택트레이스
-	at com.ssambbong.gymjjak.Dummy.method(Dummy.java:10)', '2026-05-28 10:00:00.000000');
-
--- End of reduced dummy data
+SET FOREIGN_KEY_CHECKS = 1;

@@ -4,6 +4,8 @@ import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.List;
+
 // PT 강습 상세 응답 DTO
 public record PtCourseDetailResponse(
 
@@ -61,6 +63,9 @@ public record PtCourseDetailResponse(
         @Schema(description = "트레이너 이름", example = "트레이너01")
         String trainerName,
 
+        @Schema(description = "트레이너 프로필 이미지 URL")
+        String trainerProfileImageUrl,
+
         @Schema(description = "트레이너 경력", example = "4년차 / 체형교정 전문")
         String trainerSpec,
 
@@ -71,7 +76,19 @@ public record PtCourseDetailResponse(
         Double averageRating,
 
         @Schema(description = "리뷰 수", example = "1")
-        int reviewCount
+        int reviewCount,
+
+        @Schema(description = "자격증 목록 (미구현, 빈 배열 반환)")
+        List<Object> certifications,
+
+        @Schema(description = "수상 목록 (미구현, 빈 배열 반환)")
+        List<Object> awards,
+
+        @Schema(description = "커리큘럼 목록 (미구현, 빈 배열 반환)")
+        List<Object> curriculums,
+
+        @Schema(description = "최근 리뷰 목록 (미구현, 빈 배열 반환)")
+        List<Object> recentReviews
 
 ) {
     public static PtCourseDetailResponse from(PtCourseQueryUseCase.PtCourseDetailView view) {
@@ -93,10 +110,15 @@ public record PtCourseDetailResponse(
                 view.instagramUrl(),
                 view.trainerProfileId(),
                 view.trainerName(),
+                view.trainerProfileImageUrl(),
                 view.trainerSpec(),
                 view.trainerIntroduction(),
                 view.averageRating(),
-                view.reviewCount()
+                view.reviewCount(),
+                view.certifications(),
+                view.awards(),
+                view.curriculums(),
+                view.recentReviews()
         );
     }
 }
