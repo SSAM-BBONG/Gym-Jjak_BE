@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 /**
  * 신고관리 페이지 속 1 행에 들어갈 데이터 값들
+ * @param reportGroupId : 신고 당한 글 pk값
  * @param reportNumber : 신고 번호 UUID 값
  * @param targetType : 신고 그룹 타입, ex) PT, 피드백, 게시글 등등
  * @param targetId : 피신고 게시글 pk값
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
  */
 @Builder
 public record AdminReportListItemResponse(
+        Long reportGroupId,
         String reportNumber,
         String targetType,
         Long targetId,
@@ -31,6 +33,7 @@ public record AdminReportListItemResponse(
 ) {
     public static AdminReportListItemResponse from(AdminReportListItem item) {
         return AdminReportListItemResponse.builder()
+                .reportGroupId(item.reportGroupId())
                 .reportNumber(item.reportNumber())
                 .targetType(item.targetType().getDescription())
                 .targetId(item.targetId())

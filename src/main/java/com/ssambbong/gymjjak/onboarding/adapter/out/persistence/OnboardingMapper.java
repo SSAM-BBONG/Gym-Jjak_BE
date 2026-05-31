@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.onboarding.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.onboarding.domain.model.OnboardingSurvey;
 import com.ssambbong.gymjjak.onboarding.domain.model.Region;
+import com.ssambbong.gymjjak.user.adapter.out.persistence.UserJpaEntity;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,15 +32,18 @@ public class OnboardingMapper {
         );
     }
 
-    public OnboardingSurveyJpaEntity toOnboardingSurveyEntity(OnboardingSurvey onboardingSurvey) {
+    public OnboardingSurveyJpaEntity toOnboardingSurveyEntity(
+            OnboardingSurvey onboardingSurvey,
+            UserJpaEntity userEntity,
+            RegionJpaEntity regionEntity) {
         return new OnboardingSurveyJpaEntity(
                 onboardingSurvey.getId(),
-                onboardingSurvey.getUserId(),
+                userEntity,
                 onboardingSurvey.getExerciseGoal(),
                 onboardingSurvey.getExercisePeriod(),
                 onboardingSurvey.getExerciseFrequency(),
                 onboardingSurvey.getPreferredExercise(),
-                onboardingSurvey.getPreferredRegionId(),
+                regionEntity,
                 onboardingSurvey.getHeight(),
                 onboardingSurvey.getWeight()
         );
@@ -48,12 +52,12 @@ public class OnboardingMapper {
     public OnboardingSurvey toOnboardingSurveyDomain(OnboardingSurveyJpaEntity entity) {
         return OnboardingSurvey.reconstruct(
                 entity.getId(),
-                entity.getUserId(),
+                entity.getUser().getId(),
                 entity.getExerciseGoal(),
                 entity.getExercisePeriod(),
                 entity.getExerciseFrequency(),
                 entity.getPreferredExercise(),
-                entity.getPreferredRegionId(),
+                entity.getPreferredRegion().getId(),
                 entity.getHeight(),
                 entity.getWeight(),
                 entity.getCreatedAt(),

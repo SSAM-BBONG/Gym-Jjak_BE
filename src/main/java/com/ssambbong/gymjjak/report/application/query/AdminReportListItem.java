@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import java.time.LocalDateTime;
 
 public record AdminReportListItem(
+        Long reportGroupId,
         String reportNumber, // uuid 값
         ReportTargetType targetType, // 타겟 타입
         Long targetId, // 타겟 번호

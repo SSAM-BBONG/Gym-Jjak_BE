@@ -154,4 +154,8 @@ public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
         this.reviewedAt = reviewedAt;
         this.rejectReason = rejectReason;
     }
+
+    public void cancel() {
+        this.status = OrganizationApplicationStatus.CANCELLED;
+    }
 }

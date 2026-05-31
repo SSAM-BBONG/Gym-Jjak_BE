@@ -40,10 +40,10 @@ public class TokenController {
     @PostMapping("/reissue")
     @Operation(summary = "AccessToken 재발급", description = "RefreshToken을 검증한 뒤 새로운 AccessToken을 발급한다.")
     public ResponseEntity<GlobalApiResponse<ReissueTokenResponse>> reissueAccessToken(
-            @Valid @RequestBody ReissueTokenRequest request
+            @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
         String accessToken = tokenCommandUsecase.reissueAccessToken(
-                new ReissueTokenCommand(request.refreshToken())
+                new ReissueTokenCommand(refreshToken)
         );
 
         return ResponseEntity.ok(

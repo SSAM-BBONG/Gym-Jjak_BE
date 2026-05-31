@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroupReviewStatus;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
@@ -55,4 +56,81 @@ public class ReportGroupJpaEntity extends BaseTimeEntity {
     private ReportGroupSanctionStatus sanctionStatus;
 
     private Long processedBy;
+
+    private ReportGroupJpaEntity(
+            Long reportGroupId,
+            String reportNumber,
+            ReportTargetType targetType,
+            Long targetId,
+            Long targetOwnerId,
+            String snapshotTitle,
+            String snapshotContent,
+            String snapshotFileUrl,
+            int totalReportCount,
+            int effectiveReportCount,
+            ReportGroupReviewStatus reviewStatus,
+            ReportGroupSanctionStatus sanctionStatus,
+            Long processedBy
+    ) {
+        this.reportGroupId = reportGroupId;
+        this.reportNumber = reportNumber;
+        this.targetType = targetType;
+        this.targetId = targetId;
+        this.targetOwnerId = targetOwnerId;
+        this.snapshotTitle = snapshotTitle;
+        this.snapshotContent = snapshotContent;
+        this.snapshotFileUrl = snapshotFileUrl;
+        this.totalReportCount = totalReportCount;
+        this.effectiveReportCount = effectiveReportCount;
+        this.reviewStatus = reviewStatus;
+        this.sanctionStatus = sanctionStatus;
+        this.processedBy = processedBy;
+    }
+
+    public static ReportGroupJpaEntity of(
+            Long reportGroupId,
+            String reportNumber,
+            ReportTargetType targetType,
+            Long targetId,
+            Long targetOwnerId,
+            String snapshotTitle,
+            String snapshotContent,
+            String snapshotFileUrl,
+            int totalReportCount,
+            int effectiveReportCount,
+            ReportGroupReviewStatus reviewStatus,
+            ReportGroupSanctionStatus sanctionStatus,
+            Long processedBy
+    ) {
+        return new ReportGroupJpaEntity(
+                reportGroupId,
+                reportNumber,
+                targetType,
+                targetId,
+                targetOwnerId,
+                snapshotTitle,
+                snapshotContent,
+                snapshotFileUrl,
+                totalReportCount,
+                effectiveReportCount,
+                reviewStatus,
+                sanctionStatus,
+                processedBy
+        );
+    }
+
+    public void updateFromDomain(ReportGroup reportGroup) {
+        this.reportNumber = reportGroup.getReportNumber();
+        this.targetType = reportGroup.getTargetType();
+        this.targetId = reportGroup.getTargetId();
+        this.targetOwnerId = reportGroup.getTargetOwnerId();
+        this.snapshotTitle = reportGroup.getSnapshotTitle();
+        this.snapshotContent = reportGroup.getSnapshotContent();
+        this.snapshotFileUrl = reportGroup.getSnapshotFileUrl();
+        this.totalReportCount = reportGroup.getTotalReportCount();
+        this.effectiveReportCount = reportGroup.getEffectiveReportCount();
+        this.reviewStatus = reportGroup.getReviewStatus();
+        this.sanctionStatus = reportGroup.getSanctionStatus();
+        this.processedBy = reportGroup.getProcessedBy();
+    }
 }
