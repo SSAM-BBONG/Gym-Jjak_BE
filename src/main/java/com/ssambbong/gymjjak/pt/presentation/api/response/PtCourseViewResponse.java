@@ -31,16 +31,16 @@ public record PtCourseViewResponse(
         @Schema(description = "상태", example = "VISIBLE")
         PtCourseStatus status,
 
-        @Schema(description = "조직명", example = "짐짝피트니스 강남점")
+
         String organizationName,
 
-        @Schema(description = "조직 주소", example = "서울특별시 강남구 테헤란로 123")
+
         String organizationAddress,
 
-        @Schema(description = "위도", example = "37.5007")
+
         Double latitude,
 
-        @Schema(description = "경도", example = "127.0365")
+
         Double longitude,
 
         @Schema(description = "트레이너 이름", example = "트레이너01")
