@@ -30,14 +30,13 @@ public class OrganizationApplicationQueryService implements OrganizationApplicat
     @Override
     public OrganizationApplication findOrganizationApplicationDetails(Long organizationApplicationId, Long requestUserId, boolean isAdmin) {
 
-        OrganizationApplication organizationApplication = organizationApplicationRepository.findById(organizationApplicationId)
-                .orElseThrow(OrganizationApplicationNotFoundException::new);
-
-        if (!isAdmin && !organizationApplication.getApplicantUserId().equals(requestUserId)) {
-            throw new OrganizationApplicationAccessDeniedException();
+        if (isAdmin) {
+            return organizationApplicationRepository.findById(organizationApplicationId)
+                    .orElseThrow(OrganizationApplicationNotFoundException::new);
         }
 
-        return organizationApplication;
+        return organizationApplicationRepository.findByIdAndApplicantUserId(organizationApplicationId, requestUserId)
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
     }
 
     @Override
