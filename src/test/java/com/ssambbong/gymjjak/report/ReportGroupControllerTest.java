@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.global.security.handler.CustomAccessDeniedHandler;
 import com.ssambbong.gymjjak.global.security.handler.CustomAuthenticationEntryPoint;
 import com.ssambbong.gymjjak.global.security.jwt.JwtAuthenticationFilter;
 import com.ssambbong.gymjjak.report.application.query.*;
+import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCase;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupQueryUseCase;
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.*;
@@ -42,6 +43,9 @@ public class ReportGroupControllerTest {
     private ReportGroupQueryUseCase reportGroupQueryUseCase;
 
     @MockitoBean
+    private ReportGroupCommandUseCase reportGroupCommandUseCase;
+
+    @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockitoBean
@@ -51,6 +55,7 @@ public class ReportGroupControllerTest {
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     AdminReportListItem item = new AdminReportListItem(
+            999L,
             "RPT-001",
             ReportTargetType.PT_COURSE,
             10L,
@@ -91,17 +96,18 @@ public class ReportGroupControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.code").value("REPORT_200_1"))
+                .andExpect(jsonPath("$.code").value("REPORT_200_2"))
                 .andExpect(jsonPath("$.data.page").value(1))
                 .andExpect(jsonPath("$.data.size").value(10))
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.totalPages").value(2))
+                .andExpect(jsonPath("$.data.reports[0].reportGroupId").value(999))
                 .andExpect(jsonPath("$.data.reports[0].reportNumber").value("RPT-001"))
                 .andExpect(jsonPath("$.data.reports[0].targetType").value("PT"))
                 .andExpect(jsonPath("$.data.reports[0].targetId").value(10))
                 .andExpect(jsonPath("$.data.reports[0].targetDisplayText").value("욕설이 난무하는 PT"))
                 .andExpect(jsonPath("$.data.reports[0].targetOwnerUsername").value("트레이너 현자"))
-                .andExpect(jsonPath("$.data.reports[0].reportCount").value(3))
+                .andExpect(jsonPath("$.data.reports[0].effectiveReportCount").value(3))
                 .andExpect(jsonPath("$.data.reports[0].navigationType").value("PAGE"));
     }
 
