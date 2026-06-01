@@ -26,7 +26,7 @@ public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "applicant_user_id", nullable = false)
     private Long applicantUserId;
 
-    @Column(name = "requested_login_id", nullable = false, unique = true, length = 100)
+    @Column(name = "requested_login_id", nullable = false, length = 100)
     private String requestedLoginId;
 
     @Column(name = "business_license_file_id", nullable = false)
@@ -153,5 +153,9 @@ public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
         this.reviewedBy = reviewedBy;
         this.reviewedAt = reviewedAt;
         this.rejectReason = rejectReason;
+    }
+
+    public void cancel() {
+        this.status = OrganizationApplicationStatus.CANCELLED;
     }
 }

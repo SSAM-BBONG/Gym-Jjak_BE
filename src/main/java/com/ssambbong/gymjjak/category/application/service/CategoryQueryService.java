@@ -21,7 +21,12 @@ public class CategoryQueryService implements CategoryQueryUseCase {
     public List<CategoryView> handle() {
         return categoryRepository.findAll()
                 .stream()
-                .map(category -> new CategoryView(category.getId(), category.getName()))
+                .map(category -> new CategoryView(
+                        category.getId(),
+                        category.getName(),
+                        category.getCreatedAt(),
+                        categoryRepository.countPtCoursesByCategoryId(category.getId())
+                ))
                 .toList();
     }
 }

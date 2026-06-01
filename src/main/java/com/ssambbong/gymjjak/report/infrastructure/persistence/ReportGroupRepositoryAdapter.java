@@ -34,7 +34,15 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
 
     @Override
     public ReportGroup save(ReportGroup reportGroup) {
-        ReportGroupJpaEntity entity = reportGroupPersistenceMapper.toEntity(reportGroup);
+        ReportGroupJpaEntity entity = reportGroup.getReportGroupId() == null
+                ? reportGroupPersistenceMapper.toEntity(reportGroup)
+                : reportGroupRepository.findById(reportGroup.getReportGroupId())
+                        .map(existing -> {
+                            existing.updateFromDomain(reportGroup);
+                            return existing;
+                        })
+                        .orElseThrow(() -> new ReportGroupNotFoundException(reportGroup.getReportGroupId()));
+
         ReportGroupJpaEntity savedEntity = reportGroupRepository.save(entity);
         return reportGroupPersistenceMapper.toDomain(savedEntity);
     }
@@ -223,6 +231,7 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
             LocalDateTime latestReportedAt
     ) {
         return new AdminReportListItem(
+                entity.getReportGroupId(),
                 entity.getReportNumber(),
                 entity.getTargetType(),
                 entity.getTargetId(),

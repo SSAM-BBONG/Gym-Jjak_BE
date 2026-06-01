@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.report.domain.exception.ReportNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.Report;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,15 @@ public class ReportRepositoryAdapter implements ReportRepository {
 
     @Override
     public Report save(Report report) {
-        ReportJpaEntity entity = reportPersistenceMapper.toEntity(report);
+        ReportJpaEntity entity = report.getReportId() == null
+                ? reportPersistenceMapper.toEntity(report)
+                : reportRepository.findById(report.getReportId())
+                        .map(existing -> {
+                            existing.updateFromDomain(report);
+                            return existing;
+                        })
+                        .orElseThrow(() -> new ReportNotFoundException(report.getReportId()));
+
         ReportJpaEntity savedEntity = reportRepository.save(entity);
         return reportPersistenceMapper.toDomain(savedEntity);
     }

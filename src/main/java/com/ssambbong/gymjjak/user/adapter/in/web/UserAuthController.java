@@ -82,7 +82,9 @@ public class UserAuthController {
                         UserResponseCode.USER_LOGIN_SUCCESS,
                         new LoginResponse(
                                 result.accessToken(),
+                                result.role(),
                                 result.onboardingCompleted()
+
                         )
                 ));
     }

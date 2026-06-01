@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
+import static com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus.CANCELLED;
+import static com.ssambbong.gymjjak.organization.domain.model.OrganizationApplicationStatus.REJECTED;
+
 @Component
 @RequiredArgsConstructor
 public class OrganizationApplicationAdaptor implements OrganizationApplicationRepository {
@@ -18,15 +21,18 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
 
     @Override
     public boolean existsByBusinessRegistrationNumberAndStatus(String businessRegistrationNumber) {
-       return springDataOrganizationApplicationRepository
-               .existsByBusinessRegistrationNumberAndStatus(
-                       businessRegistrationNumber,
-                       OrganizationApplicationStatus.ACCEPTED);
+        return springDataOrganizationApplicationRepository
+                .existsByBusinessRegistrationNumberAndStatusNotIn(
+                        businessRegistrationNumber,
+                        List.of(CANCELLED, REJECTED));
     }
 
     @Override
     public boolean existsByRequestedLoginId(String requestedLoginId) {
-        return springDataOrganizationApplicationRepository.existsByRequestedLoginId(requestedLoginId);
+        return springDataOrganizationApplicationRepository
+                .existsByRequestedLoginIdAndStatusNotIn(
+                        requestedLoginId,
+                        List.of(CANCELLED, REJECTED));
     }
 
     @Override
@@ -85,4 +91,24 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
 
         entity.reject(organizationApplication.getReviewedBy(), organizationApplication.getReviewedAt(), organizationApplication.getRejectReason());
     }
+
+    @Override
+    public Optional<OrganizationApplication> findByIdAndApplicantUserId(Long organizationApplicationId, Long applicantId) {
+
+        return springDataOrganizationApplicationRepository
+                .findByOrganizationApplicationIdAndApplicantUserId(organizationApplicationId, applicantId)
+                .map(OrganizationApplicationJpaEntity::toDomain);
+    }
+
+    @Override
+    public void cancel(OrganizationApplication organizationApplication) {
+
+        OrganizationApplicationJpaEntity entity = springDataOrganizationApplicationRepository
+                .findById(organizationApplication.getOrganizationApplicationId())
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        entity.cancel();
+
+    }
+
 }

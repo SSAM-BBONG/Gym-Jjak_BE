@@ -94,4 +94,17 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
 
         organizationApplicationRepository.reject(rejected);
     }
+
+    @Override
+    @Transactional
+    public void cancelOrganizationApplication(Long organizationApplicationId, Long applicantId) {
+
+        OrganizationApplication organizationApplication = organizationApplicationRepository
+                .findByIdAndApplicantUserId(organizationApplicationId, applicantId)
+                .orElseThrow(OrganizationApplicationNotFoundException::new);
+
+        OrganizationApplication cancelled = organizationApplication.cancel();
+
+        organizationApplicationRepository.cancel(cancelled);
+    }
 }

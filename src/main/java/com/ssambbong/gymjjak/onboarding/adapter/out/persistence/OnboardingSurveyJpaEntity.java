@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.onboarding.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.CreatedUpdatedEntity;
+import com.ssambbong.gymjjak.user.adapter.out.persistence.UserJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,8 +20,9 @@ public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
     @Column(name = "onboarding_id", nullable = false)
     private Long id;
 
-    @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private UserJpaEntity user;
 
     @Column(name = "exercise_goal", nullable = false, length = 100)
     private String exerciseGoal;
@@ -34,8 +36,9 @@ public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
     @Column(name = "preferred_exercise", nullable = false, length = 100)
     private String preferredExercise;
 
-    @Column(name = "preferred_region_id", nullable = false)
-    private Long preferredRegionId;
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "preferred_region_id", nullable = false)
+    private RegionJpaEntity preferredRegion;
 
     @Column(name = "height", nullable = false, precision = 5, scale = 2)
     private BigDecimal height;
@@ -45,22 +48,22 @@ public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
 
     public OnboardingSurveyJpaEntity(
             Long id,
-            Long userId,
+            UserJpaEntity user,
             String exerciseGoal,
             String exercisePeriod,
             String exerciseFrequency,
             String preferredExercise,
-            Long preferredRegionId,
+            RegionJpaEntity preferredRegion,
             BigDecimal height,
             BigDecimal weight
     ) {
         this.id = id;
-        this.userId = userId;
+        this.user = user;
         this.exerciseGoal = exerciseGoal;
         this.exercisePeriod = exercisePeriod;
         this.exerciseFrequency = exerciseFrequency;
         this.preferredExercise = preferredExercise;
-        this.preferredRegionId = preferredRegionId;
+        this.preferredRegion = preferredRegion;
         this.height = height;
         this.weight = weight;
     }

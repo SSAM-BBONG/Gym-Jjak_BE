@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum FileType {
 
-    TRAINER_PROFILE("uploads/profiles/trainers"),
+    PROFILE_IMAGE("uploads/profiles/trainers"),
     PT_THUMBNAIL("uploads/courses/thumbnails"),
     CERTIFICATION("uploads/certifications"),
     AWARD("uploads/awards"),

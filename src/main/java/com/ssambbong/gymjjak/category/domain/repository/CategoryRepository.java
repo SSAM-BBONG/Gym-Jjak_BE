@@ -17,4 +17,7 @@ public interface CategoryRepository {
     void deleteById(Long id);
     // 중복 이름 확인
     boolean existsByName(String name);
+
+    // 카테고리별 PT 강습 사용 개수
+    long countPtCoursesByCategoryId(Long categoryId);
 }

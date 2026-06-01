@@ -1,27 +1,78 @@
 package com.ssambbong.gymjjak.pt.application.usecase;
 
-import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
 
 import java.util.List;
 
 public interface PtCourseQueryUseCase {
 
-    // 목록 조회
-    List<PtCourseView> findAllPtCourses();
+    // 목록 조회 (페이지네이션)
+    PtCoursePageResult findAllPtCourses(int page, int size);
 
     // 상세 조회
-    PtCourseView findPtCourseDetail(Long ptCourseId);
+    PtCourseDetailView findPtCourseDetail(Long ptCourseId);
 
-    record PtCourseView(
+    // ──── 페이지 결과 ────
+    record PtCoursePageResult(
+            List<PtCourseListView> content,
+            long totalElements,
+            int totalPages,
+            int page,
+            int size
+    ) {}
+
+    // ──── 목록 뷰 ────
+    record PtCourseListView(
             Long ptCourseId,
-            Long categoryId,
+            String categoryName,
             Long tagId,
-            String thumbnailUrl,  // fileId → URL로 변환해서 반환
+            String thumbnailUrl,
+            String title,
+            int price,
+            int totalSessionCount,
+            PtCourseStatus status,
+            // 조직
+            String organizationName,
+            String organizationAddress,
+            Double latitude,
+            Double longitude,
+            // 트레이너
+            String trainerName,
+            String trainerProfileImageUrl,
+            Double averageRating,
+            int reviewCount
+    ) {}
+
+    // ──── 상세 뷰 ────
+    record PtCourseDetailView(
+            Long ptCourseId,
+            String categoryName,
+            Long tagId,
+            String thumbnailUrl,
             String title,
             String description,
             int price,
             int totalSessionCount,
-            PtCourseStatus status
+            PtCourseStatus status,
+            // 조직
+            Long organizationId,
+            String organizationName,
+            String organizationAddress,
+            String organizationPhone,
+            String websiteUrl,
+            String instagramUrl,
+            // 트레이너
+            Long trainerProfileId,
+            String trainerName,
+            String trainerProfileImageUrl,
+            String trainerSpec,
+            String trainerIntroduction,
+            Double averageRating,
+            int reviewCount,
+            // 미구현 (빈 배열 반환)
+            List<Object> certifications,
+            List<Object> awards,
+            List<Object> curriculums,
+            List<Object> recentReviews
     ) {}
 }

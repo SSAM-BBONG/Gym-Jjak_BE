@@ -1,9 +1,13 @@
 # 불필요한 파일 ignore
+.git
 .gradle
-build
 out
 .idea
 *.iml
-.git
-.gitignore
+
+.env
+.env.*
+application-prod.yml
+application-local.yml
+
 README.md
