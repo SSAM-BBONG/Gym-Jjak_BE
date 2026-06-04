@@ -16,6 +16,7 @@ import java.util.Optional;
 public class ReportRepositoryAdapter implements ReportRepository {
 
     private final SpringDataReportRepository reportRepository;
+    // 도메인 객체 <-> JPA 엔티티 변환 매퍼
     private final ReportPersistenceMapper reportPersistenceMapper;
 
     @Override
@@ -26,15 +27,20 @@ public class ReportRepositoryAdapter implements ReportRepository {
 
     @Override
     public Report save(Report report) {
-        ReportJpaEntity entity = report.getReportId() == null
-                ? reportPersistenceMapper.toEntity(report)
-                : reportRepository.findById(report.getReportId())
-                        .map(existing -> {
-                            existing.updateFromDomain(report);
-                            return existing;
-                        })
-                        .orElseThrow(() -> new ReportNotFoundException(report.getReportId()));
+        // 도멩니 -> 엔티티
+        ReportJpaEntity entity = reportPersistenceMapper.toEntity(report);
 
+        // 존재하면 기존 값에 업데이트
+        if (report.getReportId() != null) {
+            ReportJpaEntity existing = reportRepository.findById(report.getReportId())
+                    .orElseThrow(() -> new ReportNotFoundException(report.getReportId()));
+
+            // 변경 값 업데이트
+            existing.updateFromDomain(report);
+
+            return reportPersistenceMapper.toDomain(existing);
+        }
+        // 신규 저장
         ReportJpaEntity savedEntity = reportRepository.save(entity);
         return reportPersistenceMapper.toDomain(savedEntity);
     }

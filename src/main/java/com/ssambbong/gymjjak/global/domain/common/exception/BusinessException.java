@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.global.domain.common.exception;
 
+import java.util.Map;
+
 /* Comment
 *   도메인 규칙 위반 예외 클래스
 *   - 중복신고
@@ -16,5 +18,9 @@ public abstract class BusinessException extends ApplicationException {
 
     protected BusinessException(ErrorCode errorCode, String message, Throwable cause) {
         super(errorCode, message, cause);
+    }
+
+    protected BusinessException(ErrorCode errorCode, String message, Map<String, Object> context) {
+        super(errorCode, message, context);
     }
 }
