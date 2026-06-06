@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.report.application.service;
 
 import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
 import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
+import com.ssambbong.gymjjak.report.application.metrics.ReportGroupTimed;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionTargetPort;
 import com.ssambbong.gymjjak.report.application.port.UserProfileView;
@@ -34,6 +35,7 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
     private final ReportSanctionTargetPort  reportSanctionTargetPort;
     private final UserQueryPort userQueryPort;
 
+    @ReportGroupTimed(action = "approve")
     @Override
     public AdminReportReasonItem approveReport(ApproveReportCommand command) {
 
@@ -78,6 +80,7 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
         return toReviewReportResult(savedReport);
     }
 
+    @ReportGroupTimed(action = "reject")
     @Override
     public AdminReportReasonItem rejectReport(RejectReportCommand command) {
 

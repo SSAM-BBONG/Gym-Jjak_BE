@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.report.application.query.AdminReportDetailResult;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroupReviewStatus;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 
 import java.util.Optional;
@@ -22,4 +23,6 @@ public interface ReportGroupRepository {
     Optional<ReportGroup> findByTargetTypeAndTargetId(ReportTargetType targetType, Long targetId);
 
     boolean existsByReportNumber(String reportNumber);
+
+    long countByReviewStatusAndDeletedAtIsNull(ReportGroupReviewStatus reportGroupReviewStatus);
 }

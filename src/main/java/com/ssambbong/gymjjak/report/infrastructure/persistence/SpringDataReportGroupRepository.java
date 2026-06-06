@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroupReviewStatus;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import org.springframework.data.domain.Page;
@@ -23,4 +24,6 @@ public interface SpringDataReportGroupRepository extends JpaRepository<ReportGro
 
     // 신고 번호 존재 여부 확인
     boolean existsByReportNumber(String reportNumber);
+
+    long countByReviewStatusAndDeletedAtIsNull(ReportGroupReviewStatus reportGroupReviewStatus);
 }

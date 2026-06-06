@@ -5,10 +5,7 @@ import com.ssambbong.gymjjak.report.application.port.UserProfileView;
 import com.ssambbong.gymjjak.report.application.port.UserQueryPort;
 import com.ssambbong.gymjjak.report.application.query.*;
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
-import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
-import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
-import com.ssambbong.gymjjak.report.domain.model.ReportNavigationType;
-import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
+import com.ssambbong.gymjjak.report.domain.model.*;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -178,6 +175,12 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     @Transactional(readOnly = true)
     public boolean existsByReportNumber(String reportNumber) {
         return reportGroupRepository.existsByReportNumber(reportNumber);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countByReviewStatusAndDeletedAtIsNull(ReportGroupReviewStatus reportGroupReviewStatus) {
+        return reportGroupRepository.countByReviewStatusAndDeletedAtIsNull(reportGroupReviewStatus);
     }
 
 
