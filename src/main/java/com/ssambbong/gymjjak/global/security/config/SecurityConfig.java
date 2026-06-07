@@ -114,6 +114,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/organization-applications/**")
                         .hasAnyAuthority("USER", "TRAINER", "ADMIN")
 
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
+
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

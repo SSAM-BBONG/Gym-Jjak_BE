@@ -183,6 +183,18 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
         return reportGroupRepository.countByReviewStatusAndDeletedAtIsNull(reportGroupReviewStatus);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long countBySanctionStatusAndDeletedAtIsNull(ReportGroupSanctionStatus reportGroupSanctionStatus) {
+        return reportGroupRepository.countBySanctionStatusAndDeletedAtIsNull(reportGroupSanctionStatus);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countAllByDeletedAtIsNull() {
+        return reportGroupRepository.countAllByDeletedAtIsNull();
+    }
+
 
     /* Comment
     *   역할 : 신고 대상자 username 추출
