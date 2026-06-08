@@ -17,4 +17,6 @@ public interface SpringDataOrganizationApplicationRepository extends JpaReposito
     List<OrganizationApplicationJpaEntity> findAllByStatus(OrganizationApplicationStatus status);
 
     Optional<OrganizationApplicationJpaEntity> findByOrganizationApplicationIdAndApplicantUserId(Long organizationApplicationId, Long applicantId);
+
+    long countByStatus(OrganizationApplicationStatus status);
 }

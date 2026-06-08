@@ -27,4 +27,8 @@ public interface OrganizationApplicationRepository {
     void cancel(OrganizationApplication organizationApplication);
 
     Optional<OrganizationApplication> findByIdAndApplicantUserId(Long organizationApplicationId, Long applicantId);
+
+    long count();
+
+    long countByStatus(OrganizationApplicationStatus status);
 }
