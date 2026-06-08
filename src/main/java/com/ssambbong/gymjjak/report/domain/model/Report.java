@@ -64,26 +64,27 @@ public class Report {
         );
     }
 
+    // 신고 단건 승인
     public void approve(Long adminId, LocalDateTime now) {
         validatePending();
         this.status = ReportStatus.APPROVED;
         this.processedBy = adminId;
         this.processedAt = now;
     }
-
+    // 신고 단건 반려
     public void reject(Long adminId, LocalDateTime now) {
         validatePending();
         this.status = ReportStatus.REJECTED;
         this.processedBy = adminId;
         this.processedAt = now;
     }
-
+    // 현재 신고 상태가 pending 상태인지 검증
     private void validatePending() {
         if (this.status != ReportStatus.PENDING) {
             throw new ReportAlreadyProcessedException(this.reportId);
         }
     }
-
+    // 신고 그룹의 소속 개별 신고인지 검증
     public void validateReportGroupId(Long reportGroupId) {
         if (!this.reportGroupId.equals(reportGroupId)) {
             throw new InvalidReportGroupRelationException(reportGroupId, this.reportId);

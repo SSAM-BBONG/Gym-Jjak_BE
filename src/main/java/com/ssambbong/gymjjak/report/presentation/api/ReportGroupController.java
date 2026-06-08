@@ -48,14 +48,21 @@ public class ReportGroupController {
     })
     @GetMapping("/list")
     public ResponseEntity<GlobalApiResponse<AdminReportListResponse>> findReportGroups(
+            @AuthenticationPrincipal AuthUser authUser,
             @RequestParam ReportTargetType targetType,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
+        log.info("[ReportGroupController] 관리자 신고 목록 조회 API 호출 - adminId: {}, targetType: {}",
+                authUser.userId(), targetType);
+
+        log.debug("[ReportGroupController] 상세 조회 조건 - page: {}, size: {}", page, size);
+        // 데이터 읽는 조회 역할 담당 Query 객체로 반환
         AdminReportListQuery query = new AdminReportListQuery(targetType, page, size);
 
         AdminReportListResult result = reportGroupQueryUseCase.findReportGroups(query);
 
+        // app 반환 객체 -> 웹 reponse 객체로 변환
         AdminReportListResponse response = AdminReportListResponse.from(result);
 
         return ResponseEntity.ok(
@@ -75,8 +82,12 @@ public class ReportGroupController {
     @GetMapping("/detail/{reportGroupId}")
     public ResponseEntity<GlobalApiResponse<AdminReportDetailResponse>> findReportDetails(@PathVariable Long reportGroupId) {
 
+        log.info("[ReportGroupController] 관리자 신고 상세 조회 API 호출 - reportGroupId: {}", reportGroupId);
+
+        // Usecase 계층 호출, 비즈니스 조회 결과 담기
         AdminReportDetailResult result = reportGroupQueryUseCase.findReportDetail(reportGroupId);
 
+        // web response dto로 변환
         AdminReportDetailResponse response = AdminReportDetailResponse.from(result);
 
         return ResponseEntity.ok(
@@ -87,7 +98,7 @@ public class ReportGroupController {
         );
     }
     @PreAuthorize("hasAuthority('ADMIN')")
-    @Operation(summary = "신고 승인 처리", description = "관리자가 특정 신고를 승인한다.")
+    @Operation(summary = "신고 승인 처리 api", description = "관리자가 개별 신고 사유를 승인한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 승인 처리 성공"),
             @ApiResponse(responseCode = "404", description = "신고를 찾을 수 없음")
@@ -97,11 +108,19 @@ public class ReportGroupController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long reportGroupId, @PathVariable Long reportId) {
 
+        log.info("[ReportGroupController] 관리자 개별 신고 승인 API 호출 - reportGroupId: {}, reportId: {}, adminId: {}",
+                reportGroupId, reportId, authUser.userId());
+
+        // usecase 계층으로 전달할 식별자 명령 DTO
         AdminReportReasonItem result = reportGroupCommandUseCase.approveReport(new ApproveReportCommand(
                 reportGroupId, reportId, authUser.userId()
         ));
 
+        // appli 계층의 result -> response DTO 생성
         AdminReportReasonItemResponse  response = AdminReportReasonItemResponse.from(result);
+
+        log.info("[ReportGroupController] 관리자 개별 신고 승인 처리 성공 - reportId: {}, 해당 사유의 최종 상태: {}",
+                reportId, response.status());
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
@@ -122,11 +141,17 @@ public class ReportGroupController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long reportGroupId, @PathVariable Long reportId) {
 
+        log.info("[ReportGroupController] 관리자 개별 신고 반려 API 호출 - reportGroupId: {}, reportId: {}, adminId: {}",
+                reportGroupId, reportId, authUser.userId());
+
         AdminReportReasonItem result = reportGroupCommandUseCase.rejectReport(new RejectReportCommand(
                 reportGroupId, reportId, authUser.userId()
         ));
 
         AdminReportReasonItemResponse  response = AdminReportReasonItemResponse.from(result);
+
+        log.info("[ReportGroupController] 관리자 개별 신고 반려 처리 성공 - reportId: {}, 해당 사유의 최종 상태: {}",
+                reportId, response.status());
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
