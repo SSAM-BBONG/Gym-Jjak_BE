@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupQueryUseCase;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
+import com.ssambbong.gymjjak.report.infrastructure.metrics.ReportGroupMetric;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

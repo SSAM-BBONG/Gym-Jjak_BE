@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.report.domain.exception.ReportNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.Report;
+import com.ssambbong.gymjjak.report.domain.model.ReportStatus;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -46,6 +47,7 @@ public class ReportRepositoryAdapter implements ReportRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Report> findAllByReportGroupId(Long reportGroupId) {
         return reportRepository.findByReportGroupIdOrderByCreatedAtDesc(reportGroupId)
                 .stream()
@@ -54,7 +56,20 @@ public class ReportRepositoryAdapter implements ReportRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsByReporterIdAndReportGroupId(Long reporterId, Long reportGroupId) {
         return reportRepository.existsByReporterIdAndReportGroupId(reporterId, reportGroupId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countByStatus(ReportStatus reportStatus) {
+        return reportRepository.countByStatus(reportStatus);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countAll() {
+        return reportRepository.count();
     }
 }

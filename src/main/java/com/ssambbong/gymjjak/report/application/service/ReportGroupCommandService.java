@@ -13,9 +13,12 @@ import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundExceptio
 import com.ssambbong.gymjjak.report.domain.exception.ReportNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.Report;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroupReviewStatus;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
+import com.ssambbong.gymjjak.report.infrastructure.metrics.ReportGroupMetric;
+import com.ssambbong.gymjjak.report.infrastructure.metrics.ReportMetric;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,9 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
     private final ReportGroupRepository reportGroupRepository;
     private final ReportSanctionTargetPort  reportSanctionTargetPort;
     private final UserQueryPort userQueryPort;
+
+    private final ReportGroupMetric reportGroupMetric;
+    private final ReportMetric reportMetric;
 
     @ReportGroupTimed(action = "approve")
     @Override
@@ -59,6 +65,9 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
         // 상위 신고 그룹 가져오기
         ReportGroup reportGroup = getReportGroup(command.reportGroupId());
 
+        // Metric 변경 전 검토 상태 저장
+        ReportGroupReviewStatus previousReviewStatus = reportGroup.getReviewStatus();
+
         // 하위 모든 개별 신고 리스트 조회 후 전달
         List<Report> reports = reportRepository.findAllByReportGroupId(command.reportGroupId());
 
@@ -72,6 +81,15 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
 
         // 최종 재계산 신고 그룹 데이터 저장
         reportGroupRepository.save(reportGroup);
+
+        // 개별 신고 승인 성공 Metric 저장
+        reportMetric.countApprovedReport();
+
+        // 신고 그룹 전체 처리가 끝나면 해결 Metric 저장
+        if (previousReviewStatus == ReportGroupReviewStatus.PENDING
+                && reportGroup.getReviewStatus() != ReportGroupReviewStatus.PENDING) {
+            reportGroupMetric.countCompletedReportGroup();
+        }
 
         log.info("[ReportCommandService] 관리자 개별 신고 승인 및 그룹 상태 재계산 완료 - reportGroupId: {}, 최종 리뷰 상태: {}, 최종 제재 상태: {}",
                 reportGroup.getReportGroupId(), reportGroup.getReviewStatus(), reportGroup.getSanctionStatus());
@@ -95,6 +113,8 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
         Report savedReport = reportRepository.save(report);
 
         ReportGroup reportGroup = getReportGroup(command.reportGroupId());
+        // Metric 카운터용 이전 검토 상태 저장
+        ReportGroupReviewStatus previousReviewStatus = reportGroup.getReviewStatus();
 
         ReportGroupSanctionStatus previousSanctionStatus = reportGroup.getSanctionStatus();
 
@@ -120,6 +140,15 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
 
         log.info("[ReportCommandService] 관리자 개별 신고 반려 및 그룹 상태 동기화 완료 - reportGroupId: {}, 최종 리뷰 상태: {}, 최종 제재 상태: {}",
                 reportGroup.getReportGroupId(), reportGroup.getReviewStatus(), reportGroup.getSanctionStatus());
+
+        // 개별 신고 반려 성공 카운트
+        reportMetric.countRejectedReport();
+
+        // 신고 그룹 처리 완료 시, 해결 메트릭 저장
+        if (previousReviewStatus == ReportGroupReviewStatus.PENDING
+                && reportGroup.getReviewStatus() != ReportGroupReviewStatus.PENDING) {
+            reportGroupMetric.countCompletedReportGroup();
+        }
 
         return toReviewReportResult(savedReport);
     }

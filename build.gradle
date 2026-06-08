@@ -56,6 +56,8 @@ dependencies {
     implementation 'com.github.f4b6a3:tsid-creator:5.2.6'
     // Actuator 의존성
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // Prometheus 의존성
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
 
 tasks.named('test') {

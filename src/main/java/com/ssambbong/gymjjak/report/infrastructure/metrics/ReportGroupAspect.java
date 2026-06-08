@@ -15,22 +15,27 @@ import org.springframework.stereotype.Component;
 public class ReportGroupAspect {
 
     private final MeterRegistry meterRegistry;
+    private final ReportMetric reportMetric;
 
     @Around("@annotation(reportGroupTimed)")
     public Object recordProcessingDuration(
             ProceedingJoinPoint joinPoint,
             ReportGroupTimed reportGroupTimed) throws Throwable {
-        Timer.Sample  sample = Timer.start(meterRegistry);
+        Timer.Sample sample = Timer.start(meterRegistry);
         String outcome = "success";
 
         try {
             return joinPoint.proceed();
+        } catch (RuntimeException exception) {
+            outcome = "failure";
+            reportMetric.recordFailedReport(reportGroupTimed.action(), exception);
+            throw exception;
         } catch (Throwable throwable) {
             outcome = "failure";
             throw throwable;
         } finally {
-            sample.stop(Timer.builder("report.group.processing.duration")
-                    .description("신고 그룹 처리 서비스 실행 시간")
+            sample.stop(Timer.builder("report.processing.duration")
+                    .description("개별 신고 승인/반려 처리 실행 시간")
                     .tag("action", normalizeAction(reportGroupTimed.action()))
                     .tag("outcome", outcome)
                     .register(meterRegistry));
