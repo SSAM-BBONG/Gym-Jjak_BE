@@ -7,7 +7,7 @@ import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplic
 import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationQueryUsecase;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.presentation.api.request.OrganizationApplicationCreateRequest;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.organization.presentation.api.request.RejectOrganizationApplicationRequest;
 import com.ssambbong.gymjjak.organization.presentation.api.response.FindAllOrganizationApplicationsResponse;
 import com.ssambbong.gymjjak.organization.presentation.api.response.FindMyOrganizationApplicationResponse;

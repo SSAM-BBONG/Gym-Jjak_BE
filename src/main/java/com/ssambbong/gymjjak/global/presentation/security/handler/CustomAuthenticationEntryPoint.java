@@ -1,6 +1,7 @@
-package com.ssambbong.gymjjak.global.security.handler;
+package com.ssambbong.gymjjak.global.presentation.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ssambbong.gymjjak.global.domain.auth.AuthErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,30 +30,30 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             AuthenticationException authException
     ) throws IOException, ServletException {
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        AuthErrorCode authErrorCode = resolveAuthErrorCode(request);
+
+        response.setStatus(authErrorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
         Map<String, Object> errorResponse = new LinkedHashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now().toString());
-        errorResponse.put("status", HttpServletResponse.SC_UNAUTHORIZED);
-        errorResponse.put("error", "Unauthorized");
-
-        Object exception = request.getAttribute("exception");
-
-        if ("ACCESS_TOKEN_EXPIRED".equals(exception)) {
-            errorResponse.put("code", "ACCESS_TOKEN_EXPIRED");
-            errorResponse.put("message", "AccessToken이 만료되었습니다.");
-        } else if ("INVALID_TOKEN".equals(exception)) {
-            errorResponse.put("code", "INVALID_TOKEN");
-            errorResponse.put("message", "유효하지 않은 토큰입니다.");
-        } else {
-            errorResponse.put("code", "AUTH_401");
-            errorResponse.put("message", "인증이 필요합니다.");
-        }
-
+        errorResponse.put("status", authErrorCode.getHttpStatus().value());
+        errorResponse.put("error", authErrorCode.getHttpStatus().getReasonPhrase());
+        errorResponse.put("code", authErrorCode.getCode());
+        errorResponse.put("message", authErrorCode.getMessage());
         errorResponse.put("path", request.getRequestURI());
 
         objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
+
+    private AuthErrorCode resolveAuthErrorCode(HttpServletRequest request) {
+        Object exception = request.getAttribute("authErrorCode");
+
+        if (exception instanceof AuthErrorCode authErrorCode) {
+            return authErrorCode;
+        }
+
+        return AuthErrorCode.ACCESS_TOKEN_MISSING;
     }
 }

@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
-import com.ssambbong.gymjjak.global.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -50,7 +50,7 @@ public class TokenAdapter implements TokenPort {
 
     @Override
     public Long getUserId(String token) {
-        return jwtTokenProvider.getUserId(token);
+        return jwtTokenProvider.parseRefreshToken(token).userId();
     }
 
     @Override
@@ -59,3 +59,4 @@ public class TokenAdapter implements TokenPort {
                 .map(RefreshTokenJpaEntity::getRefreshToken);
     }
 }
+

@@ -2,7 +2,7 @@ package com.ssambbong.gymjjak.onboarding.adapter.in.web;
 
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.onboarding.adapter.in.web.request.CompleteOnboardingRequest;
 import com.ssambbong.gymjjak.onboarding.adapter.in.web.response.MyOnboardingResponse;
 import com.ssambbong.gymjjak.onboarding.adapter.in.web.response.OnboardingResponseCode;

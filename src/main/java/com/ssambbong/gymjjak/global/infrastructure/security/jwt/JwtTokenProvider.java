@@ -1,20 +1,19 @@
-package com.ssambbong.gymjjak.global.security.jwt;
+package com.ssambbong.gymjjak.global.infrastructure.security.jwt;
 
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.domain.auth.AuthErrorCode;
+import com.ssambbong.gymjjak.global.domain.auth.AuthException;
+import com.ssambbong.gymjjak.global.domain.auth.JwtClaims;
+import com.ssambbong.gymjjak.global.domain.auth.RefreshTokenClaims;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.List;
 
 @Component
 public class JwtTokenProvider {
@@ -67,28 +66,35 @@ public class JwtTokenProvider {
         }
     }
 
-    public Authentication getAuthentication(String token) {
+    public RefreshTokenClaims parseRefreshToken(String token) {
         Claims claims = parseClaims(token);
 
-        Long userId = Long.valueOf(claims.getSubject());
+        Long userId = parseSubjectAsUserId(claims);
+        String username = claims.get("username", String.class);
+
+        if (username == null || username.isBlank()) {
+            throw new AuthException(AuthErrorCode.USERNAME_CLAIM_MISSING);
+        }
+
+        return new RefreshTokenClaims(userId, username);
+    }
+
+    public JwtClaims parseAccessToken(String token) {
+        Claims claims = parseClaims(token);
+
+        Long userId = parseSubjectAsUserId(claims);
         String username = claims.get("username", String.class);
         String role = claims.get("role", String.class);
 
         if (username == null || username.isBlank()) {
-            throw new IllegalArgumentException("username claim이 없습니다.");
+            throw new AuthException(AuthErrorCode.USERNAME_CLAIM_MISSING);
         }
 
         if (role == null || role.isBlank()) {
-            throw new IllegalArgumentException("role claim이 없습니다.");
+            throw new AuthException(AuthErrorCode.ROLE_CLAIM_MISSING);
         }
 
-        AuthUser authUser = new AuthUser(userId, username, role);
-
-        return new UsernamePasswordAuthenticationToken(
-                authUser,
-                null,
-                List.of(new SimpleGrantedAuthority(toAuthority(role)))
-        );
+        return new JwtClaims(userId, username, role);
     }
 
     public boolean isTokenExpired(String token) {
@@ -102,21 +108,6 @@ public class JwtTokenProvider {
         }
     }
 
-    public Long getUserId(String token) {
-        Claims claims = parseClaims(token);
-        return Long.valueOf(claims.getSubject());
-    }
-
-    public String getUsername(String token) {
-        Claims claims = parseClaims(token);
-        return claims.get("username", String.class);
-    }
-
-    public String getRole(String token) {
-        Claims claims = parseClaims(token);
-        return claims.get("role", String.class);
-    }
-
     private Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
@@ -125,11 +116,18 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
-    private String toAuthority(String role) {
-        if (role == null || role.isBlank()) {
-            throw new IllegalArgumentException("role claim이 없습니다.");
+    private Long parseSubjectAsUserId(Claims claims) {
+        String subject = claims.getSubject();
+
+        if (subject == null || subject.isBlank()) {
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN_SUBJECT);
         }
 
-        return role;
+        try {
+            return Long.valueOf(subject);
+        } catch (NumberFormatException e) {
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN_SUBJECT);
+        }
     }
+
 }
