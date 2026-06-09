@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 
 public record AdminReportReasonItem(
         Long reportId,
-        String reporterUsername,
-        ReportReasonType reason,
-        String detail,
+        String reporterUsername, // 신고자 아이디
+        ReportReasonType reason, // 선택 신고 사유
+        String detail, // 상세 사유
         LocalDateTime reportedAt,
-        ReportStatus status
+        ReportStatus status // 단건 신고 처리 상태
 ) {
 
 }

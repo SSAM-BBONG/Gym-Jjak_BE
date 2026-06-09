@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.report.domain.exception.ReportNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.Report;
+import com.ssambbong.gymjjak.report.domain.model.ReportStatus;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -16,6 +17,7 @@ import java.util.Optional;
 public class ReportRepositoryAdapter implements ReportRepository {
 
     private final SpringDataReportRepository reportRepository;
+    // 도메인 객체 <-> JPA 엔티티 변환 매퍼
     private final ReportPersistenceMapper reportPersistenceMapper;
 
     @Override
@@ -26,20 +28,26 @@ public class ReportRepositoryAdapter implements ReportRepository {
 
     @Override
     public Report save(Report report) {
-        ReportJpaEntity entity = report.getReportId() == null
-                ? reportPersistenceMapper.toEntity(report)
-                : reportRepository.findById(report.getReportId())
-                        .map(existing -> {
-                            existing.updateFromDomain(report);
-                            return existing;
-                        })
-                        .orElseThrow(() -> new ReportNotFoundException(report.getReportId()));
+        // 도멩니 -> 엔티티
+        ReportJpaEntity entity = reportPersistenceMapper.toEntity(report);
 
+        // 존재하면 기존 값에 업데이트
+        if (report.getReportId() != null) {
+            ReportJpaEntity existing = reportRepository.findById(report.getReportId())
+                    .orElseThrow(() -> new ReportNotFoundException(report.getReportId()));
+
+            // 변경 값 업데이트
+            existing.updateFromDomain(report);
+
+            return reportPersistenceMapper.toDomain(existing);
+        }
+        // 신규 저장
         ReportJpaEntity savedEntity = reportRepository.save(entity);
         return reportPersistenceMapper.toDomain(savedEntity);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Report> findAllByReportGroupId(Long reportGroupId) {
         return reportRepository.findByReportGroupIdOrderByCreatedAtDesc(reportGroupId)
                 .stream()
@@ -48,7 +56,20 @@ public class ReportRepositoryAdapter implements ReportRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsByReporterIdAndReportGroupId(Long reporterId, Long reportGroupId) {
         return reportRepository.existsByReporterIdAndReportGroupId(reporterId, reportGroupId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countByStatus(ReportStatus reportStatus) {
+        return reportRepository.countByStatus(reportStatus);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countAll() {
+        return reportRepository.count();
     }
 }

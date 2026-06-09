@@ -5,10 +5,12 @@ import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionTargetPort;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
 
 
@@ -18,6 +20,10 @@ public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
 
     @Override
     public void changeAutoBlind(ReportTargetType targetType, Long targetId, ReportSanctionAction action) {
+
+        log.info("[ReportInfrastructure] 외부 도메인 제재 실행 - targetType: {}, targetId: {}, action: {}",
+                targetType, targetId, action);
+
         switch (targetType) {
             case PT_COURSE -> ptCourseSanctionPort.changeAutoBlind(targetId, action);
             case POST, COMMENT -> {
