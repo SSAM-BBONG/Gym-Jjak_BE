@@ -80,6 +80,13 @@ public class OrganizationJpaEntity extends BaseTimeEntity {
     @Column(name = "status", nullable = false, length = 30)
     private OrganizationStatus status;
 
+    public void update(Organization organization) {
+        this.facilityPhone = organization.getFacilityPhone();
+        this.instagramUrl = organization.getInstagramUrl();
+        this.blogUrl = organization.getBlogUrl();
+        this.websiteUrl = organization.getWebsiteUrl();
+    }
+
     public static OrganizationJpaEntity fromDomain(Organization organization) {
         OrganizationJpaEntity entity = new OrganizationJpaEntity();
         entity.organizationAccountId = organization.getOrganizationAccountId();

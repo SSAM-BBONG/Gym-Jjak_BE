@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.organization.organization.infrastructure.persisten
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
+import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +32,13 @@ public class OrganizationAdaptor implements OrganizationRepository {
     public Optional<Organization> findByOrganizationAccountId(Long organizationAccountId) {
         return springDataOrganizationRepository.findByOrganizationAccountId(organizationAccountId)
                 .map(OrganizationJpaEntity::toDomain);
+    }
+
+    @Override
+    public void update(Organization organization) {
+        OrganizationJpaEntity entity = springDataOrganizationRepository.findById(organization.getOrganizationId())
+                .orElseThrow(OrganizationNotFoundException::new);
+        entity.update(organization);
     }
 
     @Override
