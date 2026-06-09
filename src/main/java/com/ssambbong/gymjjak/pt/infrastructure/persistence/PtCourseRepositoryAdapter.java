@@ -4,8 +4,6 @@ import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.domain.repository.PtCourseRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -42,22 +40,11 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
     }
 
     @Override
-    public List<PtCourse> findAllOrderByCreatedAtDesc() {
-        return repository.findAllByOrderByCreatedAtDesc()
+    public List<PtCourse> findAllVisible() {
+        return repository.findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(PtCourseStatus.VISIBLE)
                 .stream()
                 .map(this::toDomain)
                 .toList();
-    }
-
-    @Override
-    public PtCoursePage findAllVisible(int page, int size) {
-        Page<PtCourseJpaEntity> result = repository
-                .findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
-                        PtCourseStatus.VISIBLE, PageRequest.of(page, size));
-        return new PtCoursePage(
-                result.getContent().stream().map(this::toDomain).toList(),
-                result.getTotalElements()
-        );
     }
 
     private PtCourse toDomain(PtCourseJpaEntity entity) {
