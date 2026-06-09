@@ -108,6 +108,37 @@ public class Organization {
         );
     }
 
+    // 수정 가능한 추가 정보만 변경
+    public Organization update(
+            String facilityPhone,
+            String instagramUrl,
+            String blogUrl,
+            String websiteUrl
+    ) {
+        return new Organization(
+                this.organizationId,
+                this.organizationAccountId,
+                this.ownerUserId,
+                this.applicationId,
+                this.businessLicenseFileId,
+                this.businessRegistrationNumber,
+                this.businessName,
+                this.representativeName,
+                this.representativePhone,
+                this.openingDate,
+                this.roadAddress,
+                this.jibunAddress,
+                this.detailAddress,
+                this.latitude,
+                this.longitude,
+                websiteUrl,
+                instagramUrl,
+                blogUrl,
+                facilityPhone,
+                this.status
+        );
+    }
+
     public static Organization restore(
             Long organizationId,
             Long organizationAccountId,

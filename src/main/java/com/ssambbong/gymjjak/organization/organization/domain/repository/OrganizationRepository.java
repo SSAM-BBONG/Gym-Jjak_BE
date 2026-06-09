@@ -13,5 +13,7 @@ public interface OrganizationRepository {
 
     Optional<Organization> findByOrganizationAccountId(Long organizationAccountId);
 
+    void update(Organization organization);
+
     long countByStatus(OrganizationStatus status);
 }
