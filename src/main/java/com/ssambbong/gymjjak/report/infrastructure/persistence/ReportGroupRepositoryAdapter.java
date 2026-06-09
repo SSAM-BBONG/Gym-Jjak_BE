@@ -195,6 +195,27 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
         return reportGroupRepository.countAllByDeletedAtIsNull();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> findManualBlindedResolvedHardDeleteCandidateIds(
+            LocalDateTime threshold, int batchSize) {
+        return reportGroupRepository.findManualBlindedResolvedHardDeleteCandidateIds(
+                ReportGroupReviewStatus.RESOLVED,
+                ReportGroupSanctionStatus.MANUAL_BLINDED,
+                threshold,
+                PageRequest.of(0, batchSize)
+        );
+    }
+
+    @Override
+    public int hardDeleteByIds(List<Long> reportGroupIds) {
+        if (reportGroupIds == null || reportGroupIds.isEmpty()) {
+            return 0;
+        }
+
+        return reportGroupRepository.hardDeleteByIds(reportGroupIds);
+    }
+
 
     /* Comment
     *   역할 : 신고 대상자 username 추출

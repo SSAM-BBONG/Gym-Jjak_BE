@@ -72,4 +72,13 @@ public class ReportRepositoryAdapter implements ReportRepository {
     public long countAll() {
         return reportRepository.count();
     }
+
+    @Override
+    public int hardDeleteByReportGroupIds(List<Long> reportGroupIds) {
+        if (reportGroupIds == null || reportGroupIds.isEmpty()) {
+            return 0;
+        }
+
+        return reportRepository.hardDeleteByReportGroupIds(reportGroupIds);
+    }
 }
