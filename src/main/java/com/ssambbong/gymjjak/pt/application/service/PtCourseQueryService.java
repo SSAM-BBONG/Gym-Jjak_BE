@@ -29,20 +29,16 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final FileUseCase fileUseCase;
 
     @Override
-    public PtCoursePageResult findAllPtCourses(int page, int size) {
-        log.debug("[PtCourseList] 목록 조회 시작 - page={}, size={}", page, size);
+    public List<PtCourseListView> findAllPtCourses() {
+        log.debug("[PtCourseList] 목록 조회 시작");
 
         Map<Long, String> categoryMap = buildCategoryMap();
-        PtCourseRepository.PtCoursePage ptCoursePage = ptCourseRepository.findAllVisible(page, size);
-
-        List<PtCourseListView> content = ptCoursePage.content().stream()
+        List<PtCourseListView> result = ptCourseRepository.findAllVisible().stream()
                 .map(ptCourse -> toListView(ptCourse, categoryMap))
                 .toList();
 
-        int totalPages = (int) Math.ceil((double) ptCoursePage.totalElements() / size);
-
-        log.info("[PtCourseList] 조회된 PT 강습 수={}, 전체={}", content.size(), ptCoursePage.totalElements());
-        return new PtCoursePageResult(content, ptCoursePage.totalElements(), totalPages, page, size);
+        log.info("[PtCourseList] 조회된 PT 강습 수={}", result.size());
+        return result;
     }
 
     @Override
