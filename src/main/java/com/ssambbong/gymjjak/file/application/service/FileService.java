@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.file.domain.model.File;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.file.exception.FileUploadException;
+import com.ssambbong.gymjjak.file.infrastructure.metrics.FileMetrics;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.file.domain.repository.FileRepository;
 import com.ssambbong.gymjjak.file.domain.repository.FileStoragePort;
@@ -25,6 +26,7 @@ public class FileService implements FileUseCase {
 
     private final FileStoragePort fileStoragePort;
     private final FileRepository fileRepository;
+    private final FileMetrics fileMetrics;
 
     @Override
     @Transactional
@@ -107,7 +109,9 @@ public class FileService implements FileUseCase {
 
         // 4. DB 저장 → 실패 시 S3 파일 롤백
         try {
-            return fileRepository.save(file).getFileId();
+            Long fileId = fileRepository.save(file).getFileId();
+            fileMetrics.recordUploadSuccess();
+            return fileId;
         } catch (DataAccessException e) {
             log.error("DB 저장 실패 → S3 파일 롤백 - key: {}", key);
             fileStoragePort.delete(key);

@@ -1,0 +1,24 @@
+package com.ssambbong.gymjjak.organization.organization.application.service;
+
+import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationQueryUseCase;
+import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
+import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
+import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class OrganizationQueryService implements OrganizationQueryUseCase {
+
+    private final OrganizationRepository organizationRepository;
+
+    @Override
+    public Organization findMyOrganization(Long organizationAccountId) {
+        return organizationRepository.findByOrganizationAccountId(organizationAccountId)
+                .orElseThrow(OrganizationNotFoundException::new);
+    }
+
+}
