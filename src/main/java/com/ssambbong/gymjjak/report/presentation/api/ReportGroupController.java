@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.report.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.security.principal.AuthUser;
 import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
+import com.ssambbong.gymjjak.report.application.command.ManualBlindReportGroupCommand;
 import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
 import com.ssambbong.gymjjak.report.application.query.*;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCase;
@@ -157,6 +158,37 @@ public class ReportGroupController {
                 GlobalApiResponse.ok(
                         ReportResponseCode.REJECT_REPORT_SUCCESS,
                         response
+                )
+        );
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Operation(
+            summary = "신고 그룹 수동 블라인드 처리",
+            description = "관리자가 특정 신고 그룹의 제재를 수동 블라인드로 확정하고 soft delete 처리합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "신고 그룹 수동 블라인드 처리 성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 요청 인자값"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+            @ApiResponse(responseCode = "404", description = "신고 그룹을 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "신고 그룹 soft delete 처리 실패")
+    })
+    @PatchMapping("/{reportGroupId}/manual-blind")
+    public ResponseEntity<GlobalApiResponse<Void>> manuallyBlindReportGroup(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long reportGroupId
+    ) {
+        reportGroupCommandUseCase.manuallyBlindReportGroup(
+                new ManualBlindReportGroupCommand(
+                        reportGroupId,
+                        authUser.userId())
+                );
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        ReportResponseCode.MANUAL_BLIND_REPORT_GROUP_SUCCESS,
+                        null
                 )
         );
     }

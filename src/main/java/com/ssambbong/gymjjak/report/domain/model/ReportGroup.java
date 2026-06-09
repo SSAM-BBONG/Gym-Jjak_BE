@@ -174,4 +174,10 @@ public class ReportGroup {
         }
         this.effectiveReportCount--;
     }
+
+    public void manuallyBlind(Long adminId) {
+        this.reviewStatus = ReportGroupReviewStatus.RESOLVED;
+        this.sanctionStatus = ReportGroupSanctionStatus.MANUAL_BLINDED;
+        this.processedBy = adminId;
+    }
 }
