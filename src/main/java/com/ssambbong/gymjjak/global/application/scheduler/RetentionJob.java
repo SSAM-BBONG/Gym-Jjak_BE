@@ -7,5 +7,5 @@ public interface RetentionJob {
 
     String name();
 
-    RetentionResult run(LocalDateTime now);
+    RetentionJobResult run(LocalDateTime now);
 }

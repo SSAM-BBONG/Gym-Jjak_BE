@@ -21,4 +21,7 @@ public interface ReportRepository {
 
     long countAll();
 
+    // hard Delete 스케줄러
+    int hardDeleteByReportGroupIds(List<Long> reportGroupIds);
+
 }
