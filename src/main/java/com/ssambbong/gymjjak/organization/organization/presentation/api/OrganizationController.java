@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class OrganizationController {
     private final OrganizationCommandUseCase organizationCommandUseCase;
     private final FileUseCase fileUseCase;
 
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
     @Operation(summary = "내 조직 정보 조회", description = "조직 계정이 본인 조직 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -56,6 +58,7 @@ public class OrganizationController {
         );
     }
 
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
     @Operation(summary = "내 조직 정보 수정", description = "조직 계정이 본인 조직의 추가 정보를 수정합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공",
