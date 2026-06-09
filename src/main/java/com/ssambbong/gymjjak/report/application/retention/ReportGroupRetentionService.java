@@ -35,7 +35,7 @@ public class ReportGroupRetentionService {
 
         if (candidateIds.isEmpty()) {
             log.info(
-                    "event=report-group-retention-start threshold: {}, periodDays: {}, batchSize: {}",
+                    "event=report-group-retention-empty threshold: {}, periodDays: {}, batchSize: {}",
                     threshold,
                     properties.periodDays(),
                     properties.batchSize()
