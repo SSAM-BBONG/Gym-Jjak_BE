@@ -3,13 +3,17 @@ package com.ssambbong.gymjjak.organization.application.service;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.organization.application.command.OrganizationApplicationCreateCommand;
+import com.ssambbong.gymjjak.organization.application.port.UserCreationPort;
 import com.ssambbong.gymjjak.organization.application.usecase.OrganizationApplicationCommandUsecase;
+import com.ssambbong.gymjjak.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
+import com.ssambbong.gymjjak.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.exception.DuplicateBusinessRegistrationNumberException;
 import com.ssambbong.gymjjak.organization.exception.DuplicateRequestedLoginIdException;
 import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationNotFoundException;
 import com.ssambbong.gymjjak.organization.infrastructure.metrics.OrgApplicationMetrics;
+import com.ssambbong.gymjjak.organization.infrastructure.metrics.OrganizationMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -23,8 +27,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class OrganizationApplicationCommandService implements OrganizationApplicationCommandUsecase {
 
     private final OrganizationApplicationRepository organizationApplicationRepository;
+    private final OrganizationRepository organizationRepository;
+    private final UserCreationPort userCreationPort;
     private final FileUseCase fileUseCase;
     private final OrgApplicationMetrics orgApplicationMetrics;
+    private final OrganizationMetrics organizationMetrics;
 
     @Override
     @Transactional
@@ -68,7 +75,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
             return applicationId;
         } catch (DataAccessException e) {
             log.error("조직 신청 DB 저장 실패 → S3 파일 롤백 - fileId: {}", fileId);
-            fileUseCase.deleteFromStorage(fileId); // S3만 삭제, DB는 트랜잭션 롤백이 처리
+            fileUseCase.deleteFromStorage(fileId);
             throw e;
         }
     }
@@ -82,8 +89,21 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
                 .orElseThrow(OrganizationApplicationNotFoundException::new);
 
         OrganizationApplication approved = organizationApplication.approve(reviewedBy);
-
         organizationApplicationRepository.approve(approved);
+
+        // 조직 계정 생성 (ORGANIZATION role User)
+        Long organizationAccountId = userCreationPort.createOrganizationAccount(
+                approved.getRequestedLoginId(),
+                approved.getRepresentativeName(),
+                approved.getBusinessName(),
+                approved.getRepresentativePhone()
+        );
+
+        // 조직 생성
+        Organization organization = Organization.create(organizationAccountId, approved);
+        organizationRepository.save(organization);
+        organizationMetrics.recordOrganizationCreated();
+
         orgApplicationMetrics.recordOrgApplicationApproved();
     }
 

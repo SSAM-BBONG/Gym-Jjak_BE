@@ -3,9 +3,13 @@ package com.ssambbong.gymjjak.organization;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.organization.application.command.OrganizationApplicationCreateCommand;
+import com.ssambbong.gymjjak.organization.application.port.UserCreationPort;
 import com.ssambbong.gymjjak.organization.application.service.OrganizationApplicationCommandService;
 import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
+import com.ssambbong.gymjjak.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.exception.DuplicateBusinessRegistrationNumberException;
+import com.ssambbong.gymjjak.organization.infrastructure.metrics.OrgApplicationMetrics;
+import com.ssambbong.gymjjak.organization.infrastructure.metrics.OrganizationMetrics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +27,11 @@ import static org.mockito.Mockito.*;
 class OrganizationApplicationCommandServiceTest {
 
     private OrganizationApplicationRepository organizationApplicationRepository;
+    private OrganizationRepository organizationRepository;
+    private UserCreationPort userCreationPort;
     private FileUseCase fileUseCase;
+    private OrgApplicationMetrics orgApplicationMetrics;
+    private OrganizationMetrics organizationMetrics;
     private OrganizationApplicationCommandService organizationApplicationCommandService;
 
     private MultipartFile businessLicenseFile;
@@ -32,10 +40,18 @@ class OrganizationApplicationCommandServiceTest {
     @BeforeEach
     void setUp() {
         organizationApplicationRepository = mock(OrganizationApplicationRepository.class);
+        organizationRepository = mock(OrganizationRepository.class);
+        userCreationPort = mock(UserCreationPort.class);
         fileUseCase = mock(FileUseCase.class);
+        orgApplicationMetrics = mock(OrgApplicationMetrics.class);
+        organizationMetrics = mock(OrganizationMetrics.class);
         organizationApplicationCommandService = new OrganizationApplicationCommandService(
                 organizationApplicationRepository,
-                fileUseCase
+                organizationRepository,
+                userCreationPort,
+                fileUseCase,
+                orgApplicationMetrics,
+                organizationMetrics
         );
 
         businessLicenseFile = mock(MultipartFile.class);
