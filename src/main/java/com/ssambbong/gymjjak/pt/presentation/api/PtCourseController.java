@@ -8,7 +8,7 @@ import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.presentation.api.request.CreatePtCourseRequest;
 import com.ssambbong.gymjjak.pt.presentation.api.response.CreatePtCourseResponse;
 import com.ssambbong.gymjjak.pt.presentation.api.response.PtCourseDetailResponse;
-import com.ssambbong.gymjjak.pt.presentation.api.response.PtCoursePageResponse;
+import com.ssambbong.gymjjak.pt.presentation.api.response.PtCourseViewResponse;
 import com.ssambbong.gymjjak.pt.presentation.api.response.PtCourseResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +20,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "PT", description = "PT 관련 API")
 @RestController
@@ -57,15 +59,12 @@ public class PtCourseController {
     }
 
     // 누구나 목록 조회 가능
-    @Operation(summary = "PT 강습 목록 조회",
-            description = "VISIBLE 상태의 PT 강습 목록을 페이지네이션으로 조회한다.")
+    @Operation(summary = "PT 강습 목록 조회", description = "VISIBLE 상태의 PT 강습 목록을 조회한다.")
     @GetMapping
-    public ResponseEntity<GlobalApiResponse<PtCoursePageResponse>> findAllPtCourses(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        PtCoursePageResponse response = PtCoursePageResponse.from(
-                ptCourseQueryUseCase.findAllPtCourses(page, size));
+    public ResponseEntity<GlobalApiResponse<List<PtCourseViewResponse>>> findAllPtCourses() {
+        List<PtCourseViewResponse> response = ptCourseQueryUseCase.findAllPtCourses().stream()
+                .map(PtCourseViewResponse::from)
+                .toList();
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_LIST, response));
     }
