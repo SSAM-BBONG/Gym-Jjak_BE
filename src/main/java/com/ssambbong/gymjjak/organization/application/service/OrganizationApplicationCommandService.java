@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicat
 import com.ssambbong.gymjjak.organization.exception.DuplicateBusinessRegistrationNumberException;
 import com.ssambbong.gymjjak.organization.exception.DuplicateRequestedLoginIdException;
 import com.ssambbong.gymjjak.organization.exception.OrganizationApplicationNotFoundException;
+import com.ssambbong.gymjjak.organization.infrastructure.metrics.OrgApplicationMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -23,6 +24,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
 
     private final OrganizationApplicationRepository organizationApplicationRepository;
     private final FileUseCase fileUseCase;
+    private final OrgApplicationMetrics orgApplicationMetrics;
 
     @Override
     @Transactional
@@ -61,7 +63,9 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         );
 
         try {
-            return organizationApplicationRepository.save(organizationApplication);
+            Long applicationId = organizationApplicationRepository.save(organizationApplication);
+            orgApplicationMetrics.recordOrgApplicationCreated();
+            return applicationId;
         } catch (DataAccessException e) {
             log.error("조직 신청 DB 저장 실패 → S3 파일 롤백 - fileId: {}", fileId);
             fileUseCase.deleteFromStorage(fileId); // S3만 삭제, DB는 트랜잭션 롤백이 처리
@@ -80,6 +84,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication approved = organizationApplication.approve(reviewedBy);
 
         organizationApplicationRepository.approve(approved);
+        orgApplicationMetrics.recordOrgApplicationApproved();
     }
 
     @Override
@@ -93,6 +98,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication rejected = organizationApplication.reject(reviewedBy, rejectReason);
 
         organizationApplicationRepository.reject(rejected);
+        orgApplicationMetrics.recordOrgApplicationRejected();
     }
 
     @Override

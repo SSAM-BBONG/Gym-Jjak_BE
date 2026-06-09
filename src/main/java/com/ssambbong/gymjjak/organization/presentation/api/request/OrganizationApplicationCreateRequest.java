@@ -35,6 +35,8 @@ public record OrganizationApplicationCreateRequest(
         @NotBlank(message = "도로명 주소는 필수입니다.")
         String roadAddress,
 
+
+
         // 선택값
         String jibunAddress,
         String detailAddress,

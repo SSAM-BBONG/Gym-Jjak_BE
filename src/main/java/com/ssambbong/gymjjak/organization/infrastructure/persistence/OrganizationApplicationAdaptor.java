@@ -108,7 +108,16 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
                 .orElseThrow(OrganizationApplicationNotFoundException::new);
 
         entity.cancel();
+    }
 
+    @Override
+    public long count() {
+        return springDataOrganizationApplicationRepository.count();
+    }
+
+    @Override
+    public long countByStatus(OrganizationApplicationStatus status) {
+        return springDataOrganizationApplicationRepository.countByStatus(status);
     }
 
 }
