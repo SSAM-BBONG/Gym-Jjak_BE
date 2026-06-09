@@ -23,9 +23,19 @@ public abstract class ApplicationException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
+    // Throwable cause : DB 연결 실패 등 하위 에러를 상위 에러로 전파 할떼, 진짜 원인을 파악 가능
     protected ApplicationException(ErrorCode errorCode, String message, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
+    }
+
+    // TODO : 생성 시점에 context 주입하기
+    protected ApplicationException(ErrorCode errorCode, String message, Map<String, Object> context) {
+        super(message);
+        this.errorCode = errorCode;
+        if (context != null) {
+            this.context.putAll(context);
+        }
     }
 
     protected void addContext(String key, Object value) {

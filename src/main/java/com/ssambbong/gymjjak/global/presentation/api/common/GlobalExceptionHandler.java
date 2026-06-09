@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.global.domain.common.exception.CommonErrorCode;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -91,6 +92,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
                 .body(GlobalApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId, details));
+    }
+
+    // DB unique constraint 위반 (중복 데이터)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<GlobalApiErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException exception
+    ) {
+        String traceId = getTraceId();
+
+        log.warn("[DataIntegrityViolationException] traceId={}, message={}", traceId, exception.getMessage());
+
+        return ResponseEntity
+                .status(CommonErrorCode.CONFLICT.getHttpStatus())
+                .body(GlobalApiErrorResponse.of(CommonErrorCode.CONFLICT, traceId));
     }
 
     // 500 에러! 예상 못한 서버 오류

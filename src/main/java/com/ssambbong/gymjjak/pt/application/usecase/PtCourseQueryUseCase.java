@@ -6,20 +6,11 @@ import java.util.List;
 
 public interface PtCourseQueryUseCase {
 
-    // 목록 조회 (페이지네이션)
-    PtCoursePageResult findAllPtCourses(int page, int size);
+    // 목록 조회
+    List<PtCourseListView> findAllPtCourses();
 
     // 상세 조회
     PtCourseDetailView findPtCourseDetail(Long ptCourseId);
-
-    // ──── 페이지 결과 ────
-    record PtCoursePageResult(
-            List<PtCourseListView> content,
-            long totalElements,
-            int totalPages,
-            int page,
-            int size
-    ) {}
 
     // ──── 목록 뷰 ────
     record PtCourseListView(
