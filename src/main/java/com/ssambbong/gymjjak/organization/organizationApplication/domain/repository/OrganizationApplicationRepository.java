@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.O
 import java.util.List;
 import java.util.Optional;
 
+
 public interface OrganizationApplicationRepository {
 
     boolean existsByBusinessRegistrationNumberAndStatus(String businessRegistrationNumber);
@@ -27,6 +28,8 @@ public interface OrganizationApplicationRepository {
     void cancel(OrganizationApplication organizationApplication);
 
     Optional<OrganizationApplication> findByIdAndApplicantUserId(Long organizationApplicationId, Long applicantId);
+
+    Optional<String> findRequestedLoginIdByApplicationId(Long applicationId);
 
     long count();
 

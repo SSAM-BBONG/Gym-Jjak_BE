@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 public class Organization {
@@ -30,6 +31,7 @@ public class Organization {
     private final String blogUrl;
     private final String facilityPhone;
     private final OrganizationStatus status;
+    private final LocalDateTime createdAt;
 
     private Organization(
             Long organizationId,
@@ -51,7 +53,8 @@ public class Organization {
             String instagramUrl,
             String blogUrl,
             String facilityPhone,
-            OrganizationStatus status
+            OrganizationStatus status,
+            LocalDateTime createdAt
     ) {
         this.organizationId = organizationId;
         this.organizationAccountId = organizationAccountId;
@@ -73,6 +76,7 @@ public class Organization {
         this.blogUrl = blogUrl;
         this.facilityPhone = facilityPhone;
         this.status = status;
+        this.createdAt = createdAt;
     }
 
     // 승인된 신청서로부터 조직 생성
@@ -104,7 +108,8 @@ public class Organization {
                 application.getInstagramUrl(),
                 application.getBlogUrl(),
                 application.getFacilityPhone(),
-                OrganizationStatus.ACTIVE
+                OrganizationStatus.ACTIVE,
+                null
         );
     }
 
@@ -135,7 +140,8 @@ public class Organization {
                 instagramUrl != null ? instagramUrl : this.instagramUrl,
                 blogUrl != null ? blogUrl : this.blogUrl,
                 facilityPhone != null ? facilityPhone : this.facilityPhone,
-                this.status
+                this.status,
+                this.createdAt
         );
     }
 
@@ -159,7 +165,8 @@ public class Organization {
             String instagramUrl,
             String blogUrl,
             String facilityPhone,
-            OrganizationStatus status
+            OrganizationStatus status,
+            LocalDateTime createdAt
     ) {
         return new Organization(
                 organizationId,
@@ -181,7 +188,8 @@ public class Organization {
                 instagramUrl,
                 blogUrl,
                 facilityPhone,
-                status
+                status,
+                createdAt
         );
     }
 }

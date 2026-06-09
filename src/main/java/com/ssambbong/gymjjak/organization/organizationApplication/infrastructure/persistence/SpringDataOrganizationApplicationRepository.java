@@ -2,6 +2,8 @@ package com.ssambbong.gymjjak.organization.organizationApplication.infrastructur
 
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,9 @@ public interface SpringDataOrganizationApplicationRepository extends JpaReposito
     List<OrganizationApplicationJpaEntity> findAllByStatus(OrganizationApplicationStatus status);
 
     Optional<OrganizationApplicationJpaEntity> findByOrganizationApplicationIdAndApplicantUserId(Long organizationApplicationId, Long applicantId);
+
+    @Query("SELECT o.requestedLoginId FROM OrganizationApplicationJpaEntity o WHERE o.organizationApplicationId = :applicationId")
+    Optional<String> findRequestedLoginIdByOrganizationApplicationId(@Param("applicationId") Long applicationId);
 
     long countByStatus(OrganizationApplicationStatus status);
 }
