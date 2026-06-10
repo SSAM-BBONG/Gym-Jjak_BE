@@ -1,13 +1,10 @@
 package com.ssambbong.gymjjak.report.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.global.presentation.api.common.ResponseCode;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.report.application.usecase.CreateReportCommand;
 import com.ssambbong.gymjjak.report.application.usecase.ReportCommandUseCase;
-import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCase;
 import com.ssambbong.gymjjak.report.presentation.api.request.CreateReportRequest;
-import com.ssambbong.gymjjak.report.presentation.api.response.CreateReportResponse;
 import com.ssambbong.gymjjak.report.presentation.api.response.ReportResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

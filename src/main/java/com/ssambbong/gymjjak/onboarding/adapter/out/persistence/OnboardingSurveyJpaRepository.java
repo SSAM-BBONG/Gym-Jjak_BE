@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface OnboardingSurveyJpaRepository extends JpaRepository<OnboardingSurveyJpaEntity, Long> {
 
-    boolean existsByUser_Id(Long userId);
+    boolean existsByUserId(Long userId);
 
-    Optional<OnboardingSurveyJpaEntity> findByUser_Id(Long userId);
+    Optional<OnboardingSurveyJpaEntity> findByUserId(Long userId);
 
     @Query("""
     select new com.ssambbong.gymjjak.onboarding.application.port.out.MyOnboardingView(
@@ -32,7 +32,7 @@ public interface OnboardingSurveyJpaRepository extends JpaRepository<OnboardingS
     )
     from OnboardingSurveyJpaEntity o
     join o.preferredRegion r
-    where o.user.id = :userId
+    where o.userId = :userId
 """)
     Optional<MyOnboardingView> findMyOnboardingByUserId(@Param("userId") Long userId);
 

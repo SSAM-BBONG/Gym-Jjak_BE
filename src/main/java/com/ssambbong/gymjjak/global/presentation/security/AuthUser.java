@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.global.security.principal;
+package com.ssambbong.gymjjak.global.presentation.security;
 
 public record AuthUser(
         Long userId,

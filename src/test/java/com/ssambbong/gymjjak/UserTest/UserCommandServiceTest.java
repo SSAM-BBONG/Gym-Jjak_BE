@@ -36,8 +36,7 @@ class UserCommandServiceTest {
 
         userCommandService = new UserCommandService(
                 userPort,
-                tokenPort,
-                userPolicy
+                tokenPort
         );
     }
 

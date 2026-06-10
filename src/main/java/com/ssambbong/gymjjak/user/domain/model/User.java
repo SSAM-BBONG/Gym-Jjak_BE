@@ -2,9 +2,6 @@ package com.ssambbong.gymjjak.user.domain.model;
 
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
-import lombok.RequiredArgsConstructor;
-
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -212,15 +209,9 @@ public class User {
         return this.deletedAt != null;
     }
 
-    private void validateLoginAllowed() {
-        validateNotWithdrawn();
-
-        if (this.status == UserStatus.DAY_7) {
-            throw new IllegalStateException("7일 정지된 회원은 로그인할 수 없습니다.");
-        }
-
-        if (this.status == UserStatus.ETERNAL) {
-            throw new IllegalStateException("영구 정지된 회원은 로그인할 수 없습니다.");
+    public void validateLoginAllowed() {
+        if (this.status != UserStatus.ACTIVE) {
+            throw new UserException(UserErrorCode.LOGIN_RESTRICTED);
         }
     }
 

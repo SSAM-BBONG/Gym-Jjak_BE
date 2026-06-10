@@ -1,9 +1,9 @@
-package com.ssambbong.gymjjak.global.security.config;
+package com.ssambbong.gymjjak.global.infrastructure.security.config;
 
-import com.ssambbong.gymjjak.global.security.handler.CustomAccessDeniedHandler;
-import com.ssambbong.gymjjak.global.security.handler.CustomAuthenticationEntryPoint;
-import com.ssambbong.gymjjak.global.security.jwt.JwtAuthenticationFilter;
-import com.ssambbong.gymjjak.global.security.jwt.JwtProperties;
+import com.ssambbong.gymjjak.global.presentation.security.JwtAuthenticationFilter;
+import com.ssambbong.gymjjak.global.presentation.security.handler.CustomAccessDeniedHandler;
+import com.ssambbong.gymjjak.global.presentation.security.handler.CustomAuthenticationEntryPoint;
+import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

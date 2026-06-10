@@ -4,13 +4,12 @@ import com.ssambbong.gymjjak.onboarding.application.command.RegisterOnboardingCo
 import com.ssambbong.gymjjak.onboarding.application.port.in.OnboardingUsecase;
 import com.ssambbong.gymjjak.onboarding.application.port.out.MyOnboardingView;
 import com.ssambbong.gymjjak.onboarding.application.port.out.OnboardingPort;
+import com.ssambbong.gymjjak.onboarding.application.port.out.UserPortFromOnboarding;
 import com.ssambbong.gymjjak.onboarding.application.result.MyOnboardingResult;
 import com.ssambbong.gymjjak.onboarding.domain.exception.OnboardingErrorCode;
 import com.ssambbong.gymjjak.onboarding.domain.exception.OnboardingException;
 import com.ssambbong.gymjjak.onboarding.domain.model.OnboardingSurvey;
 import com.ssambbong.gymjjak.onboarding.domain.model.Region;
-import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
-import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,13 +22,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class OnboardingService implements OnboardingUsecase {
 
     private final OnboardingPort onboardingPort;
+    private final UserPortFromOnboarding userPortFromOnboarding;
 
     @Override
     public void register(RegisterOnboardingCommand command) {
         log.info("[onboarding] 온보딩 등록 처리 시작. userId={}", command.userId());
 
+        boolean userExists = userPortFromOnboarding.existsById(command.userId());
+        log.info("[onboarding] 사용자 존재 여부 확인. userId={}, exists={}", command.userId(), userExists);
+
+        if (!userPortFromOnboarding.existsById(command.userId())) {
+            throw new OnboardingException(OnboardingErrorCode.USER_NOT_FOUND);
+        }
+
+        boolean onboardingExists = onboardingPort.existsByUserId(command.userId());
+        log.info("[onboarding] 온보딩 존재 여부 확인. userId={}, exists={}", command.userId(), onboardingExists);
+
         if (onboardingPort.existsByUserId(command.userId())) {
-            log.warn("[onboarding] 온보딩 중복 등록 시도. userId={}", command.userId());
             throw new OnboardingException(OnboardingErrorCode.ONBOARDING_ALREADY_COMPLETED);
         }
 
@@ -71,7 +80,7 @@ public class OnboardingService implements OnboardingUsecase {
                 command.userId(),
                 regionId);
 
-        onboardingPort.completeUserOnboarding(command.userId());
+        userPortFromOnboarding.completeOnboarding(command.userId());
         log.info("[onboarding] 사용자 온보딩 완료 상태 변경 완료. userId={}", command.userId());
     }
 

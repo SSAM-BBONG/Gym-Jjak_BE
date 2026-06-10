@@ -1,5 +1,8 @@
-package com.ssambbong.gymjjak.global.security.jwt;
+package com.ssambbong.gymjjak.global.presentation.security;
 
+import com.ssambbong.gymjjak.global.application.auth.port.in.AuthenticateAccessTokenUseCase;
+import com.ssambbong.gymjjak.global.domain.auth.AuthException;
+import com.ssambbong.gymjjak.global.domain.auth.JwtClaims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +23,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticateAccessTokenUseCase authenticateAccessTokenUseCase;
+    private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
     @Override
     protected void doFilterInternal(
@@ -32,13 +36,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         if (StringUtils.hasText(token)) {
-            if (jwtTokenProvider.validateToken(token)) {
-                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+            try {
+                JwtClaims claims = authenticateAccessTokenUseCase.authenticate(token);
+                Authentication authentication = jwtAuthenticationConverter.toAuthentication(claims);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else if (jwtTokenProvider.isTokenExpired(token)) {
-                request.setAttribute("exception", "ACCESS_TOKEN_EXPIRED");
-            } else {
-                request.setAttribute("exception", "INVALID_TOKEN");
+            } catch (AuthException e) {
+                request.setAttribute("authErrorCode", e.getErrorCode());
             }
         }
 
