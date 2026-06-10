@@ -15,6 +15,6 @@ public interface UserCommandUseCase {
 
     void logout(LogoutCommand command);
 
-//    void verifyPassword(Long userId, String rawPassword);
+    void verifyPassword(Long userId, String rawPassword);
 
 }
