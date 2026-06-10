@@ -22,7 +22,6 @@ public class OrganizationCommandService implements OrganizationCommandUseCase {
                 .orElseThrow(OrganizationNotFoundException::new);
 
         Organization updated = organization.update(facilityPhone, instagramUrl, blogUrl, websiteUrl);
-
         organizationRepository.update(updated);
     }
 }

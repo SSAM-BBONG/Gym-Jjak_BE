@@ -131,10 +131,10 @@ public class Organization {
                 this.detailAddress,
                 this.latitude,
                 this.longitude,
-                websiteUrl,
-                instagramUrl,
-                blogUrl,
-                facilityPhone,
+                websiteUrl != null ? websiteUrl : this.websiteUrl,
+                instagramUrl != null ? instagramUrl : this.instagramUrl,
+                blogUrl != null ? blogUrl : this.blogUrl,
+                facilityPhone != null ? facilityPhone : this.facilityPhone,
                 this.status
         );
     }
