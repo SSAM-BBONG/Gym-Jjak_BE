@@ -4,6 +4,8 @@ import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationQueryUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
@@ -18,11 +20,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +37,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/organization-applications")
+@Validated
 public class OrganizationApplicationController {
 
     private final OrganizationApplicationCommandUsecase organizationApplicationCommandUsecase;
@@ -114,27 +120,22 @@ public class OrganizationApplicationController {
                         response));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "관리자 조직 신청 전체 목록 조회", description = "관리자가 모든 조직 신청 목록을 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = FindAllOrganizationApplicationsResponse.class))),
+                    content = @Content(schema = @Schema(implementation = FindAllOrganizationApplicationsListResponse.class))),
             @ApiResponse(responseCode = "403", description = "접근 권한 없음",
                     content = @Content(schema = @Schema()))
     })
     @GetMapping
-    public ResponseEntity<GlobalApiResponse<List<FindAllOrganizationApplicationsResponse>>> findAllOrganizationApplications() {
-
-        List<OrganizationApplication> applications = organizationApplicationQueryUsecase.findPendingOrganizationApplications();
-
-        List<FindAllOrganizationApplicationsResponse> response = applications.stream()
-                .map(domain -> new FindAllOrganizationApplicationsResponse(
-                        domain.getOrganizationApplicationId(),
-                        domain.getRequestedLoginId(),
-                        domain.getBusinessName(),
-                        domain.getRepresentativeName(),
-                        domain.getRepresentativePhone()
-                ))
-                .toList();
+    public ResponseEntity<GlobalApiResponse<FindAllOrganizationApplicationsListResponse>> findAllOrganizationApplications(
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
+    ) {
+        ApplicationListQuery query = new ApplicationListQuery(page, size);
+        ApplicationListResult result = organizationApplicationQueryUsecase.findPendingOrganizationApplications(query);
+        FindAllOrganizationApplicationsListResponse response = FindAllOrganizationApplicationsListResponse.from(result);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(

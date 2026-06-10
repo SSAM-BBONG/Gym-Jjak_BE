@@ -1,15 +1,19 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.OrganizationApplicationNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-
 
 import static com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus.CANCELLED;
 import static com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus.REJECTED;
@@ -66,11 +70,16 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
     }
 
     @Override
-    public List<OrganizationApplication> findAllByStatus(OrganizationApplicationStatus status) {
+    public ApplicationListResult findAllByStatus(OrganizationApplicationStatus status, ApplicationListQuery query) {
 
-        return springDataOrganizationApplicationRepository.findAllByStatus(status).stream()
+        PageRequest pageRequest = PageRequest.of(query.page() - 1, query.size(), Sort.by("createdAt").descending());
+        Page<OrganizationApplicationJpaEntity> page = springDataOrganizationApplicationRepository.findAllByStatus(status, pageRequest);
+
+        List<OrganizationApplication> items = page.getContent().stream()
                 .map(OrganizationApplicationJpaEntity::toDomain)
                 .toList();
+
+        return new ApplicationListResult(items, query.page(), page.getSize(), page.getTotalElements(), page.getTotalPages());
     }
 
     @Override

@@ -1,17 +1,14 @@
 package com.ssambbong.gymjjak.organization.organization.application.service;
 
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationQueryUseCase;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
-import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationsResponse;
-import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
-import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,8 +16,6 @@ import java.util.List;
 public class OrganizationQueryService implements OrganizationQueryUseCase {
 
     private final OrganizationRepository organizationRepository;
-    private final OrganizationApplicationRepository organizationApplicationRepository;
-    private final OrganizationTrainerRepository organizationTrainerRepository;
 
     @Override
     public Organization findMyOrganization(Long organizationAccountId) {
@@ -29,16 +24,8 @@ public class OrganizationQueryService implements OrganizationQueryUseCase {
     }
 
     @Override
-    public List<FindOrganizationsResponse> findOrganizations() {
-        return organizationRepository.findAll().stream()
-                .map(org -> {
-                    String loginId = organizationApplicationRepository
-                            .findRequestedLoginIdByApplicationId(org.getApplicationId())
-                            .orElse(null);
-                    long trainerCount = organizationTrainerRepository.countActiveByOrganizationId(org.getOrganizationId());
-                    return FindOrganizationsResponse.of(org, loginId, trainerCount);
-                })
-                .toList();
+    public OrganizationListResult findOrganizations(OrganizationListQuery query) {
+        return organizationRepository.findAllForAdmin(query);
     }
 
 }
