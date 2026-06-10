@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
+
 import static com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus.CANCELLED;
 import static com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus.REJECTED;
 
@@ -108,6 +109,11 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
                 .orElseThrow(OrganizationApplicationNotFoundException::new);
 
         entity.cancel();
+    }
+
+    @Override
+    public Optional<String> findRequestedLoginIdByApplicationId(Long applicationId) {
+        return springDataOrganizationApplicationRepository.findRequestedLoginIdByOrganizationApplicationId(applicationId);
     }
 
     @Override

@@ -5,7 +5,7 @@ import com.ssambbong.gymjjak.organization.organization.domain.model.Organization
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record OrganizationResponse(
+public record FindMyOrganizationResponse(
 
         // 기본 정보 (수정 불가)
         String requestedLoginId,
@@ -27,8 +27,8 @@ public record OrganizationResponse(
         String blogUrl,
         String websiteUrl
 ) {
-    public static OrganizationResponse of(Organization organization, String businessLicenseUrl) {
-        return new OrganizationResponse(
+    public static FindMyOrganizationResponse of(Organization organization, String businessLicenseUrl) {
+        return new FindMyOrganizationResponse(
                 null, // requestedLoginId는 users 테이블에 있어서 추후 UserQueryPort로 조회 예정
                 organization.getBusinessRegistrationNumber(),
                 organization.getBusinessName(),
