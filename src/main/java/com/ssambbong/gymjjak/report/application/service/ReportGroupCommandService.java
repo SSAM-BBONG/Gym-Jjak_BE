@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.report.application.service;
 
 import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
+import com.ssambbong.gymjjak.report.application.command.ManualBlindReportGroupCommand;
 import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
 import com.ssambbong.gymjjak.report.application.metrics.ReportGroupTimed;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
@@ -10,6 +11,7 @@ import com.ssambbong.gymjjak.report.application.port.UserQueryPort;
 import com.ssambbong.gymjjak.report.application.query.AdminReportReasonItem;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCase;
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
+import com.ssambbong.gymjjak.report.domain.exception.ReportGroupSoftDeleteFailedException;
 import com.ssambbong.gymjjak.report.domain.exception.ReportNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.Report;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
@@ -131,7 +133,7 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
 
         if (previousSanctionStatus == ReportGroupSanctionStatus.AUTO_BLINDED
                 && reportGroup.getSanctionStatus() == ReportGroupSanctionStatus.NONE) {
-            reportSanctionTargetPort.changeAutoBlind(
+            reportSanctionTargetPort.applySanction(
                     reportGroup.getTargetType(),
                     reportGroup.getTargetId(),
                     ReportSanctionAction.RELEASE_AUTO_BLIND
@@ -151,6 +153,44 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
         }
 
         return toReviewReportResult(savedReport);
+    }
+
+    @Override
+    public void manuallyBlindReportGroup(ManualBlindReportGroupCommand command) {
+        log.info("event=report_group_manual_blind_start reportGroupId= {}", command.reportGroupId());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        ReportGroup reportGroup = getReportGroup(command.reportGroupId());
+
+        reportGroup.manuallyBlind(command.adminId());
+
+        ReportGroup savedReportGroup = reportGroupRepository.save(reportGroup);
+
+        reportSanctionTargetPort.applySanction(
+                savedReportGroup.getTargetType(),
+                savedReportGroup.getTargetId(),
+                ReportSanctionAction.APPLY_MANUAL_BLIND
+        );
+
+        int softDeleted = reportGroupRepository.softDeleteResolvedManualBlindedById(
+                savedReportGroup.getReportGroupId(),
+                now
+        );
+
+        if (softDeleted != 1) {
+            throw new ReportGroupSoftDeleteFailedException(
+                    savedReportGroup.getReportGroupId()
+            );
+        }
+
+        log.info(
+                "event=report-group-manual-blind-completed reportGroupId: {}, targetType: {}, targetId: {}, adminId: {}",
+                savedReportGroup.getReportGroupId(),
+                savedReportGroup.getTargetType(),
+                savedReportGroup.getTargetId(),
+                command.adminId()
+        );
     }
 
     private Report getReport(Long reportId) {

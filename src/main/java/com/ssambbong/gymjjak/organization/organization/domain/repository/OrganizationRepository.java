@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.organization.organization.domain.repository;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface OrganizationRepository {
@@ -12,6 +13,8 @@ public interface OrganizationRepository {
     Optional<Organization> findById(Long organizationId);
 
     Optional<Organization> findByOrganizationAccountId(Long organizationAccountId);
+
+    List<Organization> findAll();
 
     void update(Organization organization);
 

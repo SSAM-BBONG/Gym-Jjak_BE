@@ -23,7 +23,9 @@ public enum ReportErrorCode implements ErrorCode {
     REPORT_GROUP_EFFECTIVE_COUNT_UNDERFLOW(HttpStatus.CONFLICT,"REPORT_409_2","유효 신고 수는 0보다 작아질 수 없습니다."),
 
     SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "REPORT_400_4", "본인이 작성한 대상은 신고할 수 없습니다."),
-    DUPLICATE_REPORT(HttpStatus.CONFLICT, "REPORT_409_3", "동일한 대상에 중복 신고할 수 없습니다.");
+    DUPLICATE_REPORT(HttpStatus.CONFLICT, "REPORT_409_3", "동일한 대상에 중복 신고할 수 없습니다."),
+
+    REPORT_GROUP_SOFT_DELETE_FAILED(HttpStatus.CONFLICT, "REPORT_409_4", "신고 그룹 soft delete 처리에 실패했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -196,6 +196,16 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     }
 
     @Override
+    public int softDeleteResolvedManualBlindedById(Long reportGroupId, LocalDateTime deletedAt) {
+        return reportGroupRepository.softDeleteResolvedManualBlindedById(
+                reportGroupId,
+                ReportGroupReviewStatus.RESOLVED,
+                ReportGroupSanctionStatus.MANUAL_BLINDED,
+                deletedAt
+        );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<Long> findManualBlindedResolvedHardDeleteCandidateIds(
             LocalDateTime threshold, int batchSize) {

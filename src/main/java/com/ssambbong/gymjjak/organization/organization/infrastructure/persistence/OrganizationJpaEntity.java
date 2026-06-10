@@ -132,7 +132,8 @@ public class OrganizationJpaEntity extends BaseTimeEntity {
                 instagramUrl,
                 blogUrl,
                 facilityPhone,
-                status
+                status,
+                getCreatedAt()
         );
     }
 }
