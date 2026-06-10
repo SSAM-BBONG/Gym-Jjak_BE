@@ -36,6 +36,24 @@ public interface SpringDataReportGroupRepository extends JpaRepository<ReportGro
 
     long countAllByDeletedAtIsNull();
 
+    // soft delete 쿼리문
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE ReportGroupJpaEntity rg
+        SET rg.deletedAt = :deletedAt
+        WHERE rg.reportGroupId = :reportGroupId
+          AND rg.reviewStatus = :reviewStatus
+          AND rg.sanctionStatus = :sanctionStatus
+          AND rg.deletedAt IS NULL
+        """)
+    int softDeleteResolvedManualBlindedById(
+            @Param("reportGroupId") Long reportGroupId,
+            @Param("reviewStatus") ReportGroupReviewStatus reviewStatus,
+            @Param("sanctionStatus") ReportGroupSanctionStatus sanctionStatus,
+            @Param("deletedAt") LocalDateTime deletedAt
+    );
+
+
     // 수동 제재 + 처리 완료 + 수정일이 threshold 보다 오래된 신고 그룹 조회
     @Query("""
         SELECT rg.reportGroupId
@@ -43,6 +61,7 @@ public interface SpringDataReportGroupRepository extends JpaRepository<ReportGro
         WHERE rg.reviewStatus = :reviewStatus
           AND rg.sanctionStatus = :sanctionStatus
           AND rg.updatedAt < :threshold
+          AND rg.deletedAt IS NOT NULL
         ORDER BY rg.reportGroupId ASC
         """)
     List<Long> findManualBlindedResolvedHardDeleteCandidateIds(
@@ -54,4 +73,6 @@ public interface SpringDataReportGroupRepository extends JpaRepository<ReportGro
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM ReportGroupJpaEntity rg WHERE rg.reportGroupId IN :reportGroupIds")
     int hardDeleteByIds(@Param("reportGroupIds") List<Long> reportGroupIds);
+
+
 }

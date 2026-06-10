@@ -36,6 +36,9 @@ public interface ReportGroupRepository {
     // 전체 조회
     long countAllByDeletedAtIsNull();
 
+    // soft delete
+    int softDeleteResolvedManualBlindedById(Long reportGroupId, LocalDateTime deletedAt);
+
     // 수동 제재 + 처리 완료 + 수정일이 threshold 보다 오래된 신고 그룹 조회
     List<Long> findManualBlindedResolvedHardDeleteCandidateIds(
             LocalDateTime threshold,

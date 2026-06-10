@@ -94,6 +94,27 @@ public class GlobalExceptionHandler {
                 .body(GlobalApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId, details));
     }
 
+    // 유효하지 않은 파라미터 run time 에러
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<GlobalApiErrorResponse> handleIllegalArgumentException(
+            IllegalArgumentException exception
+    ) {
+        String traceId = getTraceId();
+
+        log.warn("[IllegalArgumentException] traceId={}, message={}",
+                traceId,
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(CommonErrorCode.INVALID_ARGUMENT.getHttpStatus())
+                .body(GlobalApiErrorResponse.of(
+                        CommonErrorCode.INVALID_ARGUMENT,
+                        traceId,
+                        Map.of("message", exception.getMessage())
+                ));
+    }
+
     // DB unique constraint 위반 (중복 데이터)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<GlobalApiErrorResponse> handleDataIntegrityViolationException(

@@ -17,7 +17,8 @@ public enum ReportResponseCode implements ResponseCode {
     APPROVE_REPORT_SUCCESS("REPORT_200_5", "신고 승인 처리에 성공했습니다."),
     REJECT_REPORT_SUCCESS("REPORT_200_6", "신고 반려 처리에 성공했습니다."),
     BLIND_REPORT_TARGET_SUCCESS("REPORT_200_7", "신고 대상 블라인드 처리에 성공했습니다."),
-    RELEASE_REPORT_TARGET_SUCCESS("REPORT_200_8", "신고 대상 블라인드 해제에 성공했습니다.");
+    RELEASE_REPORT_TARGET_SUCCESS("REPORT_200_8", "신고 대상 블라인드 해제에 성공했습니다."),
+    MANUAL_BLIND_REPORT_GROUP_SUCCESS("REPORT_200_9", "신고 그룹 수동 블라인드 처리가 성공했습니다." );
 
     private final String code;
     private final String message;
