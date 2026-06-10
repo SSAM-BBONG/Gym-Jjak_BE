@@ -66,14 +66,10 @@ public class UserCommandService implements UserCommandUseCase {
 
         User user = userPort.findByUsername(command.username())
                 .orElseThrow(() -> {
-                    log.warn("[UserLoginFailed] reason=user_not_found, username={}", command.username());
                     return new UserException(UserErrorCode.LOGIN_FAILED);
                 });
 
         if (!userPort.matchesPassword(command.password(), user.getPassword())) {
-            log.warn("[UserLoginFailed] reason=password_mismatch, username={}, userId={}",
-                    user.getUsername(),
-                    user.getId());
             throw new UserException(UserErrorCode.LOGIN_FAILED);
         }
 
@@ -128,21 +124,18 @@ public class UserCommandService implements UserCommandUseCase {
 
     public void validateDuplicateUsername(String username) {
         if (userPort.existsByUsername(username)) {
-            log.warn("[DuplicateUserRegister] type=username, username={}", username);
             throw new UserException(UserErrorCode.DUPLICATE_USERNAME);
         }
     }
 
     public void validateDuplicateNickname(String nickname) {
         if (userPort.existsByNickname(nickname)) {
-            log.warn("[DuplicateUserRegister] type=nickname, nickname={}", nickname);
             throw new UserException(UserErrorCode.DUPLICATE_NICKNAME);
         }
     }
 
     public void validateDuplicatePhone(String phone) {
         if (userPort.existsByPhone(phone)) {
-            log.warn("[DuplicateUserRegister] type=phone, phone={}", maskPhone(phone));
             throw new UserException(UserErrorCode.DUPLICATE_PHONE);
         }
     }

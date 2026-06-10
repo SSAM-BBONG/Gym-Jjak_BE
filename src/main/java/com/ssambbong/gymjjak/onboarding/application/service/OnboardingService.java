@@ -10,8 +10,6 @@ import com.ssambbong.gymjjak.onboarding.domain.exception.OnboardingErrorCode;
 import com.ssambbong.gymjjak.onboarding.domain.exception.OnboardingException;
 import com.ssambbong.gymjjak.onboarding.domain.model.OnboardingSurvey;
 import com.ssambbong.gymjjak.onboarding.domain.model.Region;
-import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
-import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +32,6 @@ public class OnboardingService implements OnboardingUsecase {
         log.info("[onboarding] 사용자 존재 여부 확인. userId={}, exists={}", command.userId(), userExists);
 
         if (!userPortFromOnboarding.existsById(command.userId())) {
-            log.warn("[onboarding] 존재하지 않는 사용자로 온보딩 등록 시도. userId={}", command.userId());
             throw new OnboardingException(OnboardingErrorCode.USER_NOT_FOUND);
         }
 
@@ -42,7 +39,6 @@ public class OnboardingService implements OnboardingUsecase {
         log.info("[onboarding] 온보딩 존재 여부 확인. userId={}, exists={}", command.userId(), onboardingExists);
 
         if (onboardingPort.existsByUserId(command.userId())) {
-            log.warn("[onboarding] 온보딩 중복 등록 시도. userId={}", command.userId());
             throw new OnboardingException(OnboardingErrorCode.ONBOARDING_ALREADY_COMPLETED);
         }
 
