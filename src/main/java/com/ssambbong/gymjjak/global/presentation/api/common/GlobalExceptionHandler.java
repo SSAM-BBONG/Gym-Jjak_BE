@@ -28,7 +28,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<GlobalApiErrorResponse> handleApplicationException(ApplicationException exception) {
         String traceId = getTraceId();
 
-        log.warn("[ApplicationException] code={}, message={}, traceId={}, details={}",
+        log.warn("event=exception_handled reason={}, code={}, message={}, traceId={}, details={}",
+                exception.getErrorCode().name(),
                 exception.getErrorCode().getCode(),
                 exception.getMessage(),
                 traceId,
@@ -48,7 +49,7 @@ public class GlobalExceptionHandler {
         String traceId = getTraceId();
         Map<String, Object> details = createFieldErrorDetails(exception.getBindingResult().getFieldErrors());
 
-        log.warn("[MethodArgumentNotValidException] traceId={}, details={}", traceId, details);
+        log.warn("event=exception_handled, reason=validation_failed traceId={}, details={}", traceId, details);
 
         return ResponseEntity
                 .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
@@ -61,7 +62,7 @@ public class GlobalExceptionHandler {
         String traceId = getTraceId();
         Map<String, Object> details = createFieldErrorDetails(exception.getBindingResult().getFieldErrors());
 
-        log.warn("[BindException] traceId={}, details={}", traceId, details);
+        log.warn("event=exception_handled, reason=binding_failed traceId={}, details={}", traceId, details);
 
         return ResponseEntity
                 .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
@@ -87,32 +88,11 @@ public class GlobalExceptionHandler {
 
         Map<String, Object> details = Map.of("errors", errors);
 
-        log.warn("[ConstraintViolationException] traceId={}, details={}", traceId, details);
+        log.warn("event=exception_handled, reason=constraint_violation traceId={}, details={}", traceId, details);
 
         return ResponseEntity
                 .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
                 .body(GlobalApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId, details));
-    }
-
-    // 유효하지 않은 파라미터 run time 에러
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<GlobalApiErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException exception
-    ) {
-        String traceId = getTraceId();
-
-        log.warn("[IllegalArgumentException] traceId={}, message={}",
-                traceId,
-                exception.getMessage()
-        );
-
-        return ResponseEntity
-                .status(CommonErrorCode.INVALID_ARGUMENT.getHttpStatus())
-                .body(GlobalApiErrorResponse.of(
-                        CommonErrorCode.INVALID_ARGUMENT,
-                        traceId,
-                        Map.of("message", exception.getMessage())
-                ));
     }
 
     // DB unique constraint 위반 (중복 데이터)
@@ -122,7 +102,14 @@ public class GlobalExceptionHandler {
     ) {
         String traceId = getTraceId();
 
-        log.warn("[DataIntegrityViolationException] traceId={}, message={}", traceId, exception.getMessage());
+        log.warn(
+                "event=exception_handled reason=data_integrity_violation exceptionClass={} errorCode={} httpStatus={} traceId={} message={}",
+                exception.getClass().getSimpleName(),
+                CommonErrorCode.CONFLICT.getCode(),
+                CommonErrorCode.CONFLICT.getHttpStatus().value(),
+                traceId,
+                exception.getMessage()
+        );
 
         return ResponseEntity
                 .status(CommonErrorCode.CONFLICT.getHttpStatus())
@@ -134,7 +121,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<GlobalApiErrorResponse> handleException(Exception exception) {
         String traceId = getTraceId();
 
-        log.error("[UnhandledException] traceId={}, message={}", traceId, exception.getMessage(), exception);
+        log.error(
+                "event=exception_handled reason=unexpected_exception exceptionClass={} errorCode={} httpStatus={} traceId={} message={}",
+                exception.getClass().getSimpleName(),
+                CommonErrorCode.INTERNAL_SERVER_ERROR.getCode(),
+                CommonErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus().value(),
+                traceId,
+                exception.getMessage(),
+                exception
+        );
 
         return ResponseEntity
                 .status(CommonErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
