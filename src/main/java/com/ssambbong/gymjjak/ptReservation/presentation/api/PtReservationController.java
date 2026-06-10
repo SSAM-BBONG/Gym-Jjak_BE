@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.ptReservation.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.ptReservation.application.command.CreatePtReservationCommand;
 import com.ssambbong.gymjjak.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.ptReservation.domain.model.PtReservationStatus;

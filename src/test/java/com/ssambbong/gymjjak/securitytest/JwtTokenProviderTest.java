@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.securitytest;
 
-import com.ssambbong.gymjjak.global.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +14,7 @@ public class JwtTokenProviderTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Test
-    void accessToken_생성_후_검증할_수_있다() {
+    void createAccessToken_and_validate() {
         String token = jwtTokenProvider.createAccessToken(
                 1L,
                 "user@test.com",
@@ -27,14 +27,14 @@ public class JwtTokenProviderTest {
     }
 
     @Test
-    void 토큰에서_role을_꺼낼_수_있다() {
+    void parseToken_and_extract_role() {
         String token = jwtTokenProvider.createAccessToken(
                 1L,
                 "user@test.com",
                 "ADMIN"
         );
 
-        String role = jwtTokenProvider.getRole(token);
+        String role = jwtTokenProvider.parseAccessToken(token).role();
 
         assertThat(role).isEqualTo("ADMIN");
     }

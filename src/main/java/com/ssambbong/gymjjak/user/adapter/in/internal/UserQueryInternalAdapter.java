@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class UserQueryInternalAdapter implements UserQueryPort {
+public class UserQueryInternalAdapter implements UserQueryPort{
 
     private final SpringDataUserRepository springDataUserRepository;
 

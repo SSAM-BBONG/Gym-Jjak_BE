@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.pt.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;

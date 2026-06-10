@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNot
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -32,6 +33,13 @@ public class OrganizationAdaptor implements OrganizationRepository {
     public Optional<Organization> findByOrganizationAccountId(Long organizationAccountId) {
         return springDataOrganizationRepository.findByOrganizationAccountId(organizationAccountId)
                 .map(OrganizationJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<Organization> findAll() {
+        return springDataOrganizationRepository.findAll().stream()
+                .map(OrganizationJpaEntity::toDomain)
+                .toList();
     }
 
     @Override

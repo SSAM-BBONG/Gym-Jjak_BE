@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.report.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
 import com.ssambbong.gymjjak.report.application.command.ManualBlindReportGroupCommand;
 import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
@@ -21,7 +21,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

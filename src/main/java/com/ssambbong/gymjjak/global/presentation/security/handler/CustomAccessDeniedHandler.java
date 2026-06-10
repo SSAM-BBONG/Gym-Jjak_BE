@@ -1,6 +1,7 @@
-package com.ssambbong.gymjjak.global.security.handler;
+package com.ssambbong.gymjjak.global.presentation.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ssambbong.gymjjak.global.domain.auth.AuthErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,18 +28,20 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             HttpServletRequest request,
             HttpServletResponse response,
             AccessDeniedException accessDeniedException
-    ) throws IOException, ServletException {
+    ) throws IOException {
 
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        AuthErrorCode errorCode = AuthErrorCode.ACCESS_DENIED;
+
+        response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
         Map<String, Object> errorResponse = new LinkedHashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now().toString());
-        errorResponse.put("status", HttpServletResponse.SC_FORBIDDEN);
-        errorResponse.put("error", "Forbidden");
-        errorResponse.put("code", "AUTH_403");
-        errorResponse.put("message", "접근 권한이 없습니다.");
+        errorResponse.put("status", errorCode.getHttpStatus().value());
+        errorResponse.put("error", errorCode.getHttpStatus().getReasonPhrase());
+        errorResponse.put("code", errorCode.getCode());
+        errorResponse.put("message", errorCode.getMessage());
         errorResponse.put("path", request.getRequestURI());
 
         objectMapper.writeValue(response.getWriter(), errorResponse);

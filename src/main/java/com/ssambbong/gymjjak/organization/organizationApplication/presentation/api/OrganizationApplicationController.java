@@ -2,7 +2,7 @@ package com.ssambbong.gymjjak.organization.organizationApplication.presentation.
 
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationQueryUsecase;

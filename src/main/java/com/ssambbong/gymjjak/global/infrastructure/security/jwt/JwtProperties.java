@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.global.security.jwt;
+package com.ssambbong.gymjjak.global.infrastructure.security.jwt;
 
 import lombok.Getter;
 import lombok.Setter;
