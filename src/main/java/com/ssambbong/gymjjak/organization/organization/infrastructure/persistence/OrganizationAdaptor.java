@@ -1,13 +1,18 @@
 package com.ssambbong.gymjjak.organization.organization.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -36,10 +41,16 @@ public class OrganizationAdaptor implements OrganizationRepository {
     }
 
     @Override
-    public List<Organization> findAll() {
-        return springDataOrganizationRepository.findAll().stream()
-                .map(OrganizationJpaEntity::toDomain)
-                .toList();
+    public OrganizationListResult findAllForAdmin(OrganizationListQuery query) {
+        PageRequest pageRequest = PageRequest.of(query.page() - 1, query.size(), Sort.by("createdAt").descending());
+        Page<OrganizationAdminView> page = springDataOrganizationRepository.findAllForAdmin(pageRequest);
+        return new OrganizationListResult(
+                page.getContent(),
+                query.page(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
     }
 
     @Override

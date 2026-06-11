@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.application.service;
 
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationQueryUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
@@ -39,8 +41,8 @@ public class OrganizationApplicationQueryService implements OrganizationApplicat
     }
 
     @Override
-    public List<OrganizationApplication> findPendingOrganizationApplications() {
-        return organizationApplicationRepository.findAllByStatus(OrganizationApplicationStatus.PENDING);
+    public ApplicationListResult findPendingOrganizationApplications(ApplicationListQuery query) {
+        return organizationApplicationRepository.findAllByStatus(OrganizationApplicationStatus.PENDING, query);
     }
 
 }

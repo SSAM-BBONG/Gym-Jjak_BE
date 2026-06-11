@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.application.usecase;
 
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 
 import java.util.List;
@@ -10,5 +12,5 @@ public interface OrganizationApplicationQueryUsecase {
 
     OrganizationApplication findOrganizationApplicationDetails(Long organizationApplicationId, Long requestUserId, boolean isAdmin);
 
-    List<OrganizationApplication> findPendingOrganizationApplications();
+    ApplicationListResult findPendingOrganizationApplications(ApplicationListQuery query);
 }

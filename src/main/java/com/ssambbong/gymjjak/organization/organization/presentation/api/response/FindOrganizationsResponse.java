@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.organization.organization.presentation.api.response;
 
-import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
+import com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 
 import java.time.LocalDateTime;
@@ -15,16 +15,16 @@ public record FindOrganizationsResponse(
         OrganizationStatus status,
         LocalDateTime createdAt
 ) {
-    public static FindOrganizationsResponse of(Organization organization, String loginId, long trainerCount) {
+    public static FindOrganizationsResponse from(OrganizationAdminView view) {
         return new FindOrganizationsResponse(
-                organization.getOrganizationId(),
-                loginId,
-                organization.getBusinessName(),
-                organization.getRepresentativeName(),
-                organization.getRepresentativePhone(),
-                trainerCount,
-                organization.getStatus(),
-                organization.getCreatedAt()
+                view.organizationId(),
+                view.loginId(),
+                view.businessName(),
+                view.representativeName(),
+                view.representativePhone(),
+                view.trainerCount(),
+                view.status(),
+                view.createdAt()
         );
     }
 }
