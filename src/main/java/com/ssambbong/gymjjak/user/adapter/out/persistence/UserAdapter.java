@@ -72,9 +72,19 @@ public class UserAdapter implements UserPort {
 
     @Override
     public void updateLastLoginAt(Long userId, LocalDateTime lastLoginAt) {
-        UserJpaEntity userJpaEntity = springDataUserRepository.findById(userId)
+        springDataUserRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.LOGIN_FAILED));
 
-        userJpaEntity.updateLastLoginAt(lastLoginAt);
+        springDataUserRepository.updateLastLoginAt(userId, lastLoginAt);
+    }
+
+    @Override
+    public boolean existsByNicknameAndIdNot(String nickname, Long userId) {
+        return springDataUserRepository.existsByNicknameAndIdNot(nickname, userId);
+    }
+
+    @Override
+    public boolean existsByPhoneAndIdNot(String phone, Long userId) {
+        return springDataUserRepository.existsByPhoneAndIdNot(phone, userId);
     }
 }

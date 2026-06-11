@@ -26,6 +26,9 @@ public interface UserPort {
 
     void updateLastLoginAt(Long userId, LocalDateTime lastLoginAt);
 
+    boolean existsByNicknameAndIdNot(String nickname, Long userId);
+
+    boolean existsByPhoneAndIdNot(String phone, Long userId);
 
 
 

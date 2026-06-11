@@ -25,7 +25,7 @@ public class TokenCommandService implements TokenCommandUsecase {
     public String reissueAccessToken(ReissueTokenCommand command) {
         String refreshToken = command.refreshToken();
 
-        log.info("[토큰 재발급] AccessToken 재발급 요청 시작");
+        log.info("event=accessToken_reissue_start");
 
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new UserException(UserErrorCode.REFRESH_TOKEN_NOT_FOUND);
@@ -38,7 +38,7 @@ public class TokenCommandService implements TokenCommandUsecase {
 
         // 2. refreshToken에서 userId 추출
         Long userId = tokenPort.getUserId(refreshToken);
-        log.info("[토큰 재발급] RefreshToken 검증 성공. userId={}", userId);
+        log.info("event=refreshToken_validation_succeed userId={}", userId);
 
         // 3. DB에 저장된 refreshToken 조회
         String savedRefreshToken = tokenPort.findRefreshTokenByUserId(userId)
@@ -62,7 +62,7 @@ public class TokenCommandService implements TokenCommandUsecase {
                 user.getRole().name()
         );
 
-        log.info("[토큰 재발급] AccessToken 재발급 성공. userId={}, role={}", user.getId(), user.getRole());
+        log.info("event=accessToken_reissue_succeed userId={}, role={}", user.getId(), user.getRole());
 
         return accessToken;
 

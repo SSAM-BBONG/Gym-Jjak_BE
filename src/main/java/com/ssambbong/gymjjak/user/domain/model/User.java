@@ -37,11 +37,11 @@ public class User {
             LocalDateTime  deletedAt
     ) {
         this.id = id;
-        this.username = validateRequired(username, "username");
-        this.password = validateRequired(password, "password");
-        this.name = validateRequired(name, "name");
-        this.nickname = validateRequired(nickname, "nickname");
-        this.phone = validateRequired(phone, "phone");
+        this.username = validateRequired(username, UserErrorCode.USERNAME_REQUIRED);
+        this.password = validateRequired(password, UserErrorCode.PASSWORD_REQUIRED);
+        this.name = validateRequired(name, UserErrorCode.NAME_REQUIRED);
+        this.nickname = validateRequired(nickname, UserErrorCode.NICKNAME_REQUIRED);
+        this.phone = validateRequired(phone, UserErrorCode.PHONE_REQUIRED);
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.status = Objects.requireNonNull(status, "status는 필수입니다.");
         this.onboardingCompleted = onboardingCompleted;
@@ -123,16 +123,16 @@ public class User {
     ) {
         validateUsableUser();
 
-        this.name = validateRequired(name, "name");
-        this.nickname = validateRequired(nickname, "nickname");
-        this.phone = validateRequired(phone, "phone");
+        this.name = validateRequired(name, UserErrorCode.NAME_REQUIRED);
+        this.nickname = validateRequired(nickname, UserErrorCode.NICKNAME_REQUIRED);
+        this.phone = validateRequired(phone, UserErrorCode.PHONE_REQUIRED);
         this.updatedAt = updatedAt;
     }
 
     public void changePassword(String encodedPassword, LocalDateTime  updatedAt) {
         validateUsableUser();
 
-        this.password = validateRequired(encodedPassword, "password");
+        this.password = validateRequired(encodedPassword, UserErrorCode.PASSWORD_REQUIRED);
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
@@ -216,7 +216,7 @@ public class User {
         }
     }
 
-    private void validateUsableUser() {
+    public void validateUsableUser() {
         validateNotWithdrawn();
 
         if (this.status != UserStatus.ACTIVE) {
@@ -230,9 +230,9 @@ public class User {
         }
     }
 
-    private static String validateRequired(String value, String fieldName) {
+    private static String validateRequired(String value, UserErrorCode errorCode) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(fieldName + "은 필수입니다.");
+            throw new UserException(errorCode);
         }
 
         return value;

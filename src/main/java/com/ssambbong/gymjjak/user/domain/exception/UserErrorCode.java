@@ -25,7 +25,12 @@ public enum UserErrorCode implements ErrorCode {
     USER_ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "USER_409_005", "이미 탈퇴한 회원입니다."),
     USER_ALREADY_SEVEN_DAYS_SUSPENDED(HttpStatus.CONFLICT, "USER_409_006", "이미 7일 정지된 회원입니다."),
     USER_ALREADY_PERMANENTLY_SUSPENDED(HttpStatus.CONFLICT, "USER_409_007", "이미 영구 정지된 회원입니다."),
-    PASSWORD_MISMATCH(HttpStatus.UNAUTHORIZED, "USER_401_005", "비밀번호가 일치하지 않습니다.");
+    PASSWORD_MISMATCH(HttpStatus.UNAUTHORIZED, "USER_401_005", "비밀번호가 일치하지 않습니다."),
+    USERNAME_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_003", "아이디는 필수입니다."),
+    PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_004", "비밀번호는 필수입니다."),
+    NAME_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_005", "이름은 필수입니다."),
+    NICKNAME_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_006", "닉네임은 필수입니다."),
+    PHONE_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_007", "전화번호는 필수입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
