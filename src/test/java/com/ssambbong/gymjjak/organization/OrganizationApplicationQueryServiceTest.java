@@ -136,9 +136,9 @@ class OrganizationApplicationQueryServiceTest {
     }
 
     @Test
-    @DisplayName("타인의 신청을 조회하면 OrganizationApplicationNotFoundException이 발생한다")
+    @DisplayName("타인의 신청을 조회하면 OrganizationApplicationNotFoundException이 발생한다 (보안상 미존재와 동일 처리)")
     void findOrganizationApplicationDetails_fail_otherUserAccess() {
-        // given
+        // given — 보안상 접근 거부를 미존재와 동일하게 처리하여 정보 노출 방지
         Long applicationId = 1L;
         Long otherUserId = 2L;
 

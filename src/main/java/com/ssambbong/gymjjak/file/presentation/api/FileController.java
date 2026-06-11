@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class FileController {
 
     private final FileUseCase fileUseCase;
@@ -118,7 +119,6 @@ public class FileController {
             @ApiResponse(responseCode = "404", description = "파일을 찾을 수 없음",
                     content = @Content(schema = @Schema()))
     })
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{fileId}/presigned-url")
     public ResponseEntity<GlobalApiResponse<String>> getPresignedUrl(
             @PathVariable Long fileId,
