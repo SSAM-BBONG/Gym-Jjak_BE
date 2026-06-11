@@ -144,6 +144,7 @@ public class User {
     }
 
     public void markLoggedIn(LocalDateTime  lastLoginAt) {
+        validateLoginAllowed();
         this.lastLoginAt = Objects.requireNonNull(lastLoginAt, "lastLoginAt은 필수입니다.");
     }
 
@@ -151,11 +152,7 @@ public class User {
         validateNotWithdrawn();
 
         if (this.status == UserStatus.DAY_7) {
-            throw new IllegalStateException("이미 7일 정지된 회원입니다.");
-        }
-
-        if (this.status == UserStatus.ETERNAL) {
-            throw new IllegalStateException("영구 정지된 회원은 7일 정지로 변경할 수 없습니다.");
+            throw new UserException(UserErrorCode.USER_ALREADY_SEVEN_DAYS_SUSPENDED);
         }
 
         this.status = UserStatus.DAY_7;
@@ -166,7 +163,7 @@ public class User {
         validateNotWithdrawn();
 
         if (this.status == UserStatus.ETERNAL) {
-            throw new IllegalStateException("이미 영구 정지된 회원입니다.");
+            throw new UserException(UserErrorCode.USER_ALREADY_PERMANENTLY_SUSPENDED);
         }
 
         this.status = UserStatus.ETERNAL;
@@ -182,7 +179,7 @@ public class User {
 
     public void withdraw(LocalDateTime  deletedAt) {
         if (isWithdrawn()) {
-            throw new IllegalStateException("이미 탈퇴한 회원입니다.");
+            throw new UserException(UserErrorCode.USER_ALREADY_WITHDRAWN);
         }
 
         this.deletedAt = Objects.requireNonNull(deletedAt, "deletedAt은 필수입니다.");
@@ -210,6 +207,10 @@ public class User {
     }
 
     public void validateLoginAllowed() {
+        if (isWithdrawn()) {
+            throw new UserException(UserErrorCode.LOGIN_FAILED);
+        }
+
         if (this.status != UserStatus.ACTIVE) {
             throw new UserException(UserErrorCode.LOGIN_RESTRICTED);
         }
@@ -219,13 +220,13 @@ public class User {
         validateNotWithdrawn();
 
         if (this.status != UserStatus.ACTIVE) {
-            throw new IllegalStateException("정상 상태의 회원만 사용할 수 있습니다.");
+            throw new UserException(UserErrorCode.USER_NOT_ACTIVE);
         }
     }
 
     private void validateNotWithdrawn() {
         if (isWithdrawn()) {
-            throw new IllegalStateException("탈퇴한 회원입니다.");
+            throw new UserException(UserErrorCode.USER_WITHDRAWN);
         }
     }
 

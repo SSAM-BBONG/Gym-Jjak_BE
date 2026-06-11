@@ -114,6 +114,17 @@ public class UserCommandService implements UserCommandUseCase {
         log.info("[로그아웃 완료] refresh token 삭제 완료. userId={}", command.userId());
     }
 
+    @Override
+    public void verifyPassword(Long userId, String rawPassword) {
+
+        User user = userPort.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        if (!userPort.matchesPassword(rawPassword, user.getPassword())) {
+            throw new UserException(UserErrorCode.PASSWORD_MISMATCH);
+        }
+    }
+
     private String maskPhone(String phone) {
         if (phone == null || phone.length() < 8) {
             return "****";
