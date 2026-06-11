@@ -38,6 +38,14 @@ public class S3FileStorageAdapter implements FileStoragePort {
     }
 
     @Override
+    public String getPublicUrl(String key) {
+        return String.format("https://%s.s3.%s.amazonaws.com/%s",
+                s3Properties.getS3().getBucket(),
+                s3Properties.getRegion(),
+                key);
+    }
+
+    @Override
     public String getPresignedUrl(String key) {
         return s3Presigner.presignGetObject(
                 GetObjectPresignRequest.builder()

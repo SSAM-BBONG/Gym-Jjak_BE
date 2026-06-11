@@ -46,15 +46,15 @@ public class FileService implements FileUseCase {
 
         String presignedUrl = fileStoragePort.generatePresignedUploadUrl(key, contentType);
         log.info("Presigned URL 발급 - uploaderId: {}, fileType: {}, key: {}", uploaderId, fileType, key);
-        fileMetricsPort.recordPresignedUrlGenerated();
+        recordMetricSafely(fileMetricsPort::recordPresignedUrlGenerated, "recordPresignedUrlGenerated");
         return new PresignedUrlResult(presignedUrl, key);
     }
 
     @Override
     @Transactional
     public Long registerFile(FileUploadCommand command) {
-        String expectedKeySegment = "/" + command.uploaderId() + "/";
-        if (!command.fileKey().contains(expectedKeySegment)) {
+        String expectedPrefix = command.fileType().getPath() + "/" + command.uploaderId() + "/";
+        if (!command.fileKey().startsWith(expectedPrefix)) {
             throw new FileAccessDeniedException();
         }
 
@@ -70,7 +70,7 @@ public class FileService implements FileUseCase {
         );
         Long fileId = fileRepository.save(file).getFileId();
         log.info("파일 등록 완료 - fileId: {}, key: {}", fileId, command.fileKey());
-        fileMetricsPort.recordFileRegistered();
+        recordMetricSafely(fileMetricsPort::recordFileRegistered, "recordFileRegistered");
         return fileId;
     }
 
@@ -79,9 +79,14 @@ public class FileService implements FileUseCase {
     public String getPresignedUrl(Long fileId, Long requesterId, boolean isAdmin) {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new FileNotFoundException(fileId));
-        if (FilePolicy.from(file.getFileType()).isRequiresOwnershipCheck()
-                && !isAdmin
-                && !file.getUploaderId().equals(requesterId)) {
+
+        FilePolicy policy = FilePolicy.from(file.getFileType());
+
+        if (!policy.isRequiresOwnershipCheck()) {
+            return fileStoragePort.getPublicUrl(file.getFileUrl());
+        }
+
+        if (!isAdmin && !file.getUploaderId().equals(requesterId)) {
             throw new FileAccessDeniedException();
         }
         return fileStoragePort.getPresignedUrl(file.getFileUrl());
@@ -96,6 +101,14 @@ public class FileService implements FileUseCase {
         fileRepository.deleteById(fileId);
         fileStoragePort.delete(file.getFileUrl());
         log.info("파일 삭제 완료 - fileId: {}, key: {}", fileId, file.getFileUrl());
-        fileMetricsPort.recordFileDeleted();
+        recordMetricSafely(fileMetricsPort::recordFileDeleted, "recordFileDeleted");
+    }
+
+    private void recordMetricSafely(Runnable metricCall, String metricName) {
+        try {
+            metricCall.run();
+        } catch (Exception e) {
+            log.warn("메트릭 기록 실패 - metric: {}", metricName, e);
+        }
     }
 }

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Schema(description = "PT 강습 등록 요청")
 public record CreatePtCourseRequest(
@@ -33,6 +34,7 @@ public record CreatePtCourseRequest(
         int totalSessionCount,
 
         @Schema(description = "썸네일 파일 ID (선택)", example = "1")
+        @Positive
         Long thumbnailFileId
 ) {
 }

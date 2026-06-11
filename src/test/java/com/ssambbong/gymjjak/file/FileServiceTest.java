@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -59,7 +60,7 @@ class FileServiceTest {
         // given
         FileUploadCommand command = new FileUploadCommand(
                 1L,
-                "business-license/1/uuid.pdf",
+                "uploads/organizations/1/uuid.pdf",
                 "사업자등록증.pdf",
                 "application/pdf",
                 204800L,
@@ -88,21 +89,23 @@ class FileServiceTest {
     }
 
     @Test
-    @DisplayName("공개 파일은 소유자가 아니어도 Presigned URL 발급에 성공한다")
+    @DisplayName("공개 파일은 소유자가 아니어도 고정 S3 URL을 반환한다")
     void getPresignedUrl_success_publicFile() {
-        // given — PT_THUMBNAIL은 requiresOwnershipCheck = false
+        // given — PT_THUMBNAIL은 requiresOwnershipCheck = false → getPublicUrl 호출
         File file = mock(File.class);
         when(file.getFileUrl()).thenReturn("uploads/pt-thumbnails/1/uuid.jpg");
         when(file.getFileType()).thenReturn(FileType.PT_THUMBNAIL);
         when(fileRepository.findById(1L)).thenReturn(Optional.of(file));
-        when(fileStoragePort.getPresignedUrl("uploads/pt-thumbnails/1/uuid.jpg"))
-                .thenReturn("https://s3.amazonaws.com/bucket/key?X-Amz-Signature=xyz");
+        when(fileStoragePort.getPublicUrl("uploads/pt-thumbnails/1/uuid.jpg"))
+                .thenReturn("https://bucket.s3.ap-northeast-2.amazonaws.com/uploads/pt-thumbnails/1/uuid.jpg");
 
         // when
         String url = fileService.getPresignedUrl(1L, 99L, false);
 
         // then
         assertThat(url).startsWith("https://");
+        verify(fileStoragePort).getPublicUrl(anyString());
+        verify(fileStoragePort, never()).getPresignedUrl(anyString());
     }
 
     @Test
@@ -170,10 +173,28 @@ class FileServiceTest {
     @Test
     @DisplayName("다른 사용자의 fileKey로 registerFile 시 FileAccessDeniedException이 발생한다")
     void registerFile_fail_invalidFileKey() {
-        // given — uploaderId=1 인데 key에는 /2/ 가 박혀있음
+        // given — uploaderId=1 인데 key 경로가 다른 userId(2)로 시작
         FileUploadCommand command = new FileUploadCommand(
                 1L,
                 "uploads/organizations/2/uuid.pdf",
+                "사업자등록증.pdf",
+                "application/pdf",
+                204800L,
+                FileType.BUSINESS_LICENSE
+        );
+
+        // when & then
+        assertThatThrownBy(() -> fileService.registerFile(command))
+                .isInstanceOf(FileAccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("fileType 경로와 불일치하는 fileKey로 registerFile 시 FileAccessDeniedException이 발생한다")
+    void registerFile_fail_wrongFileTypePath() {
+        // given — BUSINESS_LICENSE 타입인데 key가 pt-thumbnails 경로
+        FileUploadCommand command = new FileUploadCommand(
+                1L,
+                "uploads/pt-thumbnails/1/uuid.pdf",
                 "사업자등록증.pdf",
                 "application/pdf",
                 204800L,
@@ -190,7 +211,7 @@ class FileServiceTest {
     void deleteFile_success() {
         // given
         File file = mock(File.class);
-        when(file.getFileUrl()).thenReturn("business-license/1/uuid.pdf");
+        when(file.getFileUrl()).thenReturn("uploads/organizations/1/uuid.pdf");
         when(fileRepository.findById(1L)).thenReturn(Optional.of(file));
 
         // when
@@ -199,7 +220,7 @@ class FileServiceTest {
         // then
         var inOrder = inOrder(fileRepository, fileStoragePort);
         inOrder.verify(fileRepository).deleteById(1L);
-        inOrder.verify(fileStoragePort).delete("business-license/1/uuid.pdf");
+        inOrder.verify(fileStoragePort).delete("uploads/organizations/1/uuid.pdf");
     }
 
     @Test
@@ -213,6 +234,51 @@ class FileServiceTest {
                 .isInstanceOf(FileNotFoundException.class);
 
         verify(fileStoragePort, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("파일 삭제 성공 시 메트릭이 기록된다")
+    void deleteFile_success_recordsMetric() {
+        // given
+        File file = mock(File.class);
+        when(file.getFileUrl()).thenReturn("uploads/organizations/1/uuid.pdf");
+        when(fileRepository.findById(1L)).thenReturn(Optional.of(file));
+
+        // when
+        fileService.deleteFile(1L);
+
+        // then
+        verify(fileMetricsPort).recordFileDeleted();
+    }
+
+    @Test
+    @DisplayName("파일이 존재하지 않으면 메트릭이 기록되지 않는다")
+    void deleteFile_fail_doesNotRecordMetric() {
+        // given
+        when(fileRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> fileService.deleteFile(999L))
+                .isInstanceOf(FileNotFoundException.class);
+
+        verify(fileMetricsPort, never()).recordFileDeleted();
+    }
+
+    @Test
+    @DisplayName("메트릭 기록 실패가 deleteFile 비즈니스 로직에 영향을 주지 않는다")
+    void deleteFile_metricFailure_doesNotAffectBusiness() {
+        // given
+        File file = mock(File.class);
+        when(file.getFileUrl()).thenReturn("uploads/organizations/1/uuid.pdf");
+        when(fileRepository.findById(1L)).thenReturn(Optional.of(file));
+        doThrow(new RuntimeException("metric error")).when(fileMetricsPort).recordFileDeleted();
+
+        // when & then — 메트릭 예외가 전파되지 않아야 함
+        assertThatCode(() -> fileService.deleteFile(1L))
+                .doesNotThrowAnyException();
+
+        verify(fileRepository).deleteById(1L);
+        verify(fileStoragePort).delete("uploads/organizations/1/uuid.pdf");
     }
 
 }

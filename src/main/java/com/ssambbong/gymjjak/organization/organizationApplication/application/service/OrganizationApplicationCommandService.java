@@ -13,11 +13,13 @@ import com.ssambbong.gymjjak.organization.organization.application.port.Organiza
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrganizationApplicationCommandService implements OrganizationApplicationCommandUsecase {
 
     private final OrganizationApplicationRepository organizationApplicationRepository;
@@ -61,7 +63,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         );
 
         Long applicationId = organizationApplicationRepository.save(organizationApplication);
-        orgApplicationMetricsPort.recordOrgApplicationCreated();
+        recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationCreated, "recordOrgApplicationCreated");
         return applicationId;
     }
 
@@ -85,9 +87,8 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
 
         Organization organization = Organization.create(organizationAccountId, approved);
         organizationRepository.save(organization);
-        organizationMetricsPort.recordOrganizationCreated();
-
-        orgApplicationMetricsPort.recordOrgApplicationApproved();
+        recordMetricSafely(organizationMetricsPort::recordOrganizationCreated, "recordOrganizationCreated");
+        recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationApproved, "recordOrgApplicationApproved");
     }
 
     @Override
@@ -101,7 +102,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication rejected = organizationApplication.reject(reviewedBy, rejectReason);
 
         organizationApplicationRepository.reject(rejected);
-        orgApplicationMetricsPort.recordOrgApplicationRejected();
+        recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationRejected, "recordOrgApplicationRejected");
     }
 
     @Override
@@ -115,6 +116,14 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication cancelled = organizationApplication.cancel();
 
         organizationApplicationRepository.cancel(cancelled);
-        orgApplicationMetricsPort.recordOrgApplicationCancelled();
+        recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationCancelled, "recordOrgApplicationCancelled");
+    }
+
+    private void recordMetricSafely(Runnable metricCall, String metricName) {
+        try {
+            metricCall.run();
+        } catch (Exception e) {
+            log.warn("메트릭 기록 실패 - metric: {}", metricName, e);
+        }
     }
 }
