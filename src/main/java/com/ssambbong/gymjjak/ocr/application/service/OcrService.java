@@ -8,11 +8,15 @@ import com.ssambbong.gymjjak.ocr.domain.exception.OcrErrorCode;
 import com.ssambbong.gymjjak.ocr.domain.exception.OcrException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.CompletableFuture;
 
 /* Comment
 *   Adapter는 Ocr Api 호출 로그가 찍힘
 *   service는 공통 ocr 기능의 시작,성공을 로그찍음
+*   비동기 실행: 호출 쓰레드를 블로킹하지 않고 ocrExecutor 쓰레드풀에서 실행됨
 * */
 
 @Slf4j
@@ -22,16 +26,18 @@ public class OcrService implements OcrUseCase {
 
     private final OcrClientPort ocrClientPort;
 
+    @Async("ocrExecutor")
     @Override
-    public OcrResult extractOcr(ExtractOcrCommand command) {
+    public CompletableFuture<OcrResult> extractOcr(ExtractOcrCommand command) {
 
         validateCommand(command);
 
         long startedAt = System.currentTimeMillis();
 
-        log.info("event=ocr_extract_started contentType={}, fileSize={}",
+        log.info("event=ocr_extract_started contentType={}, fileSize={}, thread={}",
                 command.contentType(),
-                command.fileBytes().length
+                command.fileBytes().length,
+                Thread.currentThread().getName()
         );
 
         OcrResult result = ocrClientPort.extractOcr(command);
@@ -43,7 +49,7 @@ public class OcrService implements OcrUseCase {
                 result.fields().size()
         );
 
-        return result;
+        return CompletableFuture.completedFuture(result);
     }
 
     private void validateCommand(ExtractOcrCommand command) {
