@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -41,6 +42,7 @@ public class OrganizationJpaEntity extends BaseTimeEntity {
 
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id")
+    @SQLRestriction("removed_at IS NULL")
     private List<OrganizationTrainerJpaEntity> trainers = new ArrayList<>();
 
     @Column(name = "business_license_file_id", nullable = false)

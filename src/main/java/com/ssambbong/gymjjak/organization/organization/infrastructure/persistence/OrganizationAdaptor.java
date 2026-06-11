@@ -42,7 +42,11 @@ public class OrganizationAdaptor implements OrganizationRepository {
 
     @Override
     public OrganizationListResult findAllForAdmin(OrganizationListQuery query) {
-        PageRequest pageRequest = PageRequest.of(query.page() - 1, query.size(), Sort.by("createdAt").descending());
+        PageRequest pageRequest = PageRequest.of(
+                query.page() - 1,
+                query.size(),
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("organizationId"))
+        );
         Page<OrganizationAdminView> page = springDataOrganizationRepository.findAllForAdmin(pageRequest);
         return new OrganizationListResult(
                 page.getContent(),
