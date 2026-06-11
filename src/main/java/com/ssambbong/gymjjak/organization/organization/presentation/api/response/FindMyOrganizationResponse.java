@@ -19,7 +19,7 @@ public record FindMyOrganizationResponse(
         String detailAddress,
         BigDecimal latitude,
         BigDecimal longitude,
-        String businessLicenseUrl,
+        Long businessLicenseFileId,
 
         // 추가 정보 (수정 가능)
         String facilityPhone,
@@ -27,7 +27,7 @@ public record FindMyOrganizationResponse(
         String blogUrl,
         String websiteUrl
 ) {
-    public static FindMyOrganizationResponse of(Organization organization, String businessLicenseUrl) {
+    public static FindMyOrganizationResponse of(Organization organization) {
         return new FindMyOrganizationResponse(
                 null, // requestedLoginId는 users 테이블에 있어서 추후 UserQueryPort로 조회 예정
                 organization.getBusinessRegistrationNumber(),
@@ -40,7 +40,7 @@ public record FindMyOrganizationResponse(
                 organization.getDetailAddress(),
                 organization.getLatitude(),
                 organization.getLongitude(),
-                businessLicenseUrl,
+                organization.getBusinessLicenseFileId(),
                 organization.getFacilityPhone(),
                 organization.getInstagramUrl(),
                 organization.getBlogUrl(),

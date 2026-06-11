@@ -30,6 +30,9 @@ public record CreatePtCourseRequest(
 
         @Schema(description = "전체 회차 수", example = "12")
         @Min(1)
-        int totalSessionCount
+        int totalSessionCount,
+
+        @Schema(description = "썸네일 파일 ID (선택)", example = "1")
+        Long thumbnailFileId
 ) {
 }
