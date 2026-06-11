@@ -10,6 +10,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record OrganizationApplicationCreateRequest(
+        @NotNull(message = "파일 ID는 필수입니다.")
+        Long fileId,
+
         @NotBlank(message = "요청 로그인 ID는 필수입니다.")
         String requestedLoginId,
 
@@ -34,8 +37,6 @@ public record OrganizationApplicationCreateRequest(
 
         @NotBlank(message = "도로명 주소는 필수입니다.")
         String roadAddress,
-
-
 
         // 선택값
         String jibunAddress,

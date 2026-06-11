@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.pt.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.pt.application.port.PtCourseEnrichQueryPort;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.domain.exception.PtCourseNotFoundException;
@@ -26,7 +25,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final PtCourseRepository ptCourseRepository;
     private final CategoryQueryUseCase categoryQueryUseCase;
     private final PtCourseEnrichQueryPort enrichQueryPort;
-    private final FileUseCase fileUseCase;
 
     @Override
     public List<PtCourseListView> findAllPtCourses() {
@@ -67,24 +65,16 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap) {
-        String thumbnailUrl = ptCourse.getThumbnailFileId() != null
-                ? fileUseCase.getPresignedUrl(ptCourse.getThumbnailFileId())
-                : null;
-
         PtCourseEnrichQueryPort.OrganizationInfo org =
                 enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
 
-        String trainerProfileImageUrl = trainer.profileFileId() != null
-                ? fileUseCase.getPresignedUrl(trainer.profileFileId())
-                : null;
-
         return new PtCourseListView(
                 ptCourse.getId(),
                 categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                 ptCourse.getTagId(),
-                thumbnailUrl,
+                ptCourse.getThumbnailFileId(),
                 ptCourse.getTitle(),
                 ptCourse.getPrice(),
                 ptCourse.getTotalSessionCount(),
@@ -94,31 +84,23 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 org.latitude(),
                 org.longitude(),
                 trainer.name(),
-                trainerProfileImageUrl,
+                trainer.profileFileId(),
                 trainer.averageRating(),
                 trainer.reviewCount()
         );
     }
 
     private PtCourseDetailView toDetailView(PtCourse ptCourse, Map<Long, String> categoryMap) {
-        String thumbnailUrl = ptCourse.getThumbnailFileId() != null
-                ? fileUseCase.getPresignedUrl(ptCourse.getThumbnailFileId())
-                : null;
-
         PtCourseEnrichQueryPort.OrganizationInfo org =
                 enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
 
-        String trainerProfileImageUrl = trainer.profileFileId() != null
-                ? fileUseCase.getPresignedUrl(trainer.profileFileId())
-                : null;
-
         return new PtCourseDetailView(
                 ptCourse.getId(),
                 categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                 ptCourse.getTagId(),
-                thumbnailUrl,
+                ptCourse.getThumbnailFileId(),
                 ptCourse.getTitle(),
                 ptCourse.getDescription(),
                 ptCourse.getPrice(),
@@ -132,7 +114,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 org.instagramUrl(),
                 ptCourse.getTrainerProfileId(),
                 trainer.name(),
-                trainerProfileImageUrl,
+                trainer.profileFileId(),
                 trainer.spec(),
                 trainer.introduction(),
                 trainer.averageRating(),

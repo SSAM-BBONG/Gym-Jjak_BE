@@ -72,7 +72,11 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
     @Override
     public ApplicationListResult findAllByStatus(OrganizationApplicationStatus status, ApplicationListQuery query) {
 
-        PageRequest pageRequest = PageRequest.of(query.page() - 1, query.size(), Sort.by("createdAt").descending());
+        PageRequest pageRequest = PageRequest.of(
+                query.page() - 1,
+                query.size(),
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("organizationApplicationId"))
+        );
         Page<OrganizationApplicationJpaEntity> page = springDataOrganizationApplicationRepository.findAllByStatus(status, pageRequest);
 
         List<OrganizationApplication> items = page.getContent().stream()

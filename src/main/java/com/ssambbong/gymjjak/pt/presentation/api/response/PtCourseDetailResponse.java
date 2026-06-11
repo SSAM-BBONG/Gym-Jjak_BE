@@ -19,8 +19,8 @@ public record PtCourseDetailResponse(
         @Schema(description = "태그 ID", example = "1")
         Long tagId,
 
-        @Schema(description = "썸네일 URL")
-        String thumbnailUrl,
+        @Schema(description = "썸네일 파일 ID")
+        Long thumbnailFileId,
 
         @Schema(description = "제목", example = "맞춤 PT 1개월 과정")
         String title,
@@ -63,8 +63,8 @@ public record PtCourseDetailResponse(
         @Schema(description = "트레이너 이름", example = "트레이너01")
         String trainerName,
 
-        @Schema(description = "트레이너 프로필 이미지 URL")
-        String trainerProfileImageUrl,
+        @Schema(description = "트레이너 프로필 이미지 파일 ID")
+        Long trainerProfileImageFileId,
 
         @Schema(description = "트레이너 경력", example = "4년차 / 체형교정 전문")
         String trainerSpec,
@@ -96,7 +96,7 @@ public record PtCourseDetailResponse(
                 view.ptCourseId(),
                 view.categoryName(),
                 view.tagId(),
-                view.thumbnailUrl(),
+                view.thumbnailFileId(),
                 view.title(),
                 view.description(),
                 view.price(),
@@ -110,7 +110,7 @@ public record PtCourseDetailResponse(
                 view.instagramUrl(),
                 view.trainerProfileId(),
                 view.trainerName(),
-                view.trainerProfileImageUrl(),
+                view.trainerProfileImageFileId(),
                 view.trainerSpec(),
                 view.trainerIntroduction(),
                 view.averageRating(),

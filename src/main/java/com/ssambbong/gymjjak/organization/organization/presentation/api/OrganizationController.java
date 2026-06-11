@@ -13,7 +13,6 @@ import com.ssambbong.gymjjak.organization.organization.presentation.api.response
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationsListResponse;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationsResponse;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.OrganizationResponseCode;
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,7 +38,6 @@ public class OrganizationController {
 
     private final OrganizationQueryUseCase organizationQueryUseCase;
     private final OrganizationCommandUseCase organizationCommandUseCase;
-    private final FileUseCase fileUseCase;
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "조직 목록 조회 (관리자)", description = "관리자가 전체 조직 목록을 조회합니다.")
@@ -80,12 +78,10 @@ public class OrganizationController {
     ) {
         Organization organization = organizationQueryUseCase.findMyOrganization(authUser.userId());
 
-        String businessLicenseUrl = fileUseCase.getPresignedUrl(organization.getBusinessLicenseFileId());
-
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         OrganizationResponseCode.ORGANIZATION_FOUND,
-                        FindMyOrganizationResponse.of(organization, businessLicenseUrl)
+                        FindMyOrganizationResponse.of(organization)
                 )
         );
     }
