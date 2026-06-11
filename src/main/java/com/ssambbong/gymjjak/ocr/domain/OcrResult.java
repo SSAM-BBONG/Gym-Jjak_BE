@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.ocr.domain;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public record OcrResult(
@@ -16,7 +17,7 @@ public record OcrResult(
     // ocr에서 필드명으로 텍스트 값 찾기
     public Optional<String> findTextByName(String name) {
         return fields.stream()
-                .filter(field -> name.equals(field.name()))
+                .filter(field -> Objects.equals(name, field.name()))
                 .map(OcrExtractedField::inferText)
                 .findFirst();
     }
@@ -24,6 +25,6 @@ public record OcrResult(
     // ocr 안에 특정 필드 존재 여부 확인
     public boolean hasField(String name) {
         return fields.stream().anyMatch(
-                field -> name.equals(field.name()));
+                field -> Objects.equals(name, field.name()));
     }
 }

@@ -25,23 +25,14 @@ services:
       retries: 10
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: xxv211/gymjjak-backend:develop
     container_name: gymjjak-backend
-    # 자동 재시작 옵션, 도커 컨테이너 실횅시 자동 부팅
-    # 개발중에는 no, 배포는 always
     restart: no
-    # 도커 실행 전 먼저 실행되는 서비스
     depends_on:
       mysql:
         condition: service_healthy
-    # 컨테이너 내부에서 사용할 환경 변수(Environment Variable) 설정
-    # 환경 변수 이름을 자동으로 읽어서 application.yml 값으로 매핑
     environment:
-      # 활성 프로파일 설정. 실행 시 application-docker.yml 자동으로 읽어주는 설정
       SPRING_PROFILES_ACTIVE: docker
-      # DB 연결 관련 docker 에서는 localhost(x), mysql 로 실행
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
@@ -62,7 +53,6 @@ services:
 
       CLOVA_OCR_INVOKE_URL: ${CLOVA_OCR_INVOKE_URL}
       CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
-    # hostPortNum (my PC) : containerPortNum (docker inner)
     ports:
       - "${BACKEND_PORT}:8080"
 # Docker 영구 저장소 설정

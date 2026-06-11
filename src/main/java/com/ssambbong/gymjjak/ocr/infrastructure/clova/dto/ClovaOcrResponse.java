@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record ClovaOcrResponse(
         String requestId, // clova api 추적 id
         List<ClovaOcrImageResponse> images

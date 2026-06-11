@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.ocr.domain.exception;
 
 import com.ssambbong.gymjjak.global.domain.common.exception.InfrastructureException;
-import org.springframework.http.HttpStatus;
 
 public class OcrException extends InfrastructureException {
 

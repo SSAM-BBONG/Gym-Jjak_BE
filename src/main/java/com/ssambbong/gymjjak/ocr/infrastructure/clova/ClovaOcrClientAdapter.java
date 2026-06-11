@@ -15,7 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
@@ -39,6 +43,11 @@ public class ClovaOcrClientAdapter implements OcrClientPort {
     // Bean 등록한 RestClient 호출
     private final RestClient clovaOcrRestClient;
 
+    @Retryable(
+            retryFor = ClovaOcrRetryableException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 500, multiplier = 2.0)
+    )
     @Override
     public OcrResult extractOcr(ExtractOcrCommand command) {
 
@@ -73,30 +82,61 @@ public class ClovaOcrClientAdapter implements OcrClientPort {
 
             return result;
         } catch (JsonProcessingException exception) {
+            // clova 호출시 발생하는 에러, 재시도 x
             log.error(
                     "event=ocr_request_failed provider=clova reason=message_serialization_failed requestId={}, durationMs={}",
                     requestId,
                     System.currentTimeMillis() - startedAt,
                     exception
             );
+
             throw new OcrException(OcrErrorCode.OCR_REQUEST_FAILED, exception);
+
         } catch (RestClientResponseException exception) {
+        // 500 서버 에러, 재시도 o
+        if (exception.getStatusCode().is5xxServerError()) {
             log.warn(
-                    "event=ocr_request_failed provider=clova reason=external_api_error requestId={}, statusCode={}, durationMs={}, responseBodyLength={}",
+                    "event=ocr_request_retryable_failed provider=clova reason=external_api_5xx requestId={}, statusCode={}, durationMs={}, responseBodyLength={}",
                     requestId,
                     exception.getStatusCode().value(),
                     System.currentTimeMillis() - startedAt,
                     exception.getResponseBodyAsString().length()
             );
-            throw new OcrException(OcrErrorCode.OCR_REQUEST_FAILED, exception);
-        } catch (RestClientException exception) {
-            log.error(
-                    "event=ocr_request_failed provider=clova reason=external_api_client_error requestId={}, durationMs={}",
-                    requestId,
-                    System.currentTimeMillis() - startedAt,
-                    exception
-            );
-            throw new OcrException(OcrErrorCode.OCR_REQUEST_FAILED, exception);
+
+            throw new ClovaOcrRetryableException("Clova OCR 5xx response", exception);
+        }
+
+        // 4xx 클라이언트 오류 (파일 포멧 실패, 잘못된 요청 등), 재시도 x
+        log.warn(
+                "event=ocr_request_failed provider=clova reason=external_api_4xx requestId={}, statusCode={}, durationMs={}, responseBodyLength={}",
+                requestId,
+                exception.getStatusCode().value(),
+                System.currentTimeMillis() - startedAt,
+                exception.getResponseBodyAsString().length()
+        );
+
+        throw new OcrException(OcrErrorCode.OCR_REQUEST_FAILED, exception);
+
+    } catch (ResourceAccessException exception) {
+        // 네트워크 타임 아웃 에러, 재시도 o
+        log.warn(
+                "event=ocr_request_retryable_failed provider=clova reason=network_or_timeout requestId={}, durationMs={}",
+                requestId,
+                System.currentTimeMillis() - startedAt
+        );
+
+        throw new ClovaOcrRetryableException("Clova OCR network or timeout error", exception);
+
+    } catch (RestClientException exception) {
+        //  그 외 RestClient 계열 오류, 재시도x
+        log.error(
+                "event=ocr_request_failed provider=clova reason=external_api_client_error requestId={}, durationMs={}",
+                requestId,
+                System.currentTimeMillis() - startedAt,
+                exception
+        );
+
+        throw new OcrException(OcrErrorCode.OCR_REQUEST_FAILED, exception);
         }
     }
 
@@ -235,5 +275,21 @@ public class ClovaOcrClientAdapter implements OcrClientPort {
                     ? "ocr-image"
                     : filename;
         }
+    }
+
+    // 3번 재시도 실패 했을 때, 자동 호출되는 에러
+    @Recover
+    public OcrResult recover(
+            ClovaOcrRetryableException exception,
+            ExtractOcrCommand command
+    ) {
+        log.error(
+                "event=ocr_request_retries_exhausted provider=clova reason=retry_exhausted contentType={}, fileSize={}",
+                command.contentType(),
+                command.fileBytes() == null ? 0 : command.fileBytes().length,
+                exception
+        );
+
+        throw new OcrException(OcrErrorCode.OCR_REQUEST_FAILED, exception);
     }
 }
