@@ -9,7 +9,7 @@ public class PtCourse {
     private final Long trainerProfileId;
     private Long categoryId;
     private Long tagId;
-    private Long thumbnailFileId;
+    private String thumbnailUrl;
     private String title;
     private String description;
     private int price;
@@ -26,7 +26,7 @@ public class PtCourse {
                     Long trainerProfileId,
                     Long categoryId,
                     Long tagId,
-                    Long thumbnailFileId,
+                    String thumbnailUrl,
                     String title,
                     String description,
                     int price,
@@ -54,7 +54,7 @@ public class PtCourse {
         this.trainerProfileId = trainerProfileId;
         this.categoryId = categoryId;
         this.tagId = tagId;
-        this.thumbnailFileId = thumbnailFileId;
+        this.thumbnailUrl = thumbnailUrl;
         this.title = title;
         this.description = description;
         this.price = price;
@@ -70,7 +70,7 @@ public class PtCourse {
             Long trainerProfileId,
             Long categoryId,
             Long tagId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String description,
             int price,
@@ -82,7 +82,7 @@ public class PtCourse {
                 trainerProfileId,
                 categoryId,
                 tagId,
-                thumbnailFileId,
+                thumbnailUrl,
                 title,
                 description,
                 price,
@@ -100,7 +100,7 @@ public class PtCourse {
             Long trainerProfileId,
             Long categoryId,
             Long tagId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String description,
             int price,
@@ -140,7 +140,7 @@ public class PtCourse {
     public Long getTrainerProfileId() { return trainerProfileId; }
     public Long getCategoryId() { return categoryId; }
     public Long getTagId() { return tagId; }
-    public Long getThumbnailFileId() { return thumbnailFileId; }
+    public String getThumbnailUrl() { return thumbnailUrl; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public int getPrice() { return price; }

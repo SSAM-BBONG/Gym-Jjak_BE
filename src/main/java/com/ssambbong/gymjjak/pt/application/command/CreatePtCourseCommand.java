@@ -1,12 +1,19 @@
 package com.ssambbong.gymjjak.pt.application.command;
 
-public record CreatePtCourseCommand (
+import java.util.List;
+
+public record CreatePtCourseCommand(
         Long userId,
         Long categoryId,
         Long tagId,
         String title,
         String description,
         int price,
-        int totalSessionCount
-){
+        String thumbnailUrl,
+        int sessionDuration,
+        List<CurriculumData> curriculums,
+        List<ScheduleData> schedules
+) {
+    public record CurriculumData(String title, String content) {}
+    public record ScheduleData(String dayOfWeek, String startTime, String endTime) {}
 }

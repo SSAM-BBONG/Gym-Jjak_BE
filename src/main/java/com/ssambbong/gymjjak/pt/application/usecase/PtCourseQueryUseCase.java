@@ -15,55 +15,50 @@ public interface PtCourseQueryUseCase {
     // ──── 목록 뷰 ────
     record PtCourseListView(
             Long ptCourseId,
-            String categoryName,
-            Long tagId,
-            String thumbnailUrl,
             String title,
+            String thumbnailUrl,
             int price,
-            int totalSessionCount,
-            PtCourseStatus status,
+            // 태그
+            Long tagId,
+            String tagName,
+            // 카테고리
+            Long categoryId,
+            String categoryName,
+            // 트레이너
+            String displayName,
             // 조직
-            String organizationName,
-            String organizationAddress,
+            Long organizationId,
+            String organizationBusinessName,
+            String organizationRoadAddress,
             Double latitude,
             Double longitude,
-            // 트레이너
-            String trainerName,
-            String trainerProfileImageUrl,
-            Double averageRating,
+            // 리뷰
             int reviewCount
     ) {}
 
     // ──── 상세 뷰 ────
     record PtCourseDetailView(
             Long ptCourseId,
-            String categoryName,
-            Long tagId,
             String thumbnailUrl,
             String title,
             String description,
             int price,
             int totalSessionCount,
-            PtCourseStatus status,
+            Double averageRating,
+            int reviewCount,
             // 조직
             Long organizationId,
-            String organizationName,
-            String organizationAddress,
-            String organizationPhone,
-            String websiteUrl,
-            String instagramUrl,
             // 트레이너
             Long trainerProfileId,
-            String trainerName,
+            String displayName,
             String trainerProfileImageUrl,
             String trainerSpec,
             String trainerIntroduction,
-            Double averageRating,
-            int reviewCount,
             // 미구현 (빈 배열 반환)
             List<Object> certifications,
             List<Object> awards,
             List<Object> curriculums,
+            List<Object> schedules,
             List<Object> recentReviews
     ) {}
 }

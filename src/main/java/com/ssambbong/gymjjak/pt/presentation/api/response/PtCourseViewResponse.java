@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.pt.presentation.api.response;
 
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
-import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 // PT 강습 목록 카드 응답 DTO
@@ -10,69 +9,65 @@ public record PtCourseViewResponse(
         @Schema(description = "PT 강습 ID", example = "1")
         Long ptCourseId,
 
-        @Schema(description = "카테고리명", example = "헬스")
-        String categoryName,
-
-        @Schema(description = "태그 ID", example = "1")
-        Long tagId,
+        @Schema(description = "제목", example = "크로스핏 초급 클래스")
+        String title,
 
         @Schema(description = "썸네일 URL")
         String thumbnailUrl,
 
-        @Schema(description = "제목", example = "맞춤 PT 1개월 과정")
-        String title,
-
-        @Schema(description = "가격", example = "350000")
+        @Schema(description = "가격", example = "45000")
         int price,
 
-        @Schema(description = "전체 회차 수", example = "8")
-        int totalSessionCount,
+        @Schema(description = "태그")
+        TagInfo tag,
 
-        @Schema(description = "상태", example = "VISIBLE")
-        PtCourseStatus status,
+        @Schema(description = "카테고리")
+        CategoryInfo category,
 
-        @Schema(description = "조직명", example = "짐짝피트니스 강남점")
-        String organizationName,
+        @Schema(description = "트레이너 표시명", example = "Ket Trainer")
+        String displayName,
 
-        @Schema(description = "조직 주소", example = "서울특별시 강남구 테헤란로 123")
-        String organizationAddress,
+        @Schema(description = "조직 정보")
+        OrganizationInfo organization,
 
-        @Schema(description = "위도", example = "37.5007")
-        Double latitude,
-
-        @Schema(description = "경도", example = "127.0365")
-        Double longitude,
-
-        @Schema(description = "트레이너 이름", example = "트레이너01")
-        String trainerName,
-
-        @Schema(description = "트레이너 프로필 이미지 URL")
-        String trainerProfileImageUrl,
-
-        @Schema(description = "평균 평점", example = "4.6")
-        Double averageRating,
-
-        @Schema(description = "리뷰 수", example = "1")
+        @Schema(description = "리뷰 수", example = "127")
         int reviewCount
 
 ) {
+    public record TagInfo(
+            @Schema(description = "태그 ID", example = "1") Long tagId,
+            @Schema(description = "태그명", example = "전신") String name
+    ) {}
+
+    public record CategoryInfo(
+            @Schema(description = "카테고리 ID", example = "1") Long categoryId,
+            @Schema(description = "카테고리명", example = "벌크업") String name
+    ) {}
+
+    public record OrganizationInfo(
+            @Schema(description = "조직 ID", example = "1") Long organizationId,
+            @Schema(description = "사업장명", example = "짐잭피트니스 본점") String businessName,
+            @Schema(description = "도로명 주소", example = "서울시 강남구") String roadAddress,
+            @Schema(description = "위도", example = "37.5012") Double latitude,
+            @Schema(description = "경도", example = "127.0396") Double longitude
+    ) {}
+
     public static PtCourseViewResponse from(PtCourseQueryUseCase.PtCourseListView view) {
         return new PtCourseViewResponse(
                 view.ptCourseId(),
-                view.categoryName(),
-                view.tagId(),
-                view.thumbnailUrl(),
                 view.title(),
+                view.thumbnailUrl(),
                 view.price(),
-                view.totalSessionCount(),
-                view.status(),
-                view.organizationName(),
-                view.organizationAddress(),
-                view.latitude(),
-                view.longitude(),
-                view.trainerName(),
-                view.trainerProfileImageUrl(),
-                view.averageRating(),
+                new TagInfo(view.tagId(), view.tagName()),
+                new CategoryInfo(view.categoryId(), view.categoryName()),
+                view.displayName(),
+                new OrganizationInfo(
+                        view.organizationId(),
+                        view.organizationBusinessName(),
+                        view.organizationRoadAddress(),
+                        view.latitude(),
+                        view.longitude()
+                ),
                 view.reviewCount()
         );
     }

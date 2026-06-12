@@ -1,7 +1,5 @@
 package com.ssambbong.gymjjak.pt.application.service;
 
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
-import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.domain.model.PtCourse;
@@ -14,7 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,87 +26,52 @@ public class PtCourseCommandServiceTest {
     private PtCourseRepository ptCourseRepository;
 
     @Mock
-    private FileUseCase fileUseCase;
-
-    @Mock
     private TrainerProfileQueryPort trainerProfileQueryPort;
 
     @InjectMocks
     private PtCourseCommandService ptCourseCommandService;
 
-    @Test
-    @DisplayName("썸네일 없이 PT 강습 등록 시 ptCourseId가 반환되어야 한다")
-    void createPtCourse_success_withoutThumbnail() {
-
-        // given
-        CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L,                                     // userId
-                1L,                                     // categoryId
-                1L,                                     // tagId
-                "체계적인 가슴 집중 PT",                 // title
-                "가슴 근육 발달에 특화된 12주 프로그램",  // description
-                50000,                                  // price
-                12                                      // totalSessionCount
+    private CreatePtCourseCommand defaultCommand(String title, String description, int price,
+                                                  List<CreatePtCourseCommand.CurriculumData> curriculums) {
+        return new CreatePtCourseCommand(
+                1L, 1L, 1L,
+                title, description, price,
+                "https://cdn.example.com/thumbnail.jpg",
+                60,
+                curriculums,
+                List.of(new CreatePtCourseCommand.ScheduleData("MON", "10:00", "11:00"))
         );
-
-        // TrainerInfo Mock 설정
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
-
-        PtCourse savedPtCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, null,
-                "체계적인 가슴 집중 PT",
-                "가슴 근육 발달에 특화된 12주 프로그램",
-                50000, 12, false, false, PtCourseStatus.VISIBLE
-        );
-
-        when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
-
-        // when
-        Long ptCourseId = ptCourseCommandService.createPtCourse(null, command);
-
-        // then
-        assertEquals(1L, ptCourseId);
-        verify(ptCourseRepository).save(any(PtCourse.class));
-        verify(fileUseCase, never()).uploadFile(any(), any(), any()); // 파일 업로드 호출 안 됨
     }
 
     @Test
-    @DisplayName("썸네일 있을 때 PT 강습 등록 시 파일 업로드 후 ptCourseId가 반환되어야 한다")
-    void createPtCourse_success_withThumbnail() {
+    @DisplayName("PT 강습 등록 시 ptCourseId가 반환되어야 한다")
+    void createPtCourse_success() {
 
         // given
-        MultipartFile thumbnail = mock(MultipartFile.class);
-        when(thumbnail.isEmpty()).thenReturn(false);
-
-        CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L,
-                "체계적인 가슴 집중 PT",
-                "가슴 근육 발달에 특화된 12주 프로그램",
-                50000, 12
+        List<CreatePtCourseCommand.CurriculumData> curriculums = List.of(
+                new CreatePtCourseCommand.CurriculumData("기초 자세 교정", "체력 측정 및 목표 설정"),
+                new CreatePtCourseCommand.CurriculumData("벤치프레스 기초", "올바른 자세 익히기")
         );
+        CreatePtCourseCommand command = defaultCommand("체계적인 가슴 집중 PT", "가슴 근육 발달에 특화된 12주 프로그램", 50000, curriculums);
 
-        // TrainerInfo Mock 설정
         when(trainerProfileQueryPort.findByUserId(1L))
                 .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
-        when(fileUseCase.uploadFile(thumbnail, 1L, FileType.PT_THUMBNAIL)).thenReturn(99L);
-
         PtCourse savedPtCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, 99L,
+                1L, 1L, 1L, 1L, 1L,
+                "https://cdn.example.com/thumbnail.jpg",
                 "체계적인 가슴 집중 PT",
                 "가슴 근육 발달에 특화된 12주 프로그램",
-                50000, 12, false, false, PtCourseStatus.VISIBLE
+                50000, 2, false, false, PtCourseStatus.VISIBLE
         );
 
         when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
 
         // when
-        Long ptCourseId = ptCourseCommandService.createPtCourse(thumbnail, command);
+        Long ptCourseId = ptCourseCommandService.createPtCourse(command);
 
         // then
         assertEquals(1L, ptCourseId);
-        verify(fileUseCase).uploadFile(thumbnail, 1L, FileType.PT_THUMBNAIL); // 파일 업로드 호출됨
         verify(ptCourseRepository).save(any(PtCourse.class));
     }
 
@@ -116,19 +80,17 @@ public class PtCourseCommandServiceTest {
     void createPtCourse_emptyTitle_throwsException() {
 
         // given
-        CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L,
-                "",
-                "설명", 5000, 12
+        CreatePtCourseCommand command = defaultCommand(
+                "", "설명", 50000,
+                List.of(new CreatePtCourseCommand.CurriculumData("회차 제목", "회차 설명"))
         );
 
-        // TrainerInfo Mock 설정
         when(trainerProfileQueryPort.findByUserId(1L))
                 .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
-                () -> ptCourseCommandService.createPtCourse(null, command));
+                () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any(PtCourse.class));
     }
@@ -138,41 +100,36 @@ public class PtCourseCommandServiceTest {
     void createPtCourse_negativePrice_throwsException() {
 
         // given
-        CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L,
-                "PT 강습 제목", "설명",
-                -1, 12
+        CreatePtCourseCommand command = defaultCommand(
+                "PT 강습 제목", "설명", -1,
+                List.of(new CreatePtCourseCommand.CurriculumData("회차 제목", "회차 설명"))
         );
 
-        // TrainerInfo Mock 설정
         when(trainerProfileQueryPort.findByUserId(1L))
                 .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
-                () -> ptCourseCommandService.createPtCourse(null, command));
+                () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any(PtCourse.class));
     }
 
     @Test
-    @DisplayName("totalSessionCount가 1 미만이면 PtCourseInvalidException이 발생해야 한다")
-    void createPtCourse_zeroTotalSessionCount_throwsException() {
+    @DisplayName("커리큘럼이 없으면 totalSessionCount=0이 되어 PtCourseInvalidException이 발생해야 한다")
+    void createPtCourse_emptyCurriculums_throwsException() {
 
         // given
-        CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L,
-                "PT 강습 제목", "설명",
-                50000, 0
+        CreatePtCourseCommand command = defaultCommand(
+                "PT 강습 제목", "설명", 50000, List.of()
         );
 
-        // TrainerInfo Mock 설정
         when(trainerProfileQueryPort.findByUserId(1L))
                 .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
-                () -> ptCourseCommandService.createPtCourse(null, command));
+                () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any(PtCourse.class));
     }

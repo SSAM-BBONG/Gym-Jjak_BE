@@ -22,12 +22,13 @@ public class PtCourseEnrichQueryAdapter implements PtCourseEnrichQueryPort {
                        o.latitude, o.longitude,
                        o.facility_phone, o.website_url, o.instagram_url
                 FROM organizations o
-                WHERE o.organization_id = :organizationId
+                WHERE o.organization_id = ?1
                 """)
-                .setParameter("organizationId", organizationId)
+                .setParameter(1, organizationId)
                 .getSingleResult();
 
         return new OrganizationInfo(
+                organizationId,
                 (String) result[0],
                 (String) result[1],
                 result[2] != null ? ((Number) result[2]).doubleValue() : null,
@@ -44,9 +45,9 @@ public class PtCourseEnrichQueryAdapter implements PtCourseEnrichQueryPort {
                 SELECT tp.display_name, tp.spec, tp.introduction,
                        tp.average_rating, tp.review_count, tp.profile_file_id
                 FROM trainer_profiles tp
-                WHERE tp.trainer_profile_id = :trainerProfileId
+                WHERE tp.trainer_profile_id = ?1
                 """)
-                .setParameter("trainerProfileId", trainerProfileId)
+                .setParameter(1, trainerProfileId)
                 .getSingleResult();
 
         return new TrainerDisplayInfo(

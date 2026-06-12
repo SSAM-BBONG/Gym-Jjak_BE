@@ -12,8 +12,9 @@ public interface PtCourseEnrichQueryPort {
     TrainerDisplayInfo findTrainerProfileById(Long trainerProfileId);
 
     record OrganizationInfo(
-            String name,
-            String address,
+            Long organizationId,
+            String businessName,
+            String roadAddress,
             Double latitude,
             Double longitude,
             String phone,
@@ -22,7 +23,7 @@ public interface PtCourseEnrichQueryPort {
     ) {}
 
     record TrainerDisplayInfo(
-            String name,
+            String displayName,
             String spec,
             String introduction,
             Double averageRating,

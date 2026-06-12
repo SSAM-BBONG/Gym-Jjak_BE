@@ -49,7 +49,7 @@ class PtCourseQueryServiceTest {
         );
         when(enrichQueryPort.findOrganizationById(anyLong())).thenReturn(
                 new PtCourseEnrichQueryPort.OrganizationInfo(
-                        "짐짝피트니스", "서울 강남구", 37.5007, 127.0365,
+                        1L, "짐짝피트니스", "서울 강남구", 37.5007, 127.0365,
                         "02-1234-5678", null, null)
         );
         when(enrichQueryPort.findTrainerProfileById(anyLong())).thenReturn(
@@ -75,8 +75,8 @@ class PtCourseQueryServiceTest {
         // then
         assertEquals(1, result.size());
         assertEquals("헬스", result.get(0).categoryName());
-        assertEquals("짐짝피트니스", result.get(0).organizationName());
-        assertEquals("트레이너01", result.get(0).trainerName());
+        assertEquals("짐짝피트니스", result.get(0).organizationBusinessName());
+        assertEquals("트레이너01", result.get(0).displayName());
         verify(ptCourseRepository).findAllVisible();
     }
 
@@ -103,7 +103,10 @@ class PtCourseQueryServiceTest {
         // given
         PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
-        stubCategoryAndEnrich();
+        when(enrichQueryPort.findTrainerProfileById(anyLong())).thenReturn(
+                new PtCourseEnrichQueryPort.TrainerDisplayInfo(
+                        "트레이너01", "4년차", "안전하게 지도합니다.", 4.6, 1, null)
+        );
 
         // when
         PtCourseQueryUseCase.PtCourseDetailView result =
@@ -111,9 +114,7 @@ class PtCourseQueryServiceTest {
 
         // then
         assertEquals(1L, result.ptCourseId());
-        assertEquals("헬스", result.categoryName());
-        assertEquals("짐짝피트니스", result.organizationName());
-        assertEquals("트레이너01", result.trainerName());
+        assertEquals("트레이너01", result.displayName());
         verify(ptCourseRepository).findById(1L);
     }
 
@@ -128,7 +129,6 @@ class PtCourseQueryServiceTest {
                 () -> ptCourseQueryService.findPtCourseDetail(999L));
 
         verify(ptCourseRepository).findById(999L);
-        verify(categoryQueryUseCase, never()).handle();
     }
 
     @Test
@@ -141,7 +141,5 @@ class PtCourseQueryServiceTest {
         // when & then
         assertThrows(PtCourseNotFoundException.class,
                 () -> ptCourseQueryService.findPtCourseDetail(1L));
-
-        verify(categoryQueryUseCase, never()).handle();
     }
 }

@@ -52,10 +52,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
             throw new PtCourseNotFoundException();
         }
 
-        Map<Long, String> categoryMap = buildCategoryMap();
-
         log.info("[PtCourseDetail] ptCourseId={} 조회 완료", ptCourseId);
-        return toDetailView(ptCourse, categoryMap);
+        return toDetailView(ptCourse);
     }
 
     private Map<Long, String> buildCategoryMap() {
@@ -67,9 +65,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap) {
-        String thumbnailUrl = ptCourse.getThumbnailFileId() != null
-                ? fileUseCase.getPresignedUrl(ptCourse.getThumbnailFileId())
-                : null;
+        String thumbnailUrl = ptCourse.getThumbnailUrl();
 
         PtCourseEnrichQueryPort.OrganizationInfo org =
                 enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
@@ -82,31 +78,26 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         return new PtCourseListView(
                 ptCourse.getId(),
-                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
-                ptCourse.getTagId(),
-                thumbnailUrl,
                 ptCourse.getTitle(),
+                thumbnailUrl,
                 ptCourse.getPrice(),
-                ptCourse.getTotalSessionCount(),
-                ptCourse.getStatus(),
-                org.name(),
-                org.address(),
+                ptCourse.getTagId(),
+                null, // TODO: TagQueryUseCase 연동 후 tagName 채우기
+                ptCourse.getCategoryId(),
+                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
+                trainer.displayName(),
+                org.organizationId(),
+                org.businessName(),
+                org.roadAddress(),
                 org.latitude(),
                 org.longitude(),
-                trainer.name(),
-                trainerProfileImageUrl,
-                trainer.averageRating(),
                 trainer.reviewCount()
         );
     }
 
-    private PtCourseDetailView toDetailView(PtCourse ptCourse, Map<Long, String> categoryMap) {
-        String thumbnailUrl = ptCourse.getThumbnailFileId() != null
-                ? fileUseCase.getPresignedUrl(ptCourse.getThumbnailFileId())
-                : null;
+    private PtCourseDetailView toDetailView(PtCourse ptCourse) {
+        String thumbnailUrl = ptCourse.getThumbnailUrl();
 
-        PtCourseEnrichQueryPort.OrganizationInfo org =
-                enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
 
@@ -116,27 +107,20 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         return new PtCourseDetailView(
                 ptCourse.getId(),
-                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
-                ptCourse.getTagId(),
                 thumbnailUrl,
                 ptCourse.getTitle(),
                 ptCourse.getDescription(),
                 ptCourse.getPrice(),
                 ptCourse.getTotalSessionCount(),
-                ptCourse.getStatus(),
+                trainer.averageRating(),
+                trainer.reviewCount(),
                 ptCourse.getOrganizationId(),
-                org.name(),
-                org.address(),
-                org.phone(),
-                org.websiteUrl(),
-                org.instagramUrl(),
                 ptCourse.getTrainerProfileId(),
-                trainer.name(),
+                trainer.displayName(),
                 trainerProfileImageUrl,
                 trainer.spec(),
                 trainer.introduction(),
-                trainer.averageRating(),
-                trainer.reviewCount(),
+                List.of(),
                 List.of(),
                 List.of(),
                 List.of(),

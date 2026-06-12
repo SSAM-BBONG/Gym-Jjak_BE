@@ -14,12 +14,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,11 +33,10 @@ public class PtCourseController {
     // 트레이너만 PT 강습 등록 가능
     @PreAuthorize("hasAuthority('TRAINER')")
     @Operation(summary = "PT 강습 등록", description = "조직 소속 트레이너가 PT 강습을 등록한다.")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     public ResponseEntity<GlobalApiResponse<CreatePtCourseResponse>> createPtCourse(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestPart("data") @Valid CreatePtCourseRequest request,
-            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
+            @RequestBody @Valid CreatePtCourseRequest request
     ) {
         CreatePtCourseCommand command = new CreatePtCourseCommand(
                 authUser.userId(),
@@ -48,10 +45,17 @@ public class PtCourseController {
                 request.title(),
                 request.description(),
                 request.price(),
-                request.totalSessionCount()
+                request.thumbnailUrl(),
+                request.sessionDuration(),
+                request.curriculums().stream()
+                        .map(c -> new CreatePtCourseCommand.CurriculumData(c.title(), c.content()))
+                        .toList(),
+                request.schedules().stream()
+                        .map(s -> new CreatePtCourseCommand.ScheduleData(s.dayOfWeek(), s.startTime(), s.endTime()))
+                        .toList()
         );
 
-        Long ptCourseId = ptCourseCommandUseCase.createPtCourse(thumbnail, command);
+        Long ptCourseId = ptCourseCommandUseCase.createPtCourse(command);
 
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(PtCourseResponseCode.PT_COURSE_CREATED,
