@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.trainer.presentation.api.request;
+package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -26,9 +26,9 @@ public record CreateTrainerApplicationRequest(
         @Size(max = 30, message = "자격증은 최대 30개까지 입력할 수 있습니다.")
         List<String> qualifications,
 
-        @Schema(description = "대회 경력", example = "2023 피지크 대회 입상")
-        @Size(max = 100, message = "대회 경력은 최대 100개까지 입력할 수 있습니다.")
-        List<String> competitionHistories,
+        @Schema(description = "수상 경력", example = "2023 피지크 대회 입상")
+        @Size(max = 100, message = "수상 경력은 최대 100개까지 입력할 수 있습니다.")
+        List<String> awardHistories,
 
         @Schema(description = "자기 소개", example = "안녕하세요. 트레이너 kim입니다.")
         @NotBlank(message = "자기소개는 필수입니다.")

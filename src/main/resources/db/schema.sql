@@ -27,8 +27,6 @@ DROP TABLE IF EXISTS pt_courses;
 DROP TABLE IF EXISTS organization_trainers;
 DROP TABLE IF EXISTS trainer_awards;
 DROP TABLE IF EXISTS trainer_certifications;
-DROP TABLE IF EXISTS trainer_application_awards;
-DROP TABLE IF EXISTS trainer_application_certifications;
 DROP TABLE IF EXISTS trainer_profiles;
 DROP TABLE IF EXISTS trainer_applications;
 DROP TABLE IF EXISTS organizations;
@@ -214,7 +212,9 @@ CREATE TABLE trainer_applications (
                                       trainer_application_id BIGINT NOT NULL AUTO_INCREMENT,
                                       user_id BIGINT NOT NULL,
                                       profile_file_id BIGINT NULL,
-                                      spec TEXT NULL,
+                                      certificate_file_id BIGINT NOT NULL,
+                                      qualifications TEXT NULL,
+                                      award_histories TEXT NULL,
                                       introduction TEXT NOT NULL,
                                       status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
                                       reject_reason VARCHAR(500) NULL,
@@ -222,10 +222,21 @@ CREATE TABLE trainer_applications (
                                       reviewed_at DATETIME(6) NULL,
                                       created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-                                      CONSTRAINT pk_trainer_applications PRIMARY KEY (trainer_application_id),
-                                      CONSTRAINT fk_trainer_applications_user FOREIGN KEY (user_id) REFERENCES users(user_id),
-                                      CONSTRAINT fk_trainer_applications_profile_file FOREIGN KEY (profile_file_id) REFERENCES files(file_id),
-                                      CONSTRAINT fk_trainer_applications_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+
+                                      CONSTRAINT pk_trainer_applications
+                                          PRIMARY KEY (trainer_application_id),
+
+                                      CONSTRAINT fk_trainer_applications_user
+                                          FOREIGN KEY (user_id) REFERENCES users(user_id),
+
+                                      CONSTRAINT fk_trainer_applications_profile_file
+                                          FOREIGN KEY (profile_file_id) REFERENCES files(file_id),
+
+                                      CONSTRAINT fk_trainer_applications_certificate_file
+                                          FOREIGN KEY (certificate_file_id) REFERENCES files(file_id),
+
+                                      CONSTRAINT fk_trainer_applications_reviewed_by
+                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE trainer_profiles (
@@ -233,8 +244,7 @@ CREATE TABLE trainer_profiles (
                                   user_id BIGINT NOT NULL,
                                   application_id BIGINT NOT NULL,
                                   profile_file_id BIGINT NULL,
-                                  display_name VARCHAR(50) NOT NULL,
-                                  spec TEXT NULL,
+                                  trainer_name VARCHAR(50) NOT NULL,
                                   introduction TEXT NOT NULL,
                                   average_rating DECIMAL(3,2) NOT NULL DEFAULT 0.00,
                                   review_count INT NOT NULL DEFAULT 0,
@@ -242,6 +252,7 @@ CREATE TABLE trainer_profiles (
                                   created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                   updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                                   deleted_at DATETIME(6) NULL,
+
                                   CONSTRAINT pk_trainer_profiles PRIMARY KEY (trainer_profile_id),
                                   CONSTRAINT uk_trainer_profiles_user UNIQUE (user_id),
                                   CONSTRAINT uk_trainer_profiles_application UNIQUE (application_id),
@@ -252,62 +263,38 @@ CREATE TABLE trainer_profiles (
                                   CONSTRAINT chk_trainer_profiles_review_count CHECK (review_count >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE trainer_application_certifications (
-                                                    trainer_application_certification_id BIGINT NOT NULL AUTO_INCREMENT,
-                                                    application_id BIGINT NOT NULL,
-                                                    name VARCHAR(100) NOT NULL,
-                                                    issuer VARCHAR(100) NULL,
-                                                    acquired_date DATE NULL,
-                                                    file_id BIGINT NULL,
-                                                    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-                                                    CONSTRAINT pk_trainer_application_certifications PRIMARY KEY (trainer_application_certification_id),
-                                                    CONSTRAINT fk_trainer_app_cert_application FOREIGN KEY (application_id) REFERENCES trainer_applications(trainer_application_id) ON DELETE CASCADE,
-                                                    CONSTRAINT fk_trainer_app_cert_file FOREIGN KEY (file_id) REFERENCES files(file_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE trainer_application_awards (
-                                            trainer_application_award_id BIGINT NOT NULL AUTO_INCREMENT,
-                                            application_id BIGINT NOT NULL,
-                                            competition_name VARCHAR(100) NOT NULL,
-                                            award_name VARCHAR(100) NULL,
-                                            award_date DATE NULL,
-                                            description VARCHAR(255) NULL,
-                                            file_id BIGINT NULL,
-                                            created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-                                            CONSTRAINT pk_trainer_application_awards PRIMARY KEY (trainer_application_award_id),
-                                            CONSTRAINT fk_trainer_app_award_application FOREIGN KEY (application_id) REFERENCES trainer_applications(trainer_application_id) ON DELETE CASCADE,
-                                            CONSTRAINT fk_trainer_app_award_file FOREIGN KEY (file_id) REFERENCES files(file_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE trainer_certifications (
                                         trainer_certification_id BIGINT NOT NULL AUTO_INCREMENT,
                                         trainer_profile_id BIGINT NOT NULL,
                                         name VARCHAR(100) NOT NULL,
-                                        issuer VARCHAR(100) NULL,
-                                        acquired_date DATE NULL,
                                         file_id BIGINT NULL,
                                         created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                         updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                                         deleted_at DATETIME(6) NULL,
-                                        CONSTRAINT pk_trainer_certifications PRIMARY KEY (trainer_certification_id),
-                                        CONSTRAINT fk_trainer_certifications_profile FOREIGN KEY (trainer_profile_id) REFERENCES trainer_profiles(trainer_profile_id),
-                                        CONSTRAINT fk_trainer_certifications_file FOREIGN KEY (file_id) REFERENCES files(file_id)
+
+                                        CONSTRAINT pk_trainer_certifications
+                                            PRIMARY KEY (trainer_certification_id),
+
+                                        CONSTRAINT fk_trainer_certifications_profile
+                                            FOREIGN KEY (trainer_profile_id) REFERENCES trainer_profiles(trainer_profile_id),
+
+                                        CONSTRAINT fk_trainer_certifications_file
+                                            FOREIGN KEY (file_id) REFERENCES files(file_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE trainer_awards (
                                 trainer_award_id BIGINT NOT NULL AUTO_INCREMENT,
                                 trainer_profile_id BIGINT NOT NULL,
-                                competition_name VARCHAR(100) NOT NULL,
-                                award_name VARCHAR(100) NULL,
-                                award_date DATE NULL,
-                                description VARCHAR(255) NULL,
-                                file_id BIGINT NULL,
+                                name VARCHAR(150) NOT NULL,
                                 created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                 updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                                 deleted_at DATETIME(6) NULL,
-                                CONSTRAINT pk_trainer_awards PRIMARY KEY (trainer_award_id),
-                                CONSTRAINT fk_trainer_awards_profile KEY (trainer_profile_id) REFERENCES trainer_profiles(trainer_profile_id),
-                                CONSTRAINT fk_trainer_awards_file FOREIGN KEY (file_id) REFERENCES files(file_id)
+
+                                CONSTRAINT pk_trainer_awards
+                                    PRIMARY KEY (trainer_award_id),
+
+                                CONSTRAINT fk_trainer_awards_profile
+                                    FOREIGN KEY (trainer_profile_id) REFERENCES trainer_profiles(trainer_profile_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE organization_trainers (

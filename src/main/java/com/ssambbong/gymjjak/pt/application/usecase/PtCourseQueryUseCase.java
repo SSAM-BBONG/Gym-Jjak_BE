@@ -56,7 +56,13 @@ public interface PtCourseQueryUseCase {
             Long trainerProfileId,
             String trainerName,
             Long trainerProfileImageFileId,
-            String trainerSpec,
+            List<String> trainerQualifications,
+            List<String> trainerAwardHistories,
+            /* Comment
+            *   마찬가지로 List로 변경!
+            * */
+//            String trainerQualifications,
+//            String trainerAwardHistories,
             String trainerIntroduction,
             Double averageRating,
             int reviewCount,

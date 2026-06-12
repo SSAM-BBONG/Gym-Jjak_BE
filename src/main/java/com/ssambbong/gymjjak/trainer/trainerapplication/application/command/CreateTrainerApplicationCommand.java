@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.trainer.application.command;
+package com.ssambbong.gymjjak.trainer.trainerapplication.application.command;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public record CreateTrainerApplicationCommand(
         List<String> qualifications,
 
         // 대회경력
-        List<String> competitionHistories,
+        List<String> awardHistories,
 
         // 자기소개
         String introduction

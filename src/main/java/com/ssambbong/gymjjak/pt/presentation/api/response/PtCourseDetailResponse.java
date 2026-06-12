@@ -66,8 +66,14 @@ public record PtCourseDetailResponse(
         @Schema(description = "트레이너 프로필 이미지 파일 ID")
         Long trainerProfileImageFileId,
 
-        @Schema(description = "트레이너 경력", example = "4년차 / 체형교정 전문")
-        String trainerSpec,
+        /* Comment
+        *   이 2개도 List로 수정!
+        * */
+        @Schema(description = "트레이너 자격증 목록(JSON 문자열)", example = "[\"생활체육지도자 2급\", \"NSCA-CPT\"]")
+        List<String> trainerQualifications,
+
+        @Schema(description = "트레이너 수상 경력 목록(JSON 문자열)", example = "[\"2023 피지크 대회 입상\", \"2024 체육인 대회 우승\"]")
+        List<String> trainerAwardHistories,
 
         @Schema(description = "트레이너 소개")
         String trainerIntroduction,
@@ -111,7 +117,8 @@ public record PtCourseDetailResponse(
                 view.trainerProfileId(),
                 view.trainerName(),
                 view.trainerProfileImageFileId(),
-                view.trainerSpec(),
+                view.trainerQualifications(),
+                view.trainerAwardHistories(),
                 view.trainerIntroduction(),
                 view.averageRating(),
                 view.reviewCount(),
