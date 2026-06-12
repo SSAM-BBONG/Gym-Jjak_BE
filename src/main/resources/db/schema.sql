@@ -1,11 +1,6 @@
 -- GymJjak 1st Project Schema (MySQL 8.x)
--- Version: v4, Team meeting updates applied + single tag per PT course.
+-- Version: v4.1, Suspended column added & Unique index dropped on regions.
 -- Generated from ERD export after syntax/constraint cleanup.
--- Notes:
--- 1) Domain enums are stored as VARCHAR columns and validated by Java Enum code.
--- 2) Polymorphic references such as report_groups.target_id and notifications.target_id intentionally do not use FK.
--- 3) system_logs.user_id is an audit snapshot value, intentionally no FK.
--- 4) PT course has exactly one body-part tag, so pt_courses.tag_id directly references tags.tag_id; pt_course_tags join table removed.
 
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -48,6 +43,7 @@ DROP TABLE IF EXISTS users;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+-- 1. 유저 테이블 (정지 만료일 컬럼 추가 및 updated_at 속성 지정)
 CREATE TABLE users (
                        user_id BIGINT NOT NULL AUTO_INCREMENT,
                        username VARCHAR(100) NOT NULL COMMENT '로그인 ID. 이메일 형식으로 검증',
@@ -58,6 +54,7 @@ CREATE TABLE users (
                        role VARCHAR(30) NOT NULL DEFAULT 'USER',
                        status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                        onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
+                       suspended_until DATETIME(6) NULL COMMENT '기간제 정지 만료일 (7일 정지 등)',
                        last_login_at DATETIME(6) NULL,
                        created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                        updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -68,6 +65,7 @@ CREATE TABLE users (
                        CONSTRAINT uk_users_phone UNIQUE (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 2. 지역 테이블 (uk_regions_area 유니크 인덱스 제거 완료)
 CREATE TABLE regions (
                          region_id BIGINT NOT NULL AUTO_INCREMENT,
                          sido VARCHAR(50) NOT NULL,
@@ -76,8 +74,7 @@ CREATE TABLE regions (
                          full_name VARCHAR(255) NOT NULL,
                          latitude DECIMAL(10,7) NULL,
                          longitude DECIMAL(10,7) NULL,
-                         CONSTRAINT pk_regions PRIMARY KEY (region_id),
-                         CONSTRAINT uk_regions_area UNIQUE (sido, sigungu, eupmyeondong)
+                         CONSTRAINT pk_regions PRIMARY KEY (region_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE categories (
@@ -309,7 +306,7 @@ CREATE TABLE trainer_awards (
                                 updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                                 deleted_at DATETIME(6) NULL,
                                 CONSTRAINT pk_trainer_awards PRIMARY KEY (trainer_award_id),
-                                CONSTRAINT fk_trainer_awards_profile FOREIGN KEY (trainer_profile_id) REFERENCES trainer_profiles(trainer_profile_id),
+                                CONSTRAINT fk_trainer_awards_profile KEY (trainer_profile_id) REFERENCES trainer_profiles(trainer_profile_id),
                                 CONSTRAINT fk_trainer_awards_file FOREIGN KEY (file_id) REFERENCES files(file_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -355,7 +352,6 @@ CREATE TABLE pt_courses (
                             INDEX idx_pt_courses_tag (tag_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE pt_course_schedules (
                                      pt_course_schedule_id BIGINT NOT NULL AUTO_INCREMENT,
                                      pt_course_id BIGINT NOT NULL,
@@ -371,7 +367,6 @@ CREATE TABLE pt_course_schedules (
                                      INDEX idx_pt_course_schedules_course (pt_course_id),
                                      INDEX idx_pt_course_schedules_day_time (day_of_week, start_time, end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 CREATE TABLE pt_curriculums (
                                 pt_curriculum_id BIGINT NOT NULL AUTO_INCREMENT,
