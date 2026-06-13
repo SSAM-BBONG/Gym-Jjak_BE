@@ -1,41 +1,36 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.application.service;
 
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
-import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.port.OrgApplicationMetricsPort;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateBusinessRegistrationNumberException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateRequestedLoginIdException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.OrganizationApplicationNotFoundException;
-import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
-import com.ssambbong.gymjjak.organization.organizationApplication.infrastructure.metrics.OrgApplicationMetrics;
+import com.ssambbong.gymjjak.organization.organization.application.port.OrganizationMetricsPort;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
-import com.ssambbong.gymjjak.organization.organization.infrastructure.metrics.OrganizationMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 public class OrganizationApplicationCommandService implements OrganizationApplicationCommandUsecase {
 
     private final OrganizationApplicationRepository organizationApplicationRepository;
     private final OrganizationRepository organizationRepository;
     private final UserCreationPort userCreationPort;
-    private final FileUseCase fileUseCase;
-    private final OrgApplicationMetrics orgApplicationMetrics;
-    private final OrganizationMetrics organizationMetrics;
+    private final OrgApplicationMetricsPort orgApplicationMetricsPort;
+    private final OrganizationMetricsPort organizationMetricsPort;
 
     @Override
     @Transactional
-    public Long createOrganizationApplication(MultipartFile businessLicenseFile, OrganizationApplicationCreateCommand command) {
+    public Long createOrganizationApplication(OrganizationApplicationCreateCommand command) {
 
         boolean alreadyExist = organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber());
         if (alreadyExist) {
@@ -47,12 +42,10 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
             throw new DuplicateRequestedLoginIdException();
         }
 
-        Long fileId = fileUseCase.uploadFile(businessLicenseFile, command.applicantUserId(), FileType.BUSINESS_LICENSE);
-
         OrganizationApplication organizationApplication = OrganizationApplication.create(
                 command.applicantUserId(),
                 command.requestedLoginId(),
-                fileId,
+                command.fileId(),
                 command.businessRegistrationNumber(),
                 command.businessName(),
                 command.representativeName(),
@@ -69,15 +62,9 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
                 command.facilityPhone()
         );
 
-        try {
-            Long applicationId = organizationApplicationRepository.save(organizationApplication);
-            orgApplicationMetrics.recordOrgApplicationCreated();
-            return applicationId;
-        } catch (DataAccessException e) {
-            log.error("조직 신청 DB 저장 실패 → S3 파일 롤백 - fileId: {}", fileId);
-            fileUseCase.deleteFromStorage(fileId);
-            throw e;
-        }
+        Long applicationId = organizationApplicationRepository.save(organizationApplication);
+        recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationCreated, "recordOrgApplicationCreated");
+        return applicationId;
     }
 
     @Override
@@ -91,7 +78,6 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication approved = organizationApplication.approve(reviewedBy);
         organizationApplicationRepository.approve(approved);
 
-        // 조직 계정 생성 (ORGANIZATION role User)
         Long organizationAccountId = userCreationPort.createOrganizationAccount(
                 approved.getRequestedLoginId(),
                 approved.getRepresentativeName(),
@@ -99,12 +85,10 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
                 approved.getRepresentativePhone()
         );
 
-        // 조직 생성
         Organization organization = Organization.create(organizationAccountId, approved);
         organizationRepository.save(organization);
-        organizationMetrics.recordOrganizationCreated();
-
-        orgApplicationMetrics.recordOrgApplicationApproved();
+        recordMetricSafely(organizationMetricsPort::recordOrganizationCreated, "recordOrganizationCreated");
+        recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationApproved, "recordOrgApplicationApproved");
     }
 
     @Override
@@ -118,7 +102,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication rejected = organizationApplication.reject(reviewedBy, rejectReason);
 
         organizationApplicationRepository.reject(rejected);
-        orgApplicationMetrics.recordOrgApplicationRejected();
+        recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationRejected, "recordOrgApplicationRejected");
     }
 
     @Override
@@ -132,5 +116,14 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication cancelled = organizationApplication.cancel();
 
         organizationApplicationRepository.cancel(cancelled);
+        recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationCancelled, "recordOrgApplicationCancelled");
+    }
+
+    private void recordMetricSafely(Runnable metricCall, String metricName) {
+        try {
+            metricCall.run();
+        } catch (Exception e) {
+            log.warn("메트릭 기록 실패 - metric: {}", metricName, e);
+        }
     }
 }

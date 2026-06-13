@@ -5,11 +5,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record OrganizationApplicationCreateRequest(
+        @NotNull(message = "파일 ID는 필수입니다.")
+        @Positive(message = "파일 ID는 1 이상이어야 합니다.")
+        Long fileId,
+
         @NotBlank(message = "요청 로그인 ID는 필수입니다.")
         String requestedLoginId,
 
@@ -34,8 +39,6 @@ public record OrganizationApplicationCreateRequest(
 
         @NotBlank(message = "도로명 주소는 필수입니다.")
         String roadAddress,
-
-
 
         // 선택값
         String jibunAddress,

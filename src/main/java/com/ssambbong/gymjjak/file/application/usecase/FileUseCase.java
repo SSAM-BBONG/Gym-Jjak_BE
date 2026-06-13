@@ -1,23 +1,21 @@
 package com.ssambbong.gymjjak.file.application.usecase;
 
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
+import com.ssambbong.gymjjak.file.application.command.GeneratePresignedUrlCommand;
+import com.ssambbong.gymjjak.file.application.command.GetPresignedUrlCommand;
+import com.ssambbong.gymjjak.file.application.result.FileContentResult;
+import com.ssambbong.gymjjak.file.application.result.PresignedUrlResult;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface FileUseCase {
 
-    // 파일 업로드 → file_id 반환
-    Long uploadFile(MultipartFile multipartFile, Long uploaderId, FileType fileType);
+    PresignedUrlResult generatePresignedUploadUrl(GeneratePresignedUrlCommand command);
 
-    // 파일 교체 → 새 file_id 반환
-    // 기존 파일 삭제 후 새 파일 업로드
-    Long replaceFile(Long oldFileId, MultipartFile multipartFile, Long uploaderId, FileType fileType);
+    Long registerFile(CreateFileCommand command);
 
-    // S3 key로 Presigned URL 발급
-    String getPresignedUrl(Long fileId);
+    String getPresignedUrl(GetPresignedUrlCommand command);
 
-    // 파일 삭제 (DB soft delete)
+    FileContentResult downloadFile(Long fileId, Long requesterId, boolean isAdmin, FileType expectedFileType);
+
     void deleteFile(Long fileId);
-
-    // S3 스토리지에서만 삭제 (DB는 건드리지 않음 — 트랜잭션 롤백으로 처리되는 경우에 사용)
-    void deleteFromStorage(Long fileId);
 }

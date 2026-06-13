@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.file.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.file.domain.model.File;
-import com.ssambbong.gymjjak.file.domain.model.FileStatus;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedDeletedEntity;
 import jakarta.persistence.*;
@@ -43,10 +42,6 @@ public class FileJpaEntity extends BaseCreatedDeletedEntity {
     @Column(name = "file_type", nullable = false)
     private FileType fileType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private FileStatus status;
-
     @Builder
     private FileJpaEntity(
             Long uploaderId,
@@ -55,8 +50,7 @@ public class FileJpaEntity extends BaseCreatedDeletedEntity {
             String fileUrl,
             String contentType,
             Long fileSize,
-            FileType fileType,
-            FileStatus status
+            FileType fileType
     ) {
         this.uploaderId = uploaderId;
         this.originalName = originalName;
@@ -65,7 +59,6 @@ public class FileJpaEntity extends BaseCreatedDeletedEntity {
         this.contentType = contentType;
         this.fileSize = fileSize;
         this.fileType = fileType;
-        this.status = status;
     }
 
     // 도메인 모델 → JPA 엔티티 변환
@@ -78,7 +71,6 @@ public class FileJpaEntity extends BaseCreatedDeletedEntity {
                 .contentType(file.getContentType())
                 .fileSize(file.getFileSize())
                 .fileType(file.getFileType())
-                .status(FileStatus.ACTIVE)
                 .build();
     }
 
@@ -97,9 +89,5 @@ public class FileJpaEntity extends BaseCreatedDeletedEntity {
         );
     }
 
-    // soft delete
-    public void delete() {
-        this.status = FileStatus.DELETED;
-        super.delete();
-    }
+
 }

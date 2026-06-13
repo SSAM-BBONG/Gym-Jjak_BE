@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 public record OrganizationApplicationCreateCommand(
         Long applicantUserId,
+        Long fileId,
         String requestedLoginId,
         String businessRegistrationNumber,
         String businessName,

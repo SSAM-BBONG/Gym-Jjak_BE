@@ -1,9 +1,8 @@
 package com.ssambbong.gymjjak.organization.organization.application.usecase;
 
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
-import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationsResponse;
-
-import java.util.List;
 
 public interface OrganizationQueryUseCase {
 
@@ -11,5 +10,5 @@ public interface OrganizationQueryUseCase {
     Organization findMyOrganization(Long organizationAccountId);
 
     // 전체 조직 목록 조회 (ADMIN용)
-    List<FindOrganizationsResponse> findOrganizations();
+    OrganizationListResult findOrganizations(OrganizationListQuery query);
 }

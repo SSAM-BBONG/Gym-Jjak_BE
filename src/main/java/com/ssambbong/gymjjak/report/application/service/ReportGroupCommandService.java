@@ -157,7 +157,7 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
 
     @Override
     public void manuallyBlindReportGroup(ManualBlindReportGroupCommand command) {
-        log.info("event=reportGroup_manualBlind_start reportGroupId= {}", command.reportGroupId());
+        log.info("event=reportGroup_manualBlind_start reportGroupId={}", command.reportGroupId());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -185,7 +185,7 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
         }
 
         log.info(
-                "event=reportGroup_manualBlind_completed reportGroupId: {}, targetType: {}, targetId: {}, adminId: {}",
+                "event=reportGroup_manualBlind_completed reportGroupId={}, targetType={}, targetId={}, adminId={}",
                 savedReportGroup.getReportGroupId(),
                 savedReportGroup.getTargetType(),
                 savedReportGroup.getTargetId(),

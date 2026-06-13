@@ -16,8 +16,8 @@ public record PtCourseViewResponse(
         @Schema(description = "태그 ID", example = "1")
         Long tagId,
 
-        @Schema(description = "썸네일 URL")
-        String thumbnailUrl,
+        @Schema(description = "썸네일 파일 ID")
+        Long thumbnailFileId,
 
         @Schema(description = "제목", example = "맞춤 PT 1개월 과정")
         String title,
@@ -46,8 +46,8 @@ public record PtCourseViewResponse(
         @Schema(description = "트레이너 이름", example = "트레이너01")
         String trainerName,
 
-        @Schema(description = "트레이너 프로필 이미지 URL")
-        String trainerProfileImageUrl,
+        @Schema(description = "트레이너 프로필 이미지 파일 ID")
+        Long trainerProfileImageFileId,
 
         @Schema(description = "평균 평점", example = "4.6")
         Double averageRating,
@@ -61,7 +61,7 @@ public record PtCourseViewResponse(
                 view.ptCourseId(),
                 view.categoryName(),
                 view.tagId(),
-                view.thumbnailUrl(),
+                view.thumbnailFileId(),
                 view.title(),
                 view.price(),
                 view.totalSessionCount(),
@@ -71,7 +71,7 @@ public record PtCourseViewResponse(
                 view.latitude(),
                 view.longitude(),
                 view.trainerName(),
-                view.trainerProfileImageUrl(),
+                view.trainerProfileImageFileId(),
                 view.averageRating(),
                 view.reviewCount()
         );

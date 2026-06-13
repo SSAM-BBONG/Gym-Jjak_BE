@@ -1,9 +1,10 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.presentation.api;
 
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationQueryUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
@@ -12,19 +13,19 @@ import com.ssambbong.gymjjak.organization.organizationApplication.presentation.a
 import com.ssambbong.gymjjak.organization.organizationApplication.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -32,11 +33,11 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/organization-applications")
+@Validated
 public class OrganizationApplicationController {
 
     private final OrganizationApplicationCommandUsecase organizationApplicationCommandUsecase;
     private final OrganizationApplicationQueryUsecase organizationApplicationQueryUsecase;
-    private final FileUseCase fileUseCase;
 
     @Operation(summary = "조직 신청", description = "사용자가 조직(헬스장) 등록을 신청합니다.")
     @ApiResponses({
@@ -45,34 +46,31 @@ public class OrganizationApplicationController {
             @ApiResponse(responseCode = "409", description = "이미 등록된 사업자등록번호",
                     content = @Content(schema = @Schema()))
     })
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-            encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)))
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     public ResponseEntity<GlobalApiResponse<OrganizationApplicationCreateResponse>> createOrganizationApplication(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestPart("file") MultipartFile businessLicenseFile,
-            @RequestPart("request") @Valid OrganizationApplicationCreateRequest request) {
+            @RequestBody @Valid OrganizationApplicationCreateRequest request) {
 
-        Long applicantUserId = authUser.userId();
-
-        Long organizationApplicationId = organizationApplicationCommandUsecase.createOrganizationApplication(businessLicenseFile, new OrganizationApplicationCreateCommand(
-                applicantUserId,
-                request.requestedLoginId(),
-                request.businessRegistrationNumber(),
-                request.businessName(),
-                request.representativeName(),
-                request.representativePhone(),
-                request.openingDate(),
-                request.roadAddress(),
-                request.jibunAddress(),
-                request.detailAddress(),
-                request.latitude(),
-                request.longitude(),
-                request.websiteUrl(),
-                request.instagramUrl(),
-                request.blogUrl(),
-                request.facilityPhone()
-        ));
+        Long organizationApplicationId = organizationApplicationCommandUsecase.createOrganizationApplication(
+                new OrganizationApplicationCreateCommand(
+                        authUser.userId(),
+                        request.fileId(),
+                        request.requestedLoginId(),
+                        request.businessRegistrationNumber(),
+                        request.businessName(),
+                        request.representativeName(),
+                        request.representativePhone(),
+                        request.openingDate(),
+                        request.roadAddress(),
+                        request.jibunAddress(),
+                        request.detailAddress(),
+                        request.latitude(),
+                        request.longitude(),
+                        request.websiteUrl(),
+                        request.instagramUrl(),
+                        request.blogUrl(),
+                        request.facilityPhone()
+                ));
 
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
@@ -114,27 +112,22 @@ public class OrganizationApplicationController {
                         response));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "관리자 조직 신청 전체 목록 조회", description = "관리자가 모든 조직 신청 목록을 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = FindAllOrganizationApplicationsResponse.class))),
+                    content = @Content(schema = @Schema(implementation = FindAllOrganizationApplicationsListResponse.class))),
             @ApiResponse(responseCode = "403", description = "접근 권한 없음",
                     content = @Content(schema = @Schema()))
     })
     @GetMapping
-    public ResponseEntity<GlobalApiResponse<List<FindAllOrganizationApplicationsResponse>>> findAllOrganizationApplications() {
-
-        List<OrganizationApplication> applications = organizationApplicationQueryUsecase.findPendingOrganizationApplications();
-
-        List<FindAllOrganizationApplicationsResponse> response = applications.stream()
-                .map(domain -> new FindAllOrganizationApplicationsResponse(
-                        domain.getOrganizationApplicationId(),
-                        domain.getRequestedLoginId(),
-                        domain.getBusinessName(),
-                        domain.getRepresentativeName(),
-                        domain.getRepresentativePhone()
-                ))
-                .toList();
+    public ResponseEntity<GlobalApiResponse<FindAllOrganizationApplicationsListResponse>> findAllOrganizationApplications(
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
+    ) {
+        ApplicationListQuery query = new ApplicationListQuery(page, size);
+        ApplicationListResult result = organizationApplicationQueryUsecase.findPendingOrganizationApplications(query);
+        FindAllOrganizationApplicationsListResponse response = FindAllOrganizationApplicationsListResponse.from(result);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
@@ -151,7 +144,6 @@ public class OrganizationApplicationController {
             @ApiResponse(responseCode = "404", description = "신청 내역을 찾을 수 없음",
                     content = @Content(schema = @Schema()))
     })
-
     @GetMapping("/{applicationId}")
     public ResponseEntity<GlobalApiResponse<FindOrganizationApplicationDetailsResponse>> findOrganizationApplicationDetails(
             @PathVariable Long applicationId,
@@ -162,8 +154,6 @@ public class OrganizationApplicationController {
 
         OrganizationApplication organizationApplicationDetails =
                 organizationApplicationQueryUsecase.findOrganizationApplicationDetails(applicationId, requestUserId, isAdmin);
-
-        String presignedUrl = fileUseCase.getPresignedUrl(organizationApplicationDetails.getBusinessLicenseFileId());
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
@@ -185,7 +175,7 @@ public class OrganizationApplicationController {
                                 organizationApplicationDetails.getInstagramUrl(),
                                 organizationApplicationDetails.getBlogUrl(),
                                 organizationApplicationDetails.getFacilityPhone(),
-                                presignedUrl
+                                organizationApplicationDetails.getBusinessLicenseFileId()
                         )
                 )
         );
@@ -206,7 +196,6 @@ public class OrganizationApplicationController {
             @PathVariable Long applicationId,
             @AuthenticationPrincipal AuthUser authUser
     ) {
-
         organizationApplicationCommandUsecase.approveOrganizationApplication(applicationId, authUser.userId());
 
         return ResponseEntity.ok(
@@ -252,7 +241,6 @@ public class OrganizationApplicationController {
             @PathVariable Long applicationId,
             @AuthenticationPrincipal AuthUser authUser
     ) {
-
         organizationApplicationCommandUsecase.cancelOrganizationApplication(applicationId, authUser.userId());
 
         return ResponseEntity.ok(

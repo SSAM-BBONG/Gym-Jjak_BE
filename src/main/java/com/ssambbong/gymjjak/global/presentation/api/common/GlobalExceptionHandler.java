@@ -104,12 +104,11 @@ public class GlobalExceptionHandler {
         String traceId = getTraceId();
 
         log.warn(
-                "event=exception_handled reason=data_integrity_violation exceptionClass={} errorCode={} httpStatus={} traceId={} message={}",
+                "event=exception_handled reason=data_integrity_violation exceptionClass={} errorCode={} httpStatus={} traceId={}",
                 exception.getClass().getSimpleName(),
                 CommonErrorCode.CONFLICT.getCode(),
                 CommonErrorCode.CONFLICT.getHttpStatus().value(),
-                traceId,
-                exception.getMessage()
+                traceId
         );
 
         return ResponseEntity
@@ -123,12 +122,11 @@ public class GlobalExceptionHandler {
         String traceId = getTraceId();
 
         log.error(
-                "event=exception_handled reason=unexpected_exception exceptionClass={} errorCode={} httpStatus={} traceId={} message={}",
+                "event=exception_handled reason=unexpected_exception exceptionClass={} errorCode={} httpStatus={} traceId={}",
                 exception.getClass().getSimpleName(),
                 CommonErrorCode.INTERNAL_SERVER_ERROR.getCode(),
                 CommonErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus().value(),
                 traceId,
-                exception.getMessage(),
                 exception
         );
 

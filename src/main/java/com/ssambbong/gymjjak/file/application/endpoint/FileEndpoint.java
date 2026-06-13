@@ -1,6 +1,5 @@
 package com.ssambbong.gymjjak.file.application.endpoint;
 
-import com.ssambbong.gymjjak.file.domain.model.FileStatus;
 import com.ssambbong.gymjjak.file.domain.repository.FileRepository;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
@@ -29,18 +28,11 @@ public class FileEndpoint {
                         fileRepository::countByFileType
                 ));
 
-        return new FileSummary(
-                fileRepository.count(),
-                fileRepository.countByStatus(FileStatus.ACTIVE),
-                fileRepository.countByStatus(FileStatus.DELETED),
-                countByType
-        );
+        return new FileSummary(fileRepository.count(), countByType);
     }
 
     public record FileSummary(
             long totalFileCount,
-            long activeFileCount,
-            long deletedFileCount,
             Map<FileType, Long> countByType
     ) {}
 }

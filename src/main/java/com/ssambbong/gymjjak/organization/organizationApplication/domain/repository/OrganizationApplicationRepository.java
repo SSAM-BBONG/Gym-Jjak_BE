@@ -1,11 +1,12 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.domain.repository;
 
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
 
 import java.util.List;
 import java.util.Optional;
-
 
 public interface OrganizationApplicationRepository {
 
@@ -19,7 +20,7 @@ public interface OrganizationApplicationRepository {
 
     Optional<OrganizationApplication> findById(Long organizationApplicationId);
 
-    List<OrganizationApplication> findAllByStatus(OrganizationApplicationStatus status);
+    ApplicationListResult findAllByStatus(OrganizationApplicationStatus status, ApplicationListQuery query);
 
     void approve(OrganizationApplication organizationApplication);
 

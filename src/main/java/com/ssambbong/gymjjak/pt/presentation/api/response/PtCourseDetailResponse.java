@@ -19,8 +19,8 @@ public record PtCourseDetailResponse(
         @Schema(description = "태그 ID", example = "1")
         Long tagId,
 
-        @Schema(description = "썸네일 URL")
-        String thumbnailUrl,
+        @Schema(description = "썸네일 파일 ID")
+        Long thumbnailFileId,
 
         @Schema(description = "제목", example = "맞춤 PT 1개월 과정")
         String title,
@@ -63,11 +63,17 @@ public record PtCourseDetailResponse(
         @Schema(description = "트레이너 이름", example = "트레이너01")
         String trainerName,
 
-        @Schema(description = "트레이너 프로필 이미지 URL")
-        String trainerProfileImageUrl,
+        @Schema(description = "트레이너 프로필 이미지 파일 ID")
+        Long trainerProfileImageFileId,
 
-        @Schema(description = "트레이너 경력", example = "4년차 / 체형교정 전문")
-        String trainerSpec,
+        /* Comment
+        *   이 2개도 List로 수정!
+        * */
+        @Schema(description = "트레이너 자격증 목록(JSON 문자열)", example = "[\"생활체육지도자 2급\", \"NSCA-CPT\"]")
+        List<String> trainerQualifications,
+
+        @Schema(description = "트레이너 수상 경력 목록(JSON 문자열)", example = "[\"2023 피지크 대회 입상\", \"2024 체육인 대회 우승\"]")
+        List<String> trainerAwardHistories,
 
         @Schema(description = "트레이너 소개")
         String trainerIntroduction,
@@ -96,7 +102,7 @@ public record PtCourseDetailResponse(
                 view.ptCourseId(),
                 view.categoryName(),
                 view.tagId(),
-                view.thumbnailUrl(),
+                view.thumbnailFileId(),
                 view.title(),
                 view.description(),
                 view.price(),
@@ -110,8 +116,9 @@ public record PtCourseDetailResponse(
                 view.instagramUrl(),
                 view.trainerProfileId(),
                 view.trainerName(),
-                view.trainerProfileImageUrl(),
-                view.trainerSpec(),
+                view.trainerProfileImageFileId(),
+                view.trainerQualifications(),
+                view.trainerAwardHistories(),
                 view.trainerIntroduction(),
                 view.averageRating(),
                 view.reviewCount(),

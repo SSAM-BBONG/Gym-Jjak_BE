@@ -3,13 +3,18 @@ package com.ssambbong.gymjjak.organization.organization.infrastructure.persisten
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
+import com.ssambbong.gymjjak.organization.organizationApplication.infrastructure.persistence.OrganizationApplicationJpaEntity;
+import com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.persistence.OrganizationTrainerJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "organizations")
@@ -30,6 +35,15 @@ public class OrganizationJpaEntity extends BaseTimeEntity {
 
     @Column(name = "application_id", nullable = false, unique = true)
     private Long applicationId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "application_id", insertable = false, updatable = false)
+    private OrganizationApplicationJpaEntity application;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    @SQLRestriction("removed_at IS NULL")
+    private List<OrganizationTrainerJpaEntity> trainers = new ArrayList<>();
 
     @Column(name = "business_license_file_id", nullable = false)
     private Long businessLicenseFileId;

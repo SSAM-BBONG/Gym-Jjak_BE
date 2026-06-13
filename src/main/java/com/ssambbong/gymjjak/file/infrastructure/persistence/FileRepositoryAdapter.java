@@ -1,13 +1,11 @@
 package com.ssambbong.gymjjak.file.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.file.domain.model.File;
-import com.ssambbong.gymjjak.file.domain.model.FileStatus;
 import com.ssambbong.gymjjak.file.domain.repository.FileRepository;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Component
@@ -30,9 +28,8 @@ public class FileRepositoryAdapter implements FileRepository {
     }
 
     @Override
-    public boolean deleteById(Long fileId) {
-        int deleted = springDataFileRepository.softDeleteById(fileId, LocalDateTime.now());
-        return deleted > 0;
+    public void deleteById(Long fileId) {
+        springDataFileRepository.deleteById(fileId);
     }
 
     @Override
@@ -43,10 +40,5 @@ public class FileRepositoryAdapter implements FileRepository {
     @Override
     public long count() {
         return springDataFileRepository.count();
-    }
-
-    @Override
-    public long countByStatus(FileStatus fileStatus) {
-        return springDataFileRepository.countByStatus(fileStatus);
     }
 }

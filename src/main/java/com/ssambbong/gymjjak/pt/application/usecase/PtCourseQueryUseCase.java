@@ -17,7 +17,7 @@ public interface PtCourseQueryUseCase {
             Long ptCourseId,
             String categoryName,
             Long tagId,
-            String thumbnailUrl,
+            Long thumbnailFileId,
             String title,
             int price,
             int totalSessionCount,
@@ -29,7 +29,7 @@ public interface PtCourseQueryUseCase {
             Double longitude,
             // 트레이너
             String trainerName,
-            String trainerProfileImageUrl,
+            Long trainerProfileImageFileId,
             Double averageRating,
             int reviewCount
     ) {}
@@ -39,7 +39,7 @@ public interface PtCourseQueryUseCase {
             Long ptCourseId,
             String categoryName,
             Long tagId,
-            String thumbnailUrl,
+            Long thumbnailFileId,
             String title,
             String description,
             int price,
@@ -55,8 +55,14 @@ public interface PtCourseQueryUseCase {
             // 트레이너
             Long trainerProfileId,
             String trainerName,
-            String trainerProfileImageUrl,
-            String trainerSpec,
+            Long trainerProfileImageFileId,
+            List<String> trainerQualifications,
+            List<String> trainerAwardHistories,
+            /* Comment
+            *   마찬가지로 List로 변경!
+            * */
+//            String trainerQualifications,
+//            String trainerAwardHistories,
             String trainerIntroduction,
             Double averageRating,
             int reviewCount,

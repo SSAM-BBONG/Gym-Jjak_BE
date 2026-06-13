@@ -58,6 +58,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     // Prometheus 의존성
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    // spring retry 의존성 추가
+    implementation 'org.springframework.retry:spring-retry'
 }
 
 tasks.named('test') {

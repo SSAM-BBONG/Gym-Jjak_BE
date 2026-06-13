@@ -1,9 +1,10 @@
 package com.ssambbong.gymjjak.organization.organization.domain.repository;
 
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface OrganizationRepository {
@@ -14,7 +15,7 @@ public interface OrganizationRepository {
 
     Optional<Organization> findByOrganizationAccountId(Long organizationAccountId);
 
-    List<Organization> findAll();
+    OrganizationListResult findAllForAdmin(OrganizationListQuery query);
 
     void update(Organization organization);
 
