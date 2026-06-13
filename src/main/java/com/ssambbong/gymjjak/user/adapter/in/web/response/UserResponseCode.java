@@ -14,7 +14,9 @@ public enum UserResponseCode implements ResponseCode {
     ACCESS_TOKEN_REISSUED("TOKEN_REISSUED", "Access 토큰이 재발급되었습니다."),
     USER_PASSWORD_VERIFIED("USER_PASSWORD_VERIFIED", "비밀번호 확인에 성공했습니다."),
     USER_PROFILE_FOUND("USER_PROFILE_FOUND", "회원 프로필 조회에 성공했습니다."),
-    USER_PROFILE_UPDATED("USER_PROFILE_UPDATED", "회원 프로필 수정에 성공했습니다.");
+    USER_PROFILE_UPDATED("USER_PROFILE_UPDATED", "회원 프로필 수정에 성공했습니다."),
+    USER_PROFILE_WITHDREW("USER_PROFILE_WITHDREW", "회원 탈퇴에 성공했습니다."),
+    USER_STATUS_UPDATED("USER_STATUS_UPDATED", "회원 상태 변경에 성공했습니다.");
 
     private final String code;
     private final String message;

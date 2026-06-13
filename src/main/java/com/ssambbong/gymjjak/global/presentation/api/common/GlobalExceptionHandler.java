@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -134,6 +135,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(CommonErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
                 .body(GlobalApiErrorResponse.of(CommonErrorCode.INTERNAL_SERVER_ERROR, traceId));
+    }
+
+    // @PreAuthorize 권한 검증 실패
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<GlobalApiErrorResponse> handleAuthorizationDeniedException(
+            AuthorizationDeniedException exception
+    ) {
+        String traceId = getTraceId();
+
+        log.warn(
+                "event=exception_handled reason=authorization_denied exceptionClass={} errorCode={} httpStatus={} traceId={} message={}",
+                exception.getClass().getSimpleName(),
+                CommonErrorCode.ACCESS_DENIED.getCode(),
+                CommonErrorCode.ACCESS_DENIED.getHttpStatus().value(),
+                traceId,
+                exception.getMessage()
+        );
+
+        return ResponseEntity
+                .status(CommonErrorCode.ACCESS_DENIED.getHttpStatus())
+                .body(GlobalApiErrorResponse.of(CommonErrorCode.ACCESS_DENIED, traceId));
     }
 
     private Map<String, Object> createFieldErrorDetails(List<FieldError> fieldErrors) {

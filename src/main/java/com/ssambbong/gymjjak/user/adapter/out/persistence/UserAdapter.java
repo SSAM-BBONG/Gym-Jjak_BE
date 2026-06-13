@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
@@ -29,13 +30,15 @@ public class UserAdapter implements UserPort {
 
     @Override
     public User save(User user) {
+        try {
+            UserJpaEntity userJpaEntity = userPersistenceMapper.toEntity(user);
 
+            UserJpaEntity savedUserJpaEntity = springDataUserRepository.saveAndFlush(userJpaEntity);
 
-        UserJpaEntity userJpaEntity = userPersistenceMapper.toEntity(user);
-
-        UserJpaEntity savedUserJpaEntity = springDataUserRepository.save(userJpaEntity);
-
-        return userPersistenceMapper.toDomain(savedUserJpaEntity);
+            return userPersistenceMapper.toDomain(savedUserJpaEntity);
+        } catch (DataIntegrityViolationException e) {
+            throw mapToUserException(e);
+        }
     }
 
     @Override
@@ -87,4 +90,28 @@ public class UserAdapter implements UserPort {
     public boolean existsByPhoneAndIdNot(String phone, Long userId) {
         return springDataUserRepository.existsByPhoneAndIdNot(phone, userId);
     }
+
+    @Override
+    public void withdraw(Long userId, LocalDateTime deletedAt) {
+        springDataUserRepository.withdraw(userId, deletedAt);
+    }
+
+    private RuntimeException mapToUserException(DataIntegrityViolationException e) {
+        String message = e.getMostSpecificCause().getMessage();
+
+        if (message.contains("uk_users_username")) {
+            return new UserException(UserErrorCode.DUPLICATE_USERNAME);
+        }
+
+        if (message.contains("uk_users_nickname")) {
+            return new UserException(UserErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        if (message.contains("uk_users_phone")) {
+            return new UserException(UserErrorCode.DUPLICATE_PHONE);
+        }
+
+        return e;
+    }
+
 }
