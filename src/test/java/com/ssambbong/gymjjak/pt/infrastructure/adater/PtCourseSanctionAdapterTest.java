@@ -42,7 +42,7 @@ class PtCourseSanctionAdapterTest {
         when(ptCourseRepository.save(any())).thenReturn(ptCourse);
 
         // When
-        ptCourseSanctionAdapter.changeAutoBlind(1L, ReportSanctionAction.APPLY_AUTO_BLIND);
+        ptCourseSanctionAdapter.applySanction(1L, ReportSanctionAction.APPLY_AUTO_BLIND);
 
         // Then
         assertEquals(PtCourseStatus.BLOCKED, ptCourse.getStatus());
@@ -62,7 +62,7 @@ class PtCourseSanctionAdapterTest {
         when(ptCourseRepository.save(any())).thenReturn(ptCourse);
 
         // When
-        ptCourseSanctionAdapter.changeAutoBlind(1L, ReportSanctionAction.RELEASE_AUTO_BLIND);
+        ptCourseSanctionAdapter.applySanction(1L, ReportSanctionAction.RELEASE_AUTO_BLIND);
 
         // Then
         assertEquals(PtCourseStatus.VISIBLE, ptCourse.getStatus());
@@ -77,7 +77,7 @@ class PtCourseSanctionAdapterTest {
 
         // When & Then
         assertThrows(PtCourseNotFoundException.class,
-                () -> ptCourseSanctionAdapter.changeAutoBlind(999L, ReportSanctionAction.APPLY_AUTO_BLIND));
+                () -> ptCourseSanctionAdapter.applySanction(999L, ReportSanctionAction.APPLY_AUTO_BLIND));
 
         verify(ptCourseRepository, never()).save(any());
     }

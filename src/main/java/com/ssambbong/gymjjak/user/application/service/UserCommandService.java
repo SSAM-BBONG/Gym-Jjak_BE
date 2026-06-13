@@ -26,7 +26,6 @@ public class UserCommandService implements UserCommandUseCase {
 
     private final UserPort userPort;
     private final TokenPort tokenPort;
-    private final UserPolicy userPolicy;
 
     @Override
     public void registerUser(RegisterUserCommand command) {
@@ -37,10 +36,10 @@ public class UserCommandService implements UserCommandUseCase {
                 maskPhone(command.phone())
         );
 
-        userPolicy.validatePasswordPolicy(command.password());
-        userPolicy.validateDuplicateUsername(command.username());
-        userPolicy.validateDuplicateNickname(command.nickname());
-        userPolicy.validateDuplicatePhone(command.phone());
+        UserPolicy.validatePasswordPolicy(command.password());
+        validateDuplicateUsername(command.username());
+        validateDuplicateNickname(command.nickname());
+        validateDuplicatePhone(command.phone());
 
         String encodedPassword = userPort.encode(command.password());
 
@@ -67,14 +66,10 @@ public class UserCommandService implements UserCommandUseCase {
 
         User user = userPort.findByUsername(command.username())
                 .orElseThrow(() -> {
-                    log.warn("[UserLoginFailed] reason=user_not_found, username={}", command.username());
                     return new UserException(UserErrorCode.LOGIN_FAILED);
                 });
 
         if (!userPort.matchesPassword(command.password(), user.getPassword())) {
-            log.warn("[UserLoginFailed] reason=password_mismatch, username={}, userId={}",
-                    user.getUsername(),
-                    user.getId());
             throw new UserException(UserErrorCode.LOGIN_FAILED);
         }
 
@@ -85,7 +80,7 @@ public class UserCommandService implements UserCommandUseCase {
                 user.getLastLoginAt()
         );
 
-        userPolicy.validateLoginAllowed(user);
+        user.validateLoginAllowed();
 
         String accessToken = tokenPort.createAccessToken(
                 user.getId(),
@@ -119,11 +114,40 @@ public class UserCommandService implements UserCommandUseCase {
         log.info("[로그아웃 완료] refresh token 삭제 완료. userId={}", command.userId());
     }
 
+    @Override
+    public void verifyPassword(Long userId, String rawPassword) {
+
+        User user = userPort.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        if (!userPort.matchesPassword(rawPassword, user.getPassword())) {
+            throw new UserException(UserErrorCode.PASSWORD_MISMATCH);
+        }
+    }
+
     private String maskPhone(String phone) {
         if (phone == null || phone.length() < 8) {
             return "****";
         }
 
         return phone.substring(0, 3) + "-****-" + phone.substring(phone.length() - 4);
+    }
+
+    public void validateDuplicateUsername(String username) {
+        if (userPort.existsByUsername(username)) {
+            throw new UserException(UserErrorCode.DUPLICATE_USERNAME);
+        }
+    }
+
+    public void validateDuplicateNickname(String nickname) {
+        if (userPort.existsByNickname(nickname)) {
+            throw new UserException(UserErrorCode.DUPLICATE_NICKNAME);
+        }
+    }
+
+    public void validateDuplicatePhone(String phone) {
+        if (userPort.existsByPhone(phone)) {
+            throw new UserException(UserErrorCode.DUPLICATE_PHONE);
+        }
     }
 }

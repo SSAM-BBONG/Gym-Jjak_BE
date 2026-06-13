@@ -1,11 +1,13 @@
 package com.ssambbong.gymjjak.global.presentation.api.common;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ssambbong.gymjjak.global.domain.common.exception.ApplicationException;
 import com.ssambbong.gymjjak.global.domain.common.exception.ErrorCode;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
+@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
 public record GlobalApiErrorResponse(
         LocalDateTime timestamp,
         int status,

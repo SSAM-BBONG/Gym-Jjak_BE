@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 
@@ -31,8 +32,9 @@ public record CreatePtCourseRequest(
         @Min(0)
         int price,
 
-        @Schema(description = "썸네일 이미지 URL")
-        String thumbnailUrl,
+        @Schema(description = "썸네일 파일 ID (선택)", example = "1")
+        @Positive
+        Long thumbnailFileId,
 
         @Schema(description = "1회 수업 시간 (분)", example = "60")
         @NotNull

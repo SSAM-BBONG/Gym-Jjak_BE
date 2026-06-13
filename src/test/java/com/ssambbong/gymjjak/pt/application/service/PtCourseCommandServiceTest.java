@@ -20,13 +20,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class PtCourseCommandServiceTest {
+class PtCourseCommandServiceTest {
 
-    @Mock
-    private PtCourseRepository ptCourseRepository;
-
-    @Mock
-    private TrainerProfileQueryPort trainerProfileQueryPort;
+    @Mock private PtCourseRepository ptCourseRepository;
+    @Mock private TrainerProfileQueryPort trainerProfileQueryPort;
 
     @InjectMocks
     private PtCourseCommandService ptCourseCommandService;
@@ -76,7 +73,7 @@ public class PtCourseCommandServiceTest {
     }
 
     @Test
-    @DisplayName("title이 비어있으면 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("title이 비어있으면 PtCourseInvalidException이 발생한다")
     void createPtCourse_emptyTitle_throwsException() {
 
         // given
@@ -92,11 +89,11 @@ public class PtCourseCommandServiceTest {
         assertThrows(PtCourseInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
-        verify(ptCourseRepository, never()).save(any(PtCourse.class));
+        verify(ptCourseRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("price가 음수이면 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("price가 음수이면 PtCourseInvalidException이 발생한다")
     void createPtCourse_negativePrice_throwsException() {
 
         // given
@@ -105,6 +102,7 @@ public class PtCourseCommandServiceTest {
                 List.of(new CreatePtCourseCommand.CurriculumData("회차 제목", "회차 설명"))
         );
 
+        // TrainerInfo Mock 설정
         when(trainerProfileQueryPort.findByUserId(1L))
                 .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
@@ -112,7 +110,7 @@ public class PtCourseCommandServiceTest {
         assertThrows(PtCourseInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
-        verify(ptCourseRepository, never()).save(any(PtCourse.class));
+        verify(ptCourseRepository, never()).save(any());
     }
 
     @Test
@@ -131,6 +129,6 @@ public class PtCourseCommandServiceTest {
         assertThrows(PtCourseInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
-        verify(ptCourseRepository, never()).save(any(PtCourse.class));
+        verify(ptCourseRepository, never()).save(any());
     }
 }

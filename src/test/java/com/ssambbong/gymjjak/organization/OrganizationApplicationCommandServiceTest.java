@@ -1,17 +1,20 @@
 package com.ssambbong.gymjjak.organization;
 
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
-import com.ssambbong.gymjjak.global.domain.common.model.FileType;
-import com.ssambbong.gymjjak.organization.application.command.OrganizationApplicationCreateCommand;
-import com.ssambbong.gymjjak.organization.application.service.OrganizationApplicationCommandService;
-import com.ssambbong.gymjjak.organization.domain.repository.OrganizationApplicationRepository;
-import com.ssambbong.gymjjak.organization.exception.DuplicateBusinessRegistrationNumberException;
-import org.junit.jupiter.api.BeforeEach;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.port.OrgApplicationMetricsPort;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.service.OrganizationApplicationCommandService;
+import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
+import com.ssambbong.gymjjak.organization.organization.application.port.OrganizationMetricsPort;
+import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
+import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateBusinessRegistrationNumberException;
+import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateRequestedLoginIdException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.web.multipart.MultipartFile;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,27 +23,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class OrganizationApplicationCommandServiceTest {
 
-    private OrganizationApplicationRepository organizationApplicationRepository;
-    private FileUseCase fileUseCase;
+    @Mock private OrganizationApplicationRepository organizationApplicationRepository;
+    @Mock private OrganizationRepository organizationRepository;
+    @Mock private UserCreationPort userCreationPort;
+    @Mock private OrgApplicationMetricsPort orgApplicationMetricsPort;
+    @Mock private OrganizationMetricsPort organizationMetricsPort;
+
+    @InjectMocks
     private OrganizationApplicationCommandService organizationApplicationCommandService;
 
-    private MultipartFile businessLicenseFile;
-    private OrganizationApplicationCreateCommand command;
-
-    @BeforeEach
-    void setUp() {
-        organizationApplicationRepository = mock(OrganizationApplicationRepository.class);
-        fileUseCase = mock(FileUseCase.class);
-        organizationApplicationCommandService = new OrganizationApplicationCommandService(
-                organizationApplicationRepository,
-                fileUseCase
-        );
-
-        businessLicenseFile = mock(MultipartFile.class);
-        command = new OrganizationApplicationCreateCommand(
+    private OrganizationApplicationCreateCommand command(Long fileId) {
+        return new OrganizationApplicationCreateCommand(
                 1L,
+                fileId,
                 "gymjjak123",
                 "1234567890",
                 "짐짝헬스장",
@@ -48,13 +46,10 @@ class OrganizationApplicationCommandServiceTest {
                 "010-1234-5678",
                 LocalDate.of(2024, 1, 1),
                 "서울시 강남구 테헤란로 1",
-                null,
-                null,
+                null, null,
                 new BigDecimal("37.4979"),
                 new BigDecimal("127.0276"),
-                null,
-                null,
-                null,
+                null, null, null,
                 "02-1234-5678"
         );
     }
@@ -63,59 +58,54 @@ class OrganizationApplicationCommandServiceTest {
     @DisplayName("조직 신청에 성공한다")
     void createOrganizationApplication_success() {
         // given
-        Long fileId = 1L;
-        Long applicationId = 1L;
+        OrganizationApplicationCreateCommand command = command(1L);
 
         when(organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber()))
                 .thenReturn(false);
-        when(fileUseCase.uploadFile(businessLicenseFile, command.applicantUserId(), FileType.BUSINESS_LICENSE))
-                .thenReturn(fileId);
+        when(organizationApplicationRepository.existsByRequestedLoginId(command.requestedLoginId()))
+                .thenReturn(false);
         when(organizationApplicationRepository.save(any()))
-                .thenReturn(applicationId);
+                .thenReturn(1L);
 
         // when
-        Long result = organizationApplicationCommandService.createOrganizationApplication(businessLicenseFile, command);
+        Long result = organizationApplicationCommandService.createOrganizationApplication(command);
 
         // then
-        assertThat(result).isEqualTo(applicationId);
-
-        verify(organizationApplicationRepository).existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber());
-        verify(fileUseCase).uploadFile(businessLicenseFile, command.applicantUserId(), FileType.BUSINESS_LICENSE);
+        assertThat(result).isEqualTo(1L);
         verify(organizationApplicationRepository).save(any());
     }
 
     @Test
-    @DisplayName("이미 승인된 사업자등록번호로 신청하면 실패한다")
+    @DisplayName("이미 등록된 사업자등록번호로 신청하면 실패한다")
     void createOrganizationApplication_fail_duplicateBusinessRegistrationNumber() {
         // given
+        OrganizationApplicationCreateCommand command = command(1L);
+
         when(organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber()))
                 .thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> organizationApplicationCommandService.createOrganizationApplication(businessLicenseFile, command))
+        assertThatThrownBy(() -> organizationApplicationCommandService.createOrganizationApplication(command))
                 .isInstanceOf(DuplicateBusinessRegistrationNumberException.class);
 
-        verify(fileUseCase, never()).uploadFile(any(), any(), any());
         verify(organizationApplicationRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("DB 저장 실패 시 S3 파일을 롤백한다")
-    void createOrganizationApplication_fail_dbSaveFailure_rollbackS3() {
+    @DisplayName("이미 사용 중인 로그인 ID로 신청하면 실패한다")
+    void createOrganizationApplication_fail_duplicateRequestedLoginId() {
         // given
-        Long fileId = 1L;
+        OrganizationApplicationCreateCommand command = command(1L);
 
         when(organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber()))
                 .thenReturn(false);
-        when(fileUseCase.uploadFile(businessLicenseFile, command.applicantUserId(), FileType.BUSINESS_LICENSE))
-                .thenReturn(fileId);
-        when(organizationApplicationRepository.save(any()))
-                .thenThrow(new DataIntegrityViolationException("DB 저장 실패"));
+        when(organizationApplicationRepository.existsByRequestedLoginId(command.requestedLoginId()))
+                .thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> organizationApplicationCommandService.createOrganizationApplication(businessLicenseFile, command))
-                .isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> organizationApplicationCommandService.createOrganizationApplication(command))
+                .isInstanceOf(DuplicateRequestedLoginIdException.class);
 
-        verify(fileUseCase).deleteFromStorage(fileId);
+        verify(organizationApplicationRepository, never()).save(any());
     }
 }

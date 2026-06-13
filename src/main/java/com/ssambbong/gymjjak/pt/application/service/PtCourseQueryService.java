@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.pt.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.pt.application.port.PtCourseEnrichQueryPort;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.domain.exception.PtCourseNotFoundException;
@@ -26,7 +25,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final PtCourseRepository ptCourseRepository;
     private final CategoryQueryUseCase categoryQueryUseCase;
     private final PtCourseEnrichQueryPort enrichQueryPort;
-    private final FileUseCase fileUseCase;
 
     @Override
     public List<PtCourseListView> findAllPtCourses() {
@@ -72,14 +70,13 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
 
-        String trainerProfileImageUrl = trainer.profileFileId() != null
-                ? fileUseCase.getPresignedUrl(trainer.profileFileId())
-                : null;
-
         return new PtCourseListView(
                 ptCourse.getId(),
                 ptCourse.getTitle(),
-                thumbnailUrl,
+                ptCourse.getThumbnailFileId(),
+                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
+                ptCourse.getTagId(),
+                ptCourse.getTitle(),
                 ptCourse.getPrice(),
                 ptCourse.getTagId(),
                 null, // TODO: TagQueryUseCase 연동 후 tagName 채우기
@@ -101,13 +98,9 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
 
-        String trainerProfileImageUrl = trainer.profileFileId() != null
-                ? fileUseCase.getPresignedUrl(trainer.profileFileId())
-                : null;
-
         return new PtCourseDetailView(
                 ptCourse.getId(),
-                thumbnailUrl,
+                ptCourse.getThumbnailFileId(),
                 ptCourse.getTitle(),
                 ptCourse.getDescription(),
                 ptCourse.getPrice(),
@@ -117,7 +110,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourse.getOrganizationId(),
                 ptCourse.getTrainerProfileId(),
                 trainer.displayName(),
-                trainerProfileImageUrl,
+                trainer.profileFileId(),
                 trainer.spec(),
                 trainer.introduction(),
                 List.of(),

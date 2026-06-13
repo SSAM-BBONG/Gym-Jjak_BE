@@ -19,7 +19,7 @@ public class PtCourseSanctionAdapter implements PtCourseSanctionPort {
 
     @Override
     @Transactional
-    public void changeAutoBlind(Long ptCourseId, ReportSanctionAction action) {
+    public void applySanction(Long ptCourseId, ReportSanctionAction action) {
         log.debug("[PtCourseBlind] ptCourseId={}, action={}", ptCourseId, action);
 
         PtCourse ptCourse = ptCourseRepository.findById(ptCourseId)
@@ -28,6 +28,10 @@ public class PtCourseSanctionAdapter implements PtCourseSanctionPort {
         switch (action) {
             case APPLY_AUTO_BLIND -> ptCourse.blind();
             case RELEASE_AUTO_BLIND -> ptCourse.unblind();
+            // TODO : 현지야, 이거 수동 제재 (관리자 최종 블라인드는 delete로 상태값 변경 맞지?) 이거 확인해줘.
+            //  어차피 블라인드 될 때, 이미 soft delete로 삭제일 추가 시키잖아 맞지? 상태값만 변경하면 안된데이!
+            //  일단 delete까지 domain 클래스에 추가만 해놨어
+            case APPLY_MANUAL_BLIND -> ptCourse.delete();
         }
 
         ptCourseRepository.save(ptCourse);

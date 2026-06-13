@@ -174,7 +174,6 @@ CREATE TABLE organization_applications (
                                            created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                            updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                                            CONSTRAINT pk_organization_applications PRIMARY KEY (organization_application_id),
-                                           CONSTRAINT uk_org_app_requested_login UNIQUE (requested_login_id),
                                            CONSTRAINT fk_org_app_applicant FOREIGN KEY (applicant_user_id) REFERENCES users(user_id),
                                            CONSTRAINT fk_org_app_license_file FOREIGN KEY (business_license_file_id) REFERENCES files(file_id),
                                            CONSTRAINT fk_org_app_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(user_id)

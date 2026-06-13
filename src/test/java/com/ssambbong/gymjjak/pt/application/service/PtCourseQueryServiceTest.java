@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.pt.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.pt.application.port.PtCourseEnrichQueryPort;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.domain.exception.PtCourseNotFoundException;
@@ -28,7 +27,6 @@ class PtCourseQueryServiceTest {
     @Mock private PtCourseRepository ptCourseRepository;
     @Mock private CategoryQueryUseCase categoryQueryUseCase;
     @Mock private PtCourseEnrichQueryPort enrichQueryPort;
-    @Mock private FileUseCase fileUseCase;
 
     @InjectMocks
     private PtCourseQueryService ptCourseQueryService;

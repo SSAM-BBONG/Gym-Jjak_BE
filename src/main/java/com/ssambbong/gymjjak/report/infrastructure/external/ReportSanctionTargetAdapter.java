@@ -5,10 +5,13 @@ import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionTargetPort;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
 
 
@@ -17,9 +20,13 @@ public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
 //    private final CommentSanctionPort commentSanctionPort;
 
     @Override
-    public void changeAutoBlind(ReportTargetType targetType, Long targetId, ReportSanctionAction action) {
+    public void applySanction(ReportTargetType targetType, Long targetId, ReportSanctionAction action) {
+
+        log.info("[ReportInfrastructure] 외부 도메인 제재 실행 - targetType: {}, targetId: {}, action: {}",
+                targetType, targetId, action);
+
         switch (targetType) {
-            case PT_COURSE -> ptCourseSanctionPort.changeAutoBlind(targetId, action);
+            case PT_COURSE -> ptCourseSanctionPort.applySanction(targetId, action);
             case POST, COMMENT -> {
                 // TODO: 게시글/댓글 자동 블라인드 적용/해제 포트 구현 후 연결
             }

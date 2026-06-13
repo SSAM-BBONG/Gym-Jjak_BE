@@ -46,7 +46,7 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-//    aws s3 버킷 관련 의존성 추가
+    // aws s3 버킷 관련 의존성 추가
     implementation platform('software.amazon.awssdk:bom:2.31.78')
     implementation 'software.amazon.awssdk:s3'
     implementation 'software.amazon.awssdk:s3-transfer-manager'
@@ -54,6 +54,12 @@ dependencies {
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
     // TSID 의존성 추가
     implementation 'com.github.f4b6a3:tsid-creator:5.2.6'
+    // Actuator 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // Prometheus 의존성
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    // spring retry 의존성 추가
+    implementation 'org.springframework.retry:spring-retry'
 }
 
 tasks.named('test') {

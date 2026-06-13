@@ -14,8 +14,6 @@ public interface OnboardingPort {
 
     void saveOnboardingSurvey(OnboardingSurvey onboardingSurvey);
 
-    void completeUserOnboarding(Long userId);
-
     Optional<MyOnboardingView> findMyOnboardingByUserId(Long userId);
 
 }

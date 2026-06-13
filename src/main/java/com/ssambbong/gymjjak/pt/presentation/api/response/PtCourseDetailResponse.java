@@ -8,17 +8,24 @@ import java.util.List;
 // PT 강습 상세 응답 DTO
 public record PtCourseDetailResponse(
 
+        // ── 기본 PT 정보 ──
         @Schema(description = "PT 강습 ID", example = "1")
         Long ptCourseId,
 
-        @Schema(description = "제목", example = "체계적 근육 강화 PT과정")
+        @Schema(description = "카테고리명", example = "헬스")
+        String categoryName,
+
+        @Schema(description = "태그 ID", example = "1")
+        Long tagId,
+
+        @Schema(description = "썸네일 파일 ID")
+        Long thumbnailFileId,
+
+        @Schema(description = "제목", example = "맞춤 PT 1개월 과정")
         String title,
 
         @Schema(description = "소개")
         String description,
-
-        @Schema(description = "썸네일 URL")
-        String thumbnailUrl,
 
         @Schema(description = "가격", example = "345000")
         int price,
@@ -68,9 +75,11 @@ public record PtCourseDetailResponse(
     public static PtCourseDetailResponse from(PtCourseQueryUseCase.PtCourseDetailView view) {
         return new PtCourseDetailResponse(
                 view.ptCourseId(),
+                view.categoryName(),
+                view.tagId(),
+                view.thumbnailFileId(),
                 view.title(),
                 view.description(),
-                view.thumbnailUrl(),
                 view.price(),
                 view.totalSessionCount(),
                 view.averageRating(),

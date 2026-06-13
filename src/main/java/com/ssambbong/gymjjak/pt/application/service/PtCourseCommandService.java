@@ -35,7 +35,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 trainerInfo.trainerProfileId(),
                 command.categoryId(),
                 command.tagId(),
-                command.thumbnailUrl(),
+                command.thumbnailFileId(),
                 command.title(),
                 command.description(),
                 command.price(),

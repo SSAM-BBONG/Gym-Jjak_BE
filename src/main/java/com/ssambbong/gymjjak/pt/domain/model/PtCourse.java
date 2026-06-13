@@ -148,4 +148,8 @@ public class PtCourse {
     public boolean isSupportsDietLog() { return supportsDietLog; }
     public boolean isSupportsWorkoutLog() { return supportsWorkoutLog; }
     public PtCourseStatus getStatus() { return status; }
+
+    public void delete() {
+        this.status = PtCourseStatus.DELETED;
+    }
 }

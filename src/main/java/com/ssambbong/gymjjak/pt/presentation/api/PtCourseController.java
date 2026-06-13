@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.pt.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.pt.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.application.usecase.PtCourseQueryUseCase;
@@ -45,7 +45,7 @@ public class PtCourseController {
                 request.title(),
                 request.description(),
                 request.price(),
-                request.thumbnailUrl(),
+                request.thumbnailFileId(),
                 request.sessionDuration(),
                 request.curriculums().stream()
                         .map(c -> new CreatePtCourseCommand.CurriculumData(c.title(), c.content()))
@@ -81,6 +81,8 @@ public class PtCourseController {
         PtCourseDetailResponse response = PtCourseDetailResponse.from(
                 ptCourseQueryUseCase.findPtCourseDetail(ptCourseId));
         return ResponseEntity.ok(
-                GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_DETAIL, response));
+                GlobalApiResponse.ok(
+                        PtCourseResponseCode.PT_COURSE_DETAIL,
+                        response));
     }
 }

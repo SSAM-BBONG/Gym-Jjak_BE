@@ -16,7 +16,7 @@ public interface PtCourseQueryUseCase {
     record PtCourseListView(
             Long ptCourseId,
             String title,
-            String thumbnailUrl,
+            Long thumbnailFileId,
             int price,
             // 태그
             Long tagId,
@@ -39,7 +39,7 @@ public interface PtCourseQueryUseCase {
     // ──── 상세 뷰 ────
     record PtCourseDetailView(
             Long ptCourseId,
-            String thumbnailUrl,
+            Long thumbnailFileId,
             String title,
             String description,
             int price,

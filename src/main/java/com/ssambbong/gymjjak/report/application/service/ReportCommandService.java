@@ -14,6 +14,7 @@ import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
+import com.ssambbong.gymjjak.report.infrastructure.metrics.ReportGroupMetric;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,9 @@ public class ReportCommandService implements ReportCommandUseCase {
     private final ReportTargetQueryPort reportTargetQueryPort;
     private final ReportSanctionTargetPort reportSanctionTargetPort;
     private final ReportNumberGenerator reportNumberGenerator;
+
+    private final ReportGroupMetric reportGroupMetric;
+
 
     @Override
     public void createReport(CreateReportCommand command) {
@@ -56,6 +60,8 @@ public class ReportCommandService implements ReportCommandUseCase {
 
         ReportGroup reportGroup;
         ReportGroupSanctionStatus previousSanctionStatus;
+
+        boolean createdNewReportGroup = false;
 
         // 이미 존재
         if (reportGroupOptional.isPresent()) {
@@ -95,7 +101,10 @@ public class ReportCommandService implements ReportCommandUseCase {
         // 6. 자동 제재 여부 확인 및 실행
         applyAutoBlindIfNeeded(previousSanctionStatus, savedReportGroup);
 
-
+        // 신고 생성 Metric 카운트
+        if (createdNewReportGroup) {
+            reportGroupMetric.countCreatedReportGroup();
+        }
     }
 
     private ReportTargetSnapshot getTargetSnapshot(CreateReportCommand command) {
@@ -166,7 +175,7 @@ public class ReportCommandService implements ReportCommandUseCase {
                 && reportGroup.getSanctionStatus() == ReportGroupSanctionStatus.AUTO_BLINDED) {
             log.debug("[createReport] 신고 5회 등록! None -> Auto Blind 변경 요청 요청 발생, 신고 적용 그룹 ID : {}",
                     reportGroup.getReportGroupId());
-            reportSanctionTargetPort.changeAutoBlind(
+            reportSanctionTargetPort.applySanction(
                     reportGroup.getTargetType(),
                     reportGroup.getTargetId(),
                     ReportSanctionAction.APPLY_AUTO_BLIND
