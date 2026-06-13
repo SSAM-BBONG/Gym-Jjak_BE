@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.file.presentation.api;
+package com.ssambbong.gymjjak.file.presentation.api.response;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.ResponseCode;
 import lombok.AllArgsConstructor;
