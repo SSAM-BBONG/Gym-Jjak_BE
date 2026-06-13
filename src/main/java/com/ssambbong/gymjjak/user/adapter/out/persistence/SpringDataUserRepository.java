@@ -33,4 +33,17 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
             @Param("lastLoginAt") LocalDateTime lastLoginAt
     );
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    update UserJpaEntity u
+    set u.deletedAt = :deletedAt,
+        u.updatedAt = :deletedAt
+    where u.id = :userId
+      and u.deletedAt is null
+""")
+    void withdraw(
+            @Param("userId") Long userId,
+            @Param("deletedAt") LocalDateTime deletedAt
+    );
+
 }

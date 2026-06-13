@@ -20,6 +20,7 @@ public class User {
     private final LocalDateTime  createdAt;
     private LocalDateTime  updatedAt;
     private LocalDateTime  deletedAt;
+    private LocalDateTime suspendedUntil;
 
     private User(
             Long id,
@@ -37,11 +38,11 @@ public class User {
             LocalDateTime  deletedAt
     ) {
         this.id = id;
-        this.username = validateRequired(username, UserErrorCode.USERNAME_REQUIRED);
+        this.username = normalizeRequiredText(username, UserErrorCode.USERNAME_REQUIRED);
         this.password = validateRequired(password, UserErrorCode.PASSWORD_REQUIRED);
-        this.name = validateRequired(name, UserErrorCode.NAME_REQUIRED);
-        this.nickname = validateRequired(nickname, UserErrorCode.NICKNAME_REQUIRED);
-        this.phone = validateRequired(phone, UserErrorCode.PHONE_REQUIRED);
+        this.name = normalizeRequiredText(name, UserErrorCode.NAME_REQUIRED);
+        this.nickname = normalizeRequiredText(nickname, UserErrorCode.NICKNAME_REQUIRED);
+        this.phone = normalizeRequiredText(phone, UserErrorCode.PHONE_REQUIRED);
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.status = Objects.requireNonNull(status, "status는 필수입니다.");
         this.onboardingCompleted = onboardingCompleted;
@@ -129,6 +130,7 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+
     public void changePassword(String encodedPassword, LocalDateTime  updatedAt) {
         validateUsableUser();
 
@@ -148,7 +150,15 @@ public class User {
         this.lastLoginAt = Objects.requireNonNull(lastLoginAt, "lastLoginAt은 필수입니다.");
     }
 
-    public void suspendForSevenDays(LocalDateTime  updatedAt) {
+    public void activate(LocalDateTime  updatedAt) {
+        validateNotWithdrawn();
+
+        this.status = UserStatus.ACTIVE;
+        this.suspendedUntil = null;
+        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+    }
+
+    public void suspendForSevenDays(LocalDateTime  now) {
         validateNotWithdrawn();
 
         if (this.status == UserStatus.DAY_7) {
@@ -156,7 +166,8 @@ public class User {
         }
 
         this.status = UserStatus.DAY_7;
-        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+        this.suspendedUntil = Objects.requireNonNull(now, "now는 필수입니다.").plusDays(7);
+        this.updatedAt = now;
     }
 
     public void suspendPermanently(LocalDateTime  updatedAt) {
@@ -167,27 +178,13 @@ public class User {
         }
 
         this.status = UserStatus.ETERNAL;
+        this.suspendedUntil = null;
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
-    }
-
-    public void activate(LocalDateTime  updatedAt) {
-        validateNotWithdrawn();
-
-        this.status = UserStatus.ACTIVE;
-        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
-    }
-
-    public void withdraw(LocalDateTime  deletedAt) {
-        if (isWithdrawn()) {
-            throw new UserException(UserErrorCode.USER_ALREADY_WITHDRAWN);
-        }
-
-        this.deletedAt = Objects.requireNonNull(deletedAt, "deletedAt은 필수입니다.");
-        this.updatedAt = deletedAt;
     }
 
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE && !isWithdrawn();
+
     }
 
     public boolean isOnboardingCompleted() {
@@ -236,6 +233,11 @@ public class User {
         }
 
         return value;
+    }
+
+    private static String normalizeRequiredText(String value, UserErrorCode errorCode) {
+        String validated = validateRequired(value, errorCode);
+        return validated.trim();
     }
 
     public Long getId() {

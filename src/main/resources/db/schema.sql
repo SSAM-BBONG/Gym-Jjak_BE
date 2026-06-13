@@ -684,3 +684,6 @@ ALTER TABLE users
 
 ALTER TABLE regions
 DROP INDEX uk_regions_area;
+
+ALTER TABLE users
+    ADD COLUMN suspended_until DATETIME(6) NULL
