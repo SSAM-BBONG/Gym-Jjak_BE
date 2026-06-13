@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.file.application.result.PresignedUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.file.presentation.api.request.GeneratePresignedUrlRequest;
 import com.ssambbong.gymjjak.file.presentation.api.request.RegisterFileRequest;
+import com.ssambbong.gymjjak.file.presentation.api.response.FileResponseCode;
 import com.ssambbong.gymjjak.file.presentation.api.response.GeneratePresignedUrlResponse;
 import com.ssambbong.gymjjak.file.presentation.api.response.RegisterFileResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;

@@ -101,12 +101,12 @@ public class FileService implements FileUseCase {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new FileNotFoundException(fileId));
 
-        if (file.getFileType() != expectedFileType) {
-            throw new InvalidFileException(FileErrorCode.FILE_TYPE_MISMATCH);
-        }
-
         if (!isAdmin && !file.getUploaderId().equals(requesterId)) {
             throw new FileAccessDeniedException();
+        }
+
+        if (file.getFileType() != expectedFileType) {
+            throw new InvalidFileException(FileErrorCode.FILE_TYPE_MISMATCH);
         }
 
         byte[] bytes = fileStoragePort.download(file.getFileUrl());
