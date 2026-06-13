@@ -4,7 +4,7 @@ import com.ssambbong.gymjjak.file.exception.FileErrorCode;
 import com.ssambbong.gymjjak.file.exception.InvalidFileException;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 
-public record FileUploadCommand(
+public record CreateFileCommand(
         Long uploaderId,
         String fileKey,
         String originalName,
@@ -12,7 +12,7 @@ public record FileUploadCommand(
         Long fileSize,
         FileType fileType
 ) {
-    public FileUploadCommand {
+    public CreateFileCommand {
         if (uploaderId == null) {
             throw new InvalidFileException(
                     FileErrorCode.FILE_INVALID_REQUEST, "업로더 ID는 필수입니다.");

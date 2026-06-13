@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.file.presentation.api;
 
-import com.ssambbong.gymjjak.file.application.command.FileUploadCommand;
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
+import com.ssambbong.gymjjak.file.application.command.GeneratePresignedUrlCommand;
+import com.ssambbong.gymjjak.file.application.command.GetPresignedUrlCommand;
 import com.ssambbong.gymjjak.file.application.result.PresignedUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.file.presentation.api.request.GeneratePresignedUrlRequest;
@@ -59,7 +61,7 @@ public class FileController {
             @RequestBody @Valid GeneratePresignedUrlRequest request
     ) {
         PresignedUrlResult result = fileUseCase.generatePresignedUploadUrl(
-                authUser.userId(), request.fileType(), request.contentType(), request.originalName());
+                new GeneratePresignedUrlCommand(authUser.userId(), request.fileType(), request.contentType(), request.originalName()));
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(FileResponseCode.FILE_PRESIGNED_URL_GENERATED,
                         new GeneratePresignedUrlResponse(result.presignedUrl(), result.fileKey())));
@@ -86,7 +88,7 @@ public class FileController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody @Valid RegisterFileRequest request
     ) {
-        FileUploadCommand command = new FileUploadCommand(
+        CreateFileCommand command = new CreateFileCommand(
                 authUser.userId(),
                 request.fileKey(),
                 request.originalName(),
@@ -124,8 +126,8 @@ public class FileController {
             @PathVariable Long fileId,
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        boolean isAdmin = authUser.role().equals("ADMIN");
-        String url = fileUseCase.getPresignedUrl(fileId, authUser.userId(), isAdmin);
+        String url = fileUseCase.getPresignedUrl(
+                new GetPresignedUrlCommand(fileId, authUser.userId(), authUser.role().equals("ADMIN")));
         return ResponseEntity.ok(GlobalApiResponse.ok(FileResponseCode.FILE_PRESIGNED_URL_RETRIEVED, url));
     }
 

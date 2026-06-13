@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
@@ -56,6 +57,22 @@ public class S3FileStorageAdapter implements FileStoragePort {
                                 .build())
                         .build()
         ).url().toString();
+    }
+
+    @Override
+    public byte[] download(String key) {
+        try {
+            return s3Client.getObjectAsBytes(
+                    GetObjectRequest.builder()
+                            .bucket(s3Properties.getS3().getBucket())
+                            .key(key)
+                            .build()
+            ).asByteArray();
+        } catch (S3Exception e) {
+            log.error("S3 파일 다운로드 실패 - key: {}, errorCode: {}",
+                    key, e.awsErrorDetails().errorCode());
+            throw new FileUploadException(e);
+        }
     }
 
     @Override
