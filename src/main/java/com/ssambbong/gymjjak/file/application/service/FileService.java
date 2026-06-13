@@ -1,7 +1,10 @@
 package com.ssambbong.gymjjak.file.application.service;
 
-import com.ssambbong.gymjjak.file.application.command.FileUploadCommand;
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
+import com.ssambbong.gymjjak.file.application.command.GeneratePresignedUrlCommand;
+import com.ssambbong.gymjjak.file.application.command.GetPresignedUrlCommand;
 import com.ssambbong.gymjjak.file.application.port.FileMetricsPort;
+import com.ssambbong.gymjjak.file.application.result.FileContentResult;
 import com.ssambbong.gymjjak.file.application.result.PresignedUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.file.domain.model.File;
@@ -31,28 +34,28 @@ public class FileService implements FileUseCase {
     private final FileMetricsPort fileMetricsPort;
 
     @Override
-    public PresignedUrlResult generatePresignedUploadUrl(Long uploaderId, FileType fileType, String contentType, String originalName) {
-        FilePolicy policy = FilePolicy.from(fileType);
-        if (!policy.isAllowed(contentType)) {
+    public PresignedUrlResult generatePresignedUploadUrl(GeneratePresignedUrlCommand command) {
+        FilePolicy policy = FilePolicy.from(command.fileType());
+        if (!policy.isAllowed(command.contentType())) {
             throw new InvalidFileException(FileErrorCode.FILE_INVALID_TYPE);
         }
 
-        String ext = originalName != null && originalName.contains(".")
-                ? originalName.substring(originalName.lastIndexOf('.') + 1)
+        String ext = command.originalName() != null && command.originalName().contains(".")
+                ? command.originalName().substring(command.originalName().lastIndexOf('.') + 1)
                 : null;
         String key = ext != null
-                ? String.format("%s/%d/%s.%s", fileType.getPath(), uploaderId, UUID.randomUUID(), ext)
-                : String.format("%s/%d/%s", fileType.getPath(), uploaderId, UUID.randomUUID());
+                ? String.format("%s/%d/%s.%s", command.fileType().getPath(), command.uploaderId(), UUID.randomUUID(), ext)
+                : String.format("%s/%d/%s", command.fileType().getPath(), command.uploaderId(), UUID.randomUUID());
 
-        String presignedUrl = fileStoragePort.generatePresignedUploadUrl(key, contentType);
-        log.info("Presigned URL 발급 - uploaderId: {}, fileType: {}, key: {}", uploaderId, fileType, key);
+        String presignedUrl = fileStoragePort.generatePresignedUploadUrl(key, command.contentType());
+        log.info("Presigned URL 발급 - uploaderId: {}, fileType: {}, key: {}", command.uploaderId(), command.fileType(), key);
         recordMetricSafely(fileMetricsPort::recordPresignedUrlGenerated, "recordPresignedUrlGenerated");
         return new PresignedUrlResult(presignedUrl, key);
     }
 
     @Override
     @Transactional
-    public Long registerFile(FileUploadCommand command) {
+    public Long registerFile(CreateFileCommand command) {
         String expectedPrefix = command.fileType().getPath() + "/" + command.uploaderId() + "/";
         if (!command.fileKey().startsWith(expectedPrefix)) {
             throw new FileAccessDeniedException();
@@ -76,9 +79,9 @@ public class FileService implements FileUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public String getPresignedUrl(Long fileId, Long requesterId, boolean isAdmin) {
-        File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new FileNotFoundException(fileId));
+    public String getPresignedUrl(GetPresignedUrlCommand command) {
+        File file = fileRepository.findById(command.fileId())
+                .orElseThrow(() -> new FileNotFoundException(command.fileId()));
 
         FilePolicy policy = FilePolicy.from(file.getFileType());
 
@@ -86,10 +89,35 @@ public class FileService implements FileUseCase {
             return fileStoragePort.getPublicUrl(file.getFileUrl());
         }
 
-        if (!isAdmin && !file.getUploaderId().equals(requesterId)) {
+        if (!command.isAdmin() && !file.getUploaderId().equals(command.requesterId())) {
             throw new FileAccessDeniedException();
         }
         return fileStoragePort.getPresignedUrl(file.getFileUrl());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FileContentResult downloadFile(Long fileId, Long requesterId, boolean isAdmin, FileType expectedFileType) {
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new FileNotFoundException(fileId));
+
+        if (file.getFileType() != expectedFileType) {
+            throw new InvalidFileException(FileErrorCode.FILE_TYPE_MISMATCH);
+        }
+
+        if (!isAdmin && !file.getUploaderId().equals(requesterId)) {
+            throw new FileAccessDeniedException();
+        }
+
+        byte[] bytes = fileStoragePort.download(file.getFileUrl());
+        log.info("파일 다운로드 완료 - fileId: {}, key: {}", fileId, file.getFileUrl());
+        return new FileContentResult(
+                file.getOriginalName(),
+                file.getContentType(),
+                file.getFileSize(),
+                file.getFileType(),
+                bytes
+        );
     }
 
     @Monitored(name = "gymjjak.file.delete.duration", description = "S3 파일 삭제 소요 시간", domain = "file", action = "delete")

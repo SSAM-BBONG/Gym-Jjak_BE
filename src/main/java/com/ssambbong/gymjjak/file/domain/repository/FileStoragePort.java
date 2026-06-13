@@ -8,5 +8,7 @@ public interface FileStoragePort {
 
     String getPresignedUrl(String key);
 
+    byte[] download(String key);
+
     void delete(String key);
 }

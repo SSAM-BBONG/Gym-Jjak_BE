@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.file;
 
-import com.ssambbong.gymjjak.file.application.command.FileUploadCommand;
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
+import com.ssambbong.gymjjak.file.application.command.GeneratePresignedUrlCommand;
+import com.ssambbong.gymjjak.file.application.command.GetPresignedUrlCommand;
 import com.ssambbong.gymjjak.file.application.port.FileMetricsPort;
 import com.ssambbong.gymjjak.file.application.result.PresignedUrlResult;
 import com.ssambbong.gymjjak.file.application.service.FileService;
@@ -45,7 +47,7 @@ class FileServiceTest {
 
         // when
         PresignedUrlResult result = fileService.generatePresignedUploadUrl(
-                1L, FileType.BUSINESS_LICENSE, "application/pdf", "사업자등록증.pdf");
+                new GeneratePresignedUrlCommand(1L, FileType.BUSINESS_LICENSE, "application/pdf", "사업자등록증.pdf"));
 
         // then
         assertThat(result.presignedUrl()).isEqualTo(presignedUrl);
@@ -58,7 +60,7 @@ class FileServiceTest {
     @DisplayName("파일 메타데이터 등록에 성공하고 fileId를 반환한다")
     void registerFile_success() {
         // given
-        FileUploadCommand command = new FileUploadCommand(
+        CreateFileCommand command = new CreateFileCommand(
                 1L,
                 "uploads/organizations/1/uuid.pdf",
                 "사업자등록증.pdf",
@@ -84,7 +86,7 @@ class FileServiceTest {
     void generatePresignedUploadUrl_fail_invalidContentType() {
         // when & then
         assertThatThrownBy(() -> fileService.generatePresignedUploadUrl(
-                1L, FileType.BUSINESS_LICENSE, "video/mp4", "사업자등록증.pdf"))
+                new GeneratePresignedUrlCommand(1L, FileType.BUSINESS_LICENSE, "video/mp4", "사업자등록증.pdf")))
                 .isInstanceOf(com.ssambbong.gymjjak.file.exception.InvalidFileException.class);
     }
 
@@ -100,7 +102,7 @@ class FileServiceTest {
                 .thenReturn("https://bucket.s3.ap-northeast-2.amazonaws.com/uploads/pt-thumbnails/1/uuid.jpg");
 
         // when
-        String url = fileService.getPresignedUrl(1L, 99L, false);
+        String url = fileService.getPresignedUrl(new GetPresignedUrlCommand(1L, 99L, false));
 
         // then
         assertThat(url).startsWith("https://");
@@ -121,7 +123,7 @@ class FileServiceTest {
                 .thenReturn("https://s3.amazonaws.com/bucket/key?X-Amz-Signature=xyz");
 
         // when
-        String url = fileService.getPresignedUrl(1L, 1L, false);
+        String url = fileService.getPresignedUrl(new GetPresignedUrlCommand(1L, 1L, false));
 
         // then
         assertThat(url).startsWith("https://");
@@ -139,7 +141,7 @@ class FileServiceTest {
                 .thenReturn("https://s3.amazonaws.com/bucket/key?X-Amz-Signature=xyz");
 
         // when
-        String url = fileService.getPresignedUrl(1L, 99L, true);
+        String url = fileService.getPresignedUrl(new GetPresignedUrlCommand(1L, 99L, true));
 
         // then
         assertThat(url).startsWith("https://");
@@ -155,7 +157,7 @@ class FileServiceTest {
         when(fileRepository.findById(1L)).thenReturn(Optional.of(file));
 
         // when & then
-        assertThatThrownBy(() -> fileService.getPresignedUrl(1L, 99L, false))
+        assertThatThrownBy(() -> fileService.getPresignedUrl(new GetPresignedUrlCommand(1L, 99L, false)))
                 .isInstanceOf(FileAccessDeniedException.class);
     }
 
@@ -166,7 +168,7 @@ class FileServiceTest {
         when(fileRepository.findById(999L)).thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> fileService.getPresignedUrl(999L, 1L, false))
+        assertThatThrownBy(() -> fileService.getPresignedUrl(new GetPresignedUrlCommand(999L, 1L, false)))
                 .isInstanceOf(FileNotFoundException.class);
     }
 
@@ -174,7 +176,7 @@ class FileServiceTest {
     @DisplayName("다른 사용자의 fileKey로 registerFile 시 FileAccessDeniedException이 발생한다")
     void registerFile_fail_invalidFileKey() {
         // given — uploaderId=1 인데 key 경로가 다른 userId(2)로 시작
-        FileUploadCommand command = new FileUploadCommand(
+        CreateFileCommand command = new CreateFileCommand(
                 1L,
                 "uploads/organizations/2/uuid.pdf",
                 "사업자등록증.pdf",
@@ -192,7 +194,7 @@ class FileServiceTest {
     @DisplayName("fileType 경로와 불일치하는 fileKey로 registerFile 시 FileAccessDeniedException이 발생한다")
     void registerFile_fail_wrongFileTypePath() {
         // given — BUSINESS_LICENSE 타입인데 key가 pt-thumbnails 경로
-        FileUploadCommand command = new FileUploadCommand(
+        CreateFileCommand command = new CreateFileCommand(
                 1L,
                 "uploads/pt-thumbnails/1/uuid.pdf",
                 "사업자등록증.pdf",
