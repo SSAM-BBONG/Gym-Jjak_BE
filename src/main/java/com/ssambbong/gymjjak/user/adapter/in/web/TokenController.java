@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.user.adapter.in.web;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.user.adapter.in.web.request.ReissueTokenRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.ReissueTokenResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.TokenResponseCode;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
@@ -10,7 +9,6 @@ import com.ssambbong.gymjjak.user.application.port.in.TokenCommandUsecase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
