@@ -1,14 +1,13 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.domain.model;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TrainerApplication {
 
     private final Long trainerApplicationId;
@@ -33,6 +32,35 @@ public class TrainerApplication {
     private final String rejectReason;
     private final Long reviewedBy;
     private final LocalDateTime reviewedAt;
+
+    // 생성자는 private, Builder는 public
+    // 이로 인해 다른 계층에서 도메인 계층 메서드 사용 가능
+    @Builder(access = AccessLevel.PUBLIC)
+    private TrainerApplication(
+            Long trainerApplicationId,
+            Long userId,
+            Long profileFileId,
+            Long certificateFileId,
+            List<String> qualifications,
+            List<String> awardHistories,
+            String introduction,
+            TrainerApplicationStatus status,
+            String rejectReason,
+            Long reviewedBy,
+            LocalDateTime reviewedAt
+    ) {
+        this.trainerApplicationId = trainerApplicationId;
+        this.userId = userId;
+        this.profileFileId = profileFileId;
+        this.certificateFileId = certificateFileId;
+        this.qualifications = qualifications == null ? List.of() : List.copyOf(qualifications);
+        this.awardHistories = awardHistories == null ? List.of() : List.copyOf(awardHistories);
+        this.introduction = introduction;
+        this.status = status;
+        this.rejectReason = rejectReason;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+    }
 
     public static TrainerApplication create(
             Long userId,
