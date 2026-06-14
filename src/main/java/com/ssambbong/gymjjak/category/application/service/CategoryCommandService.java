@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.category.domain.exception.CategoryInUseException;
 import com.ssambbong.gymjjak.category.domain.exception.CategoryNotFoundException;
 import com.ssambbong.gymjjak.category.domain.model.Category;
 import com.ssambbong.gymjjak.category.domain.repository.CategoryRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,11 +60,15 @@ public class CategoryCommandService implements CategoryCommandUseCase {
         // 카테고리 존재 확인
         categoryRepository.findById(command.id())
                 .orElseThrow(CategoryNotFoundException::new);
-        // PT 강습에서 사용 중이면 삭제 불가
+        // PT 강습에서 사용 중이면 삭제 불가 (count 체크)
         if (categoryRepository.countPtCoursesByCategoryId(command.id()) > 0) {
             throw new CategoryInUseException();
         }
-        // 삭제
-        categoryRepository.deleteById(command.id());
+        // 삭제 — count 이후 동시 참조 발생 시 FK 제약 위반을 CategoryInUseException으로 변환
+        try {
+            categoryRepository.deleteById(command.id());
+        } catch (DataIntegrityViolationException e) {
+            throw new CategoryInUseException();
+        }
     }
 }

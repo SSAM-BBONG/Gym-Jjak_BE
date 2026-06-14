@@ -16,6 +16,6 @@ public interface PtCourseRepository {
     // VISIBLE 상태 전체 목록 조회
     List<PtCourse> findAllVisible();
 
-    // 상태 변경 (blind/unblind/delete) — 더티체킹
+    // 상태 변경 (blind/unblind/delete)
     void update(PtCourse ptCourse);
 }

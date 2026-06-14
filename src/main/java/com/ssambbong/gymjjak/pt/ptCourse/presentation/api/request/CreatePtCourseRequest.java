@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
 import java.util.List;
@@ -52,8 +53,22 @@ public record CreatePtCourseRequest(
     ) {}
 
     public record ScheduleRequest(
-            @Schema(description = "요일", example = "MONDAY") @NotNull String dayOfWeek,
-            @Schema(description = "시작 시간", example = "10:00") @NotBlank String startTime,
-            @Schema(description = "종료 시간", example = "11:00") @NotBlank String endTime
+            @Schema(description = "요일 (MONDAY~SUNDAY)", example = "MONDAY")
+            @NotNull
+            @Pattern(regexp = "MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY",
+                    message = "요일은 MONDAY~SUNDAY 중 하나여야 합니다.")
+            String dayOfWeek,
+
+            @Schema(description = "시작 시간 (HH:mm)", example = "10:00")
+            @NotBlank
+            @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d$",
+                    message = "시작 시간은 HH:mm 형식이어야 합니다.")
+            String startTime,
+
+            @Schema(description = "종료 시간 (HH:mm)", example = "11:00")
+            @NotBlank
+            @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d$",
+                    message = "종료 시간은 HH:mm 형식이어야 합니다.")
+            String endTime
     ) {}
 }

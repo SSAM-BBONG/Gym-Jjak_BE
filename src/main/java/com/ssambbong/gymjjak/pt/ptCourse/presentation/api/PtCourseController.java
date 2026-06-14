@@ -79,9 +79,7 @@ public class PtCourseController {
     @Operation(summary = "PT 강습 목록 조회", description = "VISIBLE 상태의 PT 강습 목록을 조회한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = PtCourseViewResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema()))
+                    content = @Content(schema = @Schema(implementation = PtCourseViewResponse.class)))
     })
     @GetMapping
     public ResponseEntity<GlobalApiResponse<List<PtCourseViewResponse>>> findAllPtCourses() {
@@ -98,8 +96,6 @@ public class PtCourseController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = PtCourseDetailResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
                     content = @Content(schema = @Schema()))
     })
