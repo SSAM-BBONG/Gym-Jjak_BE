@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -28,15 +29,18 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
         return trainerApplicationPersistenceMapper.toDomain(savedEntity);
     }
 
+    @Override
+    public Optional<TrainerApplication> findById(Long trainerApplicationId) {
+        return springDataTrainerApplicationRepository.findById(trainerApplicationId)
+                .map(trainerApplicationPersistenceMapper::toDomain);
+    }
+
     // 중복 신청 검증
     @Override
-    public boolean existsPendingOrApprovedByUserId(Long userId) {
+    public boolean getDuplicateBlockingStatuses(Long userId) {
         return springDataTrainerApplicationRepository.existsByUserIdAndStatusIn(
                 userId,
-                List.of(
-                        TrainerApplicationStatus.PENDING,
-                        TrainerApplicationStatus.APPROVED
-                )
+                TrainerApplicationStatus.getDuplicateBlockingStatuses()
         );
     }
 }

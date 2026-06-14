@@ -236,7 +236,9 @@ CREATE TABLE trainer_applications (
                                           FOREIGN KEY (certificate_file_id) REFERENCES files(file_id),
 
                                       CONSTRAINT fk_trainer_applications_reviewed_by
-                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
+
+                                      INDEX idx_trainer_applications_user_status (user_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE trainer_profiles (

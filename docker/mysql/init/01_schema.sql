@@ -171,7 +171,8 @@ CREATE TABLE organization_applications (
                                            CONSTRAINT pk_organization_applications PRIMARY KEY (organization_application_id),
                                            CONSTRAINT fk_org_app_applicant FOREIGN KEY (applicant_user_id) REFERENCES users(user_id),
                                            CONSTRAINT fk_org_app_license_file FOREIGN KEY (business_license_file_id) REFERENCES files(file_id),
-                                           CONSTRAINT fk_org_app_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+                                           CONSTRAINT fk_org_app_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
+                                           INDEX idx_trainer_applications_user_status (user_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE organizations (

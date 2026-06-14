@@ -2,30 +2,25 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.application.service;
 
 import com.ssambbong.gymjjak.file.application.result.FileContentResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
-import com.ssambbong.gymjjak.global.domain.common.exception.ConflictException;
-import com.ssambbong.gymjjak.global.domain.common.exception.InvalidArgumentException;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.ocr.application.command.ExtractOcrCommand;
 import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
-import com.ssambbong.gymjjak.ocr.domain.OcrExtractedField;
 import com.ssambbong.gymjjak.ocr.domain.OcrResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
-import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.DuplicateTrainerApplicationException;
-import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
-import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.RequiredCertificationNotVerifiedException;
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.*;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class TrainerApplicationCommandService implements TrainerApplicationCommandUseCase {
 
     private static final String REQUIRED_CERTIFICATION_TEMPLATE_NAME = "생활스포츠지도사";
@@ -36,6 +31,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     private final FileUseCase fileUseCase;
     private final OcrUseCase ocrUseCase;
     private final TrainerApplicationRepository trainerApplicationRepository;
+    private final TransactionTemplate transactionTemplate;
 
     @Override
     public Long createTrainerApplication(CreateTrainerApplicationCommand command) {
@@ -55,6 +51,13 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         OcrResult ocrResult =extractCertificateOcr(certificateFile);
         // ocr 요구 반환값 검증
         validateRequiredCertification(command, ocrResult);
+
+        return transactionTemplate.execute(status -> saveTrainerApplication(command));
+    }
+
+    private Long saveTrainerApplication(CreateTrainerApplicationCommand command) {
+        // 중복 신청 검사 : TOCTOU 방지를 위해 저장 직전에 중복 검증을 한 번 더 함
+        validateDuplicateApplication(command.applicantUserId());
 
         TrainerApplication trainerApplication = TrainerApplication.create(
                 command.applicantUserId(),
@@ -79,6 +82,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     }
 
     @Override
+    @Transactional
     public Long updateTrainerApplication(UpdateTrainerApplicationCommand command) {
 
         log.info(
@@ -90,7 +94,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         validateUpdateCommand(command);
 
         TrainerApplication trainerApplication = trainerApplicationRepository.findById(command.trainerApplicationId())
-                .orElseThrow(() -> new InvalidTrainerApplicationException("트레이너 신청서를 찾을 수 없습니다."));
+                .orElseThrow(() -> new TrainerApplicationNotFoundException(command.trainerApplicationId()));
 
         // 본인 검증
         validateUpdatePermission(trainerApplication, command.requesterId());
@@ -148,7 +152,10 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                     requesterId
             );
 
-            throw new InvalidTrainerApplicationException("본인의 트레이너 신청서만 수정할 수 있습니다.");
+            throw new ForbiddenTrainerApplicationUpdateException(
+                    requesterId,
+                    trainerApplication.getTrainerApplicationId()
+            );
         }
     }
 
@@ -160,7 +167,10 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                     trainerApplication.getStatus()
             );
 
-            throw new InvalidTrainerApplicationException("PENDING 상태의 트레이너 신청서만 수정할 수 있습니다.");
+            throw new TrainerApplicationStatusConflictException(
+                    trainerApplication.getTrainerApplicationId(),
+                    trainerApplication.getStatus()
+            );
         }
     }
 
@@ -188,7 +198,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
     // 중복 신청 검증
     private void validateDuplicateApplication(Long applicantUserId) {
-        boolean exists = trainerApplicationRepository.existsPendingOrApprovedByUserId(applicantUserId);
+        boolean exists = trainerApplicationRepository.getDuplicateBlockingStatuses(applicantUserId);
 
         if (exists) {
             log.warn(

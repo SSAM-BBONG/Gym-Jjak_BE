@@ -21,14 +21,16 @@ public record CreateTrainerApplicationRequest(
         Long certificateFileId,
 
         @Schema(
-                description = "사용자가 직접 입력한 자격증 목록입니다. 필수 자격증 검증은 이 값이 아니라 OCR 결과를 기준으로 처리합니다.",
+                description = "사용자가 직접 입력한 자격증 목록입니다. 필수 자격증 검증은 이 값이 아니라 OCR 결과를 기준으로 처리합니다." +
+                        "null이면 빈 목록으로 처리됩니다.",
                 example = "[\"생활스포츠지도사 2급\", \"NSCA-CPT\"]"
         )
         @Size(max = 30, message = "자격증은 최대 30개까지 입력할 수 있습니다.")
         List<String> qualifications,
 
         @Schema(
-                description = "사용자가 직접 입력한 수상/대회경력 목록입니다.",
+                description = "사용자가 직접 입력한 수상/대회경력 목록입니다." +
+                        "null이면 빈 목록으로 처리됩니다.",
                 example = "[\"2023 피지크 대회 입상\"]"
         )
         @Size(max = 100, message = "수상 경력은 최대 100개까지 입력할 수 있습니다.")
