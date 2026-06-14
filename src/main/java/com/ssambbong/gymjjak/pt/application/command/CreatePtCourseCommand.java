@@ -9,11 +9,10 @@ public record CreatePtCourseCommand(
         String title,
         String description,
         int price,
-        Long thumbnailFileId
-        int sessionDuration,
+        Long thumbnailFileId,
         List<CurriculumData> curriculums,
         List<ScheduleData> schedules
 ) {
-    public record CurriculumData(String title, String content) {}
+    public record CurriculumData(Integer sessionNo, String title, String content) {}
     public record ScheduleData(String dayOfWeek, String startTime, String endTime) {}
 }

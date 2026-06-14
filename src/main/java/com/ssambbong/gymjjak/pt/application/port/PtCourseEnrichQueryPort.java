@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.pt.application.port;
 
+import java.util.List;
+
 /**
  * PT 강습 조회 시 필요한 조직/트레이너 부가 정보 조회 포트
  * - 임시 구현체: PtCourseEnrichQueryAdapter (EntityManager 직접 쿼리)
@@ -23,11 +25,12 @@ public interface PtCourseEnrichQueryPort {
     ) {}
 
     record TrainerDisplayInfo(
-            String displayName,
-            String spec,
+            String trainerName,       // DB: trainer_name
             String introduction,
             Double averageRating,
             int reviewCount,
-            Long profileFileId   // 프로필 이미지 파일 ID (null 가능)
+            Long profileFileId,
+            List<String> certifications,  // trainer_certifications 테이블
+            List<String> awards           // trainer_awards 테이블
     ) {}
 }

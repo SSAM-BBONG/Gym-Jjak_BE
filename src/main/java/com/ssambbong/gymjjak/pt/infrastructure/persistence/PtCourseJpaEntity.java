@@ -35,8 +35,8 @@ public class PtCourseJpaEntity {
     @Column(name = "tag_id", nullable = false)
     private Long tagId;
 
-    @Column(name = "thumbnail_url")
-    private String thumbnailUrl;
+    @Column(name = "thumbnail_file_id")
+    private Long thumbnailFileId;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -75,7 +75,7 @@ public class PtCourseJpaEntity {
                              Long trainerProfileId,
                              Long categoryId,
                              Long tagId,
-                             String thumbnailUrl,
+                             Long thumbnailFileId,
                              String title,
                              String description,
                              int price,
@@ -88,7 +88,7 @@ public class PtCourseJpaEntity {
         this.trainerProfileId = trainerProfileId;
         this.categoryId = categoryId;
         this.tagId = tagId;
-        this.thumbnailUrl = thumbnailUrl;
+        this.thumbnailFileId = thumbnailFileId;
         this.title = title;
         this.description = description;
         this.price = price;

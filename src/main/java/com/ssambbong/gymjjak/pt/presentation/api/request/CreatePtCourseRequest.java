@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Valid;
 
 import java.util.List;
 
@@ -36,10 +37,6 @@ public record CreatePtCourseRequest(
         @Positive
         Long thumbnailFileId,
 
-        @Schema(description = "1회 수업 시간 (분)", example = "60")
-        @NotNull
-        Integer sessionDuration,
-
         @Schema(description = "커리큘럼 목록")
         @NotEmpty
         List<CurriculumRequest> curriculums,
@@ -50,12 +47,13 @@ public record CreatePtCourseRequest(
 
 ) {
     public record CurriculumRequest(
+            @Schema(description = "회차 번호", example = "1") @NotNull @Min(1) Integer sessionNo,
             @Schema(description = "회차 제목", example = "기초 자세 교정") @NotBlank String title,
             @Schema(description = "회차 설명", example = "현재 체력 및 목표 설정") String content
     ) {}
 
     public record ScheduleRequest(
-            @Schema(description = "요일", example = "MON") @NotNull String dayOfWeek,
+            @Schema(description = "요일", example = "MONDAY") @NotNull String dayOfWeek,
             @Schema(description = "시작 시간", example = "10:00") @NotBlank String startTime,
             @Schema(description = "종료 시간", example = "11:00") @NotBlank String endTime
     ) {}

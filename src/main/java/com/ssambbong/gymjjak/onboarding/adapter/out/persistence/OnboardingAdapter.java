@@ -32,19 +32,11 @@ public class OnboardingAdapter implements OnboardingPort {
 
     @Override
     public Long saveRegion(Region region) {
-        return regionJpaRepository.findByFullNameAndLatitudeAndLongitude(
-                        region.getFullName(),
-                        region.getLatitude(),
-                        region.getLongitude()
-                )
-                .map(RegionJpaEntity::getId)
-                .orElseGet(() -> {
-                    RegionJpaEntity savedRegion = regionJpaRepository.save(
-                            onboardingMapper.toRegionEntity(region)
-                    );
+        RegionJpaEntity savedRegion = regionJpaRepository.save(
+                onboardingMapper.toRegionEntity(region)
+        );
 
-                    return savedRegion.getId();
-                });
+        return savedRegion.getId();
     }
 
     @Override

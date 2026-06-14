@@ -63,8 +63,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap) {
-        String thumbnailUrl = ptCourse.getThumbnailUrl();
-
         PtCourseEnrichQueryPort.OrganizationInfo org =
                 enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
@@ -74,15 +72,12 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourse.getId(),
                 ptCourse.getTitle(),
                 ptCourse.getThumbnailFileId(),
-                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
-                ptCourse.getTagId(),
-                ptCourse.getTitle(),
                 ptCourse.getPrice(),
                 ptCourse.getTagId(),
                 null, // TODO: TagQueryUseCase 연동 후 tagName 채우기
                 ptCourse.getCategoryId(),
                 categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
-                trainer.displayName(),
+                trainer.trainerName(),
                 org.organizationId(),
                 org.businessName(),
                 org.roadAddress(),
@@ -93,8 +88,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     private PtCourseDetailView toDetailView(PtCourse ptCourse) {
-        String thumbnailUrl = ptCourse.getThumbnailUrl();
-
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
 
@@ -109,12 +102,11 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 trainer.reviewCount(),
                 ptCourse.getOrganizationId(),
                 ptCourse.getTrainerProfileId(),
-                trainer.displayName(),
+                trainer.trainerName(),
                 trainer.profileFileId(),
-                trainer.spec(),
                 trainer.introduction(),
-                List.of(),
-                List.of(),
+                trainer.certifications(),
+                trainer.awards(),
                 List.of(),
                 List.of(),
                 List.of()

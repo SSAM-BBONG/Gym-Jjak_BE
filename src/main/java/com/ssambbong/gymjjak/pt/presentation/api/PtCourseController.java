@@ -46,9 +46,8 @@ public class PtCourseController {
                 request.description(),
                 request.price(),
                 request.thumbnailFileId(),
-                request.sessionDuration(),
                 request.curriculums().stream()
-                        .map(c -> new CreatePtCourseCommand.CurriculumData(c.title(), c.content()))
+                        .map(c -> new CreatePtCourseCommand.CurriculumData(c.sessionNo(), c.title(), c.content()))
                         .toList(),
                 request.schedules().stream()
                         .map(s -> new CreatePtCourseCommand.ScheduleData(s.dayOfWeek(), s.startTime(), s.endTime()))

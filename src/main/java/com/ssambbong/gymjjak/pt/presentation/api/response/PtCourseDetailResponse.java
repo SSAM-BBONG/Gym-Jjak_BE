@@ -8,15 +8,8 @@ import java.util.List;
 // PT 강습 상세 응답 DTO
 public record PtCourseDetailResponse(
 
-        // ── 기본 PT 정보 ──
         @Schema(description = "PT 강습 ID", example = "1")
         Long ptCourseId,
-
-        @Schema(description = "카테고리명", example = "헬스")
-        String categoryName,
-
-        @Schema(description = "태그 ID", example = "1")
-        Long tagId,
 
         @Schema(description = "썸네일 파일 ID")
         Long thumbnailFileId,
@@ -58,25 +51,21 @@ public record PtCourseDetailResponse(
     public record TrainerInfo(
             @Schema(description = "트레이너 프로필 ID", example = "1")
             Long trainerProfileId,
-            @Schema(description = "트레이너 표시명", example = "김철수 트레이너")
-            String displayName,
-            @Schema(description = "프로필 이미지 URL")
-            String profileImageUrl,
-            @Schema(description = "스펙", example = "경력 10년")
-            String spec,
+            @Schema(description = "트레이너 이름", example = "김철수")
+            String trainerName,
+            @Schema(description = "프로필 이미지 파일 ID")
+            Long profileFileId,
             @Schema(description = "소개")
             String introduction,
-            @Schema(description = "자격증 목록 (미구현, 빈 배열 반환)")
-            List<Object> certifications,
-            @Schema(description = "수상 목록 (미구현, 빈 배열 반환)")
-            List<Object> awards
+            @Schema(description = "자격증 목록")
+            List<String> certifications,
+            @Schema(description = "수상 목록")
+            List<String> awards
     ) {}
 
     public static PtCourseDetailResponse from(PtCourseQueryUseCase.PtCourseDetailView view) {
         return new PtCourseDetailResponse(
                 view.ptCourseId(),
-                view.categoryName(),
-                view.tagId(),
                 view.thumbnailFileId(),
                 view.title(),
                 view.description(),
@@ -87,9 +76,8 @@ public record PtCourseDetailResponse(
                 view.organizationId(),
                 new TrainerInfo(
                         view.trainerProfileId(),
-                        view.displayName(),
-                        view.trainerProfileImageUrl(),
-                        view.trainerSpec(),
+                        view.trainerName(),
+                        view.trainerProfileFileId(),
                         view.trainerIntroduction(),
                         view.certifications(),
                         view.awards()

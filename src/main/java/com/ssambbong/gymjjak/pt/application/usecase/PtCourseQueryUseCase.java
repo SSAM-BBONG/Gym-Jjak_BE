@@ -1,7 +1,5 @@
 package com.ssambbong.gymjjak.pt.application.usecase;
 
-import com.ssambbong.gymjjak.pt.domain.model.PtCourseStatus;
-
 import java.util.List;
 
 public interface PtCourseQueryUseCase {
@@ -25,7 +23,7 @@ public interface PtCourseQueryUseCase {
             Long categoryId,
             String categoryName,
             // 트레이너
-            String displayName,
+            String trainerName,
             // 조직
             Long organizationId,
             String organizationBusinessName,
@@ -50,13 +48,12 @@ public interface PtCourseQueryUseCase {
             Long organizationId,
             // 트레이너
             Long trainerProfileId,
-            String displayName,
-            String trainerProfileImageUrl,
-            String trainerSpec,
+            String trainerName,
+            Long trainerProfileFileId,
             String trainerIntroduction,
+            List<String> certifications,
+            List<String> awards,
             // 미구현 (빈 배열 반환)
-            List<Object> certifications,
-            List<Object> awards,
             List<Object> curriculums,
             List<Object> schedules,
             List<Object> recentReviews
