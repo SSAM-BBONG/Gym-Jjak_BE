@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.usecase;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.List;
 
 public interface PtCourseQueryUseCase {
@@ -53,9 +55,25 @@ public interface PtCourseQueryUseCase {
             String trainerIntroduction,
             List<String> certifications,
             List<String> awards,
+            List<CurriculumView> curriculums,
+            List<ScheduleView> schedules,
             // 미구현 (빈 배열 반환)
-            List<Object> curriculums,
-            List<Object> schedules,
             List<Object> recentReviews
+    ) {}
+
+    // ──── 커리큘럼 뷰 ────
+    record CurriculumView(
+            Long curriculumId,
+            int sessionNo,
+            String title,
+            String content
+    ) {}
+
+    // ──── 스케쥴 뷰 ────
+    record ScheduleView(
+            Long scheduleId,
+            DayOfWeek dayOfWeek,
+            LocalTime startTime,
+            LocalTime endTime
     ) {}
 }

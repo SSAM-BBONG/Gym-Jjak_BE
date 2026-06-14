@@ -4,9 +4,13 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseComma
 import com.ssambbong.gymjjak.pt.ptCourse.application.service.PtCourseCommandService;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCurriculum;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +28,8 @@ import static org.mockito.Mockito.*;
 class PtCourseCommandServiceTest {
 
     @Mock private PtCourseRepository ptCourseRepository;
+    @Mock private PtCurriculumRepository ptCurriculumRepository;
+    @Mock private PtCourseScheduleRepository ptCourseScheduleRepository;
     @Mock private TrainerProfileQueryPort trainerProfileQueryPort;
 
     @InjectMocks
@@ -55,14 +61,14 @@ class PtCourseCommandServiceTest {
                 .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
         PtCourse savedPtCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L,
-                1L,
+                1L, 1L, 1L, 1L, 1L, 1L,
                 "체계적인 가슴 집중 PT",
                 "가슴 근육 발달에 특화된 12주 프로그램",
-                50000, 2, false, false, PtCourseStatus.VISIBLE
+                50000, 2, PtCourseStatus.VISIBLE
         );
-
         when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
+        when(ptCurriculumRepository.saveAll(any())).thenReturn(List.of());
+        when(ptCourseScheduleRepository.saveAll(any())).thenReturn(List.of());
 
         // when
         Long ptCourseId = ptCourseCommandService.createPtCourse(command);
@@ -70,6 +76,8 @@ class PtCourseCommandServiceTest {
         // then
         assertEquals(1L, ptCourseId);
         verify(ptCourseRepository).save(any(PtCourse.class));
+        verify(ptCurriculumRepository).saveAll(any());
+        verify(ptCourseScheduleRepository).saveAll(any());
     }
 
     @Test
@@ -102,7 +110,6 @@ class PtCourseCommandServiceTest {
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명"))
         );
 
-        // TrainerInfo Mock 설정
         when(trainerProfileQueryPort.findByUserId(1L))
                 .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
 
@@ -114,7 +121,7 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
-    @DisplayName("커리큘럼이 없으면 totalSessionCount=0이 되어 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("커리큘럼이 없으면 PtCourseInvalidException이 발생해야 한다")
     void createPtCourse_emptyCurriculums_throwsException() {
 
         // given
@@ -122,8 +129,65 @@ class PtCourseCommandServiceTest {
                 "PT 강습 제목", "설명", 50000, List.of()
         );
 
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        // when & then
+        assertThrows(PtCourseInvalidException.class,
+                () -> ptCourseCommandService.createPtCourse(command));
+
+        verify(ptCourseRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("커리큘럼 내 sessionNo가 중복되면 PtCourseInvalidException이 발생해야 한다")
+    void createPtCourse_duplicateSessionNo_throwsException() {
+
+        // given
+        List<CreatePtCourseCommand.CurriculumData> curriculums = List.of(
+                new CreatePtCourseCommand.CurriculumData(1, "회차1 제목", "회차1 설명"),
+                new CreatePtCourseCommand.CurriculumData(1, "회차2 제목", "회차2 설명") // 중복
+        );
+        CreatePtCourseCommand command = defaultCommand("PT 강습 제목", "설명", 50000, curriculums);
+
+        // when & then
+        assertThrows(PtCourseInvalidException.class,
+                () -> ptCourseCommandService.createPtCourse(command));
+
+        verify(ptCourseRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("스케줄이 없으면 PtCourseInvalidException이 발생해야 한다")
+    void createPtCourse_emptySchedules_throwsException() {
+
+        // given
+        CreatePtCourseCommand command = new CreatePtCourseCommand(
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
+                List.of() // 빈 스케줄
+        );
+
+        // when & then
+        assertThrows(PtCourseInvalidException.class,
+                () -> ptCourseCommandService.createPtCourse(command));
+
+        verify(ptCourseRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("스케줄 내 (요일, 시작/종료 시간) 조합이 중복되면 PtCourseInvalidException이 발생해야 한다")
+    void createPtCourse_duplicateSchedule_throwsException() {
+
+        // given
+        List<CreatePtCourseCommand.CurriculumData> curriculums = List.of(
+                new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")
+        );
+        CreatePtCourseCommand command = new CreatePtCourseCommand(
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                curriculums,
+                List.of(
+                        new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"),
+                        new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00") // 중복
+                )
+        );
 
         // when & then
         assertThrows(PtCourseInvalidException.class,

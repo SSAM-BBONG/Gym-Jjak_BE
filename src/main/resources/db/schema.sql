@@ -322,8 +322,6 @@ CREATE TABLE pt_courses (
                             description TEXT NOT NULL,
                             price INT NOT NULL,
                             total_session_count INT NOT NULL,
-                            supports_diet_log BOOLEAN NOT NULL DEFAULT FALSE,
-                            supports_workout_log BOOLEAN NOT NULL DEFAULT FALSE,
                             status VARCHAR(30) NOT NULL DEFAULT 'VISIBLE',
                             created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                             updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
