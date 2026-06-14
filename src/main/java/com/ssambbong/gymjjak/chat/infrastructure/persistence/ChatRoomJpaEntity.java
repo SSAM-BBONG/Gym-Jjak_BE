@@ -26,10 +26,10 @@ public class ChatRoomJpaEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "trainer_profile_id", nullable = false)
-    private Long trainerProfileId;
+    @Column(name = "trainer_id", nullable = false)
+    private Long trainerId;
 
-    @Column(name = "pt_course_id")
+    @Column(name = "pt_course_id", nullable = false)
     private Long ptCourseId;
 
     @Column(name = "user_left", nullable = false)
@@ -46,6 +46,9 @@ public class ChatRoomJpaEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "last_message_at")
+    private LocalDateTime lastMessageAt;
+
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
 
@@ -53,9 +56,22 @@ public class ChatRoomJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public ChatRoomJpaEntity(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status) {
+    public void markUserLeft() {
+        this.userLeft = true;
+    }
+
+    public void markTrainerLeft() {
+        this.trainerLeft = true;
+    }
+
+    public void close(LocalDateTime closedAt) {
+        this.status = ChatRoomStatus.CLOSED;
+        this.closedAt = closedAt;
+    }
+
+    public ChatRoomJpaEntity(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status) {
         this.userId = userId;
-        this.trainerProfileId = trainerProfileId;
+        this.trainerId = trainerId;
         this.ptCourseId = ptCourseId;
         this.userLeft = false;
         this.trainerLeft = false;

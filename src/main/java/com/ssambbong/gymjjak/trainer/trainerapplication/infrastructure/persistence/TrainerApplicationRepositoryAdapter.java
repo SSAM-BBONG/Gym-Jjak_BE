@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -26,6 +27,11 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
                 springDataTrainerApplicationRepository.save(entity);
 
         return trainerApplicationPersistenceMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<TrainerApplication> findById(Long trainerApplicationId) {
+        return Optional.empty();
     }
 
     // 중복 신청 검증

@@ -33,7 +33,7 @@ public class ChatRoomController {
     ) {
         CreateChatRoomCommand command = new CreateChatRoomCommand(
                 authUser.userId(),
-                request.trainerProfileId(),
+                request.trainerId(),
                 request.ptCourseId()
         );
 
@@ -42,5 +42,17 @@ public class ChatRoomController {
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(ChatRoomResponseCode.CHAT_ROOM_CREATED,
                         new CreateChatRoomResponse(chatRoomId)));
+    }
+
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "채팅방 나가기", description = "회원 또는 트레이너가 채팅방을 나간다. 둘 다 나가면 채팅방이 종료된다.")
+    @PatchMapping("/{chatRoomId}/leave")
+    public ResponseEntity<GlobalApiResponse<Void>> leaveChatRoom(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long chatRoomId
+    ) {
+        chatRoomUseCase.leaveChatRoom(chatRoomId, authUser.userId());
+
+        return ResponseEntity.ok(GlobalApiResponse.ok(ChatRoomResponseCode.CHAT_ROOM_LEFT));
     }
 }

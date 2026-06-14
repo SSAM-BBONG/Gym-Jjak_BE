@@ -5,7 +5,10 @@ import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
+import com.ssambbong.gymjjak.chat.exception.ChatRoomAccessDeniedException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAlreadyExistsException;
+import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,15 +24,39 @@ public class ChatRoomService implements ChatRoomUseCase {
     @Override
     @Transactional
     public Long createChatRoom(CreateChatRoomCommand command) {
-        if (chatRoomRepository.existsByUserIdAndTrainerProfileIdAndStatus(
-                command.userId(), command.trainerProfileId(), ChatRoomStatus.ACTIVE)) {
+        if (chatRoomRepository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(
+                command.userId(), command.trainerId(), command.ptCourseId(), ChatRoomStatus.ACTIVE)) {
             throw new ChatRoomAlreadyExistsException();
         }
 
-        ChatRoom chatRoom = ChatRoom.create(command.userId(), command.trainerProfileId(), command.ptCourseId());
-        ChatRoom saved = chatRoomRepository.save(chatRoom);
-        log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerProfileId: {}",
-                saved.getId(), command.userId(), command.trainerProfileId());
+        ChatRoom chatRoom = ChatRoom.create(command.userId(), command.trainerId(), command.ptCourseId());
+        ChatRoom saved;
+        try {
+            saved = chatRoomRepository.save(chatRoom);
+        } catch (DataIntegrityViolationException e) {
+            throw new ChatRoomAlreadyExistsException();
+        }
+        log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerId: {}",
+                saved.getId(), command.userId(), command.trainerId());
         return saved.getId();
+    }
+
+    @Override
+    @Transactional
+    public void leaveChatRoom(Long chatRoomId, Long requesterId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(ChatRoomNotFoundException::new);
+
+        if (requesterId.equals(chatRoom.getUserId())) {
+            chatRoom.leaveAsUser();
+        } else if (requesterId.equals(chatRoom.getTrainerId())) {
+            chatRoom.leaveAsTrainer();
+        } else {
+            throw new ChatRoomAccessDeniedException();
+        }
+
+        chatRoomRepository.leaveChatRoom(chatRoom);
+        log.info("채팅방 나가기 완료 - chatRoomId: {}, requesterId: {}, status: {}",
+                chatRoomId, requesterId, chatRoom.getStatus());
     }
 }

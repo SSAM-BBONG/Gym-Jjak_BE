@@ -8,5 +8,6 @@ import java.util.Optional;
 public interface ChatRoomRepository {
     ChatRoom save(ChatRoom chatRoom);
     Optional<ChatRoom> findById(Long id);
-    boolean existsByUserIdAndTrainerProfileIdAndStatus(Long userId, Long trainerProfileId, ChatRoomStatus status);
+    boolean existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status);
+    void leaveChatRoom(ChatRoom chatRoom);
 }
