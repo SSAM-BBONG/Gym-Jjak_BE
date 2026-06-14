@@ -51,7 +51,7 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
     @Override
     public void deleteById(Long id) {
         repository.findById(id).ifPresent(entity -> {
-            entity.delete();
+            entity.softDelete();
             repository.save(entity);
         });
     }

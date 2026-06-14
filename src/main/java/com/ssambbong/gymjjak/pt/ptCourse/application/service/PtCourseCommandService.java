@@ -23,17 +23,18 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
     @Override
     public Long createPtCourse(CreatePtCourseCommand command) {
 
-        log.debug("[PtCourseCreate] categoryId={}, tagId={}, price={}, curriculumCount={}",
-                command.categoryId(), command.tagId(), command.price(), command.curriculums().size());
-
-        // userId로 trainerProfileId, organizationId 조회
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
-
         // 커리큘럼 유효성 사전 검증 (도메인 진입 전 NPE 방지)
         if (command.curriculums() == null || command.curriculums().isEmpty()) {
             throw new PtCourseInvalidException();
         }
+        int curriculumCount = command.curriculums().size();
+
+        log.debug("[PtCourseCreate] categoryId={}, tagId={}, price={}, curriculumCount={}",
+                command.categoryId(), command.tagId(), command.price(), curriculumCount);
+
+        // userId로 trainerProfileId, organizationId 조회
+        TrainerProfileQueryPort.TrainerInfo trainerInfo =
+                trainerProfileQueryPort.findByUserId(command.userId());
 
         // 도메인 객체 생성 (totalSessionCount = curriculums.size())
         PtCourse ptCourse = PtCourse.create(
@@ -45,7 +46,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 command.title(),
                 command.description(),
                 command.price(),
-                command.curriculums().size()
+                curriculumCount
         );
 
         // 저장 후 id 반환
