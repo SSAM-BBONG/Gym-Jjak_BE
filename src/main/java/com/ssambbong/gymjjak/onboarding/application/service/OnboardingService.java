@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.onboarding.application.service;
 
 import com.ssambbong.gymjjak.onboarding.application.command.RegisterOnboardingCommand;
+import com.ssambbong.gymjjak.onboarding.application.command.UpdateOnboardingCommand;
 import com.ssambbong.gymjjak.onboarding.application.port.in.OnboardingUsecase;
 import com.ssambbong.gymjjak.onboarding.application.port.out.MyOnboardingView;
 import com.ssambbong.gymjjak.onboarding.application.port.out.OnboardingPort;
@@ -10,6 +11,9 @@ import com.ssambbong.gymjjak.onboarding.domain.exception.OnboardingErrorCode;
 import com.ssambbong.gymjjak.onboarding.domain.exception.OnboardingException;
 import com.ssambbong.gymjjak.onboarding.domain.model.OnboardingSurvey;
 import com.ssambbong.gymjjak.onboarding.domain.model.Region;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
+import com.ssambbong.gymjjak.user.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,19 +30,17 @@ public class OnboardingService implements OnboardingUsecase {
 
     @Override
     public void register(RegisterOnboardingCommand command) {
-        log.info("[onboarding] 온보딩 등록 처리 시작. userId={}", command.userId());
+        log.debug("event=onboarding_register_start userId={}", command.userId());
 
         boolean userExists = userPortFromOnboarding.existsById(command.userId());
-        log.info("[onboarding] 사용자 존재 여부 확인. userId={}, exists={}", command.userId(), userExists);
 
-        if (!userPortFromOnboarding.existsById(command.userId())) {
+        if (!userExists) {
             throw new OnboardingException(OnboardingErrorCode.USER_NOT_FOUND);
         }
 
         boolean onboardingExists = onboardingPort.existsByUserId(command.userId());
-        log.info("[onboarding] 온보딩 존재 여부 확인. userId={}, exists={}", command.userId(), onboardingExists);
 
-        if (onboardingPort.existsByUserId(command.userId())) {
+        if (onboardingExists) {
             throw new OnboardingException(OnboardingErrorCode.ONBOARDING_ALREADY_COMPLETED);
         }
 
@@ -51,15 +53,18 @@ public class OnboardingService implements OnboardingUsecase {
                 command.region().longitude()
         );
 
-        log.info("[onboarding] 선호 지역 생성 완료. userId={}, sido={}, sigungu={}, eupmyeondong={}",
+        log.info("event=region_save_start userId={}, sido={}, sigungu={}, eupmyeondong={}, fullName={}, latitude={}, longitude={}",
                 command.userId(),
                 command.region().sido(),
                 command.region().sigungu(),
-                command.region().eupmyeondong());
+                command.region().eupmyeondong(),
+                command.region().fullName(),
+                command.region().latitude(),
+                command.region().longitude());
 
         Long regionId = onboardingPort.saveRegion(region);
 
-        log.info("[onboarding] 선호 지역 저장 완료. userId={}, regionId={}",
+        log.info("event=region_save_succeed userId={}, regionId={}",
                 command.userId(),
                 regionId);
 
@@ -74,14 +79,14 @@ public class OnboardingService implements OnboardingUsecase {
                 command.weight()
         );
 
-        onboardingPort.saveOnboardingSurvey(onboardingSurvey);
+        Long onboardingId = onboardingPort.saveOnboardingSurvey(onboardingSurvey);
 
-        log.info("[onboarding] 온보딩 설문 저장 완료. userId={}, regionId={}",
+        log.info("event=onboarding_save_succeed userId={}, onboardingId={}",
                 command.userId(),
-                regionId);
+                onboardingId);
 
         userPortFromOnboarding.completeOnboarding(command.userId());
-        log.info("[onboarding] 사용자 온보딩 완료 상태 변경 완료. userId={}", command.userId());
+        log.info("event=onboardingCompleted_update_done userId={}", command.userId());
     }
 
     @Override
@@ -107,5 +112,64 @@ public class OnboardingService implements OnboardingUsecase {
                 view.height(),
                 view.weight()
         );
+    }
+
+    @Override
+    public void updateOnboarding(UpdateOnboardingCommand command) {
+        log.debug("event=onboarding_update_start userId={}", command.userId());
+
+        boolean userExists = userPortFromOnboarding.existsById(command.userId());
+
+        if (!userExists) {
+            throw new OnboardingException(OnboardingErrorCode.USER_NOT_FOUND);
+        }
+
+        MyOnboardingView existingOnboarding = onboardingPort.findMyOnboardingByUserId(command.userId())
+                .orElseThrow(() -> new OnboardingException(OnboardingErrorCode.ONBOARDING_NOT_FOUND));
+
+        Long regionId = existingOnboarding.regionId();
+
+        Region region = Region.create(
+                command.region().sido(),
+                command.region().sigungu(),
+                command.region().eupmyeondong(),
+                command.region().fullName(),
+                command.region().latitude(),
+                command.region().longitude()
+        );
+
+        log.info("event=region_update_start userId={}, sido={}, sigungu={}, eupmyeondong={}, fullName={}, latitude={}, longitude={}",
+                command.userId(),
+                command.region().sido(),
+                command.region().sigungu(),
+                command.region().eupmyeondong(),
+                command.region().fullName(),
+                command.region().latitude(),
+                command.region().longitude());
+
+        onboardingPort.updateRegion(regionId, region);
+
+        log.info("event=region_update_succeed userId={}, regionId={}",
+                command.userId(),
+                regionId);
+
+        OnboardingSurvey onboardingSurvey = OnboardingSurvey.create(
+                command.userId(),
+                command.exerciseGoal(),
+                command.exercisePeriod(),
+                command.exerciseFrequency(),
+                command.preferredExercise(),
+                regionId,
+                command.height(),
+                command.weight()
+        );
+
+        Long onboardingId = onboardingPort.updateOnboardingSurvey(onboardingSurvey);
+
+        log.info("event=onboarding_update_succeed userId={}, onboardingId={}, regionId={}",
+                command.userId(),
+                onboardingId,
+                regionId);
+
     }
 }

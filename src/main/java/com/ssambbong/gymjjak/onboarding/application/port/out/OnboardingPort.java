@@ -12,8 +12,12 @@ public interface OnboardingPort {
 
     Long saveRegion(Region region);
 
-    void saveOnboardingSurvey(OnboardingSurvey onboardingSurvey);
+    Long saveOnboardingSurvey(OnboardingSurvey onboardingSurvey);
 
     Optional<MyOnboardingView> findMyOnboardingByUserId(Long userId);
+
+    void updateRegion(Long regionId, Region region);
+
+    Long updateOnboardingSurvey(OnboardingSurvey onboardingSurvey);
 
 }

@@ -53,4 +53,20 @@ public class RegionJpaEntity {
         this.latitude = latitude;
         this.longitude = longitude;
     }
+
+    public void update(
+            String sido,
+            String sigungu,
+            String eupmyeondong,
+            String fullName,
+            BigDecimal latitude,
+            BigDecimal longitude
+    ) {
+        this.sido = sido;
+        this.sigungu = sigungu;
+        this.eupmyeondong = eupmyeondong;
+        this.fullName = fullName;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }
