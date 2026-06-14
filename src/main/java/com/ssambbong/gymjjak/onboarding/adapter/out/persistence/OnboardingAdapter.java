@@ -40,21 +40,62 @@ public class OnboardingAdapter implements OnboardingPort {
     }
 
     @Override
-    public void saveOnboardingSurvey(OnboardingSurvey onboardingSurvey) {
+    public Long saveOnboardingSurvey(OnboardingSurvey onboardingSurvey) {
 
         RegionJpaEntity region = regionJpaRepository.findById(onboardingSurvey.getPreferredRegionId())
                 .orElseThrow(() -> new OnboardingException(OnboardingErrorCode.REGION_NOT_FOUND));
 
-        onboardingSurveyJpaRepository.save(
-                onboardingMapper.toOnboardingSurveyEntity(
-                        onboardingSurvey,
-                        region
-                )
-        );
+        OnboardingSurveyJpaEntity savedOnboardingSurvey =
+                onboardingSurveyJpaRepository.save(
+                        onboardingMapper.toOnboardingSurveyEntity(
+                                onboardingSurvey,
+                                region
+                        )
+                );
+
+        return savedOnboardingSurvey.getId();
+
     }
 
     @Override
     public Optional<MyOnboardingView> findMyOnboardingByUserId(Long userId) {
         return onboardingSurveyJpaRepository.findMyOnboardingByUserId(userId);
+    }
+
+    @Override
+    public void updateRegion(Long regionId, Region region) {
+        RegionJpaEntity regionEntity = regionJpaRepository.findById(regionId)
+                .orElseThrow(() -> new OnboardingException(OnboardingErrorCode.REGION_NOT_FOUND));
+
+        regionEntity.update(
+                region.getSido(),
+                region.getSigungu(),
+                region.getEupmyeondong(),
+                region.getFullName(),
+                region.getLatitude(),
+                region.getLongitude()
+        );
+    }
+
+    @Override
+    public Long updateOnboardingSurvey(OnboardingSurvey onboardingSurvey) {
+        OnboardingSurveyJpaEntity onboardingSurveyEntity =
+                onboardingSurveyJpaRepository.findByUserId(onboardingSurvey.getUserId())
+                        .orElseThrow(() -> new OnboardingException(OnboardingErrorCode.ONBOARDING_NOT_FOUND));
+
+        RegionJpaEntity region = regionJpaRepository.findById(onboardingSurvey.getPreferredRegionId())
+                .orElseThrow(() -> new OnboardingException(OnboardingErrorCode.REGION_NOT_FOUND));
+
+        onboardingSurveyEntity.update(
+                onboardingSurvey.getExerciseGoal(),
+                onboardingSurvey.getExercisePeriod(),
+                onboardingSurvey.getExerciseFrequency(),
+                onboardingSurvey.getPreferredExercise(),
+                region,
+                onboardingSurvey.getHeight(),
+                onboardingSurvey.getWeight()
+        );
+
+        return onboardingSurveyEntity.getId();
     }
 }
