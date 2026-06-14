@@ -1,14 +1,13 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.domain.model;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TrainerApplication {
 
     private final Long trainerApplicationId;
@@ -34,6 +33,36 @@ public class TrainerApplication {
     private final Long reviewedBy;
     private final LocalDateTime reviewedAt;
 
+    // 생성자는 private, Builder는 public
+    // 이로 인해 다른 계층에서 도메인 계층 메서드 사용 가능
+    @Builder(access = AccessLevel.PUBLIC)
+    private TrainerApplication(
+            Long trainerApplicationId,
+            Long userId,
+            Long profileFileId,
+            Long certificateFileId,
+            List<String> qualifications,
+            List<String> awardHistories,
+            String introduction,
+            TrainerApplicationStatus status,
+            String rejectReason,
+            Long reviewedBy,
+            LocalDateTime reviewedAt
+    ) {
+        this.trainerApplicationId = trainerApplicationId;
+        this.userId = userId;
+        this.profileFileId = profileFileId;
+        this.certificateFileId = certificateFileId;
+        this.qualifications = qualifications == null ? List.of() : List.copyOf(qualifications);
+        this.awardHistories = awardHistories == null ? List.of() : List.copyOf(awardHistories);
+        this.introduction = introduction;
+        this.status = status;
+        this.rejectReason = rejectReason;
+        this.reviewedBy = reviewedBy;
+        this.reviewedAt = reviewedAt;
+    }
+
+    // 트레이너 신청
     public static TrainerApplication create(
             Long userId,
             Long profileFileId,
@@ -54,6 +83,28 @@ public class TrainerApplication {
                 null,
                 null,
                 null
+        );
+    }
+
+    // 트레이너 신청 수정
+    public TrainerApplication updateApplication(
+            Long profileFileId,
+            List<String> qualifications,
+            List<String> awardHistories,
+            String introduction
+    ) {
+        return new TrainerApplication(
+                this.trainerApplicationId,
+                this.userId,
+                profileFileId,
+                this.certificateFileId, // 필수 자격증은 수정 x, 기존 값 유지
+                qualifications == null ? List.of() : List.copyOf(qualifications),
+                awardHistories == null ? List.of() : List.copyOf(awardHistories),
+                introduction,
+                this.status,
+                this.rejectReason,
+                this.reviewedBy,
+                this.reviewedAt
         );
     }
 
@@ -83,5 +134,13 @@ public class TrainerApplication {
                 reviewedBy,
                 reviewedAt
         );
+    }
+
+    public boolean isOwner(Long requesterId) {
+        return this.userId.equals(requesterId);
+    }
+
+    public boolean isPending() {
+        return this.status == TrainerApplicationStatus.PENDING;
     }
 }
