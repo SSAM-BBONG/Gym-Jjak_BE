@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
 import com.ssambbong.gymjjak.ocr.domain.OcrExtractedField;
 import com.ssambbong.gymjjak.ocr.domain.OcrResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.DuplicateTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
@@ -77,6 +78,94 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         return savedTrainerApplication.getTrainerApplicationId();
     }
 
+    @Override
+    public Long updateTrainerApplication(UpdateTrainerApplicationCommand command) {
+
+        log.info(
+                "event=trainer_application_update_started, trainerApplicationId={}, requesterId={},",
+                command.trainerApplicationId(),
+                command.requesterId()
+        );
+        // 필수값 검증
+        validateUpdateCommand(command);
+
+        TrainerApplication trainerApplication = trainerApplicationRepository.findById(command.trainerApplicationId())
+                .orElseThrow(() -> new InvalidTrainerApplicationException("트레이너 신청서를 찾을 수 없습니다."));
+
+        // 본인 검증
+        validateUpdatePermission(trainerApplication, command.requesterId());
+
+        // 대기 상태 검증
+        validatePendingStatus(trainerApplication);
+
+        TrainerApplication updatedTrainerApplication = trainerApplication.updateApplication(
+                command.profileImageFileId(),
+                command.qualifications(),
+                command.awardHistories(),
+                command.introduction()
+        );
+
+        TrainerApplication savedTrainerApplication =
+                trainerApplicationRepository.save(updatedTrainerApplication);
+
+        log.info(
+                "event=trainer_application_update_succeeded, trainerApplicationId={}, requesterId={}",
+                savedTrainerApplication.getTrainerApplicationId(),
+                command.requesterId()
+        );
+
+        return savedTrainerApplication.getTrainerApplicationId();
+    }
+
+    private void validateUpdateCommand(UpdateTrainerApplicationCommand command) {
+
+        if (command == null) {
+            throw new InvalidTrainerApplicationException("command는 필수입니다.");
+        }
+
+        if (command.trainerApplicationId() == null) {
+            throw new InvalidTrainerApplicationException("trainerApplicationId는 필수입니다.");
+        }
+
+        if (command.requesterId() == null) {
+            throw new InvalidTrainerApplicationException("requesterId는 필수입니다.");
+        }
+
+        if (command.introduction() == null || command.introduction().isBlank()) {
+            throw new InvalidTrainerApplicationException("introduction은 필수입니다.");
+        }
+    }
+
+    private void validateUpdatePermission(
+            TrainerApplication trainerApplication,
+            Long requesterId
+    ) {
+        if (!trainerApplication.isOwner(requesterId)) {
+            log.warn(
+                    "event=trainer_application_update_denied, trainerApplicationId={}, ownerId={}, requesterId={}",
+                    trainerApplication.getTrainerApplicationId(),
+                    trainerApplication.getUserId(),
+                    requesterId
+            );
+
+            throw new InvalidTrainerApplicationException("본인의 트레이너 신청서만 수정할 수 있습니다.");
+        }
+    }
+
+    private void validatePendingStatus(TrainerApplication trainerApplication) {
+        if (!trainerApplication.isPending()) {
+            log.warn(
+                    "event=trainer_application_update_not_pending, trainerApplicationId={}, status={}",
+                    trainerApplication.getTrainerApplicationId(),
+                    trainerApplication.getStatus()
+            );
+
+            throw new InvalidTrainerApplicationException("PENDING 상태의 트레이너 신청서만 수정할 수 있습니다.");
+        }
+    }
+
+
+    // ============ 트레이너 신청 =================
     // 필수값 검증
     private void validateRequiredCommand(CreateTrainerApplicationCommand command) {
 

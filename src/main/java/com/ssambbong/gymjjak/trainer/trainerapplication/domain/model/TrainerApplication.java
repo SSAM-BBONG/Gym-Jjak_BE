@@ -62,6 +62,7 @@ public class TrainerApplication {
         this.reviewedAt = reviewedAt;
     }
 
+    // 트레이너 신청
     public static TrainerApplication create(
             Long userId,
             Long profileFileId,
@@ -82,6 +83,28 @@ public class TrainerApplication {
                 null,
                 null,
                 null
+        );
+    }
+
+    // 트레이너 신청 수정
+    public TrainerApplication updateApplication(
+            Long profileFileId,
+            List<String> qualifications,
+            List<String> awardHistories,
+            String introduction
+    ) {
+        return new TrainerApplication(
+                this.trainerApplicationId,
+                this.userId,
+                profileFileId,
+                this.certificateFileId, // 필수 자격증은 수정 x, 기존 값 유지
+                qualifications == null ? List.of() : List.copyOf(qualifications),
+                awardHistories == null ? List.of() : List.copyOf(awardHistories),
+                introduction,
+                this.status,
+                this.rejectReason,
+                this.reviewedBy,
+                this.reviewedAt
         );
     }
 
@@ -111,5 +134,13 @@ public class TrainerApplication {
                 reviewedBy,
                 reviewedAt
         );
+    }
+
+    public boolean isOwner(Long requesterId) {
+        return this.userId.equals(requesterId);
+    }
+
+    public boolean isPending() {
+        return this.status == TrainerApplicationStatus.PENDING;
     }
 }
