@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -28,6 +29,11 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         // userId로 trainerProfileId, organizationId 조회
         TrainerProfileQueryPort.TrainerInfo trainerInfo =
                 trainerProfileQueryPort.findByUserId(command.userId());
+
+        // 커리큘럼 유효성 사전 검증 (도메인 진입 전 NPE 방지)
+        if (command.curriculums() == null || command.curriculums().isEmpty()) {
+            throw new PtCourseInvalidException();
+        }
 
         // 도메인 객체 생성 (totalSessionCount = curriculums.size())
         PtCourse ptCourse = PtCourse.create(

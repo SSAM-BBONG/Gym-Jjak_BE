@@ -11,7 +11,7 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     @Query("""
             SELECT COUNT(r) > 0 FROM PtReservationJpaEntity r
             WHERE r.ptCourseId = :ptCourseId
-            AND r.status = 'RESERVED'
+            AND r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED
             AND r.reservedStartAt < :reservedEndAt
             AND r.reservedEndAt > :reservedStartAt
             """)
