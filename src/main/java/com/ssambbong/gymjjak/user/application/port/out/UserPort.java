@@ -30,10 +30,5 @@ public interface UserPort {
 
     boolean existsByPhoneAndIdNot(String phone, Long userId);
 
-
-
-
-
-
-
+    void withdraw(Long userId, LocalDateTime now);
 }

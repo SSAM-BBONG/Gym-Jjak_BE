@@ -12,6 +12,7 @@ import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.application.result.LoginResult;
 import com.ssambbong.gymjjak.user.domain.model.User;
+import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import com.ssambbong.gymjjak.user.domain.policy.UserPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,32 +33,38 @@ public class UserCommandService implements UserCommandUseCase {
     @Override
     public void registerUser(RegisterUserCommand command) {
 
+        String username = normalize(command.username());
+        String name = normalize(command.name());
+        String nickname = normalize(command.nickname());
+        String phone = normalize(command.phone());
+
         log.debug("event=user_register_start username={}, nickname={}, phone={}",
-                command.username(),
-                command.nickname(),
-                maskPhone(command.phone())
+                username,
+                nickname,
+                maskPhone(phone)
         );
 
         UserPolicy.validatePasswordPolicy(command.password());
-        validateDuplicateUsername(command.username());
-        validateDuplicateNickname(command.nickname());
-        validateDuplicatePhone(command.phone());
+        validateDuplicateUsername(username);
+        validateDuplicateNickname(nickname);
+        validateDuplicatePhone(phone);
 
         String encodedPassword = userPort.encode(command.password());
 
         User user = User.register(
-                command.username(),
+                username,
                 encodedPassword,
-                command.name(),
-                command.nickname(),
-                command.phone()
+                name,
+                nickname,
+                phone
         );
 
         userPort.save(user);
 
-        log.info("event=user_register_succeed username={}, nickname={}",
-                command.username(),
-                command.nickname()
+        log.info("event=user_register_succeed username={}, nickname={}, phone={}",
+                username,
+                nickname,
+                maskPhone(phone)
         );
     }
 
@@ -162,6 +169,38 @@ public class UserCommandService implements UserCommandUseCase {
 
     }
 
+    @Override
+    public void withdrawUser(Long userId) {
+        log.debug("event=user_withdrawUser_start userId={}", userId);
+
+        User user = userPort.findById(userId).orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        if (user.isWithdrawn()) {
+            throw new UserException(UserErrorCode.USER_ALREADY_WITHDRAWN);
+        }
+
+        userPort.withdraw(userId, LocalDateTime.now());
+
+        log.info("event=user_withdrawUser_succeed userId={}", userId);
+    }
+
+    @Override
+    public void updateUserStatus(Long userId, UserStatus status) {
+        log.debug("event=user_statusUpdate_start userId={} status={}", userId, status);
+
+        User user = userPort.findById(userId).orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        switch (status) {
+            case ACTIVE -> user.activate(now);
+            case DAY_7 -> user.suspendForSevenDays(now);
+            case ETERNAL -> user.suspendPermanently(now);
+        }
+        userPort.save(user);
+        log.info("event=user_statusUpdate_succeed userId={} status={}", userId, status);
+    }
+
     private String maskPhone(String phone) {
         if (phone == null || phone.length() < 8) {
             return "****";
@@ -198,5 +237,9 @@ public class UserCommandService implements UserCommandUseCase {
         if (userPort.existsByPhoneAndIdNot(phone, userId)) {
             throw new UserException(UserErrorCode.DUPLICATE_PHONE);
         }
+    }
+
+    private String normalize(String value) {
+        return value == null ? null : value.trim();
     }
 }

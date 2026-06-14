@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserProfileRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.PasswordVerificationRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserStatusRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserProfileResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
 import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,6 +72,29 @@ public class UserController {
                 GlobalApiResponse.ok(UserResponseCode.USER_PROFILE_UPDATED)
         );
 
+    }
+
+    @DeleteMapping("/me")
+    @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 한다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteUser (@AuthenticationPrincipal AuthUser authUser) {
+        userCommandUseCase.withdrawUser(authUser.userId());
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(UserResponseCode.USER_PROFILE_WITHDREW)
+        );
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{userId}/status")
+    @Operation(summary = "회원 상태 변경", description = "회원 상태를 변경한다.")
+    public ResponseEntity<GlobalApiResponse<Void>> updateUserStatus(
+            @PathVariable Long userId,
+            @Valid @RequestBody UpdateUserStatusRequest request
+            ) {
+        userCommandUseCase.updateUserStatus(userId, request.status());
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(UserResponseCode.USER_STATUS_UPDATED)
+        );
     }
 
 
