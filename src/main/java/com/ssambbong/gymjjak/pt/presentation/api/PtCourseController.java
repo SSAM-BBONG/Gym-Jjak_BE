@@ -11,6 +11,10 @@ import com.ssambbong.gymjjak.pt.presentation.api.response.PtCourseDetailResponse
 import com.ssambbong.gymjjak.pt.presentation.api.response.PtCourseViewResponse;
 import com.ssambbong.gymjjak.pt.presentation.api.response.PtCourseResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +37,16 @@ public class PtCourseController {
     // 트레이너만 PT 강습 등록 가능
     @PreAuthorize("hasAuthority('TRAINER')")
     @Operation(summary = "PT 강습 등록", description = "조직 소속 트레이너가 PT 강습을 등록한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "등록 성공",
+                    content = @Content(schema = @Schema(implementation = CreatePtCourseResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (TRAINER만 가능)",
+                    content = @Content(schema = @Schema()))
+    })
     @PostMapping
     public ResponseEntity<GlobalApiResponse<CreatePtCourseResponse>> createPtCourse(
             @AuthenticationPrincipal AuthUser authUser,
@@ -63,6 +77,12 @@ public class PtCourseController {
 
     // 누구나 목록 조회 가능
     @Operation(summary = "PT 강습 목록 조회", description = "VISIBLE 상태의 PT 강습 목록을 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = PtCourseViewResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema()))
+    })
     @GetMapping
     public ResponseEntity<GlobalApiResponse<List<PtCourseViewResponse>>> findAllPtCourses() {
         List<PtCourseViewResponse> response = ptCourseQueryUseCase.findAllPtCourses().stream()
@@ -75,6 +95,14 @@ public class PtCourseController {
     // 누구나 상세 조회 가능
     @Operation(summary = "PT 강습 상세 조회",
             description = "VISIBLE 상태의 PT 강습 상세 정보를 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = PtCourseDetailResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
     @GetMapping("/{ptCourseId}")
     public ResponseEntity<GlobalApiResponse<PtCourseDetailResponse>> findPtCourse(@PathVariable Long ptCourseId) {
         PtCourseDetailResponse response = PtCourseDetailResponse.from(
