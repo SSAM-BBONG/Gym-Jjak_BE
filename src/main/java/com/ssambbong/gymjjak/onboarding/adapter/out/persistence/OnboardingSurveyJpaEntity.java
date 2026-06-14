@@ -66,4 +66,22 @@ public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
         this.height = height;
         this.weight = weight;
     }
+
+    public void update(
+            String exerciseGoal,
+            String exercisePeriod,
+            String exerciseFrequency,
+            String preferredExercise,
+            RegionJpaEntity preferredRegion,
+            BigDecimal height,
+            BigDecimal weight
+    ) {
+        this.exerciseGoal = exerciseGoal;
+        this.exercisePeriod = exercisePeriod;
+        this.exerciseFrequency = exerciseFrequency;
+        this.preferredExercise = preferredExercise;
+        this.preferredRegion = preferredRegion;
+        this.height = height;
+        this.weight = weight;
+    }
 }
