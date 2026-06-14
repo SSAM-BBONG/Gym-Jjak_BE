@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
 import com.ssambbong.gymjjak.category.presectation.api.request.CreateCategoryRequest;
 import com.ssambbong.gymjjak.category.presectation.api.request.UpdateCategoryRequest;
 import com.ssambbong.gymjjak.category.presectation.api.response.CategoryResponseCode;
+import com.ssambbong.gymjjak.category.presectation.api.response.CreateCategoryResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,7 +46,7 @@ public class CategoryController {
             @Valid @RequestBody CreateCategoryRequest request) {
         Long categoryId = categoryCommandUseCase.handle(new CreateCategoryCommand(request.name()));
         return ResponseEntity.status(201)
-                .body(GlobalApiResponse.created(CategoryResponseCode.CATEGORY_CREATED, categoryId));
+                .body(GlobalApiResponse.created(CategoryResponseCode.CATEGORY_CREATED, new CreateCategoryResponse(categoryId)));
     }
 
     // 카테고리 수정

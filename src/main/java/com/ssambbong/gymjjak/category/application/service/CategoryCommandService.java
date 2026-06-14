@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.category.application.command.DeleteCategoryCommand;
 import com.ssambbong.gymjjak.category.application.command.UpdateCategoryCommand;
 import com.ssambbong.gymjjak.category.application.usecase.CategoryCommandUseCase;
 import com.ssambbong.gymjjak.category.domain.exception.CategoryAlreadyExistsException;
+import com.ssambbong.gymjjak.category.domain.exception.CategoryInUseException;
 import com.ssambbong.gymjjak.category.domain.exception.CategoryNotFoundException;
 import com.ssambbong.gymjjak.category.domain.model.Category;
 import com.ssambbong.gymjjak.category.domain.repository.CategoryRepository;
@@ -58,6 +59,10 @@ public class CategoryCommandService implements CategoryCommandUseCase {
         // 카테고리 존재 확인
         categoryRepository.findById(command.id())
                 .orElseThrow(CategoryNotFoundException::new);
+        // PT 강습에서 사용 중이면 삭제 불가
+        if (categoryRepository.countPtCoursesByCategoryId(command.id()) > 0) {
+            throw new CategoryInUseException();
+        }
         // 삭제
         categoryRepository.deleteById(command.id());
     }
