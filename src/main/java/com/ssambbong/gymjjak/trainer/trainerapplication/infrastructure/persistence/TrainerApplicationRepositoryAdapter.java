@@ -34,7 +34,10 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
         } catch (DataIntegrityViolationException exception) {
             if (isDuplicateBlockingUserConstraint(exception)) {
                 // 409 conflict로 예외 처리
-                throw new DuplicateTrainerApplicationException(trainerApplication.getUserId());
+                throw new DuplicateTrainerApplicationException(
+                        trainerApplication.getUserId(),
+                        exception
+                );
             }
             throw exception;
         }
