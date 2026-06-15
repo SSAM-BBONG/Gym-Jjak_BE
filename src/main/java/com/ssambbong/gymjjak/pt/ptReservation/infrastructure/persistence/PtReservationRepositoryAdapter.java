@@ -1,11 +1,13 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -38,6 +40,17 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
             LocalDateTime reservedEndAt
     ) {
         return repository.existsOverlappingReservation(ptCourseId, reservedStartAt, reservedEndAt);
+    }
+
+    @Override
+    public List<PtReservation> findAllByUserId(Long userId, PtReservationStatus status) {
+        List<PtReservationJpaEntity> entities = (status == null)
+                ? repository.findAllByUserIdOrderByReservedStartAtDesc(userId)
+                : repository.findAllByUserIdAndStatusOrderByReservedStartAtDesc(userId, status);
+
+        return entities.stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     // JpaEntity -> domain 변환
