@@ -220,6 +220,15 @@ CREATE TABLE trainer_applications (
                                       reject_reason VARCHAR(500) NULL,
                                       reviewed_by BIGINT NULL,
                                       reviewed_at DATETIME(6) NULL,
+
+                                      duplicate_blocking_user_id BIGINT
+                                          GENERATED ALWAYS AS (
+                                              CASE
+                                                  WHEN status IN ('PENDING', 'APPROVED') THEN user_id
+                                                  ELSE NULL
+                                                  END
+                                              ) STORED,
+
                                       created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
 
