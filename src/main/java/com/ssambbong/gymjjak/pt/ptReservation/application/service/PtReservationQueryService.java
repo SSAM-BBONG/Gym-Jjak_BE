@@ -1,6 +1,5 @@
 package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 
-import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtCourseEnrichQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.FeedbackQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.PtCourseQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
@@ -25,10 +24,8 @@ import java.util.Map;
 public class PtReservationQueryService implements PtReservationQueryUseCase {
 
     private final PtReservationRepository ptReservationRepository;
-    private final PtCourseQueryPort ptCourseQueryPort; // title, thumbnailFileId
+    private final PtCourseQueryPort ptCourseQueryPort; // title, thumbnailFileId, trainerName
     private final FeedbackQueryPort feedbackQueryPort; // lastDate
-    // TODO: PtCourseEnrichQueryPort 분리하면 바꾸기
-    private final PtCourseEnrichQueryPort ptCourseEnrichQueryPort;
 
     @Override
     public List<MyPtReservationView> findMyReservations(Long userId, PtReservationStatus status) {
@@ -62,14 +59,9 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
             throw new PtReservationForbiddenException();
         }
 
-        // pt_courses에서 title, thumbnailFileId 조회
+        // pt_courses에서 title, thumbnailFileId, trainerName 조회
         PtCourseQueryPort.PtCourseInfo courseInfo =
                 ptCourseQueryPort.findPtCourseInfo(reservation.getPtCourseId());
-
-        // trainer_profiles에서 트레이너 이름 조회
-        String trainerName = ptCourseEnrichQueryPort
-                .findTrainerProfileById(reservation.getTrainerProfileId())
-                .trainerName();
 
         // 커리큘럼 목록 조회
         List<PtCourseQueryPort.CurriculumInfo> curriculums =
@@ -88,7 +80,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         return new PtReservationDetailView(
                 courseInfo.thumbnailFileId(),
                 courseInfo.title(),
-                trainerName,
+                courseInfo.trainerName(),
                 reservation.getStatus(),
                 reservation.getProgressCount(),
                 reservation.getTotalSessionCount(),
@@ -99,24 +91,19 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
     private MyPtReservationView toView(PtReservation reservation) {
 
-        // pt_courses에서 title, thumbnailFileId 조회
+        // pt_courses에서 title, thumbnailFileId, trainerName 조회
         PtCourseQueryPort.PtCourseInfo courseInfo =
                 ptCourseQueryPort.findPtCourseInfo(reservation.getPtCourseId());
-
-        // trainer_profiles에서 트레이너 이름 조회
-        String trainerName = ptCourseEnrichQueryPort
-                .findTrainerProfileById(reservation.getTrainerProfileId())
-                .trainerName();
 
         // feedbacks에서 가장 최근 피드백 날짜 조회
         LocalDate lastPtDate = feedbackQueryPort.findLastFeedbackDate(reservation.getId());
 
         // 위 + PtReservation 자체 데이터 합쳐 View 생성
         return new MyPtReservationView(
-                reservation.getId(),            // ptReservationId
-                courseInfo.thumbnailFileId(),   // pt_courses
-                courseInfo.title(),             // pt_courses
-                trainerName,                    // trainer_profiles
+                reservation.getId(),              // ptReservationId
+                courseInfo.thumbnailFileId(),     // pt_courses
+                courseInfo.title(),               // pt_courses
+                courseInfo.trainerName(),         // trainer_profiles (via adapter)
                 reservation.getStatus(),        // pt_reservations 자기 컬럼
                 lastPtDate,                      // feedbacks (현재 null)
                 reservation.getProgressCount(), // pt_reservations 자기 컬럼

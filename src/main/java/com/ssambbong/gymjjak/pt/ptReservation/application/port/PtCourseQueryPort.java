@@ -10,7 +10,7 @@ public interface PtCourseQueryPort {
     // 해당 pt 강습의 커리큘럼(회차) 목록 조회
     List<CurriculumInfo> findCurriculumsByPtCourseId(Long ptCourseId);
 
-    record PtCourseInfo(String title, Long thumbnailFileId) {}
+    record PtCourseInfo(String title, Long thumbnailFileId, String trainerName) {}
 
     record CurriculumInfo(Long id, int sessionNo, String title) {}
 }

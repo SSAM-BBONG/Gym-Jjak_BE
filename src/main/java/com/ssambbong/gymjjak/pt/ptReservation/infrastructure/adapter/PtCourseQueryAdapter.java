@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.adapter;
 
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -16,13 +17,18 @@ public class PtCourseQueryAdapter implements PtCourseQueryPort {
 
     private final PtCourseRepository ptCourseRepository;
     private final PtCurriculumRepository ptCurriculumRepository;
+    private final TrainerProfileQueryPort trainerProfileQueryPort;
 
     @Override
     public PtCourseInfo findPtCourseInfo(Long ptCourseId) {
         PtCourse ptCourse = ptCourseRepository.findById(ptCourseId)
                 .orElseThrow(PtCourseNotFoundException::new);
 
-        return new PtCourseInfo(ptCourse.getTitle(), ptCourse.getThumbnailFileId());
+        String trainerName = trainerProfileQueryPort
+                .findSummaryById(ptCourse.getTrainerProfileId())
+                .trainerName();
+
+        return new PtCourseInfo(ptCourse.getTitle(), ptCourse.getThumbnailFileId(), trainerName);
     }
 
     @Override
