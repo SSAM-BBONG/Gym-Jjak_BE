@@ -2,11 +2,11 @@ package com.ssambbong.gymjjak.chat.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
-import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -38,13 +38,13 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
 
     @Override
     public void leaveChatRoom(ChatRoom chatRoom) {
-        ChatRoomJpaEntity entity = repository.findById(chatRoom.getId())
-                .orElseThrow(ChatRoomNotFoundException::new);
-        if (chatRoom.isUserLeft()) entity.markUserLeft();
-        if (chatRoom.isTrainerLeft()) entity.markTrainerLeft();
-        if (chatRoom.getStatus() == ChatRoomStatus.CLOSED) {
-            entity.close(chatRoom.getClosedAt());
+        if (chatRoom.isUserLeft()) {
+            repository.markUserLeft(chatRoom.getId());
         }
+        if (chatRoom.isTrainerLeft()) {
+            repository.markTrainerLeft(chatRoom.getId());
+        }
+        repository.updateStatusAfterLeave(chatRoom.getId(), LocalDateTime.now());
     }
 
     private ChatRoom toDomain(ChatRoomJpaEntity entity) {

@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.chat.domain.model;
 
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAlreadyLeftException;
+import com.ssambbong.gymjjak.chat.exception.ChatRoomClosedException;
 
 import java.time.LocalDateTime;
 
@@ -49,20 +50,21 @@ public class ChatRoom {
     }
 
     public void leaveAsUser() {
+        if (this.status == ChatRoomStatus.DELETED) throw new ChatRoomClosedException();
         if (this.userLeft) throw new ChatRoomAlreadyLeftException();
         this.userLeft = true;
-        close();
+        updateStatus();
     }
 
     public void leaveAsTrainer() {
+        if (this.status == ChatRoomStatus.DELETED) throw new ChatRoomClosedException();
         if (this.trainerLeft) throw new ChatRoomAlreadyLeftException();
         this.trainerLeft = true;
-        close();
+        updateStatus();
     }
 
-    private void close() {
-        if (this.status == ChatRoomStatus.CLOSED) return;
-        this.status = ChatRoomStatus.CLOSED;
+    private void updateStatus() {
+        this.status = (this.userLeft && this.trainerLeft) ? ChatRoomStatus.DELETED : ChatRoomStatus.CLOSED;
         this.closedAt = LocalDateTime.now();
     }
 

@@ -45,7 +45,7 @@ public class ChatRoomController {
     }
 
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
-    @Operation(summary = "채팅방 나가기", description = "회원 또는 트레이너가 채팅방을 나간다. 둘 다 나가면 채팅방이 종료된다.")
+    @Operation(summary = "채팅방 나가기", description = "회원 또는 트레이너가 채팅방을 나간다. 한 명이 나가면 CLOSED, 둘 다 나가면 DELETED 상태로 전환된다.")
     @PatchMapping("/{chatRoomId}/leave")
     public ResponseEntity<GlobalApiResponse<Void>> leaveChatRoom(
             @AuthenticationPrincipal AuthUser authUser,

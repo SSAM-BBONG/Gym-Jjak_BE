@@ -538,7 +538,7 @@ CREATE TABLE chat_rooms (
                             updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                             CONSTRAINT pk_chat_rooms PRIMARY KEY (chat_room_id),
                             CONSTRAINT fk_chat_rooms_user FOREIGN KEY (user_id) REFERENCES users(user_id),
-                            CONSTRAINT fk_chat_rooms_trainer FOREIGN KEY (trainer_id) REFERENCES users(user_id),
+                            CONSTRAINT fk_chat_rooms_trainer FOREIGN KEY (trainer_id) REFERENCES trainer_profiles(user_id),
                             CONSTRAINT fk_chat_rooms_pt_course FOREIGN KEY (pt_course_id) REFERENCES pt_courses(pt_course_id),
                             UNIQUE INDEX uk_chat_rooms_active(user_id, trainer_id, active_pt_course_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

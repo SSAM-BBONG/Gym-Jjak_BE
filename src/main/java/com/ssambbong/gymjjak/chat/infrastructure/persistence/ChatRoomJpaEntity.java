@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -56,17 +57,16 @@ public class ChatRoomJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public void markUserLeft() {
-        this.userLeft = true;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ChatRoomJpaEntity that)) return false;
+        return id != null && id.equals(that.id);
     }
 
-    public void markTrainerLeft() {
-        this.trainerLeft = true;
-    }
-
-    public void close(LocalDateTime closedAt) {
-        this.status = ChatRoomStatus.CLOSED;
-        this.closedAt = closedAt;
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getClass());
     }
 
     public ChatRoomJpaEntity(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status) {

@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.chat.application.service;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
+import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
@@ -8,6 +9,8 @@ import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAccessDeniedException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAlreadyExistsException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
+import com.ssambbong.gymjjak.chat.exception.TrainerNotFoundException;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatRoomService implements ChatRoomUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final TrainerQueryPort trainerQueryPort;
 
     @Override
     @Transactional
     public Long createChatRoom(CreateChatRoomCommand command) {
+        trainerQueryPort.findActiveTrainer(command.trainerId())
+                .orElseThrow(TrainerNotFoundException::new);
+
         if (chatRoomRepository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(
                 command.userId(), command.trainerId(), command.ptCourseId(), ChatRoomStatus.ACTIVE)) {
             throw new ChatRoomAlreadyExistsException();
@@ -34,11 +41,26 @@ public class ChatRoomService implements ChatRoomUseCase {
         try {
             saved = chatRoomRepository.save(chatRoom);
         } catch (DataIntegrityViolationException e) {
-            throw new ChatRoomAlreadyExistsException();
+            if (isDuplicateKeyViolation(e)) {
+                throw new ChatRoomAlreadyExistsException();
+            }
+            throw e;
         }
         log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerId: {}",
                 saved.getId(), command.userId(), command.trainerId());
         return saved.getId();
+    }
+
+    private boolean isDuplicateKeyViolation(DataIntegrityViolationException e) {
+        Throwable t = e;
+        while (t != null) {
+            if (t instanceof ConstraintViolationException cve) {
+                String name = cve.getConstraintName();
+                return name != null && name.contains("uk_chat_rooms");
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 
     @Override
