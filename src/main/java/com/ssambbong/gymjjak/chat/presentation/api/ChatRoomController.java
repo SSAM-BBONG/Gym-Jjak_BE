@@ -1,8 +1,10 @@
 package com.ssambbong.gymjjak.chat.presentation.api;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
+import com.ssambbong.gymjjak.chat.application.query.ChatRoomListResult;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
 import com.ssambbong.gymjjak.chat.presentation.api.request.CreateChatRoomRequest;
+import com.ssambbong.gymjjak.chat.presentation.api.response.ChatRoomListResponse;
 import com.ssambbong.gymjjak.chat.presentation.api.response.ChatRoomResponseCode;
 import com.ssambbong.gymjjak.chat.presentation.api.response.CreateChatRoomResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
@@ -23,6 +25,19 @@ import org.springframework.web.bind.annotation.*;
 public class ChatRoomController {
 
     private final ChatRoomUseCase chatRoomUseCase;
+
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "채팅방 목록 조회", description = "내가 참여 중인 채팅방 목록을 조회한다.")
+    @GetMapping
+    public ResponseEntity<GlobalApiResponse<ChatRoomListResponse>> getChatRooms(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        ChatRoomListResult result = chatRoomUseCase.getChatRooms(authUser.userId());
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                ChatRoomResponseCode.CHAT_ROOM_LIST_FETCHED,
+                ChatRoomListResponse.from(result)
+        ));
+    }
 
     @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "채팅방 생성", description = "회원이 트레이너와의 1:1 채팅방을 생성한다.")

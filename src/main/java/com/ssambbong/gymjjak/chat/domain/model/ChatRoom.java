@@ -64,8 +64,14 @@ public class ChatRoom {
     }
 
     private void updateStatus() {
-        this.status = (this.userLeft && this.trainerLeft) ? ChatRoomStatus.DELETED : ChatRoomStatus.CLOSED;
-        this.closedAt = LocalDateTime.now();
+        if (this.userLeft && this.trainerLeft) {
+            this.status = ChatRoomStatus.DELETED;
+            return;
+        }
+        this.status = ChatRoomStatus.CLOSED;
+        if (this.closedAt == null) {
+            this.closedAt = LocalDateTime.now();
+        }
     }
 
     public Long getId() { return id; }

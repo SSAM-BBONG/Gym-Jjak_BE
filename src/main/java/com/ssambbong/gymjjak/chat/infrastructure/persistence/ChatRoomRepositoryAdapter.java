@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.chat.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -45,6 +47,22 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
             repository.markTrainerLeft(chatRoom.getId());
         }
         repository.updateStatusAfterLeave(chatRoom.getId(), LocalDateTime.now());
+    }
+
+    @Override
+    public List<ChatRoomSummary> findChatRoomsByRequesterId(Long requesterId) {
+        return repository.findChatRoomSummariesByRequesterId(requesterId)
+                .stream()
+                .map(p -> new ChatRoomSummary(
+                        p.getChatRoomId(),
+                        p.getPartnerName(),
+                        p.getPartnerRole(),
+                        p.getPartnerProfileImageUrl(),
+                        p.getLastMessage(),
+                        p.getLastMessageAt(),
+                        p.getUnreadCount()
+                ))
+                .toList();
     }
 
     private ChatRoom toDomain(ChatRoomJpaEntity entity) {

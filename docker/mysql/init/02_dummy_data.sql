@@ -315,10 +315,10 @@ INSERT INTO post_likes (post_id, user_id) VALUES (1, 2), (1, 3);
 -- ---------------------------------------------------------
 -- 10. 채팅 (채팅방 및 메시지)
 -- ---------------------------------------------------------
-INSERT INTO chat_rooms (user_id, trainer_id, pt_course_id, status) VALUES (1, 11, 1, 'ACTIVE');
-INSERT INTO chat_messages (chat_room_id, sender_id, content) VALUES
-                                                                 (1, 1, '트레이너님 안녕하세요! 내일 준비물 따로 있을까요?'),
-                                                                 (1, 11, '유저1님 안녕하세요! 개인 실내 운동화랑 개인 물통만 챙겨와주시면 됩니다^^');
+INSERT INTO chat_rooms (user_id, trainer_id, pt_course_id, status, last_message_at) VALUES (1, 11, 1, 'ACTIVE', '2026-06-14 10:05:00');
+INSERT INTO chat_messages (chat_room_id, sender_id, content, is_read) VALUES
+    (1, 1, '트레이너님 안녕하세요! 내일 준비물 따로 있을까요?', true),
+    (1, 11, '유저1님 안녕하세요! 개인 실내 운동화랑 개인 물통만 챙겨와주시면 됩니다^^', false);
 
 -- ---------------------------------------------------------
 -- 11. 신고, 블랙리스트, 관리자 액션 로그, 알림, 시스템 로그
