@@ -10,6 +10,6 @@ public interface TrainerApplicationRepository {
 
     Optional<TrainerApplication> findById(Long trainerApplicationId);
 
-    boolean existsPendingOrApprovedByUserId(Long userId);
+    boolean existsDuplicateBlockingApplicationByUserId(Long userId);
 
 }

@@ -14,7 +14,15 @@ import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "trainer_applications")
+@Table(
+        name = "trainer_applications",
+        indexes = {
+                @Index(
+                        name = "idx_trainer_applications_user_status",
+                        columnList = "user_id, status"
+                )
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TrainerApplicationJpaEntity extends BaseCreatedUpdatedEntity {
 
@@ -58,6 +66,7 @@ public class TrainerApplicationJpaEntity extends BaseCreatedUpdatedEntity {
 
     @Builder
     private TrainerApplicationJpaEntity(
+            Long trainerApplicationId,
             Long userId,
             Long profileFileId,
             Long certificateFileId,
@@ -69,6 +78,7 @@ public class TrainerApplicationJpaEntity extends BaseCreatedUpdatedEntity {
             Long reviewedBy,
             LocalDateTime reviewedAt
     ) {
+        this.trainerApplicationId = trainerApplicationId;
         this.userId = userId;
         this.profileFileId = profileFileId;
         this.certificateFileId = certificateFileId;
