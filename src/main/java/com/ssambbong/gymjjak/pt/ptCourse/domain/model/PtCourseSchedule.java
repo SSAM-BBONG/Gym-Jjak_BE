@@ -14,7 +14,7 @@ public class PtCourseSchedule {
     private final LocalTime endTime;
 
     // 생성자
-    public PtCourseSchedule(Long id, Long ptCourseId, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
+    private PtCourseSchedule(Long id, Long ptCourseId, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
         this.id = id;
         this.ptCourseId = ptCourseId;
         this.dayOfWeek = dayOfWeek;
@@ -24,6 +24,9 @@ public class PtCourseSchedule {
 
     // 신규 생성 시 (String 도메인 타입으로 변환 + 시간 검증)
     public static PtCourseSchedule create(Long ptCourseId, String dayOfWeek, String startTime, String endTime) {
+        if (dayOfWeek == null || startTime == null || endTime == null) {
+            throw new PtCourseInvalidException();
+        }
         DayOfWeek parsedDay;
         try {
             parsedDay = DayOfWeek.valueOf(dayOfWeek);

@@ -11,7 +11,7 @@ public class PtCurriculum {
     private final String content;
 
     // 생성자
-    public PtCurriculum(Long id, Long ptCourseId, int sessionNo, String title, String content) {
+    private PtCurriculum(Long id, Long ptCourseId, int sessionNo, String title, String content) {
         this.id = id;
         this.ptCourseId = ptCourseId;
         this.sessionNo = sessionNo;
