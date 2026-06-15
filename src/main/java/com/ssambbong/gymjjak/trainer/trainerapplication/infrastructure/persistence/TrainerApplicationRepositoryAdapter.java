@@ -1,20 +1,20 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationQueryPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.DuplicateTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRepository {
+public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRepository, TrainerApplicationQueryPort {
 
     private final SpringDataTrainerApplicationRepository springDataTrainerApplicationRepository;
     private final TrainerApplicationPersistenceMapper trainerApplicationPersistenceMapper;
@@ -64,6 +64,32 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
         return springDataTrainerApplicationRepository.existsByUserIdAndStatusIn(
                 userId,
                 TrainerApplicationStatus.getDuplicateBlockingStatuses()
+        );
+    }
+
+    // 내 수강신청 조회
+    @Override
+    public Optional<TrainerApplicationDetailResult> findLatestDetailByUserId(Long userId) {
+
+        return springDataTrainerApplicationRepository.findTopByUserIdOrderByCreatedAtDescTrainerApplicationIdDesc(userId)
+                .map(this::toDetailResult);
+    }
+
+    private TrainerApplicationDetailResult toDetailResult(TrainerApplicationJpaEntity entity) {
+        return new TrainerApplicationDetailResult(
+                entity.getTrainerApplicationId(),
+                entity.getUserId(),
+                entity.getProfileFileId(),
+                entity.getCertificateFileId(),
+                entity.getQualifications(),
+                entity.getAwardHistories(),
+                entity.getIntroduction(),
+                entity.getStatus(),
+                entity.getRejectReason(),
+                entity.getReviewedBy(),
+                entity.getReviewedAt(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
         );
     }
 }
