@@ -1,10 +1,10 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationQueryPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.DuplicateTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
-import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationQueryRepository;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRepository, TrainerApplicationQueryRepository {
+public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRepository, TrainerApplicationQueryPort {
 
     private final SpringDataTrainerApplicationRepository springDataTrainerApplicationRepository;
     private final TrainerApplicationPersistenceMapper trainerApplicationPersistenceMapper;
