@@ -9,4 +9,13 @@ public class DuplicateTrainerApplicationException extends ConflictException {
         super(TrainerApplicationErrorCode.TRAINER_APPLICATION_ALREADY_EXISTS);
         addContext("applicantUserId", applicantUserId);
     }
+
+    public DuplicateTrainerApplicationException(Long applicantUserId, Throwable cause) {
+        super(
+                TrainerApplicationErrorCode.TRAINER_APPLICATION_ALREADY_EXISTS,
+                TrainerApplicationErrorCode.TRAINER_APPLICATION_ALREADY_EXISTS.getMessage(),
+                cause
+        );
+        addContext("applicantUserId", applicantUserId);
+    }
 }
