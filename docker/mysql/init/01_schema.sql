@@ -55,7 +55,7 @@ CREATE TABLE users (
                        suspended_until DATETIME(6) NULL COMMENT '기간제 정지 만료일 (7일 정지 등)',
                        last_login_at DATETIME(6) NULL,
                        created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                        deleted_at DATETIME(6) NULL,
                        CONSTRAINT pk_users PRIMARY KEY (user_id),
                        CONSTRAINT uk_users_username UNIQUE (username),
@@ -220,6 +220,15 @@ CREATE TABLE trainer_applications (
                                       reject_reason VARCHAR(500) NULL,
                                       reviewed_by BIGINT NULL,
                                       reviewed_at DATETIME(6) NULL,
+
+                                      duplicate_blocking_user_id BIGINT
+                                          GENERATED ALWAYS AS (
+                                              CASE
+                                                  WHEN status IN ('PENDING', 'APPROVED') THEN user_id
+                                                  ELSE NULL
+                                                  END
+                                              ) STORED,
+
                                       created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
 
@@ -236,7 +245,9 @@ CREATE TABLE trainer_applications (
                                           FOREIGN KEY (certificate_file_id) REFERENCES files(file_id),
 
                                       CONSTRAINT fk_trainer_applications_reviewed_by
-                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
+                                      UNIQUE KEY uk_trainer_applications_duplicate_blocking_user (duplicate_blocking_user_id),
+                                      INDEX idx_trainer_applications_user_status (user_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE trainer_profiles (
@@ -322,8 +333,6 @@ CREATE TABLE pt_courses (
                             description TEXT NOT NULL,
                             price INT NOT NULL,
                             total_session_count INT NOT NULL,
-                            supports_diet_log BOOLEAN NOT NULL DEFAULT FALSE,
-                            supports_workout_log BOOLEAN NOT NULL DEFAULT FALSE,
                             status VARCHAR(30) NOT NULL DEFAULT 'VISIBLE',
                             created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                             updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -526,18 +535,21 @@ CREATE TABLE post_likes (
 CREATE TABLE chat_rooms (
                             chat_room_id BIGINT NOT NULL AUTO_INCREMENT,
                             user_id BIGINT NOT NULL,
-                            trainer_profile_id BIGINT NOT NULL,
-                            pt_course_id BIGINT NULL,
+                            trainer_id BIGINT NOT NULL,
+                            pt_course_id BIGINT NOT NULL,
                             user_left BOOLEAN NOT NULL DEFAULT FALSE,
                             trainer_left BOOLEAN NOT NULL DEFAULT FALSE,
                             status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+                            active_pt_course_id BIGINT GENERATED ALWAYS AS (IF(status = 'ACTIVE', pt_course_id, NULL)) VIRTUAL,
+                            last_message_at DATETIME(6) NULL,
                             created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                             closed_at DATETIME(6) NULL,
                             updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                             CONSTRAINT pk_chat_rooms PRIMARY KEY (chat_room_id),
                             CONSTRAINT fk_chat_rooms_user FOREIGN KEY (user_id) REFERENCES users(user_id),
-                            CONSTRAINT fk_chat_rooms_trainer_profile FOREIGN KEY (trainer_profile_id) REFERENCES trainer_profiles(trainer_profile_id),
-                            CONSTRAINT fk_chat_rooms_pt_course FOREIGN KEY (pt_course_id) REFERENCES pt_courses(pt_course_id)
+                            CONSTRAINT fk_chat_rooms_trainer FOREIGN KEY (trainer_id) REFERENCES trainer_profiles(user_id),
+                            CONSTRAINT fk_chat_rooms_pt_course FOREIGN KEY (pt_course_id) REFERENCES pt_courses(pt_course_id),
+                            UNIQUE INDEX uk_chat_rooms_active(user_id, trainer_id, active_pt_course_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE chat_messages (

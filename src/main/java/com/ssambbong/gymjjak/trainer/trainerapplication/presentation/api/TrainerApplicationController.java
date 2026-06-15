@@ -3,23 +3,28 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.CreateTrainerApplicationRequest;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.UpdateTrainerApplicationRequest;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.CreateTrainerApplicationResponse;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationDetailResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Trainer_Application", description = "트레이너 신청 api")
 @Slf4j
 @RestController
 @RequestMapping("/api/trainer-applications")
@@ -27,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TrainerApplicationController {
 
     private final TrainerApplicationCommandUseCase trainerApplicationCommandUseCase;
+    private final TrainerApplicationQueryUseCase trainerApplicationQueryUseCase;
 
     @Operation(
             summary = "트레이너 신청",
@@ -39,6 +45,7 @@ public class TrainerApplicationController {
             @ApiResponse(responseCode = "409", description = "이미 처리 중인 트레이너 신청 존재"),
             @ApiResponse(responseCode = "502", description = "OCR 외부 API 요청 실패")
     })
+    @PreAuthorize("hasAuthority('USER')")
     @PostMapping
     public ResponseEntity<GlobalApiResponse<CreateTrainerApplicationResponse>> createTrainerApplication(
             @AuthenticationPrincipal AuthUser authUser,
@@ -60,5 +67,68 @@ public class TrainerApplicationController {
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_CREATED,
                         new CreateTrainerApplicationResponse(trainerApplicationId)
                 ));
+    }
+
+    @PatchMapping("/{trainerApplicationId}")
+    @Operation(
+            summary = "트레이너 신청서 수정",
+            description = "사용자가 PENDING 상태의 트레이너 신청을 수정합니다. 필수 자격증 파일은 수정할 수 없습니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "트레이너 신청서 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 또는 필수 자격증 파일 수정 시도"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "본인의 트레이너 신청서가 아님"),
+            @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "PENDING 상태가 아니어서 수정할 수 없음")
+    })
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<GlobalApiResponse<CreateTrainerApplicationResponse>> updateTrainerApplication(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long trainerApplicationId,
+            @RequestBody @Valid UpdateTrainerApplicationRequest request
+    ) {
+        Long updatedTrainerApplicationId = trainerApplicationCommandUseCase.updateTrainerApplication(
+                new UpdateTrainerApplicationCommand(
+                        trainerApplicationId,
+                        authUser.userId(),
+                        request.profileImageFileId(),
+                        request.qualifications(),
+                        request.awardHistories(),
+                        request.introduction()
+                )
+        );
+
+        return ResponseEntity.status(201)
+                .body(GlobalApiResponse.created(
+                       TrainerApplicationResponseCode.TRAINER_APPLICATION_UPDATED,
+                       new CreateTrainerApplicationResponse(updatedTrainerApplicationId)
+                ));
+    }
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "내 트레이너 신청서 상세 조회",
+            description = "로그인한 사용자의 최신 트레이너 신청서를 조회합니다. 신청 현황 화면에서 사용합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "트레이너 신청서 상세 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음")
+    })
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<GlobalApiResponse<TrainerApplicationDetailResponse>> getMyTrainerApplication(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+
+        TrainerApplicationDetailResult result =
+                trainerApplicationQueryUseCase.getMyTrainerApplication(authUser.userId());
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        TrainerApplicationResponseCode.TRAINER_APPLICATION_DETAIL_FOUND,
+                        TrainerApplicationDetailResponse.from(result)
+                )
+        );
     }
 }
