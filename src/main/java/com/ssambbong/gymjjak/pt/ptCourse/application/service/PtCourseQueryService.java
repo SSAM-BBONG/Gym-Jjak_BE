@@ -7,6 +7,8 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundExcept
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
 public class PtCourseQueryService implements PtCourseQueryUseCase {
 
     private final PtCourseRepository ptCourseRepository;
+    private final PtCurriculumRepository ptCurriculumRepository;
+    private final PtCourseScheduleRepository ptCourseScheduleRepository;
     private final CategoryQueryUseCase categoryQueryUseCase;
     private final PtCourseEnrichQueryPort enrichQueryPort;
 
@@ -54,6 +58,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         return toDetailView(ptCourse);
     }
 
+    // categoryId -> categoryName 매핑
     private Map<Long, String> buildCategoryMap() {
         return categoryQueryUseCase.handle().stream()
                 .collect(Collectors.toMap(
@@ -62,6 +67,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ));
     }
 
+    // ptCourse + enrich(조직/트레이너) -> 목록 응답용 View 변환
     private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap) {
         PtCourseEnrichQueryPort.OrganizationInfo org =
                 enrichQueryPort.findOrganizationById(ptCourse.getOrganizationId());
@@ -87,9 +93,22 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         );
     }
 
+    // ptCourse + enrich + 커리큘럼/스케쥴 목록 -> 상세 응답용 View 반환
     private PtCourseDetailView toDetailView(PtCourse ptCourse) {
         PtCourseEnrichQueryPort.TrainerDisplayInfo trainer =
                 enrichQueryPort.findTrainerProfileById(ptCourse.getTrainerProfileId());
+
+        // 커리큘럼 조회 (도메인 모델 -> View 변환)
+        List<CurriculumView> curriculums = ptCurriculumRepository.findAllByPtCourseId(ptCourse.getId()).stream()
+                .map(c -> new CurriculumView(c.getId(), c.getSessionNo(), c.getTitle(), c.getContent()))
+                .toList();
+        log.debug("[PtCourseDetail] ptCourseId={} 커리큘럼 수={}", ptCourse.getId(), curriculums.size());
+
+        // 스케쥴 조회 (도메인 모델 -> View 변환)
+        List<ScheduleView> schedules = ptCourseScheduleRepository.findAllByPtCourseId(ptCourse.getId()).stream()
+                .map(s -> new ScheduleView(s.getId(), s.getDayOfWeek(), s.getStartTime(), s.getEndTime()))
+                .toList();
+        log.debug("[PtCourseDetail] ptCourseId={} 스케줄 수={}", ptCourse.getId(), schedules.size());
 
         return new PtCourseDetailView(
                 ptCourse.getId(),
@@ -107,8 +126,9 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 trainer.introduction(),
                 trainer.certifications(),
                 trainer.awards(),
-                List.of(),
-                List.of(),
+                curriculums,
+                schedules,
+                // 미구현
                 List.of()
         );
     }
