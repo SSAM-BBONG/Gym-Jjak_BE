@@ -24,6 +24,9 @@ public class PtCourseSchedule {
 
     // 신규 생성 시 (String 도메인 타입으로 변환 + 시간 검증)
     public static PtCourseSchedule create(Long ptCourseId, String dayOfWeek, String startTime, String endTime) {
+        if (ptCourseId == null) {
+            throw new PtCourseInvalidException();
+        }
         if (dayOfWeek == null || startTime == null || endTime == null) {
             throw new PtCourseInvalidException();
         }

@@ -92,7 +92,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         // 스케줄 저장
         List<PtCourseSchedule> schedules = command.schedules().stream()
-                        .map(s ->PtCourseSchedule.create(saved.getId(), s.dayOfWeek(), s.startTime(), s.endTime()))
+                        .map(s -> PtCourseSchedule.create(saved.getId(), s.dayOfWeek(), s.startTime(), s.endTime()))
                         .toList();
         ptCourseScheduleRepository.saveAll(schedules);
 

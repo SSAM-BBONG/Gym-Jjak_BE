@@ -21,6 +21,9 @@ public class PtCurriculum {
 
     // 신규 생성 시
     public static PtCurriculum create(Long ptCourseId, int sessionNo, String title, String content) {
+        if (ptCourseId == null) {
+            throw new PtCourseInvalidException();
+        }
         if (sessionNo <= 0) {
             throw new PtCourseInvalidException();
         }

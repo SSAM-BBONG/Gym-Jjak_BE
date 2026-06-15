@@ -134,6 +134,8 @@ class PtCourseCommandServiceTest {
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
+        verify(ptCurriculumRepository, never()).saveAll(any());
+        verify(ptCourseScheduleRepository, never()).saveAll(any());
     }
 
     @Test
@@ -152,6 +154,8 @@ class PtCourseCommandServiceTest {
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
+        verify(ptCurriculumRepository, never()).saveAll(any());
+        verify(ptCourseScheduleRepository, never()).saveAll(any());
     }
 
     @Test
@@ -170,6 +174,8 @@ class PtCourseCommandServiceTest {
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
+        verify(ptCurriculumRepository, never()).saveAll(any());
+        verify(ptCourseScheduleRepository, never()).saveAll(any());
     }
 
     @Test
@@ -194,6 +200,8 @@ class PtCourseCommandServiceTest {
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
+        verify(ptCurriculumRepository, never()).saveAll(any());
+        verify(ptCourseScheduleRepository, never()).saveAll(any());
     }
 
     @Test
