@@ -42,6 +42,29 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
         );
     }
 
+    // 목록 조회용: trainerName, reviewCount만 조회 (자격증/수상 쿼리 없음)
+    @Override
+    public TrainerSummaryInfo findSummaryById(Long trainerProfileId) {
+        List<?> results = em.createNativeQuery("""
+                SELECT tp.trainer_name, tp.review_count
+                FROM trainer_profiles tp
+                WHERE tp.trainer_profile_id = ?1
+                  AND tp.deleted_at IS NULL
+                """)
+                .setParameter(1, trainerProfileId)
+                .getResultList();
+
+        Object[] result = (Object[]) results.stream()
+                .findFirst()
+                .orElseThrow(PtCourseNotFoundException::new);
+
+        return new TrainerSummaryInfo(
+                (String) result[0],
+                result[1] != null ? ((Number) result[1]).intValue() : 0
+        );
+    }
+
+    // 상세 조회용: 전체 정보 조회 (자격증/수상 포함)
     @Override
     public TrainerDisplayInfo findById(Long trainerProfileId) {
         List<?> results = em.createNativeQuery("""
