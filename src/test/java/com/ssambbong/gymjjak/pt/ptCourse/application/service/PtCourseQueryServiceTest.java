@@ -1,8 +1,8 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
-import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtCourseEnrichQueryPort;
-import com.ssambbong.gymjjak.pt.ptCourse.application.service.PtCourseQueryService;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,7 +36,8 @@ class PtCourseQueryServiceTest {
     @Mock private PtCurriculumRepository ptCurriculumRepository;
     @Mock private PtCourseScheduleRepository ptCourseScheduleRepository;
     @Mock private CategoryQueryUseCase categoryQueryUseCase;
-    @Mock private PtCourseEnrichQueryPort enrichQueryPort;
+    @Mock private OrganizationQueryPort organizationQueryPort;
+    @Mock private TrainerProfileQueryPort trainerProfileQueryPort;
 
     @InjectMocks
     private PtCourseQueryService ptCourseQueryService;
@@ -54,13 +56,14 @@ class PtCourseQueryServiceTest {
         when(categoryQueryUseCase.handle()).thenReturn(
                 List.of(new CategoryQueryUseCase.CategoryView(1L, "헬스", null, 0L))
         );
-        when(enrichQueryPort.findOrganizationById(anyLong())).thenReturn(
-                new PtCourseEnrichQueryPort.OrganizationInfo(
+
+        when(organizationQueryPort.findById(eq(1L))).thenReturn(
+                new OrganizationQueryPort.OrganizationInfo(
                         1L, "짐짝피트니스", "서울 강남구", 37.5007, 127.0365,
                         "02-1234-5678", null, null)
         );
-        when(enrichQueryPort.findTrainerProfileById(anyLong())).thenReturn(
-                new PtCourseEnrichQueryPort.TrainerDisplayInfo(
+        when(trainerProfileQueryPort.findById(eq(1L))).thenReturn(
+                new TrainerProfileQueryPort.TrainerDisplayInfo(
                         "트레이너01", "안전하게 지도합니다.", 4.6, 1, null, List.of(), List.of())
         );
     }
@@ -110,9 +113,16 @@ class PtCourseQueryServiceTest {
         // given
         PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
-        when(enrichQueryPort.findTrainerProfileById(anyLong())).thenReturn(
-                new PtCourseEnrichQueryPort.TrainerDisplayInfo(
-                        "트레이너01", "안전하게 지도합니다.", 4.6, 1, null, List.of(), List.of())
+        when(trainerProfileQueryPort.findById(eq(1L))).thenReturn(
+                new TrainerProfileQueryPort.TrainerDisplayInfo(
+                        "트레이너01",
+                        "안전하게 지도합니다.",
+                        4.6,
+                        1,
+                        null,
+                        List.of(),
+                        List.of()
+                )
         );
 
         List<PtCurriculum> curriculums = List.of(

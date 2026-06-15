@@ -1,8 +1,10 @@
 package com.ssambbong.gymjjak.pt.ptReservation.domain.repository;
 
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface PtReservationRepository {
 
@@ -15,4 +17,7 @@ public interface PtReservationRepository {
             LocalDateTime reservedStartedAt,
             LocalDateTime reservedEndAt
     );
+
+    // status null이면 전체 조회
+    List<PtReservation> findAllByUserId(Long userId, PtReservationStatus status);
 }

@@ -55,7 +55,7 @@ CREATE TABLE users (
                        suspended_until DATETIME(6) NULL COMMENT '기간제 정지 만료일 (7일 정지 등)',
                        last_login_at DATETIME(6) NULL,
                        created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                        deleted_at DATETIME(6) NULL,
                        CONSTRAINT pk_users PRIMARY KEY (user_id),
                        CONSTRAINT uk_users_username UNIQUE (username),
@@ -171,9 +171,7 @@ CREATE TABLE organization_applications (
                                            CONSTRAINT pk_organization_applications PRIMARY KEY (organization_application_id),
                                            CONSTRAINT fk_org_app_applicant FOREIGN KEY (applicant_user_id) REFERENCES users(user_id),
                                            CONSTRAINT fk_org_app_license_file FOREIGN KEY (business_license_file_id) REFERENCES files(file_id),
-                                           CONSTRAINT fk_org_app_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
-                                           UNIQUE KEY uk_trainer_applications_duplicate_blocking_user (duplicate_blocking_user_id),
-                                           INDEX idx_trainer_applications_user_status (user_id, status)
+                                           CONSTRAINT fk_org_app_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE organizations (
@@ -247,7 +245,9 @@ CREATE TABLE trainer_applications (
                                           FOREIGN KEY (certificate_file_id) REFERENCES files(file_id),
 
                                       CONSTRAINT fk_trainer_applications_reviewed_by
-                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
+                                      UNIQUE KEY uk_trainer_applications_duplicate_blocking_user (duplicate_blocking_user_id),
+                                      INDEX idx_trainer_applications_user_status (user_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE trainer_profiles (

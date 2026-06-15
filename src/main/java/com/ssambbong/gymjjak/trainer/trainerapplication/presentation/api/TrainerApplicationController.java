@@ -4,10 +4,13 @@ import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.CreateTrainerApplicationRequest;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.UpdateTrainerApplicationRequest;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.CreateTrainerApplicationResponse;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationDetailResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class TrainerApplicationController {
 
     private final TrainerApplicationCommandUseCase trainerApplicationCommandUseCase;
+    private final TrainerApplicationQueryUseCase trainerApplicationQueryUseCase;
 
     @Operation(
             summary = "트레이너 신청",
@@ -100,5 +104,31 @@ public class TrainerApplicationController {
                        TrainerApplicationResponseCode.TRAINER_APPLICATION_UPDATED,
                        new CreateTrainerApplicationResponse(updatedTrainerApplicationId)
                 ));
+    }
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "내 트레이너 신청서 상세 조회",
+            description = "로그인한 사용자의 최신 트레이너 신청서를 조회합니다. 신청 현황 화면에서 사용합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "트레이너 신청서 상세 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음")
+    })
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<GlobalApiResponse<TrainerApplicationDetailResponse>> getMyTrainerApplication(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+
+        TrainerApplicationDetailResult result =
+                trainerApplicationQueryUseCase.getMyTrainerApplication(authUser.userId());
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        TrainerApplicationResponseCode.TRAINER_APPLICATION_DETAIL_FOUND,
+                        TrainerApplicationDetailResponse.from(result)
+                )
+        );
     }
 }
