@@ -97,5 +97,10 @@ public class UserController {
         );
     }
 
+//    @PreAuthorize("hasAuthority('ADMIN')")
+//    @GetMapping("/all")
+//    @Operation(summary = "관리자 회원 목록 조회", description = "회원 전체를 조회한다.")
+//    public ResponseEntity<GlobalApiResponse<>>
+
 
 }

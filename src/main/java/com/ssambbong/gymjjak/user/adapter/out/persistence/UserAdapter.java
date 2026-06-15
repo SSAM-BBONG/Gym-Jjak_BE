@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
@@ -15,7 +16,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class UserAdapter implements UserPort {
+public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
 
     private final SpringDataUserRepository springDataUserRepository;
     private final UserPersistenceMapper userPersistenceMapper;
@@ -112,6 +113,16 @@ public class UserAdapter implements UserPort {
         }
 
         return e;
+    }
+
+    @Override
+    public int countWithdrawnUsersBefore(LocalDateTime threshold) {
+        return springDataUserRepository.countWithdrawnUsersBefore(threshold);
+    }
+
+    @Override
+    public int deleteWithdrawnUsersBefore(LocalDateTime threshold, int batchSize) {
+        return springDataUserRepository.deleteWithdrawnUsersBefore(threshold, batchSize);
     }
 
 }

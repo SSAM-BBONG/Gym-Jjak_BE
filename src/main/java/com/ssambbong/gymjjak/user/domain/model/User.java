@@ -35,7 +35,8 @@ public class User {
             LocalDateTime  lastLoginAt,
             LocalDateTime  createdAt,
             LocalDateTime  updatedAt,
-            LocalDateTime  deletedAt
+            LocalDateTime  deletedAt,
+            LocalDateTime suspendedUntil
     ) {
         this.id = id;
         this.username = normalizeRequiredText(username, UserErrorCode.USERNAME_REQUIRED);
@@ -50,6 +51,7 @@ public class User {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.deletedAt = deletedAt;
+        this.suspendedUntil = suspendedUntil;
     }
 
     public static User register(
@@ -72,6 +74,7 @@ public class User {
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -89,7 +92,8 @@ public class User {
             LocalDateTime  lastLoginAt,
             LocalDateTime  createdAt,
             LocalDateTime  updatedAt,
-            LocalDateTime  deletedAt
+            LocalDateTime  deletedAt,
+            LocalDateTime suspendedUntil
     ) {
         return new User(
                 id,
@@ -104,7 +108,8 @@ public class User {
                 lastLoginAt,
                 createdAt,
                 updatedAt,
-                deletedAt
+                deletedAt,
+                suspendedUntil
         );
     }
 
@@ -180,6 +185,23 @@ public class User {
         this.status = UserStatus.ETERNAL;
         this.suspendedUntil = null;
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+    }
+
+    public void releaseSuspensionIfExpired(LocalDateTime now) {
+        if (this.status != UserStatus.DAY_7) {
+            return;
+        }
+
+        if (this.suspendedUntil == null) {
+            return;
+        }
+
+        if (this.suspendedUntil.isAfter(now)) {
+            return;
+        }
+
+        this.status = UserStatus.ACTIVE;
+        this.suspendedUntil = null;
     }
 
     public boolean isActive() {
@@ -286,5 +308,9 @@ public class User {
 
     public LocalDateTime  getDeletedAt() {
         return deletedAt;
+    }
+
+    public LocalDateTime getSuspendedUntil() {
+        return suspendedUntil;
     }
 }

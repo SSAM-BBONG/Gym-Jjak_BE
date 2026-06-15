@@ -46,4 +46,28 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
             @Param("deletedAt") LocalDateTime deletedAt
     );
 
+    @Query("""
+        select count(u)
+        from UserJpaEntity u
+        where u.deletedAt is not null
+          and u.deletedAt <= :threshold
+    """)
+    int countWithdrawnUsersBefore(@Param("threshold") LocalDateTime threshold);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+            value = """
+            delete from users
+            where deleted_at is not null
+              and deleted_at <= :threshold
+            order by deleted_at asc
+            limit :batchSize
+        """,
+            nativeQuery = true
+    )
+    int deleteWithdrawnUsersBefore(
+            @Param("threshold") LocalDateTime threshold,
+            @Param("batchSize") int batchSize
+    );
+
 }
