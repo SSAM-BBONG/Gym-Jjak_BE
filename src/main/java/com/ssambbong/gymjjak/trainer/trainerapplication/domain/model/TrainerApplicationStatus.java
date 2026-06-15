@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.domain.model;
 
+import java.util.List;
+
 public enum TrainerApplicationStatus {
     // 대기 상태
     PENDING,
@@ -8,5 +10,9 @@ public enum TrainerApplicationStatus {
     // 반려
     REJECTED,
     // 직접 취소
-    CANCELED
+    CANCELED;
+
+    public static List<TrainerApplicationStatus> getDuplicateBlockingStatuses() {
+        return List.of(PENDING, APPROVED);
+    }
 }

@@ -25,7 +25,7 @@ public class StringListJsonConverter implements AttributeConverter<List<String>,
             // 빈 값이면 빈 List 반환
             return OBJECT_MAPPER.writeValueAsString(attribute == null ? List.of() : attribute);
         } catch (JsonProcessingException exception) {
-            throw new IllegalArgumentException("List<String> JSON 직렬화에 실패", exception);
+            throw new IllegalArgumentException("List<String> JSON 직렬화에 실패했습니다.", exception);
         }
     }
 

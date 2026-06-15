@@ -103,6 +103,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**")
                         .hasAnyAuthority("ADMIN", "USER","TRAINER")
 
+                        // 트레이너 신청 API
+                        .requestMatchers("/api/trainer-applications/**")
+                        .hasAnyAuthority("USER")
+
                         // 트레이너 API
                         .requestMatchers("/api/trainers/**")
                         .hasAnyAuthority("TRAINER", "ADMIN")
