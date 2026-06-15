@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQ
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.request.CreatePtReservationRequest;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.CreatePtReservationResponse;
+import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.MyPtReservationDetailResponse;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.MyPtReservationsResponse;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.PtReservationResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,7 +58,7 @@ public class PtReservationController {
 
     @GetMapping("/reservations/me")
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
-    @Operation(summary = "내 PT 예약 목록 조회")
+    @Operation(summary = "내 PT 예약 목록 조회", description = "사용자가 본인이 예약한 PT 강습 목록을 조회한다.")
     public ResponseEntity<GlobalApiResponse<MyPtReservationsResponse>> findMyReservations(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(required = false) PtReservationStatus status
@@ -72,6 +73,29 @@ public class PtReservationController {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         PtReservationResponseCode.MY_PT_RECORDS_FETCHED,
+                        response
+                )
+        );
+    }
+
+    @GetMapping("/reservations/me/{ptReservationId}")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "내 PT 예약 상세 조회", description = "본인의 PT 예약 상세 정보를 조회한다.")
+    public ResponseEntity<GlobalApiResponse<MyPtReservationDetailResponse>> findMyReservationDetail(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptReservationId   // 조회할 예약 ID
+    ) {
+        var view = ptReservationQueryUseCase.findMyReservationDetail(
+                authUser.userId(),
+                ptReservationId
+        );
+
+        // View → 응답 DTO 변환
+        var response = MyPtReservationDetailResponse.from(view);
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        PtReservationResponseCode.MY_PT_RECORD_DETAIL_FETCHED,
                         response
                 )
         );
