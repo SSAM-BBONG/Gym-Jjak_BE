@@ -66,7 +66,7 @@ public class ChatRoomJpaEntity {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(getClass());
+        return id != null ? id.hashCode() : System.identityHashCode(this);
     }
 
     public ChatRoomJpaEntity(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status) {

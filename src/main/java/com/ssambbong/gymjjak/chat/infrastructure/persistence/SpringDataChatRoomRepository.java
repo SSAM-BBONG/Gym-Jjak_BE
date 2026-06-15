@@ -13,11 +13,11 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
     boolean existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status);
 
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE ChatRoomJpaEntity c SET c.userLeft = true WHERE c.id = :id")
+    @Query("UPDATE ChatRoomJpaEntity c SET c.userLeft = true WHERE c.id = :id AND c.status != com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus.DELETED")
     void markUserLeft(@Param("id") Long chatRoomId);
 
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE ChatRoomJpaEntity c SET c.trainerLeft = true WHERE c.id = :id")
+    @Query("UPDATE ChatRoomJpaEntity c SET c.trainerLeft = true WHERE c.id = :id AND c.status != com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus.DELETED")
     void markTrainerLeft(@Param("id") Long chatRoomId);
 
     @Modifying
@@ -25,7 +25,7 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
             UPDATE chat_rooms
             SET status = CASE WHEN user_left = true AND trainer_left = true THEN 'DELETED' ELSE 'CLOSED' END,
                 closed_at = COALESCE(closed_at, :closedAt)
-            WHERE chat_room_id = :id
+            WHERE chat_room_id = :id AND status != 'DELETED'
             """, nativeQuery = true)
     void updateStatusAfterLeave(@Param("id") Long chatRoomId, @Param("closedAt") LocalDateTime closedAt);
 }
