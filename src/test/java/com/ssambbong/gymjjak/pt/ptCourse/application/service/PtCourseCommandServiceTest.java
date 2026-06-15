@@ -195,4 +195,40 @@ class PtCourseCommandServiceTest {
 
         verify(ptCourseRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("커리큘럼이 null이면 PtCourseInvalidException이 발생해야 한다")
+    void createPtCourse_nullCurriculums_throwsException() {
+
+        // given
+        CreatePtCourseCommand command = new CreatePtCourseCommand(
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                null,
+                List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
+        );
+
+        // when & then
+        assertThrows(PtCourseInvalidException.class,
+                () -> ptCourseCommandService.createPtCourse(command));
+
+        verify(ptCourseRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("스케줄이 null이면 PtCourseInvalidException이 발생해야 한다")
+    void createPtCourse_nullSchedules_throwsException() {
+
+        // given
+        CreatePtCourseCommand command = new CreatePtCourseCommand(
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
+                null
+        );
+
+        // when & then
+        assertThrows(PtCourseInvalidException.class,
+                () -> ptCourseCommandService.createPtCourse(command));
+
+        verify(ptCourseRepository, never()).save(any());
+    }
 }

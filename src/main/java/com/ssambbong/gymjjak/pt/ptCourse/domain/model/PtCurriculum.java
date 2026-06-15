@@ -21,7 +21,13 @@ public class PtCurriculum {
 
     // 신규 생성 시
     public static PtCurriculum create(Long ptCourseId, int sessionNo, String title, String content) {
-        if (sessionNo <= 0) { // 커리큘럼 회차 등록되지 않으면
+        if (sessionNo <= 0) {
+            throw new PtCourseInvalidException();
+        }
+        if (title == null || title.isBlank()) {
+            throw new PtCourseInvalidException();
+        }
+        if (content == null || content.isBlank()) {
             throw new PtCourseInvalidException();
         }
         return new PtCurriculum(null, ptCourseId, sessionNo, title, content);

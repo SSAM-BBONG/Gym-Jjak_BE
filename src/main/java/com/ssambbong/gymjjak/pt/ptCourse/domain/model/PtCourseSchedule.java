@@ -31,8 +31,14 @@ public class PtCourseSchedule {
             throw new PtCourseInvalidException();
         }
 
-        LocalTime parsedStart = LocalTime.parse(startTime);
-        LocalTime parsedEnd = LocalTime.parse(endTime);
+        LocalTime parsedStart;
+        LocalTime parsedEnd;
+        try {
+            parsedStart = LocalTime.parse(startTime);
+            parsedEnd = LocalTime.parse(endTime);
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new PtCourseInvalidException();
+        }
 
         if (!parsedEnd.isAfter(parsedStart)) {
             throw new PtCourseInvalidException();

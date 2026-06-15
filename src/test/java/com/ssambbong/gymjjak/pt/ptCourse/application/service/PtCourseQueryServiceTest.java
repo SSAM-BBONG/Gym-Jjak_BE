@@ -133,10 +133,21 @@ class PtCourseQueryServiceTest {
         // then
         assertEquals(1L, result.ptCourseId());
         assertEquals("트레이너01", result.trainerName());
+
+        // 커리큘럼 세부 필드 검증
         assertEquals(2, result.curriculums().size());
+        assertEquals(1L, result.curriculums().get(0).curriculumId());
         assertEquals(1, result.curriculums().get(0).sessionNo());
+        assertEquals("기초 체력 평가", result.curriculums().get(0).title());
+        assertEquals("체력 측정 및 목표 설정", result.curriculums().get(0).content());
+
+        // 스케줄 세부 필드 검증
         assertEquals(1, result.schedules().size());
+        assertEquals(1L, result.schedules().get(0).scheduleId());
         assertEquals(DayOfWeek.MONDAY, result.schedules().get(0).dayOfWeek());
+        assertEquals(LocalTime.of(10, 0), result.schedules().get(0).startTime());
+        assertEquals(LocalTime.of(11, 0), result.schedules().get(0).endTime());
+
         verify(ptCourseRepository).findById(1L);
         verify(ptCurriculumRepository).findAllByPtCourseId(1L);
         verify(ptCourseScheduleRepository).findAllByPtCourseId(1L);
