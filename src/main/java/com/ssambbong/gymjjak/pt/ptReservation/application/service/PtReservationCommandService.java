@@ -38,7 +38,10 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
         // 1. PT 강습 조회 → organizationId, trainerProfileId, totalSessionCount 가져오기
         PtCourse ptCourse = ptCourseRepository.findById(command.ptCourseId())
-                .orElseThrow(PtCourseNotFoundException::new);
+                .orElseThrow(() -> {
+                    log.warn("[PtReservationCreate] 존재하지 않는 PT 강습 - ptCourseId={}", command.ptCourseId());
+                    return new PtCourseNotFoundException();
+                });
 
         // 2. 중복 예약 확인 → 같은 PT 강습 + 시간 겹치면 예외
         if (ptReservationRepository.existsByPtCourseIdAndTimeOverlap(
@@ -46,6 +49,8 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 command.reservedStartAt(),
                 command.reservedEndAt()
         )) {
+            log.warn("[PtReservationCreate] 중복 예약 시도 감지 - userId={}, ptCourseId={}, start={}, end={}",
+                    command.userId(), command.ptCourseId(), command.reservedStartAt(), command.reservedEndAt());
             throw new PtReservationDuplicateException();
         }
 

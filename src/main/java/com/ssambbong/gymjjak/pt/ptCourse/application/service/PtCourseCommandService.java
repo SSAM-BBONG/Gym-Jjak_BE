@@ -36,6 +36,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         // 커리큘럼 유효성 사전 검증
         if (command.curriculums() == null || command.curriculums().isEmpty()) {
+            log.warn("[PtCourseCreate] 커리큘럼 없음 - userId={}", command.userId());
             throw new PtCourseInvalidException();
         }
         int curriculumCount = command.curriculums().size();
@@ -46,11 +47,13 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 .distinct()
                 .count();
         if (distinctSessionNo != curriculumCount) {
+            log.warn("[PtCourseCreate] 커리큘럼 sessionNo 중복 - userId={}", command.userId());
             throw new PtCourseInvalidException();
         }
 
         // 스케줄 유효성 사전 검증
         if (command.schedules() == null || command.schedules().isEmpty()) {
+            log.warn("[PtCourseCreate] 스케줄 없음 - userId={}", command.userId());
             throw new PtCourseInvalidException();
         }
         int scheduleCount = command.schedules().size();
@@ -61,6 +64,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                         .distinct()
                         .count();
         if (distinctSchedule != scheduleCount) {
+            log.warn("[PtCourseCreate] 스케줄 슬롯 중복 - userId={}", command.userId());
             throw new PtCourseInvalidException();
         }
 
