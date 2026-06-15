@@ -14,7 +14,7 @@ public enum TrainerApplicationResponseCode implements ResponseCode {
     ),
 
     TRAINER_APPLICATION_UPDATED(
-            "TRAINER_APPLICATION_201_1",
+            "TRAINER_APPLICATION_201_2",
             "트레이너 신청서 수정이 완료되었습니다.");
 
     private final String code;

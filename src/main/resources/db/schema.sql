@@ -237,7 +237,7 @@ CREATE TABLE trainer_applications (
 
                                       CONSTRAINT fk_trainer_applications_reviewed_by
                                           FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
-
+                                      UNIQUE KEY uk_trainer_applications_duplicate_blocking_user (duplicate_blocking_user_id),
                                       INDEX idx_trainer_applications_user_status (user_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

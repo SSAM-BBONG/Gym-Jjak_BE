@@ -198,7 +198,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
     // 중복 신청 검증
     private void validateDuplicateApplication(Long applicantUserId) {
-        boolean exists = trainerApplicationRepository.getDuplicateBlockingStatuses(applicantUserId);
+        boolean exists = trainerApplicationRepository.existsDuplicateBlockingApplicationByUserId(applicantUserId);
 
         if (exists) {
             log.warn(

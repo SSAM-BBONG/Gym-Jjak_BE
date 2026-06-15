@@ -41,7 +41,7 @@ public class TrainerApplicationController {
             @ApiResponse(responseCode = "409", description = "이미 처리 중인 트레이너 신청 존재"),
             @ApiResponse(responseCode = "502", description = "OCR 외부 API 요청 실패")
     })
-    @PreAuthorize("hasAnyAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER')")
     @PostMapping
     public ResponseEntity<GlobalApiResponse<CreateTrainerApplicationResponse>> createTrainerApplication(
             @AuthenticationPrincipal AuthUser authUser,
@@ -78,7 +78,7 @@ public class TrainerApplicationController {
             @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음"),
             @ApiResponse(responseCode = "409", description = "PENDING 상태가 아니어서 수정할 수 없음")
     })
-    @PreAuthorize("hasAnyAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<GlobalApiResponse<CreateTrainerApplicationResponse>> updateTrainerApplication(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long trainerApplicationId,
