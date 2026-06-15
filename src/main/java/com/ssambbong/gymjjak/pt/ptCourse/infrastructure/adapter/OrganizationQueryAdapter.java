@@ -1,9 +1,12 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 // TODO: Organization 도메인 Query Port 구현 후 EntityManager 직접 조회 제거
 
@@ -15,7 +18,7 @@ public class OrganizationQueryAdapter implements OrganizationQueryPort {
 
     @Override
     public OrganizationInfo findById(Long organizationId) {
-        Object[] result = (Object[]) em.createNativeQuery("""
+        List<?> results = em.createNativeQuery("""
                 SELECT o.business_name, o.road_address,
                        o.latitude, o.longitude,
                        o.facility_phone, o.website_url, o.instagram_url
@@ -23,7 +26,11 @@ public class OrganizationQueryAdapter implements OrganizationQueryPort {
                 WHERE o.organization_id = ?1
                 """)
                 .setParameter(1, organizationId)
-                .getSingleResult();
+                .getResultList();
+
+        Object[] result = (Object[]) results.stream()
+                .findFirst()
+                .orElseThrow(PtCourseNotFoundException::new);
 
         return new OrganizationInfo(
                 organizationId,

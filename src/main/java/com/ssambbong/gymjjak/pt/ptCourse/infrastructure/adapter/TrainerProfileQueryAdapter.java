@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
 
     @Override
     public TrainerInfo findByUserId(Long userId) {
-        Object[] result = (Object[]) em.createNativeQuery("""
+        List<?> results = em.createNativeQuery("""
                 SELECT tp.trainer_profile_id, ot.organization_id
                 FROM trainer_profiles tp
                 JOIN organization_trainers ot ON tp.trainer_profile_id = ot.trainer_profile_id
@@ -29,7 +30,11 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
                 LIMIT 1
                 """)
                 .setParameter("userId", userId)
-                .getSingleResult();
+                .getResultList();
+
+        Object[] result = (Object[]) results.stream()
+                .findFirst()
+                .orElseThrow(PtCourseNotFoundException::new);
 
         return new TrainerInfo(
                 ((Number) result[0]).longValue(),
@@ -39,7 +44,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
 
     @Override
     public TrainerDisplayInfo findById(Long trainerProfileId) {
-        Object[] result = (Object[]) em.createNativeQuery("""
+        List<?> results = em.createNativeQuery("""
                 SELECT tp.trainer_name,
                        tp.introduction,
                        tp.average_rating,
@@ -50,7 +55,11 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
                   AND tp.deleted_at IS NULL
                 """)
                 .setParameter(1, trainerProfileId)
-                .getSingleResult();
+                .getResultList();
+
+        Object[] result = (Object[]) results.stream()
+                .findFirst()
+                .orElseThrow(PtCourseNotFoundException::new);
 
         List<String> certifications = findTrainerCertificationNames(trainerProfileId);
         List<String> awards = findTrainerAwardNames(trainerProfileId);

@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,12 +57,12 @@ class PtCourseQueryServiceTest {
                 List.of(new CategoryQueryUseCase.CategoryView(1L, "헬스", null, 0L))
         );
 
-        when(organizationQueryPort.findById(anyLong())).thenReturn(
+        when(organizationQueryPort.findById(eq(1L))).thenReturn(
                 new OrganizationQueryPort.OrganizationInfo(
                         1L, "짐짝피트니스", "서울 강남구", 37.5007, 127.0365,
                         "02-1234-5678", null, null)
         );
-        when(trainerProfileQueryPort.findById(anyLong())).thenReturn(
+        when(trainerProfileQueryPort.findById(eq(1L))).thenReturn(
                 new TrainerProfileQueryPort.TrainerDisplayInfo(
                         "트레이너01", "안전하게 지도합니다.", 4.6, 1, null, List.of(), List.of())
         );
@@ -112,7 +113,7 @@ class PtCourseQueryServiceTest {
         // given
         PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
-        when(trainerProfileQueryPort.findById(anyLong())).thenReturn(
+        when(trainerProfileQueryPort.findById(eq(1L))).thenReturn(
                 new TrainerProfileQueryPort.TrainerDisplayInfo(
                         "트레이너01",
                         "안전하게 지도합니다.",
