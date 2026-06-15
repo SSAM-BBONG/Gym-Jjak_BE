@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -18,7 +19,7 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     public ChatRoom save(ChatRoom chatRoom) {
         ChatRoomJpaEntity entity = new ChatRoomJpaEntity(
                 chatRoom.getUserId(),
-                chatRoom.getTrainerProfileId(),
+                chatRoom.getTrainerId(),
                 chatRoom.getPtCourseId(),
                 chatRoom.getStatus()
         );
@@ -31,21 +32,33 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     }
 
     @Override
-    public boolean existsByUserIdAndTrainerProfileIdAndStatus(Long userId, Long trainerProfileId, ChatRoomStatus status) {
-        return repository.existsByUserIdAndTrainerProfileIdAndStatus(userId, trainerProfileId, status);
+    public boolean existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status) {
+        return repository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(userId, trainerId, ptCourseId, status);
+    }
+
+    @Override
+    public void leaveChatRoom(ChatRoom chatRoom) {
+        if (chatRoom.isUserLeft()) {
+            repository.markUserLeft(chatRoom.getId());
+        }
+        if (chatRoom.isTrainerLeft()) {
+            repository.markTrainerLeft(chatRoom.getId());
+        }
+        repository.updateStatusAfterLeave(chatRoom.getId(), LocalDateTime.now());
     }
 
     private ChatRoom toDomain(ChatRoomJpaEntity entity) {
         return ChatRoom.restore(
                 entity.getId(),
                 entity.getUserId(),
-                entity.getTrainerProfileId(),
+                entity.getTrainerId(),
                 entity.getPtCourseId(),
                 entity.isUserLeft(),
                 entity.isTrainerLeft(),
                 entity.getStatus(),
                 entity.getCreatedAt(),
                 entity.getClosedAt(),
+                entity.getLastMessageAt(),
                 entity.getUpdatedAt()
         );
     }
