@@ -15,6 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Slf4j
@@ -52,9 +55,9 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         }
         int scheduleCount = command.schedules().size();
 
-        // 같은 요청 내 (dayOfWeek, startTime, endTime) 조합 중복 검증
+        // 같은 요청 내 (dayOfWeek, startTime, endTime) 조합 중복 검증 (파싱 후 정규화된 값 기준)
         long distinctSchedule = command.schedules().stream()
-                        .map(s -> s.dayOfWeek() + "|" + s.startTime() + "|" + s.endTime())
+                        .map(s -> normalizeScheduleKey(s.dayOfWeek(), s.startTime(), s.endTime()))
                         .distinct()
                         .count();
         if (distinctSchedule != scheduleCount) {
@@ -98,5 +101,17 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         log.info("[PtCourseCreate] ptCourseId={}", saved.getId());
         return saved.getId();
+    }
+
+    // 스케줄 슬롯 중복 검증용 정규화 키 생성 (파싱 실패 시 도메인 예외로 변환)
+    private String normalizeScheduleKey(String dayOfWeek, String startTime, String endTime) {
+        try {
+            DayOfWeek day = DayOfWeek.valueOf(dayOfWeek);
+            LocalTime start = LocalTime.parse(startTime);
+            LocalTime end = LocalTime.parse(endTime);
+            return day + "|" + start + "|" + end;
+        } catch (IllegalArgumentException | DateTimeParseException e) {
+            throw new PtCourseInvalidException();
+        }
     }
 }
