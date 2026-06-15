@@ -220,6 +220,15 @@ CREATE TABLE trainer_applications (
                                       reject_reason VARCHAR(500) NULL,
                                       reviewed_by BIGINT NULL,
                                       reviewed_at DATETIME(6) NULL,
+
+                                      duplicate_blocking_user_id BIGINT
+                                          GENERATED ALWAYS AS (
+                                              CASE
+                                                  WHEN status IN ('PENDING', 'APPROVED') THEN user_id
+                                                  ELSE NULL
+                                                  END
+                                              ) STORED,
+
                                       created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
 
@@ -236,7 +245,9 @@ CREATE TABLE trainer_applications (
                                           FOREIGN KEY (certificate_file_id) REFERENCES files(file_id),
 
                                       CONSTRAINT fk_trainer_applications_reviewed_by
-                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+                                          FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
+                                      UNIQUE KEY uk_trainer_applications_duplicate_blocking_user (duplicate_blocking_user_id),
+                                      INDEX idx_trainer_applications_user_status (user_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE trainer_profiles (
