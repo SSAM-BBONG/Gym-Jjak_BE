@@ -55,7 +55,7 @@ CREATE TABLE users (
                        suspended_until DATETIME(6) NULL COMMENT '기간제 정지 만료일 (7일 정지 등)',
                        last_login_at DATETIME(6) NULL,
                        created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+                       updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                        deleted_at DATETIME(6) NULL,
                        CONSTRAINT pk_users PRIMARY KEY (user_id),
                        CONSTRAINT uk_users_username UNIQUE (username),
@@ -689,12 +689,3 @@ CREATE TABLE system_logs (
                              INDEX idx_system_logs_created_at (created_at),
                              INDEX idx_system_logs_exception_class (exception_class)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-ALTER TABLE users
-    MODIFY updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6);
-
-ALTER TABLE regions
-DROP INDEX uk_regions_area;
-
-ALTER TABLE users
-    ADD COLUMN suspended_until DATETIME(6) NULL

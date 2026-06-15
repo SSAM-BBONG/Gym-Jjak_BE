@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 
 import java.util.Optional;

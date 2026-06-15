@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerAppl
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public interface SpringDataTrainerApplicationRepository extends JpaRepository<TrainerApplicationJpaEntity, Long> {
 
@@ -12,4 +13,6 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
             Long userId,
             Collection<TrainerApplicationStatus> statuses
     );
+
+    Optional<TrainerApplicationJpaEntity> findTopByUserIdOrderByCreatedAtDescTrainerApplicationIdDesc(Long userId);
 }
