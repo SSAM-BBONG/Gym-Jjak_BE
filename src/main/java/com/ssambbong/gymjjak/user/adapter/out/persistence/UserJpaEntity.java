@@ -58,9 +58,6 @@ public class UserJpaEntity extends BaseTimeEntity {
     @Column(name = "last_login_at", columnDefinition = "DATETIME(6)")
     private LocalDateTime  lastLoginAt;
 
-    @Column(name = "suspended_until")
-    private LocalDateTime suspendedUntil;
-
     public UserJpaEntity(
             Long id,
             String username,
@@ -71,8 +68,7 @@ public class UserJpaEntity extends BaseTimeEntity {
             UserRole role,
             UserStatus status,
             boolean onboardingCompleted,
-            LocalDateTime  lastLoginAt,
-            LocalDateTime suspendedUntil
+            LocalDateTime  lastLoginAt
     ) {
         this.id = id;
         this.username = username;
@@ -84,7 +80,6 @@ public class UserJpaEntity extends BaseTimeEntity {
         this.status = status;
         this.onboardingCompleted = onboardingCompleted;
         this.lastLoginAt = lastLoginAt;
-        this.suspendedUntil = suspendedUntil;
     }
 
     public void updateLastLoginAt(LocalDateTime lastLoginAt) {

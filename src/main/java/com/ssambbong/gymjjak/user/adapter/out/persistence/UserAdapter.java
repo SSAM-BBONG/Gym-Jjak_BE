@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.User;
+import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -123,6 +124,11 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     @Override
     public int deleteWithdrawnUsersBefore(LocalDateTime threshold, int batchSize) {
         return springDataUserRepository.deleteWithdrawnUsersBefore(threshold, batchSize);
+    }
+
+    @Override
+    public void updateStatus(Long userId, UserStatus status) {
+        springDataUserRepository.updateStatus(userId, status);
     }
 
 }

@@ -20,7 +20,6 @@ public class User {
     private final LocalDateTime  createdAt;
     private LocalDateTime  updatedAt;
     private LocalDateTime  deletedAt;
-    private LocalDateTime suspendedUntil;
 
     private User(
             Long id,
@@ -35,8 +34,7 @@ public class User {
             LocalDateTime  lastLoginAt,
             LocalDateTime  createdAt,
             LocalDateTime  updatedAt,
-            LocalDateTime  deletedAt,
-            LocalDateTime suspendedUntil
+            LocalDateTime  deletedAt
     ) {
         this.id = id;
         this.username = normalizeRequiredText(username, UserErrorCode.USERNAME_REQUIRED);
@@ -51,7 +49,6 @@ public class User {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.deletedAt = deletedAt;
-        this.suspendedUntil = suspendedUntil;
     }
 
     public static User register(
@@ -74,7 +71,6 @@ public class User {
                 null,
                 null,
                 null,
-                null,
                 null
         );
     }
@@ -92,8 +88,7 @@ public class User {
             LocalDateTime  lastLoginAt,
             LocalDateTime  createdAt,
             LocalDateTime  updatedAt,
-            LocalDateTime  deletedAt,
-            LocalDateTime suspendedUntil
+            LocalDateTime  deletedAt
     ) {
         return new User(
                 id,
@@ -108,8 +103,7 @@ public class User {
                 lastLoginAt,
                 createdAt,
                 updatedAt,
-                deletedAt,
-                suspendedUntil
+                deletedAt
         );
     }
 
@@ -159,7 +153,6 @@ public class User {
         validateNotWithdrawn();
 
         this.status = UserStatus.ACTIVE;
-        this.suspendedUntil = null;
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
@@ -171,7 +164,6 @@ public class User {
         }
 
         this.status = UserStatus.DAY_7;
-        this.suspendedUntil = Objects.requireNonNull(now, "now는 필수입니다.").plusDays(7);
         this.updatedAt = now;
     }
 
@@ -183,7 +175,6 @@ public class User {
         }
 
         this.status = UserStatus.ETERNAL;
-        this.suspendedUntil = null;
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
@@ -192,16 +183,7 @@ public class User {
             return;
         }
 
-        if (this.suspendedUntil == null) {
-            return;
-        }
-
-        if (this.suspendedUntil.isAfter(now)) {
-            return;
-        }
-
         this.status = UserStatus.ACTIVE;
-        this.suspendedUntil = null;
     }
 
     public boolean isActive() {
@@ -262,6 +244,10 @@ public class User {
         return validated.trim();
     }
 
+    public void changeStatus(UserStatus status) {
+        this.status = status;
+    }
+
     public Long getId() {
         return id;
     }
@@ -308,9 +294,5 @@ public class User {
 
     public LocalDateTime  getDeletedAt() {
         return deletedAt;
-    }
-
-    public LocalDateTime getSuspendedUntil() {
-        return suspendedUntil;
     }
 }

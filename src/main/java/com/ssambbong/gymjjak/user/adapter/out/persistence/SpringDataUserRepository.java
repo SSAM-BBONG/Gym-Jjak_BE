@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -68,6 +69,17 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
     int deleteWithdrawnUsersBefore(
             @Param("threshold") LocalDateTime threshold,
             @Param("batchSize") int batchSize
+    );
+
+    @Modifying
+    @Query("""
+    update UserJpaEntity u
+    set u.status = :status
+    where u.id = :userId
+""")
+    void updateStatus(
+            @Param("userId") Long userId,
+            @Param("status") UserStatus status
     );
 
 }
