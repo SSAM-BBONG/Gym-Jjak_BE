@@ -47,7 +47,7 @@ public class OrganizationAdaptor implements OrganizationRepository {
                 query.size(),
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("organizationId"))
         );
-        Page<OrganizationAdminView> page = springDataOrganizationRepository.findAllForAdmin(pageRequest);
+        Page<OrganizationAdminView> page = springDataOrganizationRepository.findAllForAdmin(query.keyword(), pageRequest);
         return new OrganizationListResult(
                 page.getContent(),
                 query.page(),
