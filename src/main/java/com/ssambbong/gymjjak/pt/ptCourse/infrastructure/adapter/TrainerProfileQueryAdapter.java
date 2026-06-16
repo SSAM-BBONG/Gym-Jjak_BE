@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.TrainerProfileNotFoundException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -34,7 +34,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
 
         Object[] result = (Object[]) results.stream()
                 .findFirst()
-                .orElseThrow(PtCourseNotFoundException::new);
+                .orElseThrow(TrainerProfileNotFoundException::new);
 
         return new TrainerInfo(
                 ((Number) result[0]).longValue(),
@@ -56,7 +56,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
 
         Object[] result = (Object[]) results.stream()
                 .findFirst()
-                .orElseThrow(PtCourseNotFoundException::new);
+                .orElseThrow(TrainerProfileNotFoundException::new);
 
         return new TrainerSummaryInfo(
                 (String) result[0],
@@ -82,7 +82,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
 
         Object[] result = (Object[]) results.stream()
                 .findFirst()
-                .orElseThrow(PtCourseNotFoundException::new);
+                .orElseThrow(TrainerProfileNotFoundException::new);
 
         List<String> certifications = findTrainerCertificationNames(trainerProfileId);
         List<String> awards = findTrainerAwardNames(trainerProfileId);
