@@ -39,9 +39,9 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
                 where ta.status = :status
                   and (
                        :keyword is null
-                       or lower(u.username) like lower(concat('%', :keyword, '%'))
-                       or lower(u.name) like lower(concat('%', :keyword, '%'))
-                       or lower(u.nickname) like lower(concat('%', :keyword, '%'))
+                       or u.username like concat('%', :keyword, '%')
+                       or u.name like concat('%', :keyword, '%')
+                       or u.nickname like concat('%', :keyword, '%')
                   )
                 order by ta.createdAt asc, ta.trainerApplicationId asc
                 """,
@@ -51,10 +51,10 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
                     join UserJpaEntity  u on u.id = ta.userId
                     where ta.status = :status
                     and (
-                        :keyword is null
-                        or lower(u.username) like lower(concat('%', :keyword, '%'))
-                        or lower(u.name) like lower(concat('%', :keyword, '%'))
-                        or lower(u.nickname) like lower(concat('%', :keyword, '%'))
+                         :keyword is null
+                         or u.username like concat('%', :keyword, '%')
+                         or u.name like concat('%', :keyword, '%')
+                         or u.nickname like concat('%', :keyword, '%')
                     )
             """
     )
