@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdatePasswordRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserProfileRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.PasswordVerificationRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserStatusRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.response.FindUserResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserProfileResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
 import com.ssambbong.gymjjak.user.application.command.UpdatePasswordCommand;
@@ -22,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -125,10 +128,34 @@ public class UserController {
 
     }
 
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping("/all")
-//    @Operation(summary = "관리자 회원 목록 조회", description = "회원 전체를 조회한다.")
-//    public ResponseEntity<GlobalApiResponse<>>
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/all")
+    @Operation(summary = "관리자 회원 목록 조회", description = "회원을 조회한다.")
+    public ResponseEntity<GlobalApiResponse<List<FindUserResponse>>> findAllUsers(
+            @RequestParam(required = false) String name
+    ) {
+        List<FindUserResponse> response = userCommandUseCase.findUsers(name).stream()
+                .map(FindUserResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(UserResponseCode.USER_FOUND, response)
+        );
+
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/blacklist")
+    @Operation(summary = "관리자 블랙리스트 회원 목록 조회", description = "블랙리스트 회원을 조회한다.")
+    public ResponseEntity<GlobalApiResponse<List<FindUserResponse>>> findSuspendedUsers() {
+        List<FindUserResponse> response = userCommandUseCase.findBlacklistUsers().stream()
+                .map(FindUserResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(UserResponseCode.USER_FOUND, response)
+        );
+    }
 
 
 }

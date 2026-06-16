@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
@@ -98,4 +100,35 @@ where u.id = :userId
             @Param("updatedAt") LocalDateTime updatedAt
     );
 
+    @Query("""
+select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
+    u.id,
+    u.username,
+    u.name,
+    u.nickname,
+    u.status
+)
+from UserJpaEntity u
+where :name is null
+   or :name = ''
+   or lower(u.name) like lower(concat('%', :name, '%'))
+order by u.createdAt desc
+""")
+    List<FindUserResult> findUsers(@Param("name") String name);
+
+    @Query("""
+select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
+    u.id,
+    u.username,
+    u.name,
+    u.nickname,
+    u.status
+)
+from UserJpaEntity u
+where u.status in :statuses
+order by u.createdAt desc
+""")
+    List<FindUserResult> findBlacklistUsers(
+            @Param("statuses") List<UserStatus> statuses
+    );
 }

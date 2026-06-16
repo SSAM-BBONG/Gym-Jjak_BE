@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.user.application.service;
 
 import com.ssambbong.gymjjak.user.application.command.*;
 import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
+import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -237,7 +239,14 @@ public class UserCommandService implements UserCommandUseCase {
 
     @Override
     public void updatePassword(UpdatePasswordCommand command) {
+        if (command.newPassword() == null || command.newPassword().isBlank()
+                || command.checkNewPassword() == null || command.checkNewPassword().isBlank()) {
+            throw new UserException(UserErrorCode.PASSWORD_CONFIRM_NOT_MATCHED);
+        }
+        UserPolicy.validatePasswordPolicy(command.newPassword());
+
         log.debug("event=password_update_start userId={}", command.userId());
+
         if (!command.newPassword().equals(command.checkNewPassword())) {
             throw new UserException(UserErrorCode.PASSWORD_CONFIRM_NOT_MATCHED);
         }
@@ -252,6 +261,28 @@ public class UserCommandService implements UserCommandUseCase {
 
         userPort.updatePassword(user.getId(), encodedPassword, LocalDateTime.now());
         log.info("event=password_update_succeed userId={}", command.userId());
+    }
+
+    @Override
+    public List<FindUserResult> findUsers(String keyword) {
+        log.debug("event=users_find_start, keyword={}", keyword);
+
+        List<FindUserResult> results = userPort.findUsers(keyword);
+
+        log.info("event=users_find_succeed, keyword={}, count={}", keyword, results.size());
+
+        return results;
+    }
+
+    @Override
+    public List<FindUserResult> findBlacklistUsers() {
+        log.debug("event=find_blacklistUsers_start");
+
+        List<FindUserResult> results = userPort.findBlacklistUsers();
+
+        log.info("event=find_blacklistUsers_succeed, count={}", results.size());
+
+        return results;
     }
 
     private String maskPhone(String phone) {
