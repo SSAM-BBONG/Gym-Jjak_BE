@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface PtReservationRepository {
 
@@ -20,4 +21,7 @@ public interface PtReservationRepository {
 
     // status null이면 전체 조회
     List<PtReservation> findAllByUserId(Long userId, PtReservationStatus status);
+
+    // 예약 1건 상세 조회 (본인 확인용)
+    Optional<PtReservation> findById(Long id);
 }

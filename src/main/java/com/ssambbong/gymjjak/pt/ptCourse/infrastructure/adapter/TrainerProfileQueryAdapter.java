@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.TrainerProfileNotFoundException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -26,6 +26,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
                 JOIN organization_trainers ot ON tp.trainer_profile_id = ot.trainer_profile_id
                 WHERE tp.user_id = :userId
                 AND tp.status = 'ACTIVE'
+                AND tp.deleted_at IS NULL
                 AND ot.removed_at IS NULL
                 LIMIT 1
                 """)
@@ -34,7 +35,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
 
         Object[] result = (Object[]) results.stream()
                 .findFirst()
-                .orElseThrow(PtCourseNotFoundException::new);
+                .orElseThrow(TrainerProfileNotFoundException::new);
 
         return new TrainerInfo(
                 ((Number) result[0]).longValue(),
@@ -42,6 +43,29 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
         );
     }
 
+    // 목록 조회용: trainerName, reviewCount만 조회 (자격증/수상 쿼리 없음)
+    @Override
+    public TrainerSummaryInfo findSummaryById(Long trainerProfileId) {
+        List<?> results = em.createNativeQuery("""
+                SELECT tp.trainer_name, tp.review_count
+                FROM trainer_profiles tp
+                WHERE tp.trainer_profile_id = ?1
+                  AND tp.deleted_at IS NULL
+                """)
+                .setParameter(1, trainerProfileId)
+                .getResultList();
+
+        Object[] result = (Object[]) results.stream()
+                .findFirst()
+                .orElseThrow(TrainerProfileNotFoundException::new);
+
+        return new TrainerSummaryInfo(
+                (String) result[0],
+                result[1] != null ? ((Number) result[1]).intValue() : 0
+        );
+    }
+
+    // 상세 조회용: 전체 정보 조회 (자격증/수상 포함)
     @Override
     public TrainerDisplayInfo findById(Long trainerProfileId) {
         List<?> results = em.createNativeQuery("""
@@ -59,7 +83,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
 
         Object[] result = (Object[]) results.stream()
                 .findFirst()
-                .orElseThrow(PtCourseNotFoundException::new);
+                .orElseThrow(TrainerProfileNotFoundException::new);
 
         List<String> certifications = findTrainerCertificationNames(trainerProfileId);
         List<String> awards = findTrainerAwardNames(trainerProfileId);

@@ -16,7 +16,10 @@ public enum PtReservationErrorCode implements ErrorCode {
     PT_RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "PT_RESERVATION_002", "예약을 찾을 수 없습니다."),
 
     // 중복 예약
-    PT_RESERVATION_DUPLICATE(HttpStatus.CONFLICT, "PT_RESERVATION_003", "이미 예약된 시간입니다.");
+    PT_RESERVATION_DUPLICATE(HttpStatus.CONFLICT, "PT_RESERVATION_003", "이미 예약된 시간입니다."),
+
+    // 본인 예약이 아닌 경우
+    PT_RESERVATION_FORBIDDEN(HttpStatus.FORBIDDEN, "PT_RESERVATION_004", "본인의 예약만 조회할 수 있습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
