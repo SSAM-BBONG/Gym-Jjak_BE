@@ -2,10 +2,14 @@ package com.ssambbong.gymjjak.chat.application.service;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
+import com.ssambbong.gymjjak.chat.application.query.ChatRoomListResult;
+import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
+
+import java.util.List;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAccessDeniedException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAlreadyExistsException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
@@ -80,5 +84,13 @@ public class ChatRoomService implements ChatRoomUseCase {
         chatRoomRepository.leaveChatRoom(chatRoom);
         log.info("채팅방 나가기 완료 - chatRoomId: {}, requesterId: {}, status: {}",
                 chatRoomId, requesterId, chatRoom.getStatus());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChatRoomListResult getChatRooms(Long requesterId) {
+        List<ChatRoomSummary> rooms = chatRoomRepository.findChatRoomsByRequesterId(requesterId);
+        long totalUnreadCount = rooms.stream().mapToLong(ChatRoomSummary::unreadCount).sum();
+        return new ChatRoomListResult(rooms.size(), totalUnreadCount, rooms);
     }
 }

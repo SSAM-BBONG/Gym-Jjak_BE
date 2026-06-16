@@ -557,6 +557,7 @@ CREATE TABLE chat_messages (
                                chat_room_id BIGINT NOT NULL,
                                sender_id BIGINT NOT NULL,
                                content TEXT NOT NULL,
+                               is_read BOOLEAN NOT NULL DEFAULT FALSE,
                                created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                CONSTRAINT pk_chat_messages PRIMARY KEY (chat_message_id),
                                CONSTRAINT fk_chat_messages_room FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(chat_room_id) ON DELETE CASCADE,

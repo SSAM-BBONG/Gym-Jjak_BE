@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaEntity, Long> {
 
@@ -28,4 +29,30 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
             WHERE chat_room_id = :id AND status != 'DELETED'
             """, nativeQuery = true)
     void updateStatusAfterLeave(@Param("id") Long chatRoomId, @Param("closedAt") LocalDateTime closedAt);
+
+    @Query(value = """
+            SELECT
+                cr.chat_room_id AS chatRoomId,
+                CASE WHEN cr.user_id = :requesterId THEN tp.trainer_name ELSE u.nickname END AS partnerName,
+                CASE WHEN cr.user_id = :requesterId THEN 'TRAINER' ELSE 'USER' END AS partnerRole,
+                CASE WHEN cr.user_id = :requesterId THEN f.file_url ELSE NULL END AS partnerProfileImageUrl,
+                (SELECT cm.content FROM chat_messages cm
+                 WHERE cm.chat_room_id = cr.chat_room_id
+                 ORDER BY cm.created_at DESC LIMIT 1) AS lastMessage,
+                cr.last_message_at AS lastMessageAt,
+                (SELECT COUNT(*) FROM chat_messages cm
+                 WHERE cm.chat_room_id = cr.chat_room_id
+                   AND cm.sender_id != :requesterId
+                   AND cm.is_read = false) AS unreadCount
+            FROM chat_rooms cr
+            LEFT JOIN trainer_profiles tp ON cr.trainer_id = tp.user_id
+            LEFT JOIN users u ON cr.user_id = u.user_id
+            LEFT JOIN files f ON tp.profile_file_id = f.file_id
+            WHERE (cr.user_id = :requesterId OR cr.trainer_id = :requesterId)
+              AND cr.status != 'DELETED'
+              AND NOT (cr.user_id = :requesterId AND cr.user_left = true)
+              AND NOT (cr.trainer_id = :requesterId AND cr.trainer_left = true)
+            ORDER BY cr.last_message_at IS NULL ASC, cr.last_message_at DESC
+            """, nativeQuery = true)
+    List<ChatRoomSummaryProjection> findChatRoomSummariesByRequesterId(@Param("requesterId") Long requesterId);
 }
