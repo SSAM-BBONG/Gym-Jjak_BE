@@ -101,11 +101,23 @@ public class SecurityConfig {
                         // 일반 사용자 API
                         // 관리자가 사용자 API도 접근 가능해야 하면 ROLE_ADMIN 포함
                         .requestMatchers("/api/users/**")
-                        .hasAnyAuthority("ADMIN", "USER","TRAINER")
 
-                        // 트레이너 신청 API
-                        .requestMatchers("/api/trainer-applications/**")
-                        .hasAnyAuthority("USER")
+                        .hasAnyAuthority("ADMIN", "USER","TRAINER")
+                        // 트레이너 신청 목록 조회 - 관리자
+                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
+                        .hasAuthority("ADMIN")
+
+                        // 내 트레이너 신청서 상세 조회 - 사용자
+                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
+                        .hasAuthority("USER")
+
+                        // 트레이너 신청 생성 - 사용자
+                        .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
+                        .hasAuthority("USER")
+
+                        // 트레이너 신청 수정 - 사용자
+                        .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*")
+                        .hasAuthority("USER")
 
                         // 트레이너 API
                         .requestMatchers("/api/trainers/**")
