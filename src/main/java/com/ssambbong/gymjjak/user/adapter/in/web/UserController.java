@@ -2,11 +2,13 @@ package com.ssambbong.gymjjak.user.adapter.in.web;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdatePasswordRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserProfileRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.PasswordVerificationRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserStatusRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserProfileResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
+import com.ssambbong.gymjjak.user.application.command.UpdatePasswordCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateUserStatusCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
@@ -100,10 +102,27 @@ public class UserController {
                         request.reason()
                 )
         );
-
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(UserResponseCode.USER_STATUS_UPDATED)
         );
+    }
+
+    @PatchMapping("/me/updatePassword")
+    @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경한다.")
+    public ResponseEntity<GlobalApiResponse<Void>> updatePassword(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody UpdatePasswordRequest request
+    ) {
+        userCommandUseCase.updatePassword(new UpdatePasswordCommand(
+                authUser.userId(),
+                request.newPassword(),
+                request.checkNewPassword()
+        ));
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(UserResponseCode.PASSWORD_CHANGED)
+        );
+
     }
 
 //    @PreAuthorize("hasAuthority('ADMIN')")
