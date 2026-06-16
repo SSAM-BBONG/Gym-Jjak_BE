@@ -23,8 +23,6 @@ TRUNCATE TABLE pt_courses;
 TRUNCATE TABLE organization_trainers;
 TRUNCATE TABLE trainer_awards;
 TRUNCATE TABLE trainer_certifications;
-TRUNCATE TABLE trainer_application_awards;
-TRUNCATE TABLE trainer_application_certifications;
 TRUNCATE TABLE trainer_profiles;
 TRUNCATE TABLE trainer_applications;
 TRUNCATE TABLE organizations;
@@ -113,7 +111,13 @@ INSERT INTO files (uploader_id, original_name, stored_name, file_url, content_ty
                                                                                                                       (1, 'feedback_vid1.mp4', 'uuid-fb1.mp4', 'https://s3.gymjjak.com/uuid-fb1.mp4', 'video/mp4', 15000, 'FEEDBACK_VIDEO', 'ACTIVE'),
                                                                                                                       (8, 'license_pending1.pdf', 'uuid-lic-p1.pdf', 'https://s3.gymjjak.com/uuid-lic-p1.pdf', 'application/pdf', 1024, 'BUSINESS_LICENSE', 'ACTIVE'),
                                                                                                                       (9, 'license_pending2.pdf', 'uuid-lic-p2.pdf', 'https://s3.gymjjak.com/uuid-lic-p2.pdf', 'application/pdf', 1024, 'BUSINESS_LICENSE', 'ACTIVE'),
-                                                                                                                      (10, 'license_pending3.pdf', 'uuid-lic-p3.pdf', 'https://s3.gymjjak.com/uuid-lic-p3.pdf', 'application/pdf', 1024, 'BUSINESS_LICENSE', 'ACTIVE');
+                                                                                                                      (10, 'license_pending3.pdf', 'uuid-lic-p3.pdf', 'https://s3.gymjjak.com/uuid-lic-p3.pdf', 'application/pdf', 1024, 'BUSINESS_LICENSE', 'ACTIVE'),
+                                                                                                                      (11, 'trainer_cert1.jpg', 'uuid-tr-cert1.jpg', 'https://s3.gymjjak.com/uuid-tr-cert1.jpg', 'image/jpeg', 2048, 'CERTIFICATION', 'ACTIVE'),
+                                                                                                                      (12, 'trainer_cert2.jpg', 'uuid-tr-cert2.jpg', 'https://s3.gymjjak.com/uuid-tr-cert2.jpg', 'image/jpeg', 2048, 'CERTIFICATION', 'ACTIVE'),
+                                                                                                                      (13, 'trainer_cert3.jpg', 'uuid-tr-cert3.jpg', 'https://s3.gymjjak.com/uuid-tr-cert3.jpg', 'image/jpeg', 2048, 'CERTIFICATION', 'ACTIVE'),
+                                                                                                                      (14, 'trainer_cert4.jpg', 'uuid-tr-cert4.jpg', 'https://s3.gymjjak.com/uuid-tr-cert4.jpg', 'image/jpeg', 2048, 'CERTIFICATION', 'ACTIVE'),
+                                                                                                                      (15, 'trainer_cert5.jpg', 'uuid-tr-cert5.jpg', 'https://s3.gymjjak.com/uuid-tr-cert5.jpg', 'image/jpeg', 2048, 'CERTIFICATION', 'ACTIVE'),
+                                                                                                                      (16, 'trainer_cert6.jpg', 'uuid-tr-cert6.jpg', 'https://s3.gymjjak.com/uuid-tr-cert6.jpg', 'image/jpeg', 2048, 'CERTIFICATION', 'ACTIVE');
 
 -- ---------------------------------------------------------
 -- 5. 조직 (Organization Applications & Organizations)
@@ -135,49 +139,80 @@ INSERT INTO organizations (organization_account_id, owner_user_id, application_i
 -- ---------------------------------------------------------
 -- 6. 트레이너 프로필 및 자격증/수상 내역
 -- ---------------------------------------------------------
-INSERT INTO trainer_applications (user_id, profile_file_id, spec, introduction, status) VALUES
-                                                                                            (11, 4, '생활체육지도자 2급', '안녕하세요. 득근맨입니다.', 'APPROVED'),
-                                                                                            (12, 5, '건강운동관리사', '정확한 자세를 알려드립니다.', 'APPROVED'),
-                                                                                            (13, 6, 'NASM-CPT', '바프 전문 트레이너입니다.', 'APPROVED'),
-                                                                                            (14, 7, '재활치료사 면허', '통증 없는 운동을 지향합니다.', 'APPROVED'),
-                                                                                            (15, 8, '생활체육지도자 1급', '다이어트 확실하게 시켜드립니다.', 'APPROVED'),
-                                                                                            (16, 9, '크로스핏 레벨1', '체력 증진 전문입니다.', 'APPROVED');
+INSERT INTO trainer_applications (
+    user_id,
+    profile_file_id,
+    certificate_file_id,
+    qualifications,
+    award_histories,
+    introduction,
+    status
+) VALUES
+      (11, 4, 20, '["생활체육지도자 2급"]', '[]', '안녕하세요. 득근맨입니다.', 'APPROVED'),
+      (12, 5, 21, '["건강운동관리사"]', '[]', '정확한 자세를 알려드립니다.', 'APPROVED'),
+      (13, 6, 22, '["NASM-CPT"]', '["2023 WNGP 스포츠모델 1위"]', '바프 전문 트레이너입니다.', 'APPROVED'),
+      (14, 7, 23, '["재활치료사 면허"]', '[]', '통증 없는 운동을 지향합니다.', 'APPROVED'),
+      (15, 8, 24, '["생활체육지도자 1급"]', '[]', '다이어트 확실하게 시켜드립니다.', 'APPROVED'),
+      (16, 9, 25, '["크로스핏 레벨1"]', '[]', '체력 증진 전문입니다.', 'APPROVED');
 
-INSERT INTO trainer_profiles (user_id, application_id, profile_file_id, display_name, spec, introduction, average_rating, review_count, status) VALUES
-                                                                                                                                                    (11, 1, 4, '득근맨', '생활체육지도자 2급', '안녕하세요. 득근맨입니다.', 4.5, 10, 'ACTIVE'),
-                                                                                                                                                    (12, 2, 5, '헬창인생', '건강운동관리사', '정확한 자세를 알려드립니다.', 4.8, 25, 'ACTIVE'),
-                                                                                                                                                    (13, 3, 6, '바프장인', 'NASM-CPT', '바프 전문 트레이너입니다.', 5.0, 50, 'ACTIVE'),
-                                                                                                                                                    (14, 4, 7, '재활마스터', '재활치료사 면허', '통증 없는 운동을 지향합니다.', 4.9, 30, 'ACTIVE'),
-                                                                                                                                                    (15, 5, 8, '다이어터', '생활체육지도자 1급', '다이어트 확실하게 시켜드립니다.', 4.2, 5, 'ACTIVE'),
-                                                                                                                                                    (16, 6, 9, '운동은밥', '크로스핏 레벨1', '체력 증진 전문입니다.', 4.7, 15, 'ACTIVE');
+INSERT INTO trainer_profiles (
+    user_id,
+    application_id,
+    profile_file_id,
+    trainer_name,
+    introduction,
+    average_rating,
+    review_count,
+    status
+) VALUES
+      (11, 1, 4, '득근맨', '안녕하세요. 득근맨입니다.', 4.5, 10, 'ACTIVE'),
+      (12, 2, 5, '헬창인생', '정확한 자세를 알려드립니다.', 4.8, 25, 'ACTIVE'),
+      (13, 3, 6, '바프장인', '바프 전문 트레이너입니다.', 5.0, 50, 'ACTIVE'),
+      (14, 4, 7, '재활마스터', '통증 없는 운동을 지향합니다.', 4.9, 30, 'ACTIVE'),
+      (15, 5, 8, '다이어터', '다이어트 확실하게 시켜드립니다.', 4.2, 5, 'ACTIVE'),
+      (16, 6, 9, '운동은밥', '체력 증진 전문입니다.', 4.7, 15, 'ACTIVE');
 
-INSERT INTO trainer_application_certifications (application_id, name, issuer, acquired_date) VALUES (1, '생활체육지도자 2급', '국민체육진흥공단', '2020-05-10');
-INSERT INTO trainer_certifications (trainer_profile_id, name, issuer, acquired_date) VALUES (1, '생활체육지도자 2급', '국민체육진흥공단', '2020-05-10');
-INSERT INTO trainer_application_awards (application_id, competition_name, award_name, award_date) VALUES (3, '2023 WNGP', '스포츠모델 1위', '2023-09-15');
-INSERT INTO trainer_awards (trainer_profile_id, competition_name, award_name, award_date) VALUES (3, '2023 WNGP', '스포츠모델 1위', '2023-09-15');
+INSERT INTO trainer_certifications (
+    trainer_profile_id,
+    name,
+    file_id
+) VALUES
+      (1, '생활체육지도자 2급', 20),
+      (2, '건강운동관리사', 21),
+      (3, 'NASM-CPT', 22),
+      (4, '재활치료사 면허', 23),
+      (5, '생활체육지도자 1급', 24),
+      (6, '크로스핏 레벨1', 25);
+
+INSERT INTO trainer_awards (
+    trainer_profile_id,
+    name
+) VALUES
+    (3, '2023 WNGP 스포츠모델 1위');
+
 INSERT INTO organization_trainers (organization_id, trainer_profile_id, registered_by) VALUES
                                                                                            (1, 1, 19), (1, 2, 19), (2, 3, 20), (2, 4, 20), (3, 5, 21), (3, 6, 21);
 
 -- ---------------------------------------------------------
 -- 7. PT 코스 및 스케줄, 커리큘럼
 -- ---------------------------------------------------------
-INSERT INTO pt_courses (organization_id, trainer_profile_id, category_id, tag_id, thumbnail_file_id, title, description, price, total_session_count, supports_diet_log, supports_workout_log, status) VALUES
-                                                                                                                                                                                                          (1, 1, 2, 1, 10, '왕초보 탈출 30일 루틴', '웨이트 트레이닝 기초 완벽 가이드', 500000, 10, TRUE, TRUE, 'VISIBLE'),
-                                                                                                                                                                                                          (1, 2, 1, 4, 11, '10kg 감량 보장 다이어트', '체계적인 식단과 유산소 병행', 700000, 15, TRUE, TRUE, 'VISIBLE'),
-                                                                                                                                                                                                          (2, 3, 2, 2, 12, '인생 바프 만들기 프로젝트', '바프 준비를 위한 고강도 트레이닝', 1200000, 20, TRUE, TRUE, 'VISIBLE'),
-                                                                                                                                                                                                          (2, 4, 4, 3, 13, '거북목 라운드숄더 교정', '체형 교정과 통증 완화 집중', 800000, 12, FALSE, TRUE, 'VISIBLE'),
-                                                                                                                                                                                                          (3, 5, 1, 4, 14, '직장인 단기 다이어트', '바쁜 직장인을 위한 효율적인 운동', 600000, 10, TRUE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (3, 6, 2, 1, 15, '스트렝스 향상 클래스', '3대 운동 중량 증가 집중 훈련', 900000, 15, FALSE, TRUE, 'VISIBLE'),
-                                                                                                                                                                                                          (1, 1, 1, 1, 10, '한 달 20kg 감량 기적의 약물 PT', '불법 다이어트 약 처방 및 단기 속성 강제 감량', 1500000, 10, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (2, 3, 2, 2, 11, '여성 회원만 받습니다 (사심 PT)', '오빠가 친절하게 알려줄게 ^^', 50000, 10, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (3, 5, 3, 3, 12, '직장인 체형교정 8주 코스', '퇴근 후 거북목 탈출 프로젝트', 800000, 16, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (1, 2, 4, 4, 13, '수술 후 재활 전문 트레이닝', '병원 연계 안전한 재활 운동', 1200000, 20, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (2, 4, 1, 1, 14, '웨이트 트레이닝 정석 A to Z', '3대 운동 완벽 마스터', 900000, 15, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (3, 6, 2, 2, 15, '크로스핏 스타일 고강도 다이어트', '숨이 턱끝까지 차오르는 짜릿함', 700000, 12, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (1, 1, 3, 3, 10, '초보자를 위한 머신 사용법', '헬스장 기구 100% 활용하기', 400000, 8, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (2, 3, 4, 4, 11, '시니어 건강 맞춤형 PT', '50대 이상을 위한 관절 보호 운동', 850000, 15, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (3, 5, 1, 1, 12, '결혼 준비 신부 다이어트', '드레스 라인 만들기', 1100000, 20, FALSE, FALSE, 'VISIBLE'),
-                                                                                                                                                                                                          (1, 2, 2, 2, 13, '파워리프팅 입문반', '스트렝스 훈련 가이드', 950000, 10, FALSE, FALSE, 'VISIBLE');
+INSERT INTO pt_courses (organization_id, trainer_profile_id, category_id, tag_id, thumbnail_file_id, title, description, price, total_session_count, status) VALUES
+                       (1, 1, 2, 1, 10, '왕초보 탈출 30일 루틴', '웨이트 트레이닝 기초 완벽 가이드', 500000, 10, 'VISIBLE'),
+                       (1, 2, 1, 4, 11, '10kg 감량 보장 다이어트', '체계적인 식단과 유산소 병행', 700000, 15, 'VISIBLE'),
+                       (2, 3, 2, 2, 12, '인생 바프 만들기 프로젝트', '바프 준비를 위한 고강도 트레이닝', 1200000, 20, 'VISIBLE'),
+                       (2, 4, 4, 3, 13, '거북목 라운드숄더 교정', '체형 교정과 통증 완화 집중', 800000, 12, 'VISIBLE'),
+                       (3, 5, 1, 4, 14, '직장인 단기 다이어트', '바쁜 직장인을 위한 효율적인 운동', 600000, 10, 'VISIBLE'),
+                       (3, 6, 2, 1, 15, '스트렝스 향상 클래스', '3대 운동 중량 증가 집중 훈련', 900000, 15, 'VISIBLE'),
+                       (1, 1, 1, 1, 10, '한 달 20kg 감량 기적의 약물 PT', '불법 다이어트 약 처방 및 단기 속성 강제 감량', 1500000, 10, 'VISIBLE'),
+                       (2, 3, 2, 2, 11, '여성 회원만 받습니다 (사심 PT)', '오빠가 친절하게 알려줄게 ^^', 50000, 10, 'VISIBLE'),
+                       (3, 5, 3, 3, 12, '직장인 체형교정 8주 코스', '퇴근 후 거북목 탈출 프로젝트', 800000, 16, 'VISIBLE'),
+                       (1, 2, 4, 4, 13, '수술 후 재활 전문 트레이닝', '병원 연계 안전한 재활 운동', 1200000, 20, 'VISIBLE'),
+                       (2, 4, 1, 1, 14, '웨이트 트레이닝 정석 A to Z', '3대 운동 완벽 마스터', 900000, 15, 'VISIBLE'),
+                       (3, 6, 2, 2, 15, '크로스핏 스타일 고강도 다이어트', '숨이 턱끝까지 차오르는 짜릿함', 700000, 12, 'VISIBLE'),
+                       (1, 1, 3, 3, 10, '초보자를 위한 머신 사용법', '헬스장 기구 100% 활용하기', 400000, 8, 'VISIBLE'),
+                       (2, 3, 4, 4, 11, '시니어 건강 맞춤형 PT', '50대 이상을 위한 관절 보호 운동', 850000, 15, 'VISIBLE'),
+                       (3, 5, 1, 1, 12, '결혼 준비 신부 다이어트', '드레스 라인 만들기', 1100000, 20, 'VISIBLE'),
+                       (1, 2, 2, 2, 13, '파워리프팅 입문반', '스트렝스 훈련 가이드', 950000, 10, 'VISIBLE');
 
 INSERT INTO pt_course_schedules (pt_course_id, day_of_week, start_time, end_time) VALUES
                                                                                       (1, 'MONDAY', '10:00:00', '11:00:00'), (1, 'WEDNESDAY', '10:00:00', '11:00:00'),
@@ -280,10 +315,10 @@ INSERT INTO post_likes (post_id, user_id) VALUES (1, 2), (1, 3);
 -- ---------------------------------------------------------
 -- 10. 채팅 (채팅방 및 메시지)
 -- ---------------------------------------------------------
-INSERT INTO chat_rooms (user_id, trainer_profile_id, pt_course_id, status) VALUES (1, 1, 1, 'ACTIVE');
-INSERT INTO chat_messages (chat_room_id, sender_id, content) VALUES
-                                                                 (1, 1, '트레이너님 안녕하세요! 내일 준비물 따로 있을까요?'),
-                                                                 (1, 11, '유저1님 안녕하세요! 개인 실내 운동화랑 개인 물통만 챙겨와주시면 됩니다^^');
+INSERT INTO chat_rooms (user_id, trainer_id, pt_course_id, status, last_message_at) VALUES (1, 11, 1, 'ACTIVE', '2026-06-14 10:05:00');
+INSERT INTO chat_messages (chat_room_id, sender_id, content, is_read) VALUES
+    (1, 1, '트레이너님 안녕하세요! 내일 준비물 따로 있을까요?', true),
+    (1, 11, '유저1님 안녕하세요! 개인 실내 운동화랑 개인 물통만 챙겨와주시면 됩니다^^', false);
 
 -- ---------------------------------------------------------
 -- 11. 신고, 블랙리스트, 관리자 액션 로그, 알림, 시스템 로그

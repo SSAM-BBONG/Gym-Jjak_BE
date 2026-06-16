@@ -34,11 +34,10 @@ public class OnboardingMapper {
 
     public OnboardingSurveyJpaEntity toOnboardingSurveyEntity(
             OnboardingSurvey onboardingSurvey,
-            UserJpaEntity userEntity,
             RegionJpaEntity regionEntity) {
         return new OnboardingSurveyJpaEntity(
                 onboardingSurvey.getId(),
-                userEntity,
+                onboardingSurvey.getUserId(),
                 onboardingSurvey.getExerciseGoal(),
                 onboardingSurvey.getExercisePeriod(),
                 onboardingSurvey.getExerciseFrequency(),
@@ -52,7 +51,7 @@ public class OnboardingMapper {
     public OnboardingSurvey toOnboardingSurveyDomain(OnboardingSurveyJpaEntity entity) {
         return OnboardingSurvey.reconstruct(
                 entity.getId(),
-                entity.getUser().getId(),
+                entity.getUserId(),
                 entity.getExerciseGoal(),
                 entity.getExercisePeriod(),
                 entity.getExerciseFrequency(),

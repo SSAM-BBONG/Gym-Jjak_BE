@@ -222,7 +222,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/java,windows,intellij,web
 
 ### yaml ###
-**/application.yml
 
 ### env ###
 .env

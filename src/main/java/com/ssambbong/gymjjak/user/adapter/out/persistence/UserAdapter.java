@@ -1,11 +1,14 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
-import com.ssambbong.gymjjak.global.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.User;
+import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
@@ -14,7 +17,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class UserAdapter implements UserPort {
+public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
 
     private final SpringDataUserRepository springDataUserRepository;
     private final UserPersistenceMapper userPersistenceMapper;
@@ -29,13 +32,15 @@ public class UserAdapter implements UserPort {
 
     @Override
     public User save(User user) {
+        try {
+            UserJpaEntity userJpaEntity = userPersistenceMapper.toEntity(user);
 
+            UserJpaEntity savedUserJpaEntity = springDataUserRepository.saveAndFlush(userJpaEntity);
 
-        UserJpaEntity userJpaEntity = userPersistenceMapper.toEntity(user);
-
-        UserJpaEntity savedUserJpaEntity = springDataUserRepository.save(userJpaEntity);
-
-        return userPersistenceMapper.toDomain(savedUserJpaEntity);
+            return userPersistenceMapper.toDomain(savedUserJpaEntity);
+        } catch (DataIntegrityViolationException e) {
+            throw mapToUserException(e);
+        }
     }
 
     @Override
@@ -72,9 +77,75 @@ public class UserAdapter implements UserPort {
 
     @Override
     public void updateLastLoginAt(Long userId, LocalDateTime lastLoginAt) {
-        UserJpaEntity userJpaEntity = springDataUserRepository.findById(userId)
+        springDataUserRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.LOGIN_FAILED));
 
-        userJpaEntity.updateLastLoginAt(lastLoginAt);
+        springDataUserRepository.updateLastLoginAt(userId, lastLoginAt);
     }
+
+    @Override
+    public boolean existsByNicknameAndIdNot(String nickname, Long userId) {
+        return springDataUserRepository.existsByNicknameAndIdNot(nickname, userId);
+    }
+
+    @Override
+    public boolean existsByPhoneAndIdNot(String phone, Long userId) {
+        return springDataUserRepository.existsByPhoneAndIdNot(phone, userId);
+    }
+
+    @Override
+    public void withdraw(Long userId, LocalDateTime deletedAt) {
+        springDataUserRepository.withdraw(userId, UserStatus.WITHDRAWN, deletedAt);
+    }
+
+    private RuntimeException mapToUserException(DataIntegrityViolationException e) {
+        String message = e.getMostSpecificCause().getMessage();
+
+        if (message.contains("uk_users_username")) {
+            return new UserException(UserErrorCode.DUPLICATE_USERNAME);
+        }
+
+        if (message.contains("uk_users_nickname")) {
+            return new UserException(UserErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        if (message.contains("uk_users_phone")) {
+            return new UserException(UserErrorCode.DUPLICATE_PHONE);
+        }
+
+        return e;
+    }
+
+    @Override
+    public int countWithdrawnUsersBefore(LocalDateTime threshold) {
+        return springDataUserRepository.countWithdrawnUsersBefore(threshold);
+    }
+
+    @Override
+    public int deleteWithdrawnUsersBefore(LocalDateTime threshold, int batchSize) {
+        return springDataUserRepository.deleteWithdrawnUsersBefore(threshold, batchSize);
+    }
+
+    @Override
+    public void updateStatus(Long userId, UserStatus status) {
+        springDataUserRepository.updateStatus(userId, status);
+    }
+
+    @Override
+    public void updatePassword(
+            Long userId,
+            String encodedPassword,
+            LocalDateTime updatedAt
+    ) {
+        int updatedCount = springDataUserRepository.changePassword(
+                userId,
+                encodedPassword,
+                updatedAt
+        );
+
+        if (updatedCount == 0) {
+            throw new UserException(UserErrorCode.USER_NOT_FOUND);
+        }
+    }
+
 }

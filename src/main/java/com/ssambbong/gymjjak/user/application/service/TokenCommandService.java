@@ -25,33 +25,29 @@ public class TokenCommandService implements TokenCommandUsecase {
     public String reissueAccessToken(ReissueTokenCommand command) {
         String refreshToken = command.refreshToken();
 
-        log.info("[토큰 재발급] AccessToken 재발급 요청 시작");
+        log.info("event=accessToken_reissue_start");
 
         if (refreshToken == null || refreshToken.isBlank()) {
-            log.warn("[토큰 재발급] RefreshToken이 요청에 존재하지 않음");
             throw new UserException(UserErrorCode.REFRESH_TOKEN_NOT_FOUND);
         }
 
         // 1. refreshToken 자체가 유효한 JWT인지 검증
         if (!tokenPort.validateToken(refreshToken)) {
-            log.warn("[토큰 재발급] 유효하지 않은 RefreshToken");
             throw new UserException(UserErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         // 2. refreshToken에서 userId 추출
         Long userId = tokenPort.getUserId(refreshToken);
-        log.info("[토큰 재발급] RefreshToken 검증 성공. userId={}", userId);
+        log.info("event=refreshToken_validation_succeed userId={}", userId);
 
         // 3. DB에 저장된 refreshToken 조회
         String savedRefreshToken = tokenPort.findRefreshTokenByUserId(userId)
                 .orElseThrow(() -> {
-                    log.warn("[토큰 재발급] DB에 저장된 RefreshToken 없음. userId={}", userId);
                     return new UserException(UserErrorCode.REFRESH_TOKEN_NOT_FOUND);
                 });
 
         // 4. 요청으로 들어온 refreshToken과 DB refreshToken 비교
         if (!savedRefreshToken.equals(refreshToken)) {
-            log.warn("[토큰 재발급] RefreshToken 불일치. userId={}", userId);
             throw new UserException(UserErrorCode.REFRESH_TOKEN_MISMATCH);
         }
 
@@ -66,7 +62,7 @@ public class TokenCommandService implements TokenCommandUsecase {
                 user.getRole().name()
         );
 
-        log.info("[토큰 재발급] AccessToken 재발급 성공. userId={}, role={}", user.getId(), user.getRole());
+        log.info("event=accessToken_reissue_succeed userId={}, role={}", user.getId(), user.getRole());
 
         return accessToken;
 

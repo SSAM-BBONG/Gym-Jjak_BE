@@ -2,12 +2,14 @@ package com.ssambbong.gymjjak.onboarding.adapter.in.web;
 
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
-import com.ssambbong.gymjjak.global.security.principal.AuthUser;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.onboarding.adapter.in.web.request.CompleteOnboardingRequest;
+import com.ssambbong.gymjjak.onboarding.adapter.in.web.request.UpdateOnboardingRequest;
 import com.ssambbong.gymjjak.onboarding.adapter.in.web.response.MyOnboardingResponse;
 import com.ssambbong.gymjjak.onboarding.adapter.in.web.response.OnboardingResponseCode;
 import com.ssambbong.gymjjak.onboarding.application.command.RegionCommand;
 import com.ssambbong.gymjjak.onboarding.application.command.RegisterOnboardingCommand;
+import com.ssambbong.gymjjak.onboarding.application.command.UpdateOnboardingCommand;
 import com.ssambbong.gymjjak.onboarding.application.port.in.OnboardingUsecase;
 import com.ssambbong.gymjjak.onboarding.application.result.MyOnboardingResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,5 +85,38 @@ public class OnboardingController {
                         MyOnboardingResponse.from(result)
                 )
         );
+    }
+
+    @PutMapping("/me")
+    @Operation(summary = "온보딩 수정", description = "로그인한 사용자의 온보딩 설문 정보와 선호 지역을 수정한다.")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<GlobalApiResponse<Void>> updateOnboarding(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody UpdateOnboardingRequest request
+    ) {
+        onboardingUsecase.updateOnboarding(new UpdateOnboardingCommand(
+                authUser.userId(),
+                request.exerciseGoal(),
+                request.exercisePeriod(),
+                request.exerciseFrequency(),
+                request.preferredExercise(),
+                request.height(),
+                request.weight(),
+                new RegionCommand(
+                        request.region().sido(),
+                        request.region().sigungu(),
+                        request.region().eupmyeondong(),
+                        request.region().fullName(),
+                        request.region().latitude(),
+                        request.region().longitude()
+                )
+        ));
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(GlobalApiResponse.ok(
+                        OnboardingResponseCode.ONBOARDING_UPDATED
+                ));
+
     }
 }

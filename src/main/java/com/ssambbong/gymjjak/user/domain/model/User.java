@@ -2,9 +2,6 @@ package com.ssambbong.gymjjak.user.domain.model;
 
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
-import lombok.RequiredArgsConstructor;
-
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -40,11 +37,11 @@ public class User {
             LocalDateTime  deletedAt
     ) {
         this.id = id;
-        this.username = validateRequired(username, "username");
-        this.password = validateRequired(password, "password");
-        this.name = validateRequired(name, "name");
-        this.nickname = validateRequired(nickname, "nickname");
-        this.phone = validateRequired(phone, "phone");
+        this.username = normalizeRequiredText(username, UserErrorCode.USERNAME_REQUIRED);
+        this.password = validateRequired(password, UserErrorCode.PASSWORD_REQUIRED);
+        this.name = normalizeRequiredText(name, UserErrorCode.NAME_REQUIRED);
+        this.nickname = normalizeRequiredText(nickname, UserErrorCode.NICKNAME_REQUIRED);
+        this.phone = normalizeRequiredText(phone, UserErrorCode.PHONE_REQUIRED);
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.status = Objects.requireNonNull(status, "status는 필수입니다.");
         this.onboardingCompleted = onboardingCompleted;
@@ -126,16 +123,17 @@ public class User {
     ) {
         validateUsableUser();
 
-        this.name = validateRequired(name, "name");
-        this.nickname = validateRequired(nickname, "nickname");
-        this.phone = validateRequired(phone, "phone");
+        this.name = validateRequired(name, UserErrorCode.NAME_REQUIRED);
+        this.nickname = validateRequired(nickname, UserErrorCode.NICKNAME_REQUIRED);
+        this.phone = validateRequired(phone, UserErrorCode.PHONE_REQUIRED);
         this.updatedAt = updatedAt;
     }
+
 
     public void changePassword(String encodedPassword, LocalDateTime  updatedAt) {
         validateUsableUser();
 
-        this.password = validateRequired(encodedPassword, "password");
+        this.password = validateRequired(encodedPassword, UserErrorCode.PASSWORD_REQUIRED);
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
@@ -147,33 +145,8 @@ public class User {
     }
 
     public void markLoggedIn(LocalDateTime  lastLoginAt) {
+        validateLoginAllowed();
         this.lastLoginAt = Objects.requireNonNull(lastLoginAt, "lastLoginAt은 필수입니다.");
-    }
-
-    public void suspendForSevenDays(LocalDateTime  updatedAt) {
-        validateNotWithdrawn();
-
-        if (this.status == UserStatus.DAY_7) {
-            throw new IllegalStateException("이미 7일 정지된 회원입니다.");
-        }
-
-        if (this.status == UserStatus.ETERNAL) {
-            throw new IllegalStateException("영구 정지된 회원은 7일 정지로 변경할 수 없습니다.");
-        }
-
-        this.status = UserStatus.DAY_7;
-        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
-    }
-
-    public void suspendPermanently(LocalDateTime  updatedAt) {
-        validateNotWithdrawn();
-
-        if (this.status == UserStatus.ETERNAL) {
-            throw new IllegalStateException("이미 영구 정지된 회원입니다.");
-        }
-
-        this.status = UserStatus.ETERNAL;
-        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
     public void activate(LocalDateTime  updatedAt) {
@@ -183,17 +156,39 @@ public class User {
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
-    public void withdraw(LocalDateTime  deletedAt) {
-        if (isWithdrawn()) {
-            throw new IllegalStateException("이미 탈퇴한 회원입니다.");
+    public void suspendForSevenDays(LocalDateTime  now) {
+        validateNotWithdrawn();
+
+        if (this.status == UserStatus.DAY_7) {
+            throw new UserException(UserErrorCode.USER_ALREADY_SEVEN_DAYS_SUSPENDED);
         }
 
-        this.deletedAt = Objects.requireNonNull(deletedAt, "deletedAt은 필수입니다.");
-        this.updatedAt = deletedAt;
+        this.status = UserStatus.DAY_7;
+        this.updatedAt = now;
+    }
+
+    public void suspendPermanently(LocalDateTime  updatedAt) {
+        validateNotWithdrawn();
+
+        if (this.status == UserStatus.ETERNAL) {
+            throw new UserException(UserErrorCode.USER_ALREADY_PERMANENTLY_SUSPENDED);
+        }
+
+        this.status = UserStatus.ETERNAL;
+        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+    }
+
+    public void releaseSuspensionIfExpired(LocalDateTime now) {
+        if (this.status != UserStatus.DAY_7) {
+            return;
+        }
+
+        this.status = UserStatus.ACTIVE;
     }
 
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE && !isWithdrawn();
+
     }
 
     public boolean isOnboardingCompleted() {
@@ -212,38 +207,45 @@ public class User {
         return this.deletedAt != null;
     }
 
-    private void validateLoginAllowed() {
-        validateNotWithdrawn();
-
-        if (this.status == UserStatus.DAY_7) {
-            throw new IllegalStateException("7일 정지된 회원은 로그인할 수 없습니다.");
+    public void validateLoginAllowed() {
+        if (isWithdrawn()) {
+            throw new UserException(UserErrorCode.LOGIN_FAILED);
         }
 
-        if (this.status == UserStatus.ETERNAL) {
-            throw new IllegalStateException("영구 정지된 회원은 로그인할 수 없습니다.");
+        if (this.status != UserStatus.ACTIVE) {
+            throw new UserException(UserErrorCode.LOGIN_RESTRICTED);
         }
     }
 
-    private void validateUsableUser() {
+    public void validateUsableUser() {
         validateNotWithdrawn();
 
         if (this.status != UserStatus.ACTIVE) {
-            throw new IllegalStateException("정상 상태의 회원만 사용할 수 있습니다.");
+            throw new UserException(UserErrorCode.USER_NOT_ACTIVE);
         }
     }
 
     private void validateNotWithdrawn() {
         if (isWithdrawn()) {
-            throw new IllegalStateException("탈퇴한 회원입니다.");
+            throw new UserException(UserErrorCode.USER_WITHDRAWN);
         }
     }
 
-    private static String validateRequired(String value, String fieldName) {
+    private static String validateRequired(String value, UserErrorCode errorCode) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(fieldName + "은 필수입니다.");
+            throw new UserException(errorCode);
         }
 
         return value;
+    }
+
+    private static String normalizeRequiredText(String value, UserErrorCode errorCode) {
+        String validated = validateRequired(value, errorCode);
+        return validated.trim();
+    }
+
+    public void changeStatus(UserStatus status) {
+        this.status = status;
     }
 
     public Long getId() {

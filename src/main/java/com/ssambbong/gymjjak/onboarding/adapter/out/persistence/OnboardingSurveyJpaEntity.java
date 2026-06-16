@@ -20,9 +20,8 @@ public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
     @Column(name = "onboarding_id", nullable = false)
     private Long id;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private UserJpaEntity user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @Column(name = "exercise_goal", nullable = false, length = 100)
     private String exerciseGoal;
@@ -48,7 +47,7 @@ public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
 
     public OnboardingSurveyJpaEntity(
             Long id,
-            UserJpaEntity user,
+            Long userId,
             String exerciseGoal,
             String exercisePeriod,
             String exerciseFrequency,
@@ -58,7 +57,25 @@ public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
             BigDecimal weight
     ) {
         this.id = id;
-        this.user = user;
+        this.userId = userId;
+        this.exerciseGoal = exerciseGoal;
+        this.exercisePeriod = exercisePeriod;
+        this.exerciseFrequency = exerciseFrequency;
+        this.preferredExercise = preferredExercise;
+        this.preferredRegion = preferredRegion;
+        this.height = height;
+        this.weight = weight;
+    }
+
+    public void update(
+            String exerciseGoal,
+            String exercisePeriod,
+            String exerciseFrequency,
+            String preferredExercise,
+            RegionJpaEntity preferredRegion,
+            BigDecimal height,
+            BigDecimal weight
+    ) {
         this.exerciseGoal = exerciseGoal;
         this.exercisePeriod = exercisePeriod;
         this.exerciseFrequency = exerciseFrequency;

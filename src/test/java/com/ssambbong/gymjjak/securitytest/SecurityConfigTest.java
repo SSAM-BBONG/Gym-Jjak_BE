@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.securitytest;
 
-import com.ssambbong.gymjjak.global.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

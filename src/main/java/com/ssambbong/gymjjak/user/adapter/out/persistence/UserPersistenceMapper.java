@@ -36,6 +36,7 @@ public class UserPersistenceMapper {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getDeletedAt()
+
         );
     }
 }

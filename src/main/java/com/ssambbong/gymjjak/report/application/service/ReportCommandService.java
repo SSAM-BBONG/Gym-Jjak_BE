@@ -175,7 +175,7 @@ public class ReportCommandService implements ReportCommandUseCase {
                 && reportGroup.getSanctionStatus() == ReportGroupSanctionStatus.AUTO_BLINDED) {
             log.debug("[createReport] 신고 5회 등록! None -> Auto Blind 변경 요청 요청 발생, 신고 적용 그룹 ID : {}",
                     reportGroup.getReportGroupId());
-            reportSanctionTargetPort.changeAutoBlind(
+            reportSanctionTargetPort.applySanction(
                     reportGroup.getTargetType(),
                     reportGroup.getTargetId(),
                     ReportSanctionAction.APPLY_AUTO_BLIND
