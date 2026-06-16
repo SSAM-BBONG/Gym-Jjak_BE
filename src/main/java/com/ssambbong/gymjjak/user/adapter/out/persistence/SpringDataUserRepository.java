@@ -36,14 +36,16 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-    update UserJpaEntity u
-    set u.deletedAt = :deletedAt,
-        u.updatedAt = :deletedAt
-    where u.id = :userId
-      and u.deletedAt is null
+update UserJpaEntity u
+set u.status = :status,
+    u.deletedAt = :deletedAt,
+    u.updatedAt = :deletedAt
+where u.id = :userId
+  and u.deletedAt is null
 """)
-    void withdraw(
+    int withdraw(
             @Param("userId") Long userId,
+            @Param("status") UserStatus status,
             @Param("deletedAt") LocalDateTime deletedAt
     );
 
@@ -80,6 +82,20 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
     void updateStatus(
             @Param("userId") Long userId,
             @Param("status") UserStatus status
+    );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+update UserJpaEntity u
+set u.password = :encodedPassword,
+    u.updatedAt = :updatedAt
+where u.id = :userId
+  and u.deletedAt is null
+""")
+    int changePassword(
+            @Param("userId") Long userId,
+            @Param("encodedPassword") String encodedPassword,
+            @Param("updatedAt") LocalDateTime updatedAt
     );
 
 }

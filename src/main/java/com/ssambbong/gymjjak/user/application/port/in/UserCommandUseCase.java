@@ -24,5 +24,7 @@ public interface UserCommandUseCase {
 
     void updateUserStatus(UpdateUserStatusCommand command);
 
+    void updatePassword(UpdatePasswordCommand command);
+
 
 }

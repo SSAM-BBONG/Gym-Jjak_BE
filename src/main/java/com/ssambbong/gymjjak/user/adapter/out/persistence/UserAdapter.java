@@ -95,7 +95,7 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
 
     @Override
     public void withdraw(Long userId, LocalDateTime deletedAt) {
-        springDataUserRepository.withdraw(userId, deletedAt);
+        springDataUserRepository.withdraw(userId, UserStatus.WITHDRAWN, deletedAt);
     }
 
     private RuntimeException mapToUserException(DataIntegrityViolationException e) {
@@ -129,6 +129,23 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     @Override
     public void updateStatus(Long userId, UserStatus status) {
         springDataUserRepository.updateStatus(userId, status);
+    }
+
+    @Override
+    public void updatePassword(
+            Long userId,
+            String encodedPassword,
+            LocalDateTime updatedAt
+    ) {
+        int updatedCount = springDataUserRepository.changePassword(
+                userId,
+                encodedPassword,
+                updatedAt
+        );
+
+        if (updatedCount == 0) {
+            throw new UserException(UserErrorCode.USER_NOT_FOUND);
+        }
     }
 
 }

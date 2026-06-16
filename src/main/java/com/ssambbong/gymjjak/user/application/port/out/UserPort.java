@@ -34,4 +34,6 @@ public interface UserPort {
     void withdraw(Long userId, LocalDateTime now);
 
     void updateStatus(Long userId, UserStatus status);
+
+    void updatePassword(Long userId, String encodedPassword, LocalDateTime updatedAt);
 }

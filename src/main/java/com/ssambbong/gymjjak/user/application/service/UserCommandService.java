@@ -79,17 +79,23 @@ public class UserCommandService implements UserCommandUseCase {
                     return new UserException(UserErrorCode.LOGIN_FAILED);
                 });
 
-        user.releaseSuspensionIfExpired(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
 
-        userPort.save(user);
+        UserStatus beforeStatus = user.getStatus();
+
+        user.releaseSuspensionIfExpired(now);
 
         if (!userPort.matchesPassword(command.password(), user.getPassword())) {
             throw new UserException(UserErrorCode.LOGIN_FAILED);
         }
 
-        user.markLoggedIn(LocalDateTime.now());
+        if (beforeStatus != user.getStatus()) {
+            userPort.save(user);
+        }
 
         user.validateLoginAllowed();
+
+        user.markLoggedIn(now);
 
         userPort.updateLastLoginAt(
                 user.getId(),
@@ -186,6 +192,8 @@ public class UserCommandService implements UserCommandUseCase {
 
         userPort.withdraw(userId, LocalDateTime.now());
 
+        tokenPort.deleteRefreshToken(user.getId());
+
         log.info("event=user_withdrawUser_succeed userId={}", userId);
     }
 
@@ -225,6 +233,25 @@ public class UserCommandService implements UserCommandUseCase {
         userPort.updateStatus(user.getId(), user.getStatus());
 
         log.info("event=user_statusUpdate_succeed userId={} status={}", command.userId(), command.status());
+    }
+
+    @Override
+    public void updatePassword(UpdatePasswordCommand command) {
+        log.debug("event=password_update_start userId={}", command.userId());
+        if (!command.newPassword().equals(command.checkNewPassword())) {
+            throw new UserException(UserErrorCode.PASSWORD_CONFIRM_NOT_MATCHED);
+        }
+        User user = userPort.findById(command.userId())
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        if (userPort.matchesPassword(command.newPassword(), user.getPassword())) {
+            throw new UserException(UserErrorCode.SAME_AS_OLD_PASSWORD);
+        }
+
+        String encodedPassword = userPort.encode(command.newPassword());
+
+        userPort.updatePassword(user.getId(), encodedPassword, LocalDateTime.now());
+        log.info("event=password_update_succeed userId={}", command.userId());
     }
 
     private String maskPhone(String phone) {
