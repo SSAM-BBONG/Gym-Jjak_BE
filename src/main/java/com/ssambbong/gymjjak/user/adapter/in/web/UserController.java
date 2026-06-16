@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserStatusRequest
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserProfileResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
 import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
+import com.ssambbong.gymjjak.user.application.command.UpdateUserStatusCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,14 +89,27 @@ public class UserController {
     @Operation(summary = "회원 상태 변경", description = "회원 상태를 변경한다.")
     public ResponseEntity<GlobalApiResponse<Void>> updateUserStatus(
             @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody UpdateUserStatusRequest request
             ) {
-        userCommandUseCase.updateUserStatus(userId, request.status());
+        userCommandUseCase.updateUserStatus(
+                new UpdateUserStatusCommand(
+                        userId,
+                        authUser.userId(),
+                        request.status(),
+                        request.reason()
+                )
+        );
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(UserResponseCode.USER_STATUS_UPDATED)
         );
     }
+
+//    @PreAuthorize("hasAuthority('ADMIN')")
+//    @GetMapping("/all")
+//    @Operation(summary = "관리자 회원 목록 조회", description = "회원 전체를 조회한다.")
+//    public ResponseEntity<GlobalApiResponse<>>
 
 
 }

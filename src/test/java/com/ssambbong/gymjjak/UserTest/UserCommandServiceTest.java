@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.UserTest;
 
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
+import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
@@ -25,6 +26,7 @@ class UserCommandServiceTest {
 
     private TokenPort tokenPort;
     private UserPort userPort;
+    private BlacklistPort blacklistPort;
     private UserPolicy userPolicy;
     private UserCommandService userCommandService;
 
@@ -36,7 +38,8 @@ class UserCommandServiceTest {
 
         userCommandService = new UserCommandService(
                 userPort,
-                tokenPort
+                tokenPort,
+                blacklistPort
         );
     }
 

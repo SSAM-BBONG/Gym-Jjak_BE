@@ -20,7 +20,6 @@ public class User {
     private final LocalDateTime  createdAt;
     private LocalDateTime  updatedAt;
     private LocalDateTime  deletedAt;
-    private LocalDateTime suspendedUntil;
 
     private User(
             Long id,
@@ -154,7 +153,6 @@ public class User {
         validateNotWithdrawn();
 
         this.status = UserStatus.ACTIVE;
-        this.suspendedUntil = null;
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
@@ -166,7 +164,6 @@ public class User {
         }
 
         this.status = UserStatus.DAY_7;
-        this.suspendedUntil = Objects.requireNonNull(now, "now는 필수입니다.").plusDays(7);
         this.updatedAt = now;
     }
 
@@ -178,8 +175,15 @@ public class User {
         }
 
         this.status = UserStatus.ETERNAL;
-        this.suspendedUntil = null;
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+    }
+
+    public void releaseSuspensionIfExpired(LocalDateTime now) {
+        if (this.status != UserStatus.DAY_7) {
+            return;
+        }
+
+        this.status = UserStatus.ACTIVE;
     }
 
     public boolean isActive() {
@@ -238,6 +242,10 @@ public class User {
     private static String normalizeRequiredText(String value, UserErrorCode errorCode) {
         String validated = validateRequired(value, errorCode);
         return validated.trim();
+    }
+
+    public void changeStatus(UserStatus status) {
+        this.status = status;
     }
 
     public Long getId() {
