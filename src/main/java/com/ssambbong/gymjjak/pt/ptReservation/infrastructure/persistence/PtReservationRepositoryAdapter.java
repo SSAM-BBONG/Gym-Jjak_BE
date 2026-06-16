@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -51,6 +52,11 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
         return entities.stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<PtReservation> findById(Long id) {
+        return repository.findById(id).map(this::toDomain);
     }
 
     // JpaEntity -> domain 변환
