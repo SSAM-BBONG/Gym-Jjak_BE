@@ -26,6 +26,7 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
                 JOIN organization_trainers ot ON tp.trainer_profile_id = ot.trainer_profile_id
                 WHERE tp.user_id = :userId
                 AND tp.status = 'ACTIVE'
+                AND tp.deleted_at IS NULL
                 AND ot.removed_at IS NULL
                 LIMIT 1
                 """)
