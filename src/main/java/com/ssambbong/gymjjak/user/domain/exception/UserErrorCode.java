@@ -30,7 +30,9 @@ public enum UserErrorCode implements ErrorCode {
     PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_004", "비밀번호는 필수입니다."),
     NAME_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_005", "이름은 필수입니다."),
     NICKNAME_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_006", "닉네임은 필수입니다."),
-    PHONE_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_007", "전화번호는 필수입니다.");
+    PHONE_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_007", "전화번호는 필수입니다."),
+    USER_STATUS_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_8", "회원 정지 또는 영구 정지 시 제재 사유는 필수입니다."),
+    INVALID_USER_STATUS(HttpStatus.BAD_REQUEST, "USER_400_9", "변경할 수 없는 회원 상태입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

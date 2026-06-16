@@ -1,10 +1,12 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.User;
+import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,7 +17,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class UserAdapter implements UserPort {
+public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
 
     private final SpringDataUserRepository springDataUserRepository;
     private final UserPersistenceMapper userPersistenceMapper;
@@ -112,6 +114,21 @@ public class UserAdapter implements UserPort {
         }
 
         return e;
+    }
+
+    @Override
+    public int countWithdrawnUsersBefore(LocalDateTime threshold) {
+        return springDataUserRepository.countWithdrawnUsersBefore(threshold);
+    }
+
+    @Override
+    public int deleteWithdrawnUsersBefore(LocalDateTime threshold, int batchSize) {
+        return springDataUserRepository.deleteWithdrawnUsersBefore(threshold, batchSize);
+    }
+
+    @Override
+    public void updateStatus(Long userId, UserStatus status) {
+        springDataUserRepository.updateStatus(userId, status);
     }
 
 }

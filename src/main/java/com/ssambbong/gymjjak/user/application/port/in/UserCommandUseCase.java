@@ -22,7 +22,7 @@ public interface UserCommandUseCase {
 
     void withdrawUser(Long userId);
 
-    void updateUserStatus(Long userId, UserStatus status);
+    void updateUserStatus(UpdateUserStatusCommand command);
 
 
 }

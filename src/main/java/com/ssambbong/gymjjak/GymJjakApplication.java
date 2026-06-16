@@ -2,8 +2,10 @@ package com.ssambbong.gymjjak;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class GymJjakApplication {
 
     public static void main(String[] args) {

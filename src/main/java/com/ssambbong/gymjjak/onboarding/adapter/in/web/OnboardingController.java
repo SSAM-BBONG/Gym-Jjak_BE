@@ -89,6 +89,7 @@ public class OnboardingController {
 
     @PutMapping("/me")
     @Operation(summary = "온보딩 수정", description = "로그인한 사용자의 온보딩 설문 정보와 선호 지역을 수정한다.")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<GlobalApiResponse<Void>> updateOnboarding(
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody UpdateOnboardingRequest request

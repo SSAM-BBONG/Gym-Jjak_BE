@@ -1,9 +1,7 @@
 package com.ssambbong.gymjjak.user.application.service;
 
-import com.ssambbong.gymjjak.user.application.command.LoginCommand;
-import com.ssambbong.gymjjak.user.application.command.LogoutCommand;
-import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
-import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
+import com.ssambbong.gymjjak.user.application.command.*;
+import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
 import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
@@ -11,6 +9,8 @@ import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.application.result.LoginResult;
+import com.ssambbong.gymjjak.user.domain.model.Blacklist;
+import com.ssambbong.gymjjak.user.domain.model.BlacklistType;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import com.ssambbong.gymjjak.user.domain.policy.UserPolicy;
@@ -29,6 +29,7 @@ public class UserCommandService implements UserCommandUseCase {
 
     private final UserPort userPort;
     private final TokenPort tokenPort;
+    private final BlacklistPort blacklistPort;
 
     @Override
     public void registerUser(RegisterUserCommand command) {
@@ -77,6 +78,8 @@ public class UserCommandService implements UserCommandUseCase {
                 .orElseThrow(() -> {
                     return new UserException(UserErrorCode.LOGIN_FAILED);
                 });
+
+        user.releaseSuspensionIfExpired(LocalDateTime.now());
 
         if (!userPort.matchesPassword(command.password(), user.getPassword())) {
             throw new UserException(UserErrorCode.LOGIN_FAILED);
@@ -185,20 +188,41 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
-    public void updateUserStatus(Long userId, UserStatus status) {
-        log.debug("event=user_statusUpdate_start userId={} status={}", userId, status);
+    public void updateUserStatus(UpdateUserStatusCommand command) {
+        log.debug("event=user_statusUpdate_start userId={} status={}", command.userId(), command.status());
 
-        User user = userPort.findById(userId).orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        validateStatusChangeReason(command.status(), command.reason());
+
+        User user = userPort.findById(command.userId())
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
 
         LocalDateTime now = LocalDateTime.now();
 
-        switch (status) {
-            case ACTIVE -> user.activate(now);
-            case DAY_7 -> user.suspendForSevenDays(now);
-            case ETERNAL -> user.suspendPermanently(now);
+        blacklistPort.releaseActiveBlacklistsByUserId(user.getId());
+
+        if (command.status() == UserStatus.ACTIVE) {
+            user.changeStatus(UserStatus.ACTIVE);
+            userPort.updateStatus(user.getId(), UserStatus.ACTIVE);
+            return;
         }
-        userPort.save(user);
-        log.info("event=user_statusUpdate_succeed userId={} status={}", userId, status);
+        BlacklistType blacklistType = toBlacklistType(command.status());
+        LocalDateTime endedAt = calculateEndedAt(command.status(), now);
+
+        Blacklist blacklist = Blacklist.createByAdmin(
+                user.getId(),
+                command.adminId(),
+                blacklistType,
+                command.reason(),
+                endedAt,
+                now
+        );
+
+        blacklistPort.save(blacklist);
+
+        user.changeStatus(command.status());
+        userPort.updateStatus(user.getId(), user.getStatus());
+
+        log.info("event=user_statusUpdate_succeed userId={} status={}", command.userId(), command.status());
     }
 
     private String maskPhone(String phone) {
@@ -241,5 +265,37 @@ public class UserCommandService implements UserCommandUseCase {
 
     private String normalize(String value) {
         return value == null ? null : value.trim();
+    }
+
+    private void validateStatusChangeReason(UserStatus status, String reason) {
+        if (status == UserStatus.DAY_7 || status == UserStatus.ETERNAL) {
+            if (reason == null || reason.isBlank()) {
+                throw new UserException(UserErrorCode.USER_STATUS_REASON_REQUIRED);
+            }
+        }
+    }
+
+    private BlacklistType toBlacklistType(UserStatus status) {
+        if (status == UserStatus.DAY_7) {
+            return BlacklistType.DAY_7;
+        }
+
+        if (status == UserStatus.ETERNAL) {
+            return BlacklistType.ETERNAL;
+        }
+
+        throw new UserException(UserErrorCode.INVALID_USER_STATUS);
+    }
+
+    private LocalDateTime calculateEndedAt(UserStatus status, LocalDateTime now) {
+        if (status == UserStatus.DAY_7) {
+            return now.plusDays(7);
+        }
+
+        if (status == UserStatus.ETERNAL) {
+            return null;
+        }
+
+        return null;
     }
 }
