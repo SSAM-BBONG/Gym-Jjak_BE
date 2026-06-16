@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.user.application.service;
 
 import com.ssambbong.gymjjak.user.application.command.*;
 import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
+import com.ssambbong.gymjjak.user.application.result.CursorResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
@@ -264,25 +265,48 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
-    public List<FindUserResult> findUsers(String keyword) {
-        log.debug("event=users_find_start, keyword={}", keyword);
+    @Transactional(readOnly = true)
+    public CursorResult<FindUserResult> findUsers(String name, Long cursor, int size) {
+        log.debug("event=users_find_start, name={}, cursor={}, size={}", name, cursor, size);
 
-        List<FindUserResult> results = userPort.findUsers(keyword);
+        List<FindUserResult> results = userPort.findUsers(name, cursor, size);
 
-        log.info("event=users_find_succeed, keyword={}, count={}", keyword, results.size());
+        boolean hasNext = results.size() > size;
 
-        return results;
+        List<FindUserResult> content = hasNext
+                ? results.subList(0, size)
+                : results;
+
+        Long nextCursor = content.isEmpty()
+                ? null
+                : content.get(content.size() - 1).userId();
+
+        log.info("event=users_find_succeed, name={}, cursor={}, size={}, resultCount={}, hasNext={}",
+                name, cursor, size, content.size(), hasNext);
+
+        return new CursorResult<>(content, nextCursor, hasNext);
     }
 
     @Override
-    public List<FindUserResult> findBlacklistUsers() {
-        log.debug("event=find_blacklistUsers_start");
+    public CursorResult<FindUserResult> findBlacklistUsers(Long cursor, int size) {
+        log.debug("users_findBlacklistUsers_start, cursor={}, size={}", cursor, size);
 
-        List<FindUserResult> results = userPort.findBlacklistUsers();
+        List<FindUserResult> results = userPort.findBlacklistUsers(cursor, size);
 
-        log.info("event=find_blacklistUsers_succeed, count={}", results.size());
+        boolean hasNext = results.size() > size;
 
-        return results;
+        List<FindUserResult> content = hasNext
+                ? results.subList(0, size)
+                : results;
+
+        Long nextCursor = content.isEmpty()
+                ? null
+                : content.get(content.size() - 1).userId();
+
+        log.info("event=users_findBlacklistUsers_succeed, cursor={}, size={}, resultCount={}, hasNext={}",
+                cursor, size, content.size(), hasNext);
+
+        return new CursorResult<>(content, nextCursor, hasNext);
     }
 
     private String maskPhone(String phone) {

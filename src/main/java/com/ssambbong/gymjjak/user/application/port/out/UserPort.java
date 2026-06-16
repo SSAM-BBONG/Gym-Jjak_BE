@@ -39,7 +39,7 @@ public interface UserPort {
 
     void updatePassword(Long userId, String encodedPassword, LocalDateTime updatedAt);
 
-    List<FindUserResult> findUsers(String keyword);
+    List<FindUserResult> findUsers(String name, Long cursor, int size);
 
-    List<FindUserResult> findBlacklistUsers();
+    List<FindUserResult> findBlacklistUsers(Long cursor, int size);
 }

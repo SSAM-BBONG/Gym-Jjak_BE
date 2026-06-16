@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdatePasswordRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserProfileRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.PasswordVerificationRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserStatusRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.response.CursorResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.FindUserResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserProfileResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
@@ -13,6 +14,8 @@ import com.ssambbong.gymjjak.user.application.command.UpdatePasswordCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateUserStatusCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
+import com.ssambbong.gymjjak.user.application.result.CursorResult;
+import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -131,29 +134,51 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/all")
     @Operation(summary = "관리자 회원 목록 조회", description = "회원을 조회한다.")
-    public ResponseEntity<GlobalApiResponse<List<FindUserResponse>>> findAllUsers(
-            @RequestParam(required = false) String name
+    public ResponseEntity<GlobalApiResponse<CursorResponse<FindUserResponse>>> findUsers(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        List<FindUserResponse> response = userCommandUseCase.findUsers(name).stream()
+        CursorResult<FindUserResult> result = userCommandUseCase.findUsers(name, cursor, size);
+
+        List<FindUserResponse> content = result.content().stream()
                 .map(FindUserResponse::from)
                 .toList();
 
         return ResponseEntity.ok(
-                GlobalApiResponse.ok(UserResponseCode.USER_FOUND, response)
+                GlobalApiResponse.ok(
+                        UserResponseCode.USER_FOUND,
+                        new CursorResponse<>(
+                                content,
+                                result.nextCursor(),
+                                result.hasNext()
+                        )
+                )
         );
-
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/blacklist")
     @Operation(summary = "관리자 블랙리스트 회원 목록 조회", description = "블랙리스트 회원을 조회한다.")
-    public ResponseEntity<GlobalApiResponse<List<FindUserResponse>>> findSuspendedUsers() {
-        List<FindUserResponse> response = userCommandUseCase.findBlacklistUsers().stream()
+    public ResponseEntity<GlobalApiResponse<CursorResponse<FindUserResponse>>> findSuspendedUsers(
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        CursorResult<FindUserResult> result = userCommandUseCase.findBlacklistUsers(cursor, size);
+
+        List<FindUserResponse> content = result.content().stream()
                 .map(FindUserResponse::from)
                 .toList();
 
         return ResponseEntity.ok(
-                GlobalApiResponse.ok(UserResponseCode.USER_FOUND, response)
+                GlobalApiResponse.ok(
+                        UserResponseCode.USER_FOUND,
+                        new CursorResponse<>(
+                                content,
+                                result.nextCursor(),
+                                result.hasNext()
+                        )
+                )
         );
     }
 

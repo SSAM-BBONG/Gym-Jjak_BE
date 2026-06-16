@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
@@ -154,14 +155,20 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     }
 
     @Override
-    public List<FindUserResult> findUsers(String keyword) {
-        return springDataUserRepository.findUsers(keyword);
+    public List<FindUserResult> findUsers(String name, Long cursor, int size) {
+        return springDataUserRepository.findUsersByCursor(
+                name,
+                cursor,
+                PageRequest.of(0, size + 1)
+        );
     }
 
     @Override
-    public List<FindUserResult> findBlacklistUsers() {
-        return springDataUserRepository.findBlacklistUsers(
-                List.of(UserStatus.DAY_7, UserStatus.ETERNAL)
+    public List<FindUserResult> findBlacklistUsers(Long cursor, int size) {
+        return springDataUserRepository.findBlacklistUsersByCursor(
+                List.of(UserStatus.DAY_7, UserStatus.ETERNAL),
+                cursor,
+                PageRequest.of(0, size + 1)
         );
     }
 

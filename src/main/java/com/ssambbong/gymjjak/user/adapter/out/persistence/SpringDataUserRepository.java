@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -109,12 +110,17 @@ select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
     u.status
 )
 from UserJpaEntity u
-where :name is null
-   or :name = ''
-   or lower(u.name) like lower(concat('%', :name, '%'))
-order by u.createdAt desc
+where (:name is null
+       or trim(:name) = ''
+       or lower(u.name) like lower(concat('%', trim(:name), '%')))
+  and (:cursor is null or u.id < :cursor)
+order by u.id desc
 """)
-    List<FindUserResult> findUsers(@Param("name") String name);
+    List<FindUserResult> findUsersByCursor(
+            @Param("name") String name,
+            @Param("cursor") Long cursor,
+            Pageable pageable
+    );
 
     @Query("""
 select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
@@ -126,9 +132,12 @@ select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
 )
 from UserJpaEntity u
 where u.status in :statuses
-order by u.createdAt desc
+  and (:cursor is null or u.id < :cursor)
+order by u.id desc
 """)
-    List<FindUserResult> findBlacklistUsers(
-            @Param("statuses") List<UserStatus> statuses
+    List<FindUserResult> findBlacklistUsersByCursor(
+            @Param("statuses") List<UserStatus> statuses,
+            @Param("cursor") Long cursor,
+            Pageable pageable
     );
 }
