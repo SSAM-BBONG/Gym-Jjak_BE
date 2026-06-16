@@ -81,6 +81,8 @@ public class UserCommandService implements UserCommandUseCase {
 
         user.releaseSuspensionIfExpired(LocalDateTime.now());
 
+        userPort.save(user);
+
         if (!userPort.matchesPassword(command.password(), user.getPassword())) {
             throw new UserException(UserErrorCode.LOGIN_FAILED);
         }
