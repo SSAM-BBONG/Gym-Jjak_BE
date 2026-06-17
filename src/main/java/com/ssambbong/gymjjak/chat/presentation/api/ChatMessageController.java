@@ -46,11 +46,11 @@ public class ChatMessageController {
     @GetMapping
     public ResponseEntity<GlobalApiResponse<ChatMessageListResponse>> getMessages(
             @PathVariable Long chatRoomId,
-            @RequestParam(required = false) Long cursor,
+            @RequestParam(required = false) @Min(1) Long cursor,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        ChatMessageQuery query = new ChatMessageQuery(chatRoomId, authUser.userId(), cursor, size);
+        ChatMessageQuery query = new ChatMessageQuery(chatRoomId, cursor, size);
         ChatMessageListResult result = chatMessageUseCase.getMessages(authUser.userId(), query);
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 ChatMessageResponseCode.CHAT_MESSAGE_LIST_FETCHED,

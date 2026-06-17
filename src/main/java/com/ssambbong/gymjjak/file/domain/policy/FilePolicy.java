@@ -20,25 +20,25 @@ public enum FilePolicy {
 
     PROFILE_IMAGE(
             FileType.PROFILE_IMAGE,
-            List.of("image/jpeg", "image/png", "image/webp"),
+            List.of("image/jpeg", "image/png", "image/webp", "application/pdf"),
             10 * 1024 * 1024L,
             false
     ),
     PT_THUMBNAIL(
             FileType.PT_THUMBNAIL,
-            List.of("image/jpeg", "image/png", "image/webp"),
+            List.of("image/jpeg", "image/png", "image/webp", "application/pdf"),
             10 * 1024 * 1024L,
             false
     ),
     CERTIFICATION(
             FileType.CERTIFICATION,
-            List.of("image/jpeg", "image/png", "image/webp"),
+            List.of("image/jpeg", "image/png", "image/webp", "application/pdf"),
             10 * 1024 * 1024L,
             true
     ),
     AWARD(
             FileType.AWARD,
-            List.of("image/jpeg", "image/png", "image/webp"),
+            List.of("image/jpeg", "image/png", "image/webp", "application/pdf"),
             10 * 1024 * 1024L,
             true
     ),

@@ -68,7 +68,9 @@ public class ChatRoomService implements ChatRoomUseCase {
         while (t != null) {
             if (t instanceof ConstraintViolationException cve) {
                 String name = cve.getConstraintName();
-                return name != null && name.contains(constraintName);
+                if (name != null && name.contains(constraintName)) {
+                    return true;
+                }
             }
             t = t.getCause();
         }

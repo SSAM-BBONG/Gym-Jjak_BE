@@ -9,8 +9,5 @@ public record GeneratePresignedUrlRequest(
         FileType fileType,
 
         @NotBlank(message = "Content-Type은 필수입니다.")
-        String contentType,
-
-        @NotBlank(message = "파일명은 필수입니다.")
-        String originalName
+        String contentType
 ) {}

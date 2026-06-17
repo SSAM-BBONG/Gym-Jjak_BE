@@ -16,14 +16,12 @@ public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
     private final SpringDataChatMessageRepository repository;
 
     @Override
-    public ChatMessageListResult findMessages(ChatMessageQuery query) {
-        repository.markMessagesAsRead(query.chatRoomId(), query.readerId());
+    public ChatMessageListResult findMessages(ChatMessageQuery query, Long readerId) {
+        repository.markMessagesAsRead(query.chatRoomId(), readerId);
 
-        List<ChatMessageProjection> rows = repository.findMessages(
-                query.chatRoomId(),
-                query.cursor(),
-                query.size() + 1
-        );
+        List<ChatMessageProjection> rows = query.cursor() == null
+                ? repository.findLatestMessages(query.chatRoomId(), query.size() + 1)
+                : repository.findMessagesBeforeCursor(query.chatRoomId(), query.cursor(), query.size() + 1);
 
         boolean hasNext = rows.size() > query.size();
         List<ChatMessageItem> messages = rows.stream()

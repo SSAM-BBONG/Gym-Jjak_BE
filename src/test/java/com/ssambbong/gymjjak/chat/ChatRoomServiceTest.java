@@ -167,6 +167,29 @@ class ChatRoomServiceTest {
             assertThatThrownBy(() -> chatRoomService.leaveChatRoom(1L, 1L))
                     .isInstanceOf(ChatRoomAlreadyLeftException.class);
         }
+
+        @Test
+        @DisplayName("회원이 채팅방을 나가면 leaveChatRoom이 호출된다")
+        void success_userLeave() {
+            when(chatRoomRepository.findById(1L)).thenReturn(Optional.of(activeRoom));
+
+            chatRoomService.leaveChatRoom(1L, 1L);
+
+            verify(chatRoomRepository).leaveChatRoom(any());
+            verifyNoInteractions(trainerQueryPort);
+        }
+
+        @Test
+        @DisplayName("트레이너가 채팅방을 나가면 leaveChatRoom이 호출된다")
+        void success_trainerLeave() {
+            when(chatRoomRepository.findById(1L)).thenReturn(Optional.of(activeRoom));
+            when(trainerQueryPort.findActiveTrainer(11L)).thenReturn(Optional.of(new TrainerView(20L)));
+
+            chatRoomService.leaveChatRoom(1L, 20L);
+
+            verify(chatRoomRepository).leaveChatRoom(any());
+            verify(trainerQueryPort).findActiveTrainer(11L);
+        }
     }
 
     private DataIntegrityViolationException uniqueConstraintException(String constraintName) {
