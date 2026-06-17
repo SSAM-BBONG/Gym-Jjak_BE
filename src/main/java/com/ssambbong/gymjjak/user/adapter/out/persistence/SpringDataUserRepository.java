@@ -1,12 +1,15 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
@@ -98,4 +101,43 @@ where u.id = :userId
             @Param("updatedAt") LocalDateTime updatedAt
     );
 
+    @Query("""
+select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
+    u.id,
+    u.username,
+    u.name,
+    u.nickname,
+    u.status
+)
+from UserJpaEntity u
+where (:name is null
+       or trim(:name) = ''
+       or lower(u.name) like lower(concat('%', trim(:name), '%')))
+  and (:cursor is null or u.id < :cursor)
+order by u.id desc
+""")
+    List<FindUserResult> findUsersByCursor(
+            @Param("name") String name,
+            @Param("cursor") Long cursor,
+            Pageable pageable
+    );
+
+    @Query("""
+select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
+    u.id,
+    u.username,
+    u.name,
+    u.nickname,
+    u.status
+)
+from UserJpaEntity u
+where u.status in :statuses
+  and (:cursor is null or u.id < :cursor)
+order by u.id desc
+""")
+    List<FindUserResult> findBlacklistUsersByCursor(
+            @Param("statuses") List<UserStatus> statuses,
+            @Param("cursor") Long cursor,
+            Pageable pageable
+    );
 }

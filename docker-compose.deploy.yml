@@ -14,7 +14,6 @@ services:
       - "${DEV_MYSQL_PORT}:3306"
     volumes:
       - gymjjak-mysql-data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -32,10 +31,10 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: ${DEV_MYSQL_URL}
-      SPRING_DATASOURCE_USERNAME: ${DEV_MYSQL_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DEV_MYSQL_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DEV_MYSQL_URL: ${DEV_MYSQL_URL}
+      DEV_MYSQL_USERNAME: ${DEV_MYSQL_USERNAME}
+      DEV_MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
 
       AWS_REGION: ${AWS_REGION}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
