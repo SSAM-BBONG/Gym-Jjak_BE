@@ -1,47 +1,3 @@
--- GymJjak 1st Project Schema (MySQL 8.x)
--- Version: v4.1, Suspended column added & Unique index dropped on regions.
--- Generated from ERD export after syntax/constraint cleanup.
-
-SET FOREIGN_KEY_CHECKS = 0;
-
-DROP TABLE IF EXISTS reports;
-DROP TABLE IF EXISTS report_groups;
-DROP TABLE IF EXISTS admin_action_logs;
-DROP TABLE IF EXISTS system_logs;
-DROP TABLE IF EXISTS notifications;
-DROP TABLE IF EXISTS blacklists;
-DROP TABLE IF EXISTS chat_messages;
-DROP TABLE IF EXISTS chat_rooms;
-DROP TABLE IF EXISTS post_likes;
-DROP TABLE IF EXISTS comments;
-DROP TABLE IF EXISTS posts;
-DROP TABLE IF EXISTS workout_diaries;
-DROP TABLE IF EXISTS calendar_entries;
-DROP TABLE IF EXISTS trainer_reviews;
-DROP TABLE IF EXISTS feedback_media;
-DROP TABLE IF EXISTS feedbacks;
-DROP TABLE IF EXISTS pt_reservations;
-DROP TABLE IF EXISTS pt_course_schedules;
-DROP TABLE IF EXISTS pt_curriculums;
-DROP TABLE IF EXISTS pt_courses;
-DROP TABLE IF EXISTS organization_trainers;
-DROP TABLE IF EXISTS trainer_awards;
-DROP TABLE IF EXISTS trainer_certifications;
-DROP TABLE IF EXISTS trainer_profiles;
-DROP TABLE IF EXISTS trainer_applications;
-DROP TABLE IF EXISTS organizations;
-DROP TABLE IF EXISTS organization_applications;
-DROP TABLE IF EXISTS refresh_tokens;
-DROP TABLE IF EXISTS onboarding_surveys;
-DROP TABLE IF EXISTS files;
-DROP TABLE IF EXISTS tags;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS regions;
-DROP TABLE IF EXISTS users;
-
-SET FOREIGN_KEY_CHECKS = 1;
-
--- 1. 유저 테이블 (정지 만료일 컬럼 추가 및 updated_at 속성 지정)
 CREATE TABLE users (
                        user_id BIGINT NOT NULL AUTO_INCREMENT,
                        username VARCHAR(100) NOT NULL COMMENT '로그인 ID. 이메일 형식으로 검증',
@@ -62,7 +18,6 @@ CREATE TABLE users (
                        CONSTRAINT uk_users_phone UNIQUE (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. 지역 테이블 (uk_regions_area 유니크 인덱스 제거 완료)
 CREATE TABLE regions (
                          region_id BIGINT NOT NULL AUTO_INCREMENT,
                          sido VARCHAR(50) NOT NULL,
@@ -333,6 +288,8 @@ CREATE TABLE pt_courses (
                             description TEXT NOT NULL,
                             price INT NOT NULL,
                             total_session_count INT NOT NULL,
+                            supports_diet_log BOOLEAN NOT NULL DEFAULT FALSE,
+                            supports_workout_log BOOLEAN NOT NULL DEFAULT FALSE,
                             status VARCHAR(30) NOT NULL DEFAULT 'VISIBLE',
                             created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                             updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
@@ -535,21 +492,18 @@ CREATE TABLE post_likes (
 CREATE TABLE chat_rooms (
                             chat_room_id BIGINT NOT NULL AUTO_INCREMENT,
                             user_id BIGINT NOT NULL,
-                            trainer_id BIGINT NOT NULL,
-                            pt_course_id BIGINT NOT NULL,
+                            trainer_profile_id BIGINT NOT NULL,
+                            pt_course_id BIGINT NULL,
                             user_left BOOLEAN NOT NULL DEFAULT FALSE,
                             trainer_left BOOLEAN NOT NULL DEFAULT FALSE,
                             status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
-                            active_pt_course_id BIGINT GENERATED ALWAYS AS (IF(status = 'ACTIVE', pt_course_id, NULL)) VIRTUAL,
-                            last_message_at DATETIME(6) NULL,
                             created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                             closed_at DATETIME(6) NULL,
                             updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                             CONSTRAINT pk_chat_rooms PRIMARY KEY (chat_room_id),
                             CONSTRAINT fk_chat_rooms_user FOREIGN KEY (user_id) REFERENCES users(user_id),
-                            CONSTRAINT fk_chat_rooms_trainer FOREIGN KEY (trainer_id) REFERENCES trainer_profiles(user_id),
-                            CONSTRAINT fk_chat_rooms_pt_course FOREIGN KEY (pt_course_id) REFERENCES pt_courses(pt_course_id),
-                            UNIQUE INDEX uk_chat_rooms_active(user_id, trainer_id, active_pt_course_id)
+                            CONSTRAINT fk_chat_rooms_trainer_profile FOREIGN KEY (trainer_profile_id) REFERENCES trainer_profiles(trainer_profile_id),
+                            CONSTRAINT fk_chat_rooms_pt_course FOREIGN KEY (pt_course_id) REFERENCES pt_courses(pt_course_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE chat_messages (
@@ -557,7 +511,6 @@ CREATE TABLE chat_messages (
                                chat_room_id BIGINT NOT NULL,
                                sender_id BIGINT NOT NULL,
                                content TEXT NOT NULL,
-                               is_read BOOLEAN NOT NULL DEFAULT FALSE,
                                created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                CONSTRAINT pk_chat_messages PRIMARY KEY (chat_message_id),
                                CONSTRAINT fk_chat_messages_room FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(chat_room_id) ON DELETE CASCADE,
