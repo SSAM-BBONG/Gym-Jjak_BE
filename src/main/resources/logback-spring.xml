@@ -33,71 +33,30 @@
     - remoteAddr : 요청 클라이언트 IP
     - userAgent  : 요청을 보낸 클라이언트/브라우저 정보
 -->
-
 <configuration>
 
-    <!-- ===================================================== -->
-    <!-- 1. 공통 속성 -->
-    <!-- ===================================================== -->
-
-    <!-- 로그 파일이 저장될 폴더 경로 -->
     <property name="LOG_PATH" value="./logs"/>
-
-    <!-- 로그 파일 기본 이름 -->
     <property name="LOG_FILE_NAME" value="gym-jjak"/>
-
-    <!--
-        콘솔 로그 패턴
-
-        %d{yyyy-MM-dd HH:mm:ss.SSS} : 날짜/시간
-        [%thread]                   : 현재 스레드 이름
-        %highlight(%-5level)        : 로그 레벨 강조 출력
-        %X{traceId:-}               : MDC의 traceId 출력
-        %logger{36}                 : Logger 이름(길이 제한)
-        %msg                        : 실제 로그 메시지
-        %n                          : 줄바꿈
-    -->
+<!--    콘솔 로그 패턴-->
     <property name="CONSOLE_LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan([%X{traceId:-}]) %yellow(%logger{36}) - %msg%n"/>
-
-    <!--
-        파일 로그 패턴
-
-        콘솔보다 운영 추적에 필요한 정보를 더 많이 남긴다.
-        method / requestURI / remoteAddr / userAgent는 MDC에서 가져온다.
-    -->
+<!--    파일 로그 패턴-->
     <property name="FILE_LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] [%X{method:-}] [%X{requestURI:-}] [%X{remoteAddr:-}] %logger{36} - %msg%n"/>
-
-    <!-- ===================================================== -->
-    <!-- 2. Appender 정의 -->
-    <!-- ===================================================== -->
-
-    <!--
-        CONSOLE
-        - 로그를 터미널(콘솔)에 출력한다.
-        - 로컬 개발 환경에서 가장 자주 확인하는 출력 방식이다.
-    -->
+<!--    로그를 터미널에 출력-->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
     </appender>
-
-    <!--
-        FILE
-        - 전체 로그를 일반 파일에 저장한다.
-        - INFO, WARN, ERROR 등 애플리케이션 전반의 흐름을 남긴다.
-    -->
+<!--    전체 로그를 일반 파일에 저장한다.-->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
-
         <encoder>
             <pattern>${FILE_LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
-
         <!--
             날짜/크기 기준 파일 분리 정책
 
@@ -113,27 +72,18 @@
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
     </appender>
-
-    <!--
-        ERROR_FILE
-        - ERROR 레벨 로그만 별도 파일에 저장한다.
-        - 운영 장애 분석 시 가장 먼저 확인할 로그 파일이다.
-    -->
+<!--    에러 파일 저장 양식-->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${LOG_FILE_NAME}-error.log</file>
-
-        <!-- ERROR 레벨만 허용 -->
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
             <onMatch>ACCEPT</onMatch>
             <onMismatch>DENY</onMismatch>
         </filter>
-
         <encoder>
             <pattern>${FILE_LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
-
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
@@ -141,20 +91,13 @@
             <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
     </appender>
-
-    <!--
-        PERFORMANCE_FILE
-        - 성능 측정 로그를 별도 파일에 저장한다.
-        - PerformanceLogAspect에서 get*, find* 메서드 실행 시간을 기록할 때 사용한다.
-    -->
+<!--    성능 측정 로그 저장 양식-->
     <appender name="PERFORMANCE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${LOG_FILE_NAME}-performance.log</file>
-
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-}] %logger{36} - %msg%n</pattern>
             <charset>UTF-8</charset>
         </encoder>
-
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}-performance.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
@@ -162,47 +105,20 @@
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
     </appender>
-
-    <!-- ===================================================== -->
-    <!-- 3. 개발 환경(dev, default) -->
-    <!-- ===================================================== -->
-
-    <!--
-        개발 환경 전략
-        - 콘솔 출력 적극 사용
-        - 우리 프로젝트 패키지는 DEBUG까지 출력
-        - SQL도 개발 편의상 DEBUG로 확인
-    -->
-    <springProfile name="dev,default,docker">
-
-        <!--
-            root logger
-            - 별도 logger 설정이 없는 로그에 대한 기본 정책
-            - INFO 이상 로그를 콘솔/파일/에러 파일에 기록
-        -->
+<!--    개발 환경 전략-->
+    <springProfile name="local,dev,default,docker">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
             <appender-ref ref="ERROR_FILE"/>
         </root>
 
-        <!--
-            우리 프로젝트 전체 패키지 로그
-            - DEBUG부터 출력
-            - additivity=false로 root로 중복 전달되는 것을 방지
-        -->
-        <logger name="com.ssambbong.gymjjak"
-                level="DEBUG"
-                additivity="false">
+        <logger name="com.ssambbong.gymjjak" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
             <appender-ref ref="ERROR_FILE"/>
         </logger>
 
-        <!--
-            성능 로그 전용 logger
-            - PerformanceLogAspect에서 찍는 로그를 성능 파일에도 저장
-        -->
         <logger name="com.ssambbong.gymjjak.global.infrastructure.aop.PerformanceLogAspect"
                 level="INFO"
                 additivity="false">
@@ -210,112 +126,47 @@
             <appender-ref ref="PERFORMANCE_FILE"/>
         </logger>
 
-        <!-- Spring 내부 로그 -->
         <logger name="org.springframework" level="INFO"/>
         <logger name="org.springframework.web" level="DEBUG"/>
         <logger name="org.springframework.transaction" level="DEBUG"/>
-
-        <!-- Hibernate / SQL 로그 -->
         <logger name="org.hibernate" level="INFO"/>
         <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <logger name="com.zaxxer.hikari" level="INFO"/>
     </springProfile>
-
-    <!-- ===================================================== -->
-    <!-- 4. 운영 환경(prod) -->
-    <!-- ===================================================== -->
-
-    <!--
-        운영 환경 전략
-        - 콘솔 출력은 최소화
-        - 외부 라이브러리 로그는 WARN 위주
-        - 우리 프로젝트 로그는 INFO 이상 유지
-        - 에러 로그는 별도 파일에 저장
-    -->
+<!--    운영 환경 전략 외부는 warn, 프로젝트 로그는 info, 에러는 별도 파일 저장-->
     <springProfile name="prod">
-
-        <!-- 운영 기본 로그는 WARN 이상 -->
         <root level="WARN">
             <appender-ref ref="FILE"/>
             <appender-ref ref="ERROR_FILE"/>
         </root>
 
-        <!-- 우리 프로젝트는 INFO 이상 저장 -->
-        <logger name="com.ssambbong.gymjjak"
-                level="INFO"
-                additivity="false">
+        <logger name="com.ssambbong.gymjjak" level="INFO" additivity="false">
             <appender-ref ref="FILE"/>
             <appender-ref ref="ERROR_FILE"/>
         </logger>
 
-        <!-- 운영에서도 성능 로그는 별도 저장 -->
         <logger name="com.ssambbong.gymjjak.global.infrastructure.aop.PerformanceLogAspect"
                 level="INFO"
                 additivity="false">
             <appender-ref ref="PERFORMANCE_FILE"/>
         </logger>
 
-        <!-- 외부 라이브러리 로그 최소화 -->
         <logger name="org.springframework" level="WARN"/>
         <logger name="org.hibernate" level="WARN"/>
         <logger name="com.zaxxer.hikari" level="WARN"/>
     </springProfile>
-
-    <!-- ===================================================== -->
-    <!-- 5. 테스트 환경(test) -->
-    <!-- ===================================================== -->
-
-    <!--
-        테스트 환경 전략
-        - 파일 로그는 제외
-        - 콘솔만 사용
-        - 테스트 중에는 우리 프로젝트 로그를 DEBUG까지 확인
-    -->
+<!--    테스트 환경 전략-->
     <springProfile name="test">
-
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>
 
-        <logger name="com.ssambbong.gymjjak"
-                level="DEBUG"
-                additivity="false">
+        <logger name="com.ssambbong.gymjjak" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>
 
-        <!-- 테스트 프레임워크 내부 로그 최소화 -->
         <logger name="org.springframework.test" level="WARN"/>
         <logger name="org.springframework.boot.test" level="WARN"/>
-    </springProfile>
-
-    <!-- ===================================================== -->
-    <!-- 6. docker 환경(test) -->
-    <!-- ===================================================== -->
-
-    <springProfile name="docker">
-        <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="FILE"/>
-            <appender-ref ref="ERROR_FILE"/>
-        </root>
-
-        <logger name="com.ssambbong.gymjjak"
-                level="DEBUG"
-                additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="FILE"/>
-            <appender-ref ref="ERROR_FILE"/>
-        </logger>
-
-        <logger name="com.ssambbong.gymjjak.global.infrastructure.aop.PerformanceLogAspect"
-                level="INFO"
-                additivity="false">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="PERFORMANCE_FILE"/>
-        </logger>
-
-        <logger name="org.springframework" level="INFO"/>
-        <logger name="org.hibernate" level="INFO"/>
-        <logger name="org.hibernate.SQL" level="DEBUG"/>
     </springProfile>
 
 </configuration>

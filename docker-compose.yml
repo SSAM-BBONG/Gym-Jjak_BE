@@ -14,7 +14,6 @@ services:
       - "${DEV_MYSQL_PORT}:3306"
     volumes:
       - gymjjak-mysql-data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -39,12 +38,12 @@ services:
     # 컨테이너 내부에서 사용할 환경 변수(Environment Variable) 설정
     # 환경 변수 이름을 자동으로 읽어서 application.yml 값으로 매핑
     environment:
-      # 활성 프로파일 설정. 실행 시 application-docker.yml 자동으로 읽어주는 설정
-      SPRING_PROFILES_ACTIVE: docker
+      # 활성 프로파일 설정. 실행 시 application-dev.yml을 읽습니다.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       # DB 연결 관련 docker 에서는 localhost(x), mysql 로 실행
-      SPRING_DATASOURCE_URL: ${DEV_MYSQL_URL}
-      SPRING_DATASOURCE_USERNAME: ${DEV_MYSQL_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DEV_MYSQL_PASSWORD}
+      DEV_MYSQL_URL: ${DEV_MYSQL_URL}
+      DEV_MYSQL_USERNAME: ${DEV_MYSQL_USERNAME}
+      DEV_MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
 
       AWS_REGION: ${AWS_REGION}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}

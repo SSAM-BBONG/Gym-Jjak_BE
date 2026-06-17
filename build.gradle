@@ -63,6 +63,9 @@ dependencies {
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     // spring retry 의존성 추가
     implementation 'org.springframework.retry:spring-retry'
+    // flyway 의존성 추가
+    implementation 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-mysql'
 }
 
 tasks.named('test') {

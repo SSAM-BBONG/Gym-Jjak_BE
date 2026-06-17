@@ -131,9 +131,9 @@ public class SecurityConfig {
                         .hasAnyAuthority("USER", "TRAINER", "ADMIN")
 
                         // Metric 관련 API
-//                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-//                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
+//                        .requestMatchers("/actuator/**").permitAll()
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
