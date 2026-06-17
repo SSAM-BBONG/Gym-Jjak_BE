@@ -6,7 +6,11 @@ import java.util.List;
 
 public interface PtCurriculumQueryPort {
 
+    // 코스 ID로 커리큘럼 목록 조회
     List<CurriculumSummary> findAllByPtCourseId(Long ptCourseId);
+
+    // 커리큘럼 ID로 단건 조회
+    CurriculumSummary findById(Long ptCurriculumId);
 
     record CurriculumSummary(
             Long ptCurriculumId,

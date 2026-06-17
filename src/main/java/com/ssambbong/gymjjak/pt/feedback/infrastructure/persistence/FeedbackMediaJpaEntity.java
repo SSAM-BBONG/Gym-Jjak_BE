@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
