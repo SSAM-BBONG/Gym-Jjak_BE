@@ -279,6 +279,7 @@ CREATE TABLE trainer_certifications (
                                         trainer_profile_id BIGINT NOT NULL,
                                         name VARCHAR(100) NOT NULL,
                                         file_id BIGINT NULL,
+                                        certification_type VARCHAR(30) NOT NULL DEFAULT 'ADDITIONAL',
                                         created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                         updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
                                         deleted_at DATETIME(6) NULL,
