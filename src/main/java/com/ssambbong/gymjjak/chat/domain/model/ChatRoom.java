@@ -9,7 +9,7 @@ public class ChatRoom {
 
     private final Long id;
     private final Long userId;
-    private final Long trainerId;
+    private final Long trainerProfileId;
     private final Long ptCourseId;
     private boolean userLeft;
     private boolean trainerLeft;
@@ -19,13 +19,13 @@ public class ChatRoom {
     private LocalDateTime lastMessageAt;
     private final LocalDateTime updatedAt;
 
-    private ChatRoom(Long id, Long userId, Long trainerId, Long ptCourseId,
+    private ChatRoom(Long id, Long userId, Long trainerProfileId, Long ptCourseId,
                      boolean userLeft, boolean trainerLeft, ChatRoomStatus status,
                      LocalDateTime createdAt, LocalDateTime closedAt,
                      LocalDateTime lastMessageAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
-        this.trainerId = trainerId;
+        this.trainerProfileId = trainerProfileId;
         this.ptCourseId = ptCourseId;
         this.userLeft = userLeft;
         this.trainerLeft = trainerLeft;
@@ -36,16 +36,16 @@ public class ChatRoom {
         this.updatedAt = updatedAt;
     }
 
-    public static ChatRoom create(Long userId, Long trainerId, Long ptCourseId) {
-        return new ChatRoom(null, userId, trainerId, ptCourseId,
+    public static ChatRoom create(Long userId, Long trainerProfileId, Long ptCourseId) {
+        return new ChatRoom(null, userId, trainerProfileId, ptCourseId,
                 false, false, ChatRoomStatus.ACTIVE, null, null, null, null);
     }
 
-    public static ChatRoom restore(Long id, Long userId, Long trainerId, Long ptCourseId,
+    public static ChatRoom restore(Long id, Long userId, Long trainerProfileId, Long ptCourseId,
                                    boolean userLeft, boolean trainerLeft, ChatRoomStatus status,
                                    LocalDateTime createdAt, LocalDateTime closedAt,
                                    LocalDateTime lastMessageAt, LocalDateTime updatedAt) {
-        return new ChatRoom(id, userId, trainerId, ptCourseId,
+        return new ChatRoom(id, userId, trainerProfileId, ptCourseId,
                 userLeft, trainerLeft, status, createdAt, closedAt, lastMessageAt, updatedAt);
     }
 
@@ -76,7 +76,7 @@ public class ChatRoom {
 
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
-    public Long getTrainerId() { return trainerId; }
+    public Long getTrainerProfileId() { return trainerProfileId; }
     public Long getPtCourseId() { return ptCourseId; }
     public boolean isUserLeft() { return userLeft; }
     public boolean isTrainerLeft() { return trainerLeft; }

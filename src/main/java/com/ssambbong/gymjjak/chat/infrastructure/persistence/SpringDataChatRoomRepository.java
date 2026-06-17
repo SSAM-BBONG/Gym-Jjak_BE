@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaEntity, Long> {
 
-    boolean existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status);
+    boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE ChatRoomJpaEntity c SET c.userLeft = true WHERE c.id = :id AND c.status != com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus.DELETED")
@@ -45,13 +45,13 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
                    AND cm.sender_id != :requesterId
                    AND cm.is_read = false) AS unreadCount
             FROM chat_rooms cr
-            LEFT JOIN trainer_profiles tp ON cr.trainer_id = tp.user_id
+            LEFT JOIN trainer_profiles tp ON cr.trainer_profile_id = tp.trainer_profile_id
             LEFT JOIN users u ON cr.user_id = u.user_id
             LEFT JOIN files f ON tp.profile_file_id = f.file_id
-            WHERE (cr.user_id = :requesterId OR cr.trainer_id = :requesterId)
+            WHERE (cr.user_id = :requesterId OR tp.user_id = :requesterId)
               AND cr.status != 'DELETED'
               AND NOT (cr.user_id = :requesterId AND cr.user_left = true)
-              AND NOT (cr.trainer_id = :requesterId AND cr.trainer_left = true)
+              AND NOT (tp.user_id = :requesterId AND cr.trainer_left = true)
             ORDER BY cr.last_message_at IS NULL ASC, cr.last_message_at DESC
             """, nativeQuery = true)
     List<ChatRoomSummaryProjection> findChatRoomSummariesByRequesterId(@Param("requesterId") Long requesterId);

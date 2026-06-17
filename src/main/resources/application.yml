@@ -61,6 +61,10 @@ app:
     report-group:
       period-days: ${APP_RETENTION_REPORT_GROUP_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_REPORT_GROUP_BATCH_SIZE}
+    withdrawn-user:
+      enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED:false}
+      period-days: ${APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS}
+      batch-size: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
 
 clova:
   ocr:

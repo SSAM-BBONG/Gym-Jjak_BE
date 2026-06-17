@@ -11,7 +11,12 @@ import java.util.Optional;
 public class TrainerQueryAdapter implements TrainerQueryPort {
 
     @Override
-    public Optional<TrainerView> findActiveTrainer(Long trainerId) {
-        return Optional.of(new TrainerView(trainerId));
+    public Optional<TrainerView> findActiveTrainer(Long trainerProfileId) {
+        return Optional.of(new TrainerView(trainerProfileId));
+    }
+
+    @Override
+    public Optional<Long> findUserIdByTrainerProfileId(Long trainerProfileId) {
+        return Optional.of(trainerProfileId);
     }
 }

@@ -9,6 +9,15 @@ spring:
       hibernate:
         format_sql: true
 
+app:
+  retention:
+    withdrawn-user:
+      period-days: 30
+      batch-size: 100
+    report-group:
+      period-days: 30
+      batch-size: 100
+
 logging:
   level:
     org.hibernate.SQL: debug
