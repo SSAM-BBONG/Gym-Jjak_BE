@@ -20,6 +20,10 @@ import java.util.List;
                 @Index(
                         name = "idx_trainer_applications_user_status",
                         columnList = "user_id, status"
+                ),
+                @Index(
+                        name = "idx_trainer_applications_status_created_id",
+                        columnList = "status, created_at, trainer_application_id"
                 )
         }
 )

@@ -6,36 +6,35 @@ services:
     container_name: gymjjak-mysql
     restart: always
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DEV_MYSQL_DATABASE}
+      MYSQL_USER: ${DEV_MYSQL_USER}
+      MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DEV_MYSQL_ROOT_PASSWORD}
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "${DEV_MYSQL_PORT}:3306"
     volumes:
       - gymjjak-mysql-data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
 
   backend:
-    image: xxv211/gymjjak-backend:develop
+    image: xxv211/gymjjak-backend:latest
     container_name: gymjjak-backend
     restart: no
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DEV_MYSQL_URL: ${DEV_MYSQL_URL}
+      DEV_MYSQL_USERNAME: ${DEV_MYSQL_USERNAME}
+      DEV_MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
 
       AWS_REGION: ${AWS_REGION}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
@@ -54,7 +53,7 @@ services:
       CLOVA_OCR_INVOKE_URL: ${CLOVA_OCR_INVOKE_URL}
       CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
     ports:
-      - "${BACKEND_PORT}:8080"
+      - "${DEV_BACKEND_PORT}:8080"
 # Docker 영구 저장소 설정
 volumes:
   gymjjak-mysql-data:

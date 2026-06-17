@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.chat.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,7 +21,7 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     public ChatRoom save(ChatRoom chatRoom) {
         ChatRoomJpaEntity entity = new ChatRoomJpaEntity(
                 chatRoom.getUserId(),
-                chatRoom.getTrainerId(),
+                chatRoom.getTrainerProfileId(),
                 chatRoom.getPtCourseId(),
                 chatRoom.getStatus()
         );
@@ -32,8 +34,8 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     }
 
     @Override
-    public boolean existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status) {
-        return repository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(userId, trainerId, ptCourseId, status);
+    public boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status) {
+        return repository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(userId, trainerProfileId, ptCourseId, status);
     }
 
     @Override
@@ -47,11 +49,27 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
         repository.updateStatusAfterLeave(chatRoom.getId(), LocalDateTime.now());
     }
 
+    @Override
+    public List<ChatRoomSummary> findChatRoomsByRequesterId(Long requesterId) {
+        return repository.findChatRoomSummariesByRequesterId(requesterId)
+                .stream()
+                .map(p -> new ChatRoomSummary(
+                        p.getChatRoomId(),
+                        p.getPartnerName(),
+                        p.getPartnerRole(),
+                        p.getPartnerProfileImageUrl(),
+                        p.getLastMessage(),
+                        p.getLastMessageAt(),
+                        p.getUnreadCount()
+                ))
+                .toList();
+    }
+
     private ChatRoom toDomain(ChatRoomJpaEntity entity) {
         return ChatRoom.restore(
                 entity.getId(),
                 entity.getUserId(),
-                entity.getTrainerId(),
+                entity.getTrainerProfileId(),
                 entity.getPtCourseId(),
                 entity.isUserLeft(),
                 entity.isTrainerLeft(),

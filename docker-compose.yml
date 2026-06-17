@@ -6,20 +6,19 @@ services:
     container_name: gymjjak-mysql
     restart: always
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DEV_MYSQL_DATABASE}
+      MYSQL_USER: ${DEV_MYSQL_USER}
+      MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DEV_MYSQL_ROOT_PASSWORD}
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "${DEV_MYSQL_PORT}:3306"
     volumes:
       - gymjjak-mysql-data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -39,12 +38,12 @@ services:
     # 컨테이너 내부에서 사용할 환경 변수(Environment Variable) 설정
     # 환경 변수 이름을 자동으로 읽어서 application.yml 값으로 매핑
     environment:
-      # 활성 프로파일 설정. 실행 시 application-docker.yml 자동으로 읽어주는 설정
-      SPRING_PROFILES_ACTIVE: docker
+      # 활성 프로파일 설정. 실행 시 application-dev.yml을 읽습니다.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       # DB 연결 관련 docker 에서는 localhost(x), mysql 로 실행
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      DEV_MYSQL_URL: ${DEV_MYSQL_URL}
+      DEV_MYSQL_USERNAME: ${DEV_MYSQL_USERNAME}
+      DEV_MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
 
       AWS_REGION: ${AWS_REGION}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
@@ -64,7 +63,7 @@ services:
       CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
     # hostPortNum (my PC) : containerPortNum (docker inner)
     ports:
-      - "${BACKEND_PORT}:8080"
+      - "${DEV_BACKEND_PORT}:8080"
 # Docker 영구 저장소 설정
 volumes:
   gymjjak-mysql-data:

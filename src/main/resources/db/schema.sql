@@ -52,7 +52,6 @@ CREATE TABLE users (
                        role VARCHAR(30) NOT NULL DEFAULT 'USER',
                        status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                        onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
-                       suspended_until DATETIME(6) NULL COMMENT '기간제 정지 만료일 (7일 정지 등)',
                        last_login_at DATETIME(6) NULL,
                        created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                        updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -247,7 +246,8 @@ CREATE TABLE trainer_applications (
                                       CONSTRAINT fk_trainer_applications_reviewed_by
                                           FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
                                       UNIQUE KEY uk_trainer_applications_duplicate_blocking_user (duplicate_blocking_user_id),
-                                      INDEX idx_trainer_applications_user_status (user_id, status)
+                                      INDEX idx_trainer_applications_user_status (user_id, status),
+                                      INDEX idx_trainer_applications_status_created_id (status, created_at, trainer_application_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE trainer_profiles (
@@ -557,6 +557,7 @@ CREATE TABLE chat_messages (
                                chat_room_id BIGINT NOT NULL,
                                sender_id BIGINT NOT NULL,
                                content TEXT NOT NULL,
+                               is_read BOOLEAN NOT NULL DEFAULT FALSE,
                                created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                                CONSTRAINT pk_chat_messages PRIMARY KEY (chat_message_id),
                                CONSTRAINT fk_chat_messages_room FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(chat_room_id) ON DELETE CASCADE,
