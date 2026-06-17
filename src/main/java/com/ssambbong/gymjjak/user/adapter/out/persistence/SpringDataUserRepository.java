@@ -132,11 +132,10 @@ select new com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult
     u.nickname,
     u.status,
     b.type,
-    b.reason,
-    b.endedAt
+    b.reason
 )
 from UserJpaEntity u
-join BlacklistJpaEntity b on b.userId = u.id
+join BlacklistsJpaEntity b on b.userId = u.id
 where u.status in :userStatuses
   and b.status = :blacklistStatus
   and b.deletedAt is null
