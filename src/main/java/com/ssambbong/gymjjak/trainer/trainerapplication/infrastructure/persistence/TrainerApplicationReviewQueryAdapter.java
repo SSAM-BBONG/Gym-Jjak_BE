@@ -3,11 +3,14 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persiste
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationReviewQueryPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.FindTrainerApplicationsCondition;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationListResult;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationReviewDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationSummaryResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 // 관리자 심사용 목록 read model 조회
 @Repository
@@ -39,5 +42,10 @@ public class TrainerApplicationReviewQueryAdapter implements TrainerApplicationR
                 page.getTotalPages(),
                 page.hasNext()
         );
+    }
+
+    @Override
+    public Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(Long trainerApplicationId) {
+        return springDataTrainerApplicationRepository.findTrainerApplicationReviewDetailById(trainerApplicationId);
     }
 }
