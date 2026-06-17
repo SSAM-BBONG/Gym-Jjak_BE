@@ -8,10 +8,14 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaEntity, Long> {
 
     boolean existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status);
+
+    @Query("SELECT c FROM ChatRoomJpaEntity c WHERE c.id = :chatRoomId AND (c.userId = :userId OR c.trainerId = :userId)")
+    Optional<ChatRoomJpaEntity> findByIdAndParticipant(@Param("chatRoomId") Long chatRoomId, @Param("userId") Long userId);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE ChatRoomJpaEntity c SET c.userLeft = true WHERE c.id = :id AND c.status != com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus.DELETED")

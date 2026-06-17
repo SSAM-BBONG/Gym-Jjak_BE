@@ -34,6 +34,11 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     }
 
     @Override
+    public Optional<ChatRoom> findByIdAndParticipant(Long chatRoomId, Long userId) {
+        return repository.findByIdAndParticipant(chatRoomId, userId).map(this::toDomain);
+    }
+
+    @Override
     public boolean existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status) {
         return repository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(userId, trainerId, ptCourseId, status);
     }

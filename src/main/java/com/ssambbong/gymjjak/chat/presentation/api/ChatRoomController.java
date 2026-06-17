@@ -10,6 +10,10 @@ import com.ssambbong.gymjjak.chat.presentation.api.response.CreateChatRoomRespon
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,14 @@ public class ChatRoomController {
 
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "채팅방 목록 조회", description = "내가 참여 중인 채팅방 목록을 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = ChatRoomListResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema()))
+    })
     @GetMapping
     public ResponseEntity<GlobalApiResponse<ChatRoomListResponse>> getChatRooms(
             @AuthenticationPrincipal AuthUser authUser
@@ -41,6 +53,18 @@ public class ChatRoomController {
 
     @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "채팅방 생성", description = "회원이 트레이너와의 1:1 채팅방을 생성한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "채팅방 생성 성공",
+                    content = @Content(schema = @Schema(implementation = CreateChatRoomResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효성 검사 실패)",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "이미 존재하는 채팅방",
+                    content = @Content(schema = @Schema()))
+    })
     @PostMapping
     public ResponseEntity<GlobalApiResponse<CreateChatRoomResponse>> createChatRoom(
             @AuthenticationPrincipal AuthUser authUser,
@@ -61,6 +85,16 @@ public class ChatRoomController {
 
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "채팅방 나가기", description = "회원 또는 트레이너가 채팅방을 나간다. 한 명이 나가면 CLOSED, 둘 다 나가면 DELETED 상태로 전환된다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "채팅방 나가기 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (채팅방 참여자가 아님)",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
     @PatchMapping("/{chatRoomId}/leave")
     public ResponseEntity<GlobalApiResponse<Void>> leaveChatRoom(
             @AuthenticationPrincipal AuthUser authUser,
