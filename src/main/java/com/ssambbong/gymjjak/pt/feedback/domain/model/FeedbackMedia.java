@@ -15,7 +15,7 @@ public class FeedbackMedia {
     }
 
     // DB 복원 시
-    public static FeedbackMedia restore(Long id, Long feedbackId, FeedbackMediaType mediaType, Long fileId) {
+    public static FeedbackMedia restore(Long id, Long feedbackId, FeedbackMedia mediaType, Long fileId) {
         return new FeedbackMedia(id, feedbackId, mediaType, fileId);
     }
 
