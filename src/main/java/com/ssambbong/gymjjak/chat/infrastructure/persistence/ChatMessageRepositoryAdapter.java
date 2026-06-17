@@ -1,0 +1,44 @@
+package com.ssambbong.gymjjak.chat.infrastructure.persistence;
+
+import com.ssambbong.gymjjak.chat.application.query.ChatMessageItem;
+import com.ssambbong.gymjjak.chat.application.query.ChatMessageListResult;
+import com.ssambbong.gymjjak.chat.application.query.ChatMessageQuery;
+import com.ssambbong.gymjjak.chat.domain.repository.ChatMessageRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+@RequiredArgsConstructor
+public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
+
+    private final SpringDataChatMessageRepository repository;
+
+    @Override
+    public ChatMessageListResult findMessages(ChatMessageQuery query) {
+        repository.markMessagesAsRead(query.chatRoomId(), query.readerId());
+
+        List<ChatMessageProjection> rows = repository.findMessages(
+                query.chatRoomId(),
+                query.cursor(),
+                query.size() + 1
+        );
+
+        boolean hasNext = rows.size() > query.size();
+        List<ChatMessageItem> messages = rows.stream()
+                .limit(query.size())
+                .map(p -> new ChatMessageItem(
+                        p.getChatMessageId(),
+                        p.getSenderId(),
+                        p.getContent(),
+                        p.getIsRead(),
+                        p.getCreatedAt()
+                ))
+                .toList();
+
+        Long nextCursor = hasNext ? messages.get(messages.size() - 1).messageId() : null;
+
+        return new ChatMessageListResult(messages, nextCursor, hasNext);
+    }
+}
