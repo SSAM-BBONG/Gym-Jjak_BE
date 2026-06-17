@@ -27,8 +27,8 @@ public class ChatRoomJpaEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "trainer_id", nullable = false)
-    private Long trainerId;
+    @Column(name = "trainer_profile_id", nullable = false)
+    private Long trainerProfileId;
 
     @Column(name = "pt_course_id", nullable = false)
     private Long ptCourseId;
@@ -69,9 +69,9 @@ public class ChatRoomJpaEntity {
         return id != null ? id.hashCode() : System.identityHashCode(this);
     }
 
-    public ChatRoomJpaEntity(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status) {
+    public ChatRoomJpaEntity(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status) {
         this.userId = userId;
-        this.trainerId = trainerId;
+        this.trainerProfileId = trainerProfileId;
         this.ptCourseId = ptCourseId;
         this.userLeft = false;
         this.trainerLeft = false;

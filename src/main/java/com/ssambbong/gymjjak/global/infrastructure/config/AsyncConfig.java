@@ -40,6 +40,19 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
+    @Bean(name = "mailTaskExecutor")
+    public Executor mailTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("mail-async-");
+        executor.initialize();
+
+        return executor;
+    }
+
     // 기본 Async 실행 코드
     @Override
     public Executor getAsyncExecutor() {
