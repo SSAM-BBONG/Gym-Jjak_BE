@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationReviewDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationSummaryResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
 import org.springframework.data.domain.Page;
@@ -63,4 +64,16 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    @Query("""
+        select new com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationReviewDetailResult(
+            ta.trainerApplicationId, ta.userId, ta.profileFileId, u.name, u.username, u.nickname,
+            ta.introduction, ta.qualifications, ta.certificateFileId, ta.awardHistories, ta.status
+            )
+        from TrainerApplicationJpaEntity ta
+        join UserJpaEntity u on u.id = ta.userId
+        where ta.trainerApplicationId = :trainerApplicationId
+    """)
+    Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(
+            @Param("trainerApplicationId") Long trainerApplicationId);
 }

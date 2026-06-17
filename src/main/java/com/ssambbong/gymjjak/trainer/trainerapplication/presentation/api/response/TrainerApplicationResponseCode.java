@@ -27,6 +27,11 @@ public enum TrainerApplicationResponseCode implements ResponseCode {
     TRAINER_APPLICATION_LIST_FOUND(
             "TRAINER_APPLICATION_200_3",
             "트레이너 신청 목록 조회에 성공했습니다."
+    ),
+
+    TRAINER_APPLICATION_REVIEW_DETAIL_FOUND(
+            "TRAINER_APPLICATION_200_4",
+            "트레이너 신청서 관리자 상세 조회에 성공했습니다."
     );
 
     private final String code;
