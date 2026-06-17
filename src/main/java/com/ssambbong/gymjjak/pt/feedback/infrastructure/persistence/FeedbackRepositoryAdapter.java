@@ -26,7 +26,10 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
                 entity.getId(),
                 entity.getPtReservationId(),
                 entity.getPtCurriculumId(),
+                entity.getTrainerProfileId(),
+                entity.getUserId(),
                 entity.getContent(),
+                entity.getStatus(),
                 entity.getCreatedAt()
         );
     }
