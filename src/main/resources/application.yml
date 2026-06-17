@@ -27,6 +27,18 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"
@@ -61,6 +73,12 @@ app:
     report-group:
       period-days: ${APP_RETENTION_REPORT_GROUP_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_REPORT_GROUP_BATCH_SIZE}
+
+    withdrawn-user:
+      enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED:false}
+      period-days: ${APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS}
+      batch-size: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
+
 
 clova:
   ocr:

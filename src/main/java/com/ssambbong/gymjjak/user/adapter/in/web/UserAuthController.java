@@ -2,11 +2,13 @@ package com.ssambbong.gymjjak.user.adapter.in.web;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.IssueTemporaryPasswordRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.LoginRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.LoginResponse;
 import com.ssambbong.gymjjak.user.application.command.LoginCommand;
 import com.ssambbong.gymjjak.user.application.command.LogoutCommand;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
+import com.ssambbong.gymjjak.user.application.port.in.MailUseCase;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.SignupRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
@@ -34,6 +36,7 @@ import java.time.Duration;
 public class UserAuthController {
 
     private final UserCommandUseCase userCommandUseCase;
+    private final MailUseCase mailUseCase;
 
     @PostMapping("/signup")
     @Operation( summary = "일반 회원 계정 생성", description = "회원이 회원가입을 하는 요청이다.")
@@ -86,6 +89,7 @@ public class UserAuthController {
     }
 
     @PostMapping("/logout")
+    @Operation( summary = "로그아웃", description = "로그아웃을 하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> logout( @AuthenticationPrincipal AuthUser authUser) {
 
         userCommandUseCase.logout(new LogoutCommand(authUser.userId()));
@@ -95,6 +99,16 @@ public class UserAuthController {
                         UserResponseCode.USER_LOGOUT_SUCCESS
                 ));
 
+    }
+
+    @PostMapping("/password")
+    @Operation(summary = "임시 비밀번호 발급", description = "임시 비밀번호를 발급하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> issueTemporaryPassword(@Valid @RequestBody IssueTemporaryPasswordRequest request) {
+        mailUseCase.issueTemporaryPassword(request.toCommand());
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(UserResponseCode.TEMPORARY_PASSWORD_SENT)
+        );
     }
 
 }
