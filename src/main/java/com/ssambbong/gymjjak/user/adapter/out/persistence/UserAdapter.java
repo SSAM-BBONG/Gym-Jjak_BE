@@ -1,21 +1,26 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
+import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
+import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.User;
+import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class UserAdapter implements UserPort {
+public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
 
     private final SpringDataUserRepository springDataUserRepository;
     private final UserPersistenceMapper userPersistenceMapper;
@@ -93,7 +98,10 @@ public class UserAdapter implements UserPort {
 
     @Override
     public void withdraw(Long userId, LocalDateTime deletedAt) {
-        springDataUserRepository.withdraw(userId, deletedAt);
+        int updatedCount = springDataUserRepository.withdraw(userId, UserStatus.WITHDRAWN, deletedAt);
+        if (updatedCount == 0) {
+            throw new UserException(UserErrorCode.USER_NOT_FOUND);
+        }
     }
 
     private RuntimeException mapToUserException(DataIntegrityViolationException e) {
@@ -112,6 +120,56 @@ public class UserAdapter implements UserPort {
         }
 
         return e;
+    }
+
+    @Override
+    public int countWithdrawnUsersBefore(LocalDateTime threshold) {
+        return springDataUserRepository.countWithdrawnUsersBefore(threshold);
+    }
+
+    @Override
+    public int deleteWithdrawnUsersBefore(LocalDateTime threshold, int batchSize) {
+        return springDataUserRepository.deleteWithdrawnUsersBefore(threshold, batchSize);
+    }
+
+    @Override
+    public void updateStatus(Long userId, UserStatus status) {
+        springDataUserRepository.updateStatus(userId, status);
+    }
+
+    @Override
+    public void updatePassword(
+            Long userId,
+            String encodedPassword,
+            LocalDateTime updatedAt
+    ) {
+        int updatedCount = springDataUserRepository.changePassword(
+                userId,
+                encodedPassword,
+                updatedAt
+        );
+
+        if (updatedCount == 0) {
+            throw new UserException(UserErrorCode.USER_NOT_FOUND);
+        }
+    }
+
+    @Override
+    public List<FindUserResult> findUsers(String name, Long cursor, int size) {
+        return springDataUserRepository.findUsersByCursor(
+                name,
+                cursor,
+                PageRequest.of(0, size + 1)
+        );
+    }
+
+    @Override
+    public List<FindUserResult> findBlacklistUsers(Long cursor, int size) {
+        return springDataUserRepository.findBlacklistUsersByCursor(
+                List.of(UserStatus.DAY_7, UserStatus.ETERNAL),
+                cursor,
+                PageRequest.of(0, size + 1)
+        );
     }
 
 }

@@ -15,10 +15,6 @@ public class PtCourse {
     private int price;
     private int totalSessionCount;
 
-    // 추후 구현 예정. 지금은 false로 유지
-    private boolean supportsDietLog;
-    private boolean supportsWorkoutLog;
-
     private PtCourseStatus status;
 
     private PtCourse(Long id,
@@ -31,8 +27,6 @@ public class PtCourse {
                     String description,
                     int price,
                     int totalSessionCount,
-                    boolean supportsDietLog,
-                    boolean supportsWorkoutLog,
                     PtCourseStatus status
     ) {
         // 도메인 불변식 보호
@@ -59,8 +53,6 @@ public class PtCourse {
         this.description = description;
         this.price = price;
         this.totalSessionCount = totalSessionCount;
-        this.supportsDietLog = supportsDietLog;
-        this.supportsWorkoutLog = supportsWorkoutLog;
         this.status = status;
     }
 
@@ -87,8 +79,6 @@ public class PtCourse {
                 description,
                 price,
                 totalSessionCount,
-                false,
-                false,
                 PtCourseStatus.VISIBLE
         );
     }
@@ -105,8 +95,6 @@ public class PtCourse {
             String description,
             int price,
             int totalSessionCount,
-            boolean supportsDietLog,
-            boolean supportsWorkoutLog,
             PtCourseStatus status
     ) {
         return new PtCourse(
@@ -120,8 +108,6 @@ public class PtCourse {
                 description,
                 price,
                 totalSessionCount,
-                supportsDietLog,
-                supportsWorkoutLog,
                 status
         );
     }
@@ -145,8 +131,6 @@ public class PtCourse {
     public String getDescription() { return description; }
     public int getPrice() { return price; }
     public int getTotalSessionCount() { return totalSessionCount; }
-    public boolean isSupportsDietLog() { return supportsDietLog; }
-    public boolean isSupportsWorkoutLog() { return supportsWorkoutLog; }
     public PtCourseStatus getStatus() { return status; }
 
     public void delete() {

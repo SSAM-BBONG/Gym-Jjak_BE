@@ -45,12 +45,6 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
     @Column(name = "total_session_count", nullable = false)
     private int totalSessionCount;
 
-    // 추후 구현 예정. 기본값 false
-    @Column(name = "supports_diet_log", nullable = false)
-    private boolean supportsDietLog;
-    @Column(name = "supports_workout_log", nullable = false)
-    private boolean supportsWorkoutLog;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private PtCourseStatus status;
@@ -64,8 +58,6 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
                              String description,
                              int price,
                              int totalSessionCount,
-                             boolean supportsDietLog,
-                             boolean supportsWorkoutLog,
                              PtCourseStatus status
     ) {
         this.organizationId = organizationId;
@@ -77,8 +69,6 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
         this.description = description;
         this.price = price;
         this.totalSessionCount = totalSessionCount;
-        this.supportsDietLog = supportsDietLog;
-        this.supportsWorkoutLog = supportsWorkoutLog;
         this.status = status;
     }
 

@@ -28,8 +28,6 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
                 ptCourse.getDescription(),
                 ptCourse.getPrice(),
                 ptCourse.getTotalSessionCount(),
-                ptCourse.isSupportsDietLog(),
-                ptCourse.isSupportsWorkoutLog(),
                 ptCourse.getStatus()
         );
         return toDomain(repository.save(entity));
@@ -73,8 +71,6 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
                 entity.getDescription(),
                 entity.getPrice(),
                 entity.getTotalSessionCount(),
-                entity.isSupportsDietLog(),
-                entity.isSupportsWorkoutLog(),
                 entity.getStatus()
         );
     }

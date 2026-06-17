@@ -1,10 +1,12 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface SpringDataPtReservationRepository extends JpaRepository<PtReservationJpaEntity, Long> {
 
@@ -20,5 +22,11 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("reservedStartAt") LocalDateTime reservedStartAt,
             @Param("reservedEndAt") LocalDateTime reservedEndAt
     );
+
+    // status 미지정 -> 전체 조회
+    List<PtReservationJpaEntity> findAllByUserIdOrderByReservedStartAtDesc(Long userId);
+
+    // status 지정 -> 필터
+    List<PtReservationJpaEntity> findAllByUserIdAndStatusOrderByReservedStartAtDesc(Long userId, PtReservationStatus status);
 
 }
