@@ -111,6 +111,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
                         .hasAuthority("USER")
 
+                         // 트레이너 신청서 관리자 상세 조회 - 관리자
+                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications/*")
+                        .hasAuthority("ADMIN")
+
                         // 트레이너 신청 생성 - 사용자
                         .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
                         .hasAuthority("USER")
