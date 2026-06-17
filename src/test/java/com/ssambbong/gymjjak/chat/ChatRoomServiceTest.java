@@ -176,6 +176,7 @@ class ChatRoomServiceTest {
             chatRoomService.leaveChatRoom(1L, 1L);
 
             verify(chatRoomRepository).leaveChatRoom(any());
+            verifyNoInteractions(trainerQueryPort);
         }
 
         @Test
@@ -187,6 +188,7 @@ class ChatRoomServiceTest {
             chatRoomService.leaveChatRoom(1L, 20L);
 
             verify(chatRoomRepository).leaveChatRoom(any());
+            verify(trainerQueryPort).findActiveTrainer(11L);
         }
     }
 

@@ -52,7 +52,9 @@ class FileControllerTest {
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
             return http
                     .csrf(AbstractHttpConfigurer::disable)
-                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                    .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                    .exceptionHandling(e -> e.authenticationEntryPoint(
+                            (req, res, ex) -> res.sendError(401)))
                     .build();
         }
     }
@@ -184,6 +186,31 @@ class FileControllerTest {
                             .with(authentication(auth)))
                     .andExpect(status().isBadRequest());
         }
+
+        @Test
+        @DisplayName("files 배열에 null 항목이 포함되면 400을 반환한다")
+        void fail_nullItemInFiles() throws Exception {
+            String body = "{\"files\":[null]}";
+
+            mockMvc.perform(post("/api/files/presigned-urls")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body)
+                            .with(authentication(auth)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("인증 없이 요청하면 401을 반환한다")
+        void fail_unauthenticated() throws Exception {
+            String body = objectMapper.writeValueAsString(Map.of(
+                    "files", List.of(Map.of("fileType", "BUSINESS_LICENSE", "contentType", "application/pdf"))
+            ));
+
+            mockMvc.perform(post("/api/files/presigned-urls")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isUnauthorized());
+        }
     }
 
     @Nested
@@ -220,6 +247,13 @@ class FileControllerTest {
             mockMvc.perform(get("/api/files/999/presigned-url")
                             .with(authentication(auth)))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("인증 없이 요청하면 401을 반환한다")
+        void fail_unauthenticated() throws Exception {
+            mockMvc.perform(get("/api/files/1/presigned-url"))
+                    .andExpect(status().isUnauthorized());
         }
     }
 }
