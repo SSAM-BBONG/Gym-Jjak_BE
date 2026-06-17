@@ -8,6 +8,4 @@ public interface FeedbackRepository {
 
     // 예약 ID로 피드백 목록 조회
     List<Feedback> findAllByPtReservationId(Long ptReservationId);
-
-    //
 }

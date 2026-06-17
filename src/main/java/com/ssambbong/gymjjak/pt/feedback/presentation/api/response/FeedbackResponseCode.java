@@ -8,7 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum FeedbackResponseCode implements ResponseCode {
 
-    STUDENT_FEEDBACKS_FETCHED("STUDENT_FEEDBACKS_200", "수강생 피드백 목록 조회 성공");
+    RESERVATION_FEEDBACKS_FETCHED("RESERVATION_FEEDBACKS_200", "피드백 목록 조회 성공");
 
     private final String code;
     private final String message;

@@ -41,7 +41,7 @@ public class FeedbackController {
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
-                        FeedbackResponseCode.STUDENT_FEEDBACKS_FETCHED,
+                        FeedbackResponseCode.RESERVATION_FEEDBACKS_FETCHED,
                         responses
                 )
         );
