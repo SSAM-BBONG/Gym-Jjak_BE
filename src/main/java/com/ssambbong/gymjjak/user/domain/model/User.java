@@ -129,9 +129,10 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-
-    public void changePassword(String encodedPassword) {
-        this.password = encodedPassword;
+    public void changePassword(String encodedPassword, LocalDateTime updatedAt) {
+        validateUsableUser();
+        this.password = validateRequired(encodedPassword, UserErrorCode.PASSWORD_REQUIRED);
+        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
     public void changeRole(UserRole role, LocalDateTime  updatedAt) {

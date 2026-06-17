@@ -2,15 +2,12 @@ package com.ssambbong.gymjjak.user.application.service;
 
 import com.ssambbong.gymjjak.user.application.command.*;
 import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
-import com.ssambbong.gymjjak.user.application.result.CursorResult;
-import com.ssambbong.gymjjak.user.application.result.FindUserResult;
-import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
+import com.ssambbong.gymjjak.user.application.result.*;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
-import com.ssambbong.gymjjak.user.application.result.LoginResult;
 import com.ssambbong.gymjjak.user.domain.model.Blacklist;
 import com.ssambbong.gymjjak.user.domain.model.BlacklistType;
 import com.ssambbong.gymjjak.user.domain.model.User;
@@ -288,14 +285,15 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
-    public CursorResult<FindUserResult> findBlacklistUsers(Long cursor, int size) {
+    public CursorResult<FindBlacklistUserResult> findBlacklistUsers(String name, Long cursor, int size) {
         log.debug("users_findBlacklistUsers_start, cursor={}, size={}", cursor, size);
 
-        List<FindUserResult> results = userPort.findBlacklistUsers(cursor, size);
+        List<FindBlacklistUserResult> results =
+                userPort.findBlacklistUsers(name, cursor, size);
 
         boolean hasNext = results.size() > size;
 
-        List<FindUserResult> content = hasNext
+        List<FindBlacklistUserResult> content = hasNext
                 ? results.subList(0, size)
                 : results;
 

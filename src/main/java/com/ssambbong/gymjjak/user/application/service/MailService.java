@@ -8,9 +8,13 @@ import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -22,6 +26,8 @@ public class MailService implements MailUseCase {
     @Override
     public void issueTemporaryPassword(IssueTemporaryPasswordCommand command) {
 
+        log.debug("event=email_send_start username={}", command.username());
+
         User user = userPort.findByUsername(command.username())
                 .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
 
@@ -29,7 +35,7 @@ public class MailService implements MailUseCase {
 
         String encodedPassword = mailPort.encode(temporaryPassword);
 
-        user.changePassword(encodedPassword);
+        user.changePassword(encodedPassword, LocalDateTime.now());
 
         userPort.save(user);
 
@@ -37,5 +43,7 @@ public class MailService implements MailUseCase {
                 user.getUsername(),
                 temporaryPassword
         );
+
+        log.info("event=email_send_succeed username={}", command.username());
     }
 }
