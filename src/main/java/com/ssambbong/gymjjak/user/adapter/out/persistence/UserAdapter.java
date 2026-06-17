@@ -2,10 +2,12 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
 import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
+import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
+import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
@@ -164,9 +166,15 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     }
 
     @Override
-    public List<FindUserResult> findBlacklistUsers(Long cursor, int size) {
+    public List<FindBlacklistUserResult> findBlacklistUsers(
+            String name,
+            Long cursor,
+            int size
+    ) {
         return springDataUserRepository.findBlacklistUsersByCursor(
                 List.of(UserStatus.DAY_7, UserStatus.ETERNAL),
+                BlacklistStatus.ACTIVE,
+                name,
                 cursor,
                 PageRequest.of(0, size + 1)
         );
