@@ -28,14 +28,15 @@ public class ChatMessageService implements ChatMessageUseCase {
         ChatRoom chatRoom = chatRoomRepository.findById(query.chatRoomId())
                 .orElseThrow(ChatRoomNotFoundException::new);
 
-        Long trainerUserId = trainerQueryPort.findActiveTrainer(chatRoom.getTrainerProfileId())
-                .map(TrainerView::userId)
-                .orElseThrow(ChatRoomAccessDeniedException::new);
-
-        if (!requesterId.equals(chatRoom.getUserId()) && !requesterId.equals(trainerUserId)) {
-            throw new ChatRoomAccessDeniedException();
+        if (!requesterId.equals(chatRoom.getUserId())) {
+            Long trainerUserId = trainerQueryPort.findActiveTrainer(chatRoom.getTrainerProfileId())
+                    .map(TrainerView::userId)
+                    .orElseThrow(ChatRoomAccessDeniedException::new);
+            if (!requesterId.equals(trainerUserId)) {
+                throw new ChatRoomAccessDeniedException();
+            }
         }
 
-        return chatMessageRepository.findMessages(query);
+        return chatMessageRepository.findMessages(query, requesterId);
     }
 }
