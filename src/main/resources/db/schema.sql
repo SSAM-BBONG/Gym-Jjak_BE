@@ -52,7 +52,6 @@ CREATE TABLE users (
                        role VARCHAR(30) NOT NULL DEFAULT 'USER',
                        status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                        onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
-                       suspended_until DATETIME(6) NULL COMMENT '기간제 정지 만료일 (7일 정지 등)',
                        last_login_at DATETIME(6) NULL,
                        created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
                        updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),

@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
 import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
+import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
@@ -9,10 +10,12 @@ import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -95,7 +98,10 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
 
     @Override
     public void withdraw(Long userId, LocalDateTime deletedAt) {
-        springDataUserRepository.withdraw(userId, UserStatus.WITHDRAWN, deletedAt);
+        int updatedCount = springDataUserRepository.withdraw(userId, UserStatus.WITHDRAWN, deletedAt);
+        if (updatedCount == 0) {
+            throw new UserException(UserErrorCode.USER_NOT_FOUND);
+        }
     }
 
     private RuntimeException mapToUserException(DataIntegrityViolationException e) {
@@ -146,6 +152,24 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
         if (updatedCount == 0) {
             throw new UserException(UserErrorCode.USER_NOT_FOUND);
         }
+    }
+
+    @Override
+    public List<FindUserResult> findUsers(String name, Long cursor, int size) {
+        return springDataUserRepository.findUsersByCursor(
+                name,
+                cursor,
+                PageRequest.of(0, size + 1)
+        );
+    }
+
+    @Override
+    public List<FindUserResult> findBlacklistUsers(Long cursor, int size) {
+        return springDataUserRepository.findBlacklistUsersByCursor(
+                List.of(UserStatus.DAY_7, UserStatus.ETERNAL),
+                cursor,
+                PageRequest.of(0, size + 1)
+        );
     }
 
 }
