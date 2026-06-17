@@ -3,3 +3,11 @@ spring:
     url: ${DEV_MYSQL_URL}
     username: ${DEV_MYSQL_USERNAME}
     password: ${DEV_MYSQL_PASSWORD}
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+logging:
+  level:
+    org.hibernate.sql: debug

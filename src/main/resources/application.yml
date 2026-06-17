@@ -8,10 +8,6 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  sql:
-    init:
-      mode: never
-
   jpa:
     hibernate:
       ddl-auto: validate
@@ -31,8 +27,6 @@ spring:
     clean-disabled: true
 
 logging:
-  level:
-    org.hibernate.SQL: debug
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"
 

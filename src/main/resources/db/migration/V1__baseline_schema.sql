@@ -1,47 +1,3 @@
--- GymJjak 1st Project Schema (MySQL 8.x)
--- Version: v4.1, Suspended column added & Unique index dropped on regions.
--- Generated from ERD export after syntax/constraint cleanup.
-
-SET FOREIGN_KEY_CHECKS = 0;
-
-DROP TABLE IF EXISTS reports;
-DROP TABLE IF EXISTS report_groups;
-DROP TABLE IF EXISTS admin_action_logs;
-DROP TABLE IF EXISTS system_logs;
-DROP TABLE IF EXISTS notifications;
-DROP TABLE IF EXISTS blacklists;
-DROP TABLE IF EXISTS chat_messages;
-DROP TABLE IF EXISTS chat_rooms;
-DROP TABLE IF EXISTS post_likes;
-DROP TABLE IF EXISTS comments;
-DROP TABLE IF EXISTS posts;
-DROP TABLE IF EXISTS workout_diaries;
-DROP TABLE IF EXISTS calendar_entries;
-DROP TABLE IF EXISTS trainer_reviews;
-DROP TABLE IF EXISTS feedback_media;
-DROP TABLE IF EXISTS feedbacks;
-DROP TABLE IF EXISTS pt_reservations;
-DROP TABLE IF EXISTS pt_course_schedules;
-DROP TABLE IF EXISTS pt_curriculums;
-DROP TABLE IF EXISTS pt_courses;
-DROP TABLE IF EXISTS organization_trainers;
-DROP TABLE IF EXISTS trainer_awards;
-DROP TABLE IF EXISTS trainer_certifications;
-DROP TABLE IF EXISTS trainer_profiles;
-DROP TABLE IF EXISTS trainer_applications;
-DROP TABLE IF EXISTS organizations;
-DROP TABLE IF EXISTS organization_applications;
-DROP TABLE IF EXISTS refresh_tokens;
-DROP TABLE IF EXISTS onboarding_surveys;
-DROP TABLE IF EXISTS files;
-DROP TABLE IF EXISTS tags;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS regions;
-DROP TABLE IF EXISTS users;
-
-SET FOREIGN_KEY_CHECKS = 1;
-
--- 1. 유저 테이블 (정지 만료일 컬럼 추가 및 updated_at 속성 지정)
 CREATE TABLE users (
                        user_id BIGINT NOT NULL AUTO_INCREMENT,
                        username VARCHAR(100) NOT NULL COMMENT '로그인 ID. 이메일 형식으로 검증',
@@ -62,7 +18,6 @@ CREATE TABLE users (
                        CONSTRAINT uk_users_phone UNIQUE (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. 지역 테이블 (uk_regions_area 유니크 인덱스 제거 완료)
 CREATE TABLE regions (
                          region_id BIGINT NOT NULL AUTO_INCREMENT,
                          sido VARCHAR(50) NOT NULL,
