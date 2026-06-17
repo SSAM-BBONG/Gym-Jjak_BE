@@ -32,15 +32,15 @@ public class ChatRoomService implements ChatRoomUseCase {
     @Override
     @Transactional
     public Long createChatRoom(CreateChatRoomCommand command) {
-        trainerQueryPort.findActiveTrainer(command.trainerId())
+        trainerQueryPort.findActiveTrainer(command.trainerProfileId())
                 .orElseThrow(TrainerNotFoundException::new);
 
-        if (chatRoomRepository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(
-                command.userId(), command.trainerId(), command.ptCourseId(), ChatRoomStatus.ACTIVE)) {
+        if (chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(
+                command.userId(), command.trainerProfileId(), command.ptCourseId(), ChatRoomStatus.ACTIVE)) {
             throw new ChatRoomAlreadyExistsException();
         }
 
-        ChatRoom chatRoom = ChatRoom.create(command.userId(), command.trainerId(), command.ptCourseId());
+        ChatRoom chatRoom = ChatRoom.create(command.userId(), command.trainerProfileId(), command.ptCourseId());
         ChatRoom saved;
         try {
             saved = chatRoomRepository.save(chatRoom);
@@ -50,8 +50,8 @@ public class ChatRoomService implements ChatRoomUseCase {
             }
             throw e;
         }
-        log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerId: {}",
-                saved.getId(), command.userId(), command.trainerId());
+        log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerProfileId: {}",
+                saved.getId(), command.userId(), command.trainerProfileId());
         return saved.getId();
     }
 
@@ -75,10 +75,14 @@ public class ChatRoomService implements ChatRoomUseCase {
 
         if (requesterId.equals(chatRoom.getUserId())) {
             chatRoom.leaveAsUser();
-        } else if (requesterId.equals(chatRoom.getTrainerId())) {
-            chatRoom.leaveAsTrainer();
         } else {
-            throw new ChatRoomAccessDeniedException();
+            Long trainerUserId = trainerQueryPort.findUserIdByTrainerProfileId(chatRoom.getTrainerProfileId())
+                    .orElseThrow(ChatRoomAccessDeniedException::new);
+            if (requesterId.equals(trainerUserId)) {
+                chatRoom.leaveAsTrainer();
+            } else {
+                throw new ChatRoomAccessDeniedException();
+            }
         }
 
         chatRoomRepository.leaveChatRoom(chatRoom);

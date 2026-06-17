@@ -21,7 +21,7 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     public ChatRoom save(ChatRoom chatRoom) {
         ChatRoomJpaEntity entity = new ChatRoomJpaEntity(
                 chatRoom.getUserId(),
-                chatRoom.getTrainerId(),
+                chatRoom.getTrainerProfileId(),
                 chatRoom.getPtCourseId(),
                 chatRoom.getStatus()
         );
@@ -34,8 +34,8 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     }
 
     @Override
-    public boolean existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(Long userId, Long trainerId, Long ptCourseId, ChatRoomStatus status) {
-        return repository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(userId, trainerId, ptCourseId, status);
+    public boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status) {
+        return repository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(userId, trainerProfileId, ptCourseId, status);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
         return ChatRoom.restore(
                 entity.getId(),
                 entity.getUserId(),
-                entity.getTrainerId(),
+                entity.getTrainerProfileId(),
                 entity.getPtCourseId(),
                 entity.isUserLeft(),
                 entity.isTrainerLeft(),
