@@ -60,7 +60,7 @@ public class TrainerApplicationReviewController {
         );
     }
 
-    @GetMapping("/{trainerApplicationId")
+    @GetMapping("/{trainerApplicationId}")
     @Operation(
             summary = "트레이너 신청서 관리자 상세 조회",
             description = "관리자가 특정 트레이너 신청서를 상세 조회합니다."
