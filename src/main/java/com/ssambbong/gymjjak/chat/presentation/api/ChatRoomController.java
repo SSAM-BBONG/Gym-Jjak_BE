@@ -56,11 +56,13 @@ public class ChatRoomController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "채팅방 생성 성공",
                     content = @Content(schema = @Schema(implementation = CreateChatRoomResponse.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효성 검사 실패)",
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효성 검사 실패 또는 유효하지 않은 PT 코스)",
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema())),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
+            @ApiResponse(responseCode = "403", description = "권한 없음 (USER만 채팅방 생성 가능)",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "트레이너를 찾을 수 없음",
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "409", description = "이미 존재하는 채팅방",
                     content = @Content(schema = @Schema()))
@@ -72,7 +74,7 @@ public class ChatRoomController {
     ) {
         CreateChatRoomCommand command = new CreateChatRoomCommand(
                 authUser.userId(),
-                request.trainerId(),
+                request.trainerProfileId(),
                 request.ptCourseId()
         );
 
@@ -88,11 +90,15 @@ public class ChatRoomController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "채팅방 나가기 성공",
                     content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "400", description = "이미 종료된 채팅방 (DELETED 상태)",
+                    content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "403", description = "권한 없음 (채팅방 참여자가 아님)",
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "이미 나간 채팅방",
                     content = @Content(schema = @Schema()))
     })
     @PatchMapping("/{chatRoomId}/leave")

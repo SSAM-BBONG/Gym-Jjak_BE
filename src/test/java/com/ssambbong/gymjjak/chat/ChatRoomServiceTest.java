@@ -49,7 +49,7 @@ class ChatRoomServiceTest {
                     ChatRoomStatus.ACTIVE, LocalDateTime.now(), null, null, LocalDateTime.now());
 
             when(trainerQueryPort.findActiveTrainer(11L)).thenReturn(Optional.of(new TrainerView(11L)));
-            when(chatRoomRepository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(false);
+            when(chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(false);
             when(chatRoomRepository.save(any())).thenReturn(savedRoom);
 
             Long result = chatRoomService.createChatRoom(command);
@@ -73,7 +73,7 @@ class ChatRoomServiceTest {
         @DisplayName("이미 ACTIVE 채팅방이 존재하면 ChatRoomAlreadyExistsException이 발생한다")
         void fail_alreadyExists() {
             when(trainerQueryPort.findActiveTrainer(11L)).thenReturn(Optional.of(new TrainerView(11L)));
-            when(chatRoomRepository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(true);
+            when(chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(true);
 
             assertThatThrownBy(() -> chatRoomService.createChatRoom(command))
                     .isInstanceOf(ChatRoomAlreadyExistsException.class);
@@ -85,7 +85,7 @@ class ChatRoomServiceTest {
         @DisplayName("동시 요청으로 unique 제약 위반 시 ChatRoomAlreadyExistsException이 발생한다")
         void fail_uniqueConstraintViolation() {
             when(trainerQueryPort.findActiveTrainer(11L)).thenReturn(Optional.of(new TrainerView(11L)));
-            when(chatRoomRepository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(false);
+            when(chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(false);
             when(chatRoomRepository.save(any())).thenThrow(uniqueConstraintException("uk_chat_rooms_active"));
 
             assertThatThrownBy(() -> chatRoomService.createChatRoom(command))
@@ -96,7 +96,7 @@ class ChatRoomServiceTest {
         @DisplayName("trainer_id FK 위반 시 TrainerNotFoundException이 발생한다")
         void fail_trainerFkViolation() {
             when(trainerQueryPort.findActiveTrainer(11L)).thenReturn(Optional.of(new TrainerView(11L)));
-            when(chatRoomRepository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(false);
+            when(chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(false);
             when(chatRoomRepository.save(any())).thenThrow(uniqueConstraintException("fk_chat_rooms_trainer"));
 
             assertThatThrownBy(() -> chatRoomService.createChatRoom(command))
@@ -107,7 +107,7 @@ class ChatRoomServiceTest {
         @DisplayName("pt_course_id FK 위반 시 PtCourseNotFoundException이 발생한다")
         void fail_ptCourseFkViolation() {
             when(trainerQueryPort.findActiveTrainer(11L)).thenReturn(Optional.of(new TrainerView(11L)));
-            when(chatRoomRepository.existsByUserIdAndTrainerIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(false);
+            when(chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(1L, 11L, 1L, ChatRoomStatus.ACTIVE)).thenReturn(false);
             when(chatRoomRepository.save(any())).thenThrow(uniqueConstraintException("fk_chat_rooms_pt_course"));
 
             assertThatThrownBy(() -> chatRoomService.createChatRoom(command))
@@ -144,6 +144,7 @@ class ChatRoomServiceTest {
         @DisplayName("참여자가 아닌 사용자가 나가려 하면 ChatRoomAccessDeniedException이 발생한다")
         void fail_accessDenied() {
             when(chatRoomRepository.findById(1L)).thenReturn(Optional.of(activeRoom));
+            when(trainerQueryPort.findActiveTrainer(11L)).thenReturn(Optional.of(new TrainerView(50L)));
 
             assertThatThrownBy(() -> chatRoomService.leaveChatRoom(1L, 999L))
                     .isInstanceOf(ChatRoomAccessDeniedException.class);

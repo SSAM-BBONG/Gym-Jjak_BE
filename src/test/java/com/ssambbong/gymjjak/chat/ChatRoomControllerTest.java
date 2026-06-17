@@ -73,8 +73,8 @@ class ChatRoomControllerTest {
     @DisplayName("POST /api/chat/rooms - 채팅방 생성")
     class CreateChatRoom {
 
-        private String requestBody(Long trainerId, Long ptCourseId) throws Exception {
-            return objectMapper.writeValueAsString(Map.of("trainerId", trainerId, "ptCourseId", ptCourseId));
+        private String requestBody(Long trainerProfileId, Long ptCourseId) throws Exception {
+            return objectMapper.writeValueAsString(Map.of("trainerProfileId", trainerProfileId, "ptCourseId", ptCourseId));
         }
 
         @Test

@@ -38,7 +38,9 @@ public class ChatMessageController {
                     content = @Content(schema = @Schema(implementation = ChatMessageListResponse.class))),
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema())),
-            @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없음 (존재하지 않거나 참여자가 아님)",
+            @ApiResponse(responseCode = "403", description = "권한 없음 (채팅방 참여자가 아님)",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "채팅방을 찾을 수 없음",
                     content = @Content(schema = @Schema()))
     })
     @GetMapping
@@ -48,7 +50,7 @@ public class ChatMessageController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        ChatMessageQuery query = new ChatMessageQuery(chatRoomId, cursor, size);
+        ChatMessageQuery query = new ChatMessageQuery(chatRoomId, authUser.userId(), cursor, size);
         ChatMessageListResult result = chatMessageUseCase.getMessages(authUser.userId(), query);
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 ChatMessageResponseCode.CHAT_MESSAGE_LIST_FETCHED,

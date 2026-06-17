@@ -17,6 +17,8 @@ public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
 
     @Override
     public ChatMessageListResult findMessages(ChatMessageQuery query) {
+        repository.markMessagesAsRead(query.chatRoomId(), query.readerId());
+
         List<ChatMessageProjection> rows = repository.findMessages(
                 query.chatRoomId(),
                 query.cursor(),

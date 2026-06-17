@@ -18,7 +18,8 @@ public enum UserResponseCode implements ResponseCode {
     USER_PROFILE_WITHDREW("USER_PROFILE_WITHDREW", "회원 탈퇴에 성공했습니다."),
     USER_STATUS_UPDATED("USER_STATUS_UPDATED", "회원 상태 변경에 성공했습니다."),
     PASSWORD_CHANGED("PASSWORD_CHANGED", "비밀번호 변경에 성공했습니다."),
-    USER_FOUND("USER_FOUND", "유저 목록이 조회되었습니다.");
+    USER_FOUND("USER_FOUND", "유저 목록이 조회되었습니다."),
+    TEMPORARY_PASSWORD_SENT("USER", "입력한 이메일로 임시 비밀번호가 발급되었습니다.");
 
     private final String code;
     private final String message;

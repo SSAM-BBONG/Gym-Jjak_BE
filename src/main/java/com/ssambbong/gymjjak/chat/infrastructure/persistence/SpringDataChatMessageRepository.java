@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.chat.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,4 +27,15 @@ public interface SpringDataChatMessageRepository extends JpaRepository<ChatMessa
             @Param("cursor") Long cursor,
             @Param("size") int size
     );
+
+    @Modifying
+    @Query(value = """
+            UPDATE chat_messages
+            SET is_read = true
+            WHERE chat_room_id = :chatRoomId
+              AND sender_id != :readerId
+              AND is_read = false
+            """, nativeQuery = true)
+    void
+    markMessagesAsRead(@Param("chatRoomId") Long chatRoomId, @Param("readerId") Long readerId);
 }
