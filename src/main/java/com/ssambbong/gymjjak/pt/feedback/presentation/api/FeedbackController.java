@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.pt.feedback.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.pt.feedback.application.usecase.FeedbackQueryUseCase;
+import com.ssambbong.gymjjak.pt.feedback.presentation.api.response.FeedbackDetailResponse;
 import com.ssambbong.gymjjak.pt.feedback.presentation.api.response.FeedbackListResponse;
 import com.ssambbong.gymjjak.pt.feedback.presentation.api.response.FeedbackResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,6 +45,22 @@ public class FeedbackController {
                         FeedbackResponseCode.RESERVATION_FEEDBACKS_FETCHED,
                         responses
                 )
+        );
+    }
+
+    @GetMapping("/{feedbackId}")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "피드백 상세 조회", description = "피드백 ID로 상세 내용을 조회한다.")
+    public ResponseEntity<GlobalApiResponse<FeedbackDetailResponse>>
+    findFeedbackDetail(@AuthenticationPrincipal AuthUser authUser,
+                       @PathVariable Long ptReservationId,
+                       @PathVariable Long feedbackId
+    ) {
+        FeedbackDetailResponse response = FeedbackDetailResponse.from(
+                feedbackQueryUseCase.findFeedbackDetail(authUser.userId(), ptReservationId, feedbackId)
+        );
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(FeedbackResponseCode.FEEDBACK_DETAIL_FETCHED, response)
         );
     }
 }

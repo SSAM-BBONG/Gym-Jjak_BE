@@ -5,7 +5,9 @@ import com.ssambbong.gymjjak.pt.feedback.application.port.PtReservationQueryPort
 import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.usecase.FeedbackQueryUseCase;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
+import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackMediaRepository;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class FeedbackQueryService implements FeedbackQueryUseCase {
 
     private final FeedbackRepository feedbackRepository;
+    private final FeedbackMediaRepository feedbackMediaRepository;
     private final PtReservationQueryPort ptReservationQueryPort;
     private final PtCurriculumQueryPort ptCurriculumQueryPort;
     private final TrainerQueryPort trainerQueryPort;
@@ -62,7 +65,50 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         return result;
     }
 
-    // USER: 본인 예약인지, TRAINER: 본인 강습인지 검증
+    @Override
+    public FeedbackDetailView findFeedbackDetail(Long userId, Long ptReservationId, Long feedbackId) {
+        log.debug("[FeedbackDetail] userId={}, ptReservationId={}, feedbackId={}", userId, ptReservationId, feedbackId);
+
+        // 1. 피드백 조회
+        Feedback feedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> {
+            log.warn("[FeedbackDetail] 피드백 없음 feedbackId={}", feedbackId);
+            return new FeedbackNotFoundException();
+        });
+
+        // 2. path param의 ptReservationId와 피드백의 예약 ID 일치 확인
+        if (!feedback.getPtReservationId().equals(ptReservationId)) {
+            log.warn("[FeedbackDetail] 예약 불일치 feedbackId={}, ptReservationId={}", feedbackId, ptReservationId);
+            throw new FeedbackNotFoundException();
+        }
+
+        // 3. 소유권 검증
+        verifyOwnershipByFeedback(userId, feedback);
+
+        // 4. 커리큘럼 조회 (sessionNo, title)
+        PtCurriculumQueryPort.CurriculumSummary curriculum =
+                ptCurriculumQueryPort.findById(feedback.getPtCurriculumId());
+
+        // 5. 미디어 목록 조회
+        List<MediaView> mediaList =
+                feedbackMediaRepository.findAllByFeedbackId(feedbackId)
+                        .stream()
+                        .map(m -> new MediaView(m.getId(), m.getMediaType(), m.getFileId()))
+                        .toList();
+
+        log.info("[FeedbackDetail] feedbackId={} 조회 완료", feedbackId);
+
+        return new FeedbackDetailView(
+                curriculum.sessionNo(),
+                curriculum.title(),
+                feedback.getContent(),
+                mediaList,
+                feedback.getCreatedAt().toLocalDate()
+        );
+
+    }
+
+    // 목록 조회용 -> USER: 본인 예약인지, TRAINER: 본인 강습인지 검증
     private void verifyOwnership(Long userId, PtReservationQueryPort.ReservationInfo reservation) {
 
         if (reservation.userId().equals(userId)) {
@@ -76,6 +122,23 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
 
         if (!trainerProfileId.equals(reservation.trainerProfileId())) {
             log.warn("[FeedbackList] 본인 강습 아님 userId={}, trainerProfileId={}", userId, trainerProfileId);
+            throw new FeedbackForbiddenException();
+        }
+    }
+
+    // 상세 조회용 소유권 검증
+    private void verifyOwnershipByFeedback(Long userId, Feedback feedback) {
+
+        if (feedback.getUserId().equals(userId)) return;
+
+        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(userId)
+                .orElseThrow(() -> {
+                    log.warn("[FeedbackDetail] 접근 권한 없음 userId={}", userId);
+                    return new FeedbackForbiddenException();
+                });
+
+        if (!trainerProfileId.equals(feedback.getTrainerProfileId())) {
+            log.warn("[FeedbackDetail] 본인 강습 아님 userId={}, trainerProfileId={}", userId, trainerProfileId);
             throw new FeedbackForbiddenException();
         }
     }

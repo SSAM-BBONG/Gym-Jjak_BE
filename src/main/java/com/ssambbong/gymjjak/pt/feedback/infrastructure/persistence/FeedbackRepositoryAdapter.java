@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -19,6 +20,12 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
                 .stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<Feedback> findById(Long feedbackId) {
+        return repository.findByIdAndDeletedAtIsNull(feedbackId)
+                .map(this::toDomain);
     }
 
     private Feedback toDomain(FeedbackJpaEntity entity) {
