@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.organization.organizationTrainer.presentation.api.
 import com.ssambbong.gymjjak.global.infrastructure.config.MapStructConfig;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.presentation.api.response.FindOrganizationTrainerResponse;
+import com.ssambbong.gymjjak.organization.organizationTrainer.presentation.api.response.FindOrganizationTrainersResponse;
 import org.mapstruct.Mapper;
 
 import java.util.List;
@@ -13,4 +14,8 @@ public interface OrganizationTrainerMapper {
     FindOrganizationTrainerResponse toResponse(TrainerSummary summary);
 
     List<FindOrganizationTrainerResponse> toResponseList(List<TrainerSummary> summaries);
+
+    default FindOrganizationTrainersResponse toWrappedResponse(List<TrainerSummary> summaries) {
+        return new FindOrganizationTrainersResponse(toResponseList(summaries));
+    }
 }

@@ -45,10 +45,8 @@ public class OrganizationTrainerController {
     public ResponseEntity<GlobalApiResponse<FindOrganizationTrainersResponse>> getMyOrganizationTrainers(
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        FindOrganizationTrainersResponse response = new FindOrganizationTrainersResponse(
-                organizationTrainerMapper.toResponseList(
-                        organizationTrainerQueryUseCase.findMyOrganizationTrainers(authUser.userId())
-                )
+        FindOrganizationTrainersResponse response = organizationTrainerMapper.toWrappedResponse(
+                organizationTrainerQueryUseCase.findMyOrganizationTrainers(authUser.userId())
         );
 
         return ResponseEntity.ok(
