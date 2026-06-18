@@ -143,4 +143,20 @@ public class TrainerApplication {
     public boolean isPending() {
         return this.status == TrainerApplicationStatus.PENDING;
     }
+
+    public TrainerApplication approve(Long adminId, LocalDateTime reviewedAt) {
+        return new TrainerApplication(
+                this.trainerApplicationId,
+                this.userId,
+                this.profileFileId,
+                this.certificateFileId,
+                this.qualifications,
+                this.awardHistories,
+                this.introduction,
+                TrainerApplicationStatus.APPROVED,
+                null,
+                adminId,
+                reviewedAt
+        );
+    }
 }

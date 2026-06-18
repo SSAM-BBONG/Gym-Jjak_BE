@@ -19,7 +19,6 @@ public record TrainerApplicationReviewDetailResponse(
         @Schema(description = "프로필 이미지 파일 ID. 프론트에서 File API로 url 조회 후 표시합니다.", example = "15")
         Long profileImageFileId,
 
-
         @Schema(description = "신청자 이름", example = "김정수")
         String name,
 
