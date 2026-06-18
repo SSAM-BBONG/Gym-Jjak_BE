@@ -11,4 +11,7 @@ public interface OrganizationQueryUseCase {
 
     // 전체 조직 목록 조회 (ADMIN용)
     OrganizationListResult findOrganizations(OrganizationListQuery query);
+
+    // 조직 상세 조회 - ADMIN용 (status 무관)
+    Organization findOrganizationById(Long organizationId);
 }
