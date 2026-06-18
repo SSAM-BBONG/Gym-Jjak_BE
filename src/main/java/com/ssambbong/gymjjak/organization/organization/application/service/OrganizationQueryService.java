@@ -28,4 +28,11 @@ public class OrganizationQueryService implements OrganizationQueryUseCase {
         return organizationRepository.findAllForAdmin(query);
     }
 
+    @Override
+    public Organization findOrganizationById(Long organizationId) {
+        return organizationRepository.findById(organizationId)
+                .orElseThrow(OrganizationNotFoundException::new);
+    }
+
+
 }

@@ -3,9 +3,7 @@ package com.ssambbong.gymjjak.onboarding.adapter.out.persistence;
 import com.ssambbong.gymjjak.global.infrastructure.presentation.CreatedUpdatedEntity;
 import com.ssambbong.gymjjak.user.adapter.out.persistence.UserJpaEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -13,6 +11,8 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "onboarding_surveys")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
 
     @Id
@@ -44,28 +44,6 @@ public class OnboardingSurveyJpaEntity extends CreatedUpdatedEntity {
 
     @Column(name = "weight", nullable = false, precision = 5, scale = 2)
     private BigDecimal weight;
-
-    public OnboardingSurveyJpaEntity(
-            Long id,
-            Long userId,
-            String exerciseGoal,
-            String exercisePeriod,
-            String exerciseFrequency,
-            String preferredExercise,
-            RegionJpaEntity preferredRegion,
-            BigDecimal height,
-            BigDecimal weight
-    ) {
-        this.id = id;
-        this.userId = userId;
-        this.exerciseGoal = exerciseGoal;
-        this.exercisePeriod = exercisePeriod;
-        this.exerciseFrequency = exerciseFrequency;
-        this.preferredExercise = preferredExercise;
-        this.preferredRegion = preferredRegion;
-        this.height = height;
-        this.weight = weight;
-    }
 
     public void update(
             String exerciseGoal,

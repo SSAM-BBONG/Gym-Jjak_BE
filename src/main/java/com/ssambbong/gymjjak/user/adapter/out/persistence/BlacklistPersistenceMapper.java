@@ -1,27 +1,20 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.config.MapStructConfig;
 import com.ssambbong.gymjjak.user.domain.model.Blacklist;
+import org.mapstruct.Mapper;
 import org.springframework.stereotype.Component;
 
-@Component
-public class BlacklistPersistenceMapper {
+@Mapper(config = MapStructConfig.class)
+public interface BlacklistPersistenceMapper {
 
-    public BlacklistsJpaEntity toEntity(Blacklist blacklist) {
-        return BlacklistsJpaEntity.of(
-                blacklist.getId(),
-                blacklist.getUserId(),
-                blacklist.getAdminId(),
-                blacklist.getType(),
-                blacklist.getReason(),
-                blacklist.getEndedAt(),
-                blacklist.getStatus(),
-                blacklist.getSourceType(),
-                blacklist.getCreatedAt(),
-                blacklist.getDeletedAt()
-        );
-    }
+    BlacklistsJpaEntity toEntity(Blacklist blacklist);
 
-    public Blacklist toDomain(BlacklistsJpaEntity entity) {
+    default Blacklist toDomain(BlacklistsJpaEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
         return Blacklist.of(
                 entity.getId(),
                 entity.getUserId(),

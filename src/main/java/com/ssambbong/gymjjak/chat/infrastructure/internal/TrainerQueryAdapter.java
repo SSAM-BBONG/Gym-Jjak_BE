@@ -14,9 +14,4 @@ public class TrainerQueryAdapter implements TrainerQueryPort {
     public Optional<TrainerView> findActiveTrainer(Long trainerProfileId) {
         return Optional.of(new TrainerView(trainerProfileId));
     }
-
-    @Override
-    public Optional<Long> findUserIdByTrainerProfileId(Long trainerProfileId) {
-        return Optional.of(trainerProfileId);
-    }
 }

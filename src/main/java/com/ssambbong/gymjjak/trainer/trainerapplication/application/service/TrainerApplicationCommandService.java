@@ -6,8 +6,13 @@ import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.ocr.application.command.ExtractOcrCommand;
 import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
 import com.ssambbong.gymjjak.ocr.domain.OcrResult;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.ApproveTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateApprovedTrainerProfileCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.result.TrainerApprovalUserInfo;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.*;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
@@ -17,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -32,6 +39,8 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     private final OcrUseCase ocrUseCase;
     private final TrainerApplicationRepository trainerApplicationRepository;
     private final TransactionTemplate transactionTemplate;
+    private final TrainerApplicationUserPort trainerApplicationUserPort;
+    private final ApprovedTrainerProfilePort approvedTrainerProfilePort;
 
     @Override
     public Long createTrainerApplication(CreateTrainerApplicationCommand command) {
@@ -121,6 +130,68 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         return savedTrainerApplication.getTrainerApplicationId();
     }
 
+    @Override
+    @Transactional
+    public Long approveTrainerApplication(ApproveTrainerApplicationCommand command) {
+
+        // approve command 검증
+        validateApproveCommand(command);
+
+        log.info(
+                "event=trainer_application_approve_started, trainerApplicationId={}, adminId={}",
+                command.trainerApplicationId(),
+                command.adminId()
+        );
+
+        // 심사받는 user 존재 여부 확인
+        TrainerApplication trainerApplication =
+                trainerApplicationRepository.findByIdForUpdate(command.trainerApplicationId())
+                .orElseThrow(() -> new TrainerApplicationNotFoundException(command.trainerApplicationId()));
+
+        // 승인된 user 처리
+        TrainerApplication approvedTrainerApplication =
+                trainerApplication.approve(command.adminId(), LocalDateTime.now());
+
+        // Users 도메인으로 role값 변경 port 요청
+        TrainerApprovalUserInfo userInfo =
+                trainerApplicationUserPort.promoteToTrainer(trainerApplication.getUserId());
+
+        // 트레이너 프로필 테이블 insert port 요청
+        Long trainerProfileId = approvedTrainerProfilePort.createApprovedTrainerProfile(
+                new CreateApprovedTrainerProfileCommand(
+                        trainerApplication.getUserId(),
+                        trainerApplication.getTrainerApplicationId(),
+                        trainerApplication.getProfileFileId(),
+                        userInfo.name(),
+                        trainerApplication.getIntroduction(),
+                        trainerApplication.getQualifications(),
+                        trainerApplication.getCertificateFileId(),
+                        trainerApplication.getAwardHistories()
+                )
+        );
+
+        // 승인된 user 값 update
+        trainerApplicationRepository.save(approvedTrainerApplication);
+
+        log.info(
+                "event=trainer_application_approve_succeeded, trainerApplicationId={}, userId={}, trainerProfileId={}, adminId={}",
+                approvedTrainerApplication.getTrainerApplicationId(),
+                approvedTrainerApplication.getUserId(),
+                trainerProfileId,
+                command.adminId()
+        );
+
+        return trainerProfileId;
+    }
+
+    private void validateApproveCommand(ApproveTrainerApplicationCommand command) {
+        if (command == null) {
+            throw new InvalidTrainerApplicationException("command는 필수입니다.");
+        }
+    }
+
+
+    // ====== 트레이너 신청서 변경 ======
     private void validateUpdateCommand(UpdateTrainerApplicationCommand command) {
 
         if (command == null) {

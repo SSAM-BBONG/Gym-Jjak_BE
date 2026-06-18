@@ -36,8 +36,20 @@ spring:
       mail:
         smtp:
           auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
           starttls:
             enable: true
+            required: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
 
 logging:
   pattern:
@@ -78,8 +90,6 @@ app:
       enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED:false}
       period-days: ${APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
-
-
 
 clova:
   ocr:

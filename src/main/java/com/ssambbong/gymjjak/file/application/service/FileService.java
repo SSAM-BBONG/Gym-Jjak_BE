@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.file.application.command.GeneratePresignedUrlComman
 import com.ssambbong.gymjjak.file.application.command.GetPresignedUrlCommand;
 import com.ssambbong.gymjjak.file.application.port.FileMetricsPort;
 import com.ssambbong.gymjjak.file.application.result.FileContentResult;
+import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
 import com.ssambbong.gymjjak.file.application.result.PresignedUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.file.domain.model.File;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,18 +36,19 @@ public class FileService implements FileUseCase {
     private final FileMetricsPort fileMetricsPort;
 
     @Override
-    public PresignedUrlResult generatePresignedUploadUrl(GeneratePresignedUrlCommand command) {
+    public List<PresignedUrlResult> generatePresignedUploadUrls(List<GeneratePresignedUrlCommand> commands) {
+        return commands.stream()
+                .map(this::doGeneratePresignedUploadUrl)
+                .toList();
+    }
+
+    private PresignedUrlResult doGeneratePresignedUploadUrl(GeneratePresignedUrlCommand command) {
         FilePolicy policy = FilePolicy.from(command.fileType());
         if (!policy.isAllowed(command.contentType())) {
             throw new InvalidFileException(FileErrorCode.FILE_INVALID_TYPE);
         }
 
-        String ext = command.originalName() != null && command.originalName().contains(".")
-                ? command.originalName().substring(command.originalName().lastIndexOf('.') + 1)
-                : null;
-        String key = ext != null
-                ? String.format("%s/%d/%s.%s", command.fileType().getPath(), command.uploaderId(), UUID.randomUUID(), ext)
-                : String.format("%s/%d/%s", command.fileType().getPath(), command.uploaderId(), UUID.randomUUID());
+        String key = String.format("%s/%d/%s", command.fileType().getPath(), command.uploaderId(), UUID.randomUUID());
 
         String presignedUrl = fileStoragePort.generatePresignedUploadUrl(key, command.contentType());
         log.info("Presigned URL 발급 - uploaderId: {}, fileType: {}, key: {}", command.uploaderId(), command.fileType(), key);
@@ -55,7 +58,13 @@ public class FileService implements FileUseCase {
 
     @Override
     @Transactional
-    public Long registerFile(CreateFileCommand command) {
+    public List<FileRegistrationResult> registerFiles(List<CreateFileCommand> commands) {
+        return commands.stream()
+                .map(this::doRegisterFile)
+                .toList();
+    }
+
+    private FileRegistrationResult doRegisterFile(CreateFileCommand command) {
         String expectedPrefix = command.fileType().getPath() + "/" + command.uploaderId() + "/";
         if (!command.fileKey().startsWith(expectedPrefix)) {
             throw new FileAccessDeniedException();
@@ -74,7 +83,7 @@ public class FileService implements FileUseCase {
         Long fileId = fileRepository.save(file).getFileId();
         log.info("파일 등록 완료 - fileId: {}, key: {}", fileId, command.fileKey());
         recordMetricSafely(fileMetricsPort::recordFileRegistered, "recordFileRegistered");
-        return fileId;
+        return new FileRegistrationResult(fileId, command.fileType());
     }
 
     @Override

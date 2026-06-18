@@ -4,5 +4,4 @@ import java.util.Optional;
 
 public interface TrainerQueryPort {
     Optional<TrainerView> findActiveTrainer(Long trainerProfileId);
-    Optional<Long> findUserIdByTrainerProfileId(Long trainerProfileId);
 }

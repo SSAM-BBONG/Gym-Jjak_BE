@@ -1,9 +1,7 @@
 package com.ssambbong.gymjjak.onboarding.adapter.out.persistence;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -11,6 +9,8 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "regions")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class RegionJpaEntity {
 
     @Id
@@ -35,24 +35,6 @@ public class RegionJpaEntity {
 
     @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
     private BigDecimal longitude;
-
-    public RegionJpaEntity(
-            Long id,
-            String sido,
-            String sigungu,
-            String eupmyeondong,
-            String fullName,
-            BigDecimal latitude,
-            BigDecimal longitude
-    ) {
-        this.id = id;
-        this.sido = sido;
-        this.sigungu = sigungu;
-        this.eupmyeondong = eupmyeondong;
-        this.fullName = fullName;
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
 
     public void update(
             String sido,

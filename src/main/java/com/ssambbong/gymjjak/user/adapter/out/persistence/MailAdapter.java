@@ -1,7 +1,11 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.user.application.port.out.MailPort;
+import com.ssambbong.gymjjak.user.domain.exception.MailErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.MailSendException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -10,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MailAdapter implements MailPort {
@@ -30,11 +35,12 @@ public class MailAdapter implements MailPort {
     @Async("mailTaskExecutor")
     @Override
     public void sendTemporaryPassword(String email, String temporaryPassword) {
-        SimpleMailMessage message = new SimpleMailMessage();
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
 
-        message.setTo(email);
-        message.setSubject("[짐짝] 임시 비밀번호 안내");
-        message.setText("""
+            message.setTo(email);
+            message.setSubject("[짐짝] 임시 비밀번호 안내");
+            message.setText("""
                 안녕하세요. 짐짝입니다.
 
                 임시 비밀번호가 발급되었습니다.
@@ -44,7 +50,12 @@ public class MailAdapter implements MailPort {
                 로그인 후 반드시 비밀번호를 변경해주세요.
                 """.formatted(temporaryPassword));
 
-        javaMailSender.send(message);
+            javaMailSender.send(message);
+
+        } catch (MailException e) {
+            log.error("event=mail_send_failed email={}, reason={}", email, e.getMessage(), e);
+            throw new MailSendException(MailErrorCode.TEMPORARY_PASSWORD_MAIL_SEND_FAILED);
+        }
     }
 
     @Override
@@ -85,9 +96,5 @@ public class MailAdapter implements MailPort {
 
         return new String(chars);
     }
-
-
-
-
 
 }

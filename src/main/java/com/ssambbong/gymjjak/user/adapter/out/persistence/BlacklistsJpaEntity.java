@@ -4,9 +4,7 @@ import com.ssambbong.gymjjak.user.domain.model.BlacklistSourceType;
 import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
 import com.ssambbong.gymjjak.user.domain.model.BlacklistType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +12,8 @@ import java.time.LocalDateTime;
 @Table(name = "blacklists")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class BlacklistsJpaEntity {
 
     @Id
@@ -50,54 +50,4 @@ public class BlacklistsJpaEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-
-    private BlacklistsJpaEntity(
-            Long id,
-            Long userId,
-            Long adminId,
-            BlacklistType type,
-            String reason,
-            LocalDateTime endedAt,
-            BlacklistStatus status,
-            BlacklistSourceType sourceType,
-            LocalDateTime createdAt,
-            LocalDateTime deletedAt
-    ) {
-        this.id = id;
-        this.userId = userId;
-        this.adminId = adminId;
-        this.type = type;
-        this.reason = reason;
-        this.endedAt = endedAt;
-        this.status = status;
-        this.sourceType = sourceType;
-        this.createdAt = createdAt;
-        this.deletedAt = deletedAt;
-    }
-
-    public static BlacklistsJpaEntity of(
-            Long id,
-            Long userId,
-            Long adminId,
-            BlacklistType type,
-            String reason,
-            LocalDateTime endedAt,
-            BlacklistStatus status,
-            BlacklistSourceType sourceType,
-            LocalDateTime createdAt,
-            LocalDateTime deletedAt
-    ) {
-        return new BlacklistsJpaEntity(
-                id,
-                userId,
-                adminId,
-                type,
-                reason,
-                endedAt,
-                status,
-                sourceType,
-                createdAt,
-                deletedAt
-        );
-    }
 }

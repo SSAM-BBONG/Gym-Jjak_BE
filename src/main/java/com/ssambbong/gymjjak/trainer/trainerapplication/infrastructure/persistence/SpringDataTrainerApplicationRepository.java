@@ -3,9 +3,11 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persiste
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationReviewDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationSummaryResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -76,4 +78,14 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
     """)
     Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(
             @Param("trainerApplicationId") Long trainerApplicationId);
+
+    @Lock(LockModeType.WRITE)
+    @Query("""
+            select ta
+            from TrainerApplicationJpaEntity ta
+            where ta.trainerApplicationId = :trainerApplicationId
+    """)
+    Optional<TrainerApplicationJpaEntity> findByIdForUpdate(
+            @Param("trainerApplicationId") Long trainerApplicationId
+    );
 }
