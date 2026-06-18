@@ -2,11 +2,14 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.ApproveTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.FindTrainerApplicationsCondition;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationListResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationReviewDetailResult;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationReviewQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.FindTrainerApplicationsRequest;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.ApproveTrainerApplicationResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationListResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationResponseCode;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationReviewDetailResponse;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class TrainerApplicationReviewController {
 
     private final TrainerApplicationReviewQueryUseCase trainerApplicationReviewQueryUseCase;
+    private final TrainerApplicationCommandUseCase trainerApplicationCommandUseCase;
 
     @GetMapping
     @Operation(
@@ -85,5 +89,42 @@ public class TrainerApplicationReviewController {
                         TrainerApplicationReviewDetailResponse.from(result)
                 )
         );
+    }
+
+    @PatchMapping("/{trainerApplicationId}/approve")
+    @Operation(
+            summary = "트레이너 신청 승인",
+            description = "관리자가 트레이너 신청을 승인합니다. 승인 시 사용자 권한이 TRAINER로 변경되고 트레이너 프로필이 생성됩니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "트레이너 신청 승인 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+            @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "PENDING 상태가 아니어서 승인할 수 없음")
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<GlobalApiResponse<ApproveTrainerApplicationResponse>> approveTrainerApplication(
+            @PathVariable long trainerApplicationId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        Long trainerProfileId = trainerApplicationCommandUseCase.approveTrainerApplication(
+                new ApproveTrainerApplicationCommand(
+                        trainerApplicationId,
+                        authUser.userId()
+                )
+        );
+
+        return ResponseEntity.status(200).body(
+                GlobalApiResponse.ok(
+                        TrainerApplicationResponseCode.TRAINER_APPLICATION_APPROVED,
+                        new ApproveTrainerApplicationResponse(
+                                trainerApplicationId,
+                                trainerProfileId
+                        )
+                )
+        );
+
+
     }
 }
