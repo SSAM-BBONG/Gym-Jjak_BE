@@ -68,6 +68,8 @@ dependencies {
     runtimeOnly 'org.flywaydb:flyway-mysql'
     // email 의존성 추가
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    // 소셜 로그인
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 }
 
 tasks.named('test') {
