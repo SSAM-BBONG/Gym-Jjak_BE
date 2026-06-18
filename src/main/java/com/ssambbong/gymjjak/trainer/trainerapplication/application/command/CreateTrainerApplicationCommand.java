@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.application.command;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
+
 import java.util.List;
 
 public record CreateTrainerApplicationCommand(
@@ -8,12 +10,10 @@ public record CreateTrainerApplicationCommand(
         Long applicantUserId,
 
         // 프로필 이미지 file
-        // 프론트가 PROFILE_IMAGE 타입으로 업로드/등록한 파일
-        Long profileImageFileId,
+        UploadedFileMetadataCommand profileImageFile,
 
         // 필수 자격증 file.
-        // 이 fileId로 File 도메인에서 S3 bytes를 읽고 OCR을 수행.
-        Long certificateFileId,
+        UploadedFileMetadataCommand certificateFile,
 
         // 자격증명
         // 필수 자격증 여부는 OCR 결과로 검증, 나머지는 그냥 입력
@@ -25,4 +25,30 @@ public record CreateTrainerApplicationCommand(
         // 자기소개
         String introduction
 ) {
+    public CreateTrainerApplicationCommand {
+
+        if (applicantUserId == null || applicantUserId <= 0) {
+            throw new InvalidTrainerApplicationException(
+                    "applicantUserId는 1 이상이어야 합니다."
+            );
+        }
+
+        if (certificateFile == null) {
+            throw new InvalidTrainerApplicationException(
+                    "필수 자격증 파일은 필수입니다."
+            );
+        }
+
+        qualifications = qualifications == null
+                ? List.of()
+                : List.copyOf(qualifications);
+
+        awardHistories = awardHistories == null
+                ? List.of()
+                : List.copyOf(awardHistories);
+
+        introduction = introduction == null
+                ? null
+                : introduction.trim();
+    }
 }

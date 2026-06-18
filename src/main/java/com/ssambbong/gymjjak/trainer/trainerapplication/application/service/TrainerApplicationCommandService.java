@@ -1,17 +1,17 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.application.service;
 
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
 import com.ssambbong.gymjjak.file.application.result.FileContentResult;
+import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.ocr.application.command.ExtractOcrCommand;
 import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
 import com.ssambbong.gymjjak.ocr.domain.OcrResult;
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.ApproveTrainerApplicationCommand;
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateApprovedTrainerProfileCommand;
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.*;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.result.RegisteredTrainerApplicationFiles;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.result.TrainerApprovalUserInfo;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.*;
@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -44,34 +46,60 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
     @Override
     public Long createTrainerApplication(CreateTrainerApplicationCommand command) {
-        log.info(
-                "event=trainer_application_create_started, applicantUserId={}, profileImageFileId={}, certificateFileId={}",
-                command.applicantUserId(),
-                command.profileImageFileId(),
-                command.certificateFileId()
-        );
+
         // 필수값 검증
         validateRequiredCommand(command);
         // 중복 신청 검증
         validateDuplicateApplication(command.applicantUserId());
-        // 파일 다운로드 호출
-        FileContentResult certificateFile = downloadCertificateFile(command);
-        // ocr 검증
-        OcrResult ocrResult =extractCertificateOcr(certificateFile);
-        // ocr 요구 반환값 검증
-        validateRequiredCertification(command, ocrResult);
 
-        return transactionTemplate.execute(status -> saveTrainerApplication(command));
+        log.info(
+                "event=trainer_application_create_started, applicantUserId={}, profileImageFilePresent={}, certificateFilePresent={}",
+                command.applicantUserId(),
+                command.profileImageFile() != null,
+                command.certificateFile() != null
+        );
+
+        // 파일 등록 메서드 (반환값 FileId들)
+        RegisteredTrainerApplicationFiles registeredFiles =
+                registerTrainerApplicationFiles(command);
+
+        try {
+            // 파일 다운로드 호출
+            FileContentResult certificateFile = downloadCertificateFile(
+                    registeredFiles.certificateFileId(),
+                    command.applicantUserId()
+            );
+
+            // ocr 검증
+            OcrResult ocrResult =extractCertificateOcr(certificateFile);
+
+            // ocr 요구 반환값 검증
+            validateRequiredCertification(
+                    command.applicantUserId(),
+                    registeredFiles.certificateFileId(),
+                    ocrResult
+            );
+
+            return transactionTemplate.execute(status ->
+                    saveTrainerApplication(command, registeredFiles)
+            );
+        } catch (RuntimeException exception) {
+            deleteRegisteredFilesSafely(registeredFiles, exception);
+            throw exception;
+        }
     }
 
-    private Long saveTrainerApplication(CreateTrainerApplicationCommand command) {
+    private Long saveTrainerApplication(
+            CreateTrainerApplicationCommand command,
+            RegisteredTrainerApplicationFiles registeredFiles
+    ) {
         // 중복 신청 검사 : TOCTOU 방지를 위해 저장 직전에 중복 검증을 한 번 더 함
         validateDuplicateApplication(command.applicantUserId());
 
         TrainerApplication trainerApplication = TrainerApplication.create(
                 command.applicantUserId(),
-                command.profileImageFileId(),
-                command.certificateFileId(),
+                registeredFiles.profileImageFileId(),
+                registeredFiles.certificateFileId(),
                 command.qualifications(),
                 command.awardHistories(),
                 command.introduction()
@@ -258,8 +286,8 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
             throw new InvalidTrainerApplicationException("applicantUserId는 필수입니다.");
         }
 
-        if (command.certificateFileId() == null) {
-            throw new InvalidTrainerApplicationException("certificateFileId는 필수입니다.");
+        if (command.certificateFile() == null) {
+            throw new InvalidTrainerApplicationException("certificateFile은 필수입니다.");
         }
 
         if (command.introduction() == null || command.introduction().isBlank()) {
@@ -281,25 +309,109 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         }
     }
 
+    // 파일 등록 메서드
+    private RegisteredTrainerApplicationFiles registerTrainerApplicationFiles(
+            CreateTrainerApplicationCommand command
+    ) {
+        // file 생성 도메인 List 만들기
+        List<CreateFileCommand> fileCommands = new ArrayList<>();
+
+        // 프로필 이미지 메타 데이터 추출
+        UploadedFileMetadataCommand profileImageFile =
+                command.profileImageFile();
+
+        // 프로필 이미지 리스트에 추가
+        if (profileImageFile != null) {
+            fileCommands.add(
+                    new CreateFileCommand(
+                            command.applicantUserId(),
+                            profileImageFile.fileKey(),
+                            profileImageFile.originalName(),
+                            profileImageFile.contentType(),
+                            profileImageFile.fileSize(),
+                            FileType.PROFILE_IMAGE
+                    )
+            );
+        }
+
+        // 필수 자격증 메타 데이터 추출
+        UploadedFileMetadataCommand certificateFile =
+                command.certificateFile();
+        // 리스트 추가
+        fileCommands.add(
+                new CreateFileCommand(
+                        command.applicantUserId(),
+                        certificateFile.fileKey(),
+                        certificateFile.originalName(),
+                        certificateFile.contentType(),
+                        certificateFile.fileSize(),
+                        FileType.CERTIFICATION
+                )
+        );
+        // 담긴 파일들 등록 메서드 거쳐서 결과로 담기
+        List<FileRegistrationResult> results =
+                fileUseCase.registerFiles(fileCommands);
+
+        return resolveRegisteredFiles(results);
+    }
+
+    // 파일등록 결과(fileId로 반환) 처리 메서드
+    private RegisteredTrainerApplicationFiles resolveRegisteredFiles(
+            List<FileRegistrationResult> results
+    ) {
+        // 초기화
+        Long profileImageFileId = null;
+        Long certificateFileId = null;
+
+        // 결과값 하나씩 꺼내서 해당 파일 id 추출
+        for (FileRegistrationResult result : results) {
+            if (result.fileType() == FileType.PROFILE_IMAGE) {
+                profileImageFileId = result.fileId();
+            }
+
+            if (result.fileType() == FileType.CERTIFICATION) {
+                certificateFileId = result.fileId();
+            }
+        }
+
+        // 필수자격증 null 검증, TODO : 커스텀 예외처리 하기
+        if (certificateFileId == null) {
+            throw new IllegalStateException(
+                    "자격증 파일 등록 결과가 존재하지 않습니다."
+            );
+        }
+
+        return new RegisteredTrainerApplicationFiles(
+                profileImageFileId,
+                certificateFileId
+        );
+    }
+
     // OCR에 업로드할 파일 다운로드
-    private FileContentResult downloadCertificateFile(CreateTrainerApplicationCommand command) {
+    private FileContentResult downloadCertificateFile(
+            Long certificateFileId,
+            Long applicantUserId
+    ) {
         log.info(
-                "event=trainer_application_certificate_download_started, applicantUserId={}, certificateFileId={}",
-                command.applicantUserId(),
-                command.certificateFileId()
+                "event=trainer_application_certificate_download_started, " +
+                        "applicantUserId={}, certificateFileId={}",
+                applicantUserId,
+                certificateFileId
         );
 
         FileContentResult certificateFile = fileUseCase.downloadFile(
-                command.certificateFileId(),
-                command.applicantUserId(),
+                certificateFileId,
+                applicantUserId,
                 false,
                 FileType.CERTIFICATION
         );
 
         log.info(
-                "event=trainer_application_certificate_download_succeeded, applicantUserId={}, certificateFileId={}, contentType={}, fileSize={}",
-                command.applicantUserId(),
-                command.certificateFileId(),
+                "event=trainer_application_certificate_download_succeeded, " +
+                        "applicantUserId={}, certificateFileId={}, " +
+                        "contentType={}, fileSize={}",
+                applicantUserId,
+                certificateFileId,
                 certificateFile.contentType(),
                 certificateFile.fileSize()
         );
@@ -335,7 +447,11 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         return ocrResult;
     }
 
-    private void validateRequiredCertification(CreateTrainerApplicationCommand command, OcrResult ocrResult) {
+    private void validateRequiredCertification(
+            Long applicantUserId,
+            Long certificateFileId,
+            OcrResult ocrResult
+    ) {
 
         boolean validTemplate = isSameText(
                 ocrResult.matchedTemplateName(),
@@ -351,9 +467,11 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
         if (!verified) {
             log.warn(
-                    "event=trainer_application_required_certification_not_verified, applicantUserId={}, certificateFileId={}, templateName={}, validTemplate={}, hasGrade={}, hasEvent={}, hasAcquiredDate={}",
-                    command.applicantUserId(),
-                    command.certificateFileId(),
+                    "event=trainer_application_required_certification_not_verified, " +
+                            "applicantUserId={}, certificateFileId={}, templateName={}, " +
+                            "validTemplate={}, hasGrade={}, hasEvent={}, hasAcquiredDate={}",
+                    applicantUserId,
+                    certificateFileId,
                     ocrResult.matchedTemplateName(),
                     validTemplate,
                     hasGrade,
@@ -362,19 +480,17 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
             );
 
             throw new RequiredCertificationNotVerifiedException(
-                    command.applicantUserId(),
-                    command.certificateFileId()
+                    applicantUserId,
+                    certificateFileId
             );
         }
 
         log.info(
-                "event=trainer_application_required_certification_verified, applicantUserId={}, certificateFileId={}, templateName={}, grade={}, event={}, acquiredDate={}",
-                command.applicantUserId(),
-                command.certificateFileId(),
-                ocrResult.matchedTemplateName(),
-                ocrResult.findTextByName(CERTIFICATION_GRADE_FIELD_NAME).orElse(null), // 운영시 -> hasGrade
-                ocrResult.findTextByName(CERTIFICATION_EVENT_FIELD_NAME).orElse(null), // 운영시 -> hasEvent
-                ocrResult.findTextByName(CERTIFICATION_ACQUIRED_DATE_FIELD_NAME).orElse(null) // 운영시 -> hasAcquiredDate
+                "event=trainer_application_required_certification_verified, " +
+                        "applicantUserId={}, certificateFileId={}, templateName={}",
+                applicantUserId,
+                certificateFileId,
+                ocrResult.matchedTemplateName()
         );
     }
 
@@ -399,5 +515,42 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     // 문자열 속 모든 공백 제거
     private String normalizeText(String text) {
         return text.replaceAll("\\s+", "");
+    }
+
+    // 파일 업로드 실패 시, 헤딩 파일 삭제 요청
+    private void deleteRegisteredFilesSafely(
+            RegisteredTrainerApplicationFiles registeredFiles,
+            RuntimeException originalException
+    ) {
+        deleteFileSafely(
+                registeredFiles.profileImageFileId(),
+                originalException
+        );
+
+        deleteFileSafely(
+                registeredFiles.certificateFileId(),
+                originalException
+        );
+    }
+    // 파일 삭제 요청
+    private void deleteFileSafely(
+            Long fileId,
+            RuntimeException originalException
+    ) {
+        if (fileId == null) {
+            return;
+        }
+
+        try {
+            fileUseCase.deleteFile(fileId);
+        } catch (RuntimeException cleanupException) {
+            originalException.addSuppressed(cleanupException);
+
+            log.error(
+                    "event=trainer_application_file_cleanup_failed, fileId={}",
+                    fileId,
+                    cleanupException
+            );
+        }
     }
 }

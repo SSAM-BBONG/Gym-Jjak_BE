@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -9,16 +10,14 @@ import java.util.List;
 
 public record CreateTrainerApplicationRequest(
 
-        @Schema(description = "프로필 이미지 파일 ID" +
-                "프론트가 PROFILE_IMAGE 타입으로 파일 업로드/등록을 끝낸 뒤 받은 fileId를 전달합니다." +
-                "예: uploads/profiles/trainers/{userId}/{uuid}.png 에 해당하는 files.file_id")
-        Long profileImageFileId,
+        @Schema(description = "S3 업로드가 완료된 프로필 이미지 메타데이터")
+        @Valid
+        UploadedFileMetadataRequest profileImageFile,
 
-        @Schema(description = "자격증 파일 ID" +
-                "프론트가 CERTIFICATION 타입으로 파일 업로드/등록을 끝낸 뒤 받은 fileId를 전달합니다." +
-                "이 파일은 백엔드에서 S3 bytes를 읽어 OCR 검증에 사용합니다.")
-        @NotNull(message = "자격증 파일은 필수입니다.")
-        Long certificateFileId,
+        @Schema(description = "S3 업로드가 완료된 필수 자격증 파일 메타데이터")
+        @NotNull(message = "필수 자격증 파일은 필수입니다.")
+        @Valid
+        UploadedFileMetadataRequest certificateFile,
 
         @Schema(
                 description = "사용자가 직접 입력한 자격증 목록입니다. 필수 자격증 검증은 이 값이 아니라 OCR 결과를 기준으로 처리합니다." +
