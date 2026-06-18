@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.chat.application.service;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
+import com.ssambbong.gymjjak.chat.application.port.TrainerView;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
@@ -13,6 +14,7 @@ import java.util.List;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAccessDeniedException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAlreadyExistsException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
+import com.ssambbong.gymjjak.chat.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.chat.exception.TrainerNotFoundException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,8 +47,14 @@ public class ChatRoomService implements ChatRoomUseCase {
         try {
             saved = chatRoomRepository.save(chatRoom);
         } catch (DataIntegrityViolationException e) {
-            if (isDuplicateKeyViolation(e)) {
+            if (isConstraintViolation(e, "uk_chat_rooms")) {
                 throw new ChatRoomAlreadyExistsException();
+            }
+            if (isConstraintViolation(e, "fk_chat_rooms_trainer")) {
+                throw new TrainerNotFoundException();
+            }
+            if (isConstraintViolation(e, "fk_chat_rooms_pt_course")) {
+                throw new PtCourseNotFoundException();
             }
             throw e;
         }
@@ -55,12 +63,14 @@ public class ChatRoomService implements ChatRoomUseCase {
         return saved.getId();
     }
 
-    private boolean isDuplicateKeyViolation(DataIntegrityViolationException e) {
+    private boolean isConstraintViolation(DataIntegrityViolationException e, String constraintName) {
         Throwable t = e;
         while (t != null) {
             if (t instanceof ConstraintViolationException cve) {
                 String name = cve.getConstraintName();
-                return name != null && name.contains("uk_chat_rooms");
+                if (name != null && name.contains(constraintName)) {
+                    return true;
+                }
             }
             t = t.getCause();
         }
@@ -76,7 +86,8 @@ public class ChatRoomService implements ChatRoomUseCase {
         if (requesterId.equals(chatRoom.getUserId())) {
             chatRoom.leaveAsUser();
         } else {
-            Long trainerUserId = trainerQueryPort.findUserIdByTrainerProfileId(chatRoom.getTrainerProfileId())
+            Long trainerUserId = trainerQueryPort.findActiveTrainer(chatRoom.getTrainerProfileId())
+                    .map(TrainerView::userId)
                     .orElseThrow(ChatRoomAccessDeniedException::new);
             if (requesterId.equals(trainerUserId)) {
                 chatRoom.leaveAsTrainer();

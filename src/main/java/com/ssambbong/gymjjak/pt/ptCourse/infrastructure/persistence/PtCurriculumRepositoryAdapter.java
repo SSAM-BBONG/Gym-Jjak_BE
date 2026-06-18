@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -31,6 +32,11 @@ public class PtCurriculumRepositoryAdapter implements PtCurriculumRepository {
         return repository.findAllByPtCourseIdOrderBySessionNoAsc(ptCourseId).stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<PtCurriculum> findById(Long ptCurriculumId) {
+        return repository.findById(ptCurriculumId).map(this::toDomain);
     }
 
     private PtCurriculum toDomain(PtCurriculumJpaEntity entity) {

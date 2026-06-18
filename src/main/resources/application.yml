@@ -92,7 +92,6 @@ app:
       batch-size: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
 
 
-
 clova:
   ocr:
     invoke-url: "${CLOVA_OCR_INVOKE_URL}"
