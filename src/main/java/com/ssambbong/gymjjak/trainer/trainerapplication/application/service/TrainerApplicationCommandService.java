@@ -133,20 +133,24 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     @Override
     @Transactional
     public Long approveTrainerApplication(ApproveTrainerApplicationCommand command) {
+
+        // approve command 검증
+        validateApproveCommand(command);
+
         log.info(
                 "event=trainer_application_approve_started, trainerApplicationId={}, adminId={}",
                 command.trainerApplicationId(),
                 command.adminId()
         );
-        // approve command 검증
-        validateApproveCommand(command);
 
         // 심사받는 user 존재 여부 확인
-        TrainerApplication trainerApplication = trainerApplicationRepository.findById(command.trainerApplicationId())
+        TrainerApplication trainerApplication =
+                trainerApplicationRepository.findByIdForUpdate(command.trainerApplicationId())
                 .orElseThrow(() -> new TrainerApplicationNotFoundException(command.trainerApplicationId()));
 
-        // 대기 상태 검증
-        validatePendingStatus(trainerApplication);
+        // 승인된 user 처리
+        TrainerApplication approvedTrainerApplication =
+                trainerApplication.approve(command.adminId(), LocalDateTime.now());
 
         // Users 도메인으로 role값 변경 port 요청
         TrainerApprovalUserInfo userInfo =
@@ -166,10 +170,6 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                 )
         );
 
-        // 승인된 user 처리
-        TrainerApplication approvedTrainerApplication =
-                trainerApplication.approve(command.adminId(), LocalDateTime.now());
-
         // 승인된 user 값 update
         trainerApplicationRepository.save(approvedTrainerApplication);
 
@@ -187,14 +187,6 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     private void validateApproveCommand(ApproveTrainerApplicationCommand command) {
         if (command == null) {
             throw new InvalidTrainerApplicationException("command는 필수입니다.");
-        }
-
-        if (command.trainerApplicationId() == null) {
-            throw new InvalidTrainerApplicationException("trainerApplicationId는 필수입니다.");
-        }
-
-        if (command.adminId() == null) {
-            throw new InvalidTrainerApplicationException("adminId는 필수입니다.");
         }
     }
 

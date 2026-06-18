@@ -67,6 +67,13 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
         );
     }
 
+    @Override
+    public Optional<TrainerApplication> findByIdForUpdate(Long trainerApplicationId) {
+        return springDataTrainerApplicationRepository
+                .findByIdForUpdate(trainerApplicationId)
+                .map(trainerApplicationPersistenceMapper::toDomain);
+    }
+
     // 내 수강신청 조회
     @Override
     public Optional<TrainerApplicationDetailResult> findLatestDetailByUserId(Long userId) {

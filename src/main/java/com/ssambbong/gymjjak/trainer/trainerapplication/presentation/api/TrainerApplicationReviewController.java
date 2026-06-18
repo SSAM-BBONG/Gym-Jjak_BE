@@ -17,12 +17,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@Validated
 @RestController
 @RequestMapping("/api/trainer-applications")
 @RequiredArgsConstructor
@@ -105,7 +108,7 @@ public class TrainerApplicationReviewController {
     })
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<GlobalApiResponse<ApproveTrainerApplicationResponse>> approveTrainerApplication(
-            @PathVariable long trainerApplicationId,
+            @PathVariable @Positive long trainerApplicationId,
             @AuthenticationPrincipal AuthUser authUser
     ) {
         Long trainerProfileId = trainerApplicationCommandUseCase.approveTrainerApplication(

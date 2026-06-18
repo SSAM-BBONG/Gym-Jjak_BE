@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.application.command;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
+
 import java.util.List;
 
 public record CreateApprovedTrainerProfileCommand(
@@ -30,4 +32,22 @@ public record CreateApprovedTrainerProfileCommand(
         // 승인 후 trainer_awards에 저장
         List<String> awardHistories
 ) {
+    public CreateApprovedTrainerProfileCommand {
+        if (userId == null || userId <= 0) {
+            throw new InvalidTrainerApplicationException("userId는 1 이상이어야 합니다.");
+        }
+        if (trainerApplicationId == null || trainerApplicationId <= 0) {
+            throw new InvalidTrainerApplicationException("trainerApplicationId는 1 이상이어야 합니다.");
+        }
+        if (certificateFileId == null || certificateFileId <= 0) {
+            throw new InvalidTrainerApplicationException("certificateFileId는 1 이상이어야 합니다.");
+        }
+        if (trainerName == null || trainerName.isBlank()) {
+            throw new InvalidTrainerApplicationException("trainerName은 비어 있을 수 없습니다.");
+        }
+
+        qualifications = qualifications == null ? List.of() : List.copyOf(qualifications);
+        awardHistories = awardHistories == null ? List.of() : List.copyOf(awardHistories);
+
+    }
 }
