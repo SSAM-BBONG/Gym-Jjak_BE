@@ -15,7 +15,7 @@ public class FeedbackMediaRepositoryAdapter implements FeedbackMediaRepository {
 
     @Override
     public List<FeedbackMedia> findAllByFeedbackId(Long feedbackId) {
-        return repository.findAllByFeedbackId(feedbackId)
+        return repository.findAllByFeedbackIdOrderByIdAsc(feedbackId)
                 .stream()
                 .map(this::toDomain)
                 .toList();
