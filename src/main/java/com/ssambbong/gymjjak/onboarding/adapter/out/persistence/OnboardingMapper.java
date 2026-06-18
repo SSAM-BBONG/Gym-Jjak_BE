@@ -1,26 +1,23 @@
 package com.ssambbong.gymjjak.onboarding.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.config.MapStructConfig;
 import com.ssambbong.gymjjak.onboarding.domain.model.OnboardingSurvey;
 import com.ssambbong.gymjjak.onboarding.domain.model.Region;
 import com.ssambbong.gymjjak.user.adapter.out.persistence.UserJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-@Component
-public class OnboardingMapper {
+@Mapper(config = MapStructConfig.class)
+public interface OnboardingMapper {
 
-    public RegionJpaEntity toRegionEntity(Region region) {
-        return new RegionJpaEntity(
-                region.getId(),
-                region.getSido(),
-                region.getSigungu(),
-                region.getEupmyeondong(),
-                region.getFullName(),
-                region.getLatitude(),
-                region.getLongitude()
-        );
-    }
+    RegionJpaEntity toRegionEntity(Region region);
 
-    public Region toRegionDomain(RegionJpaEntity entity) {
+    default Region toRegionDomain(RegionJpaEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
         return Region.reconstruct(
                 entity.getId(),
                 entity.getSido(),
@@ -32,23 +29,18 @@ public class OnboardingMapper {
         );
     }
 
-    public OnboardingSurveyJpaEntity toOnboardingSurveyEntity(
+    @Mapping(target = "id", source = "onboardingSurvey.id")
+    @Mapping(target = "preferredRegion", source = "regionEntity")
+    OnboardingSurveyJpaEntity toOnboardingSurveyEntity(
             OnboardingSurvey onboardingSurvey,
-            RegionJpaEntity regionEntity) {
-        return new OnboardingSurveyJpaEntity(
-                onboardingSurvey.getId(),
-                onboardingSurvey.getUserId(),
-                onboardingSurvey.getExerciseGoal(),
-                onboardingSurvey.getExercisePeriod(),
-                onboardingSurvey.getExerciseFrequency(),
-                onboardingSurvey.getPreferredExercise(),
-                regionEntity,
-                onboardingSurvey.getHeight(),
-                onboardingSurvey.getWeight()
-        );
-    }
+            RegionJpaEntity regionEntity
+    );
 
-    public OnboardingSurvey toOnboardingSurveyDomain(OnboardingSurveyJpaEntity entity) {
+    default OnboardingSurvey toOnboardingSurveyDomain(OnboardingSurveyJpaEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
         return OnboardingSurvey.reconstruct(
                 entity.getId(),
                 entity.getUserId(),
