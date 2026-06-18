@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.organization.organization.application.query.Organiz
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationCommandUseCase;
 import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationQueryUseCase;
+import com.ssambbong.gymjjak.organization.organization.presentation.api.mapper.OrganizationMapper;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.request.OrganizationUpdateRequest;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindMyOrganizationResponse;
@@ -39,6 +40,7 @@ public class OrganizationController {
 
     private final OrganizationQueryUseCase organizationQueryUseCase;
     private final OrganizationCommandUseCase organizationCommandUseCase;
+    private final OrganizationMapper organizationMapper;
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "조직 목록 조회 (관리자)", description = "관리자가 전체 조직 목록을 조회합니다.")
@@ -58,7 +60,7 @@ public class OrganizationController {
     ) {
         OrganizationListQuery query = new OrganizationListQuery(page, size, keyword);
         OrganizationListResult result = organizationQueryUseCase.findOrganizations(query);
-        FindOrganizationsListResponse response = FindOrganizationsListResponse.from(result);
+        FindOrganizationsListResponse response = organizationMapper.toListResponse(result);
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(OrganizationResponseCode.ORGANIZATION_LIST_FOUND, response)
         );
@@ -85,7 +87,7 @@ public class OrganizationController {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         OrganizationResponseCode.ORGANIZATION_FOUND,
-                        FindOrganizationResponse.of(organization)
+                        organizationMapper.toResponse(organization)
                 )
         );
     }
