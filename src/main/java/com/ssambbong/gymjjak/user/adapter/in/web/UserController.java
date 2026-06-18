@@ -6,15 +6,13 @@ import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdatePasswordRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserProfileRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.PasswordVerificationRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserStatusRequest;
-import com.ssambbong.gymjjak.user.adapter.in.web.response.CursorResponse;
-import com.ssambbong.gymjjak.user.adapter.in.web.response.FindUserResponse;
-import com.ssambbong.gymjjak.user.adapter.in.web.response.UserProfileResponse;
-import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
+import com.ssambbong.gymjjak.user.adapter.in.web.response.*;
 import com.ssambbong.gymjjak.user.application.command.UpdatePasswordCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateUserStatusCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.application.result.CursorResult;
+import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -160,14 +158,16 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/blacklist")
     @Operation(summary = "관리자 블랙리스트 회원 목록 조회", description = "블랙리스트 회원을 조회한다.")
-    public ResponseEntity<GlobalApiResponse<CursorResponse<FindUserResponse>>> findSuspendedUsers(
+    public ResponseEntity<GlobalApiResponse<CursorResponse<FindBlacklistUserResponse>>> findSuspendedUsers(
+            @RequestParam(required = false) String name,
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") int size
     ) {
-        CursorResult<FindUserResult> result = userCommandUseCase.findBlacklistUsers(cursor, size);
+        CursorResult<FindBlacklistUserResult> result =
+                userCommandUseCase.findBlacklistUsers(name, cursor, size);
 
-        List<FindUserResponse> content = result.content().stream()
-                .map(FindUserResponse::from)
+        List<FindBlacklistUserResponse> content = result.content().stream()
+                .map(FindBlacklistUserResponse::from)
                 .toList();
 
         return ResponseEntity.ok(

@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.organization.organization.application.usecase.Organ
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.request.OrganizationUpdateRequest;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindMyOrganizationResponse;
+import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationResponse;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationsListResponse;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationsResponse;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.OrganizationResponseCode;
@@ -60,6 +61,32 @@ public class OrganizationController {
         FindOrganizationsListResponse response = FindOrganizationsListResponse.from(result);
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(OrganizationResponseCode.ORGANIZATION_LIST_FOUND, response)
+        );
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Operation(summary = "조직 상세 조회 (관리자)", description = "관리자가 조직의 상세 정보를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = FindOrganizationResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "조직을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/{organizationId}")
+    public ResponseEntity<GlobalApiResponse<FindOrganizationResponse>> getOrganization(
+            @PathVariable Long organizationId
+    ) {
+        Organization organization = organizationQueryUseCase.findOrganizationById(organizationId);
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        OrganizationResponseCode.ORGANIZATION_FOUND,
+                        FindOrganizationResponse.of(organization)
+                )
         );
     }
 

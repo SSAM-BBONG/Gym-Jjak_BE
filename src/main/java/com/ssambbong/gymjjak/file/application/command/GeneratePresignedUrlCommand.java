@@ -5,7 +5,6 @@ import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 public record GeneratePresignedUrlCommand(
         Long uploaderId,
         FileType fileType,
-        String contentType,
-        String originalName
+        String contentType
 ) {
 }

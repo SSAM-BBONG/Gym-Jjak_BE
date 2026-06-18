@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
+import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -123,20 +125,30 @@ order by u.id desc
     );
 
     @Query("""
-select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
+select new com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult(
     u.id,
     u.username,
     u.name,
     u.nickname,
-    u.status
+    u.status,
+    b.type,
+    b.reason
 )
 from UserJpaEntity u
-where u.status in :statuses
+join BlacklistsJpaEntity b on b.userId = u.id
+where u.status in :userStatuses
+  and b.status = :blacklistStatus
+  and b.deletedAt is null
+  and (:name is null
+       or trim(:name) = ''
+       or lower(u.name) like lower(concat('%', trim(:name), '%')))
   and (:cursor is null or u.id < :cursor)
 order by u.id desc
 """)
-    List<FindUserResult> findBlacklistUsersByCursor(
-            @Param("statuses") List<UserStatus> statuses,
+    List<FindBlacklistUserResult> findBlacklistUsersByCursor(
+            @Param("userStatuses") List<UserStatus> userStatuses,
+            @Param("blacklistStatus") BlacklistStatus blacklistStatus,
+            @Param("name") String name,
             @Param("cursor") Long cursor,
             Pageable pageable
     );

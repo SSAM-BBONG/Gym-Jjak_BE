@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.user.application.port.out;
 
+import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
@@ -41,5 +42,5 @@ public interface UserPort {
 
     List<FindUserResult> findUsers(String name, Long cursor, int size);
 
-    List<FindUserResult> findBlacklistUsers(Long cursor, int size);
+    List<FindBlacklistUserResult> findBlacklistUsers(String name, Long cursor, int size);
 }
