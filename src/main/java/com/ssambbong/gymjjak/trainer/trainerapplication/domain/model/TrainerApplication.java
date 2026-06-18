@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.domain.model;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationStatusConflictException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -145,6 +147,26 @@ public class TrainerApplication {
     }
 
     public TrainerApplication approve(Long adminId, LocalDateTime reviewedAt) {
+
+        if (!isPending()) {
+            throw new TrainerApplicationStatusConflictException(
+                    this.trainerApplicationId,
+                    this.status
+            );
+        }
+
+        if (adminId == null) {
+            throw new InvalidTrainerApplicationException(
+                    "승인 관리자 ID는 필수입니다."
+            );
+        }
+
+        if (reviewedAt == null) {
+            throw new InvalidTrainerApplicationException(
+                    "승인 처리 시각은 필수입니다."
+            );
+        }
+
         return new TrainerApplication(
                 this.trainerApplicationId,
                 this.userId,

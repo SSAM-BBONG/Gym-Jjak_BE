@@ -95,7 +95,7 @@ public class ApprovedTrainerProfileAdapter implements ApprovedTrainerProfilePort
                 .filter(Objects::nonNull) // list 속 null 있으면 제거
                 .map(String::trim) // 문자열 공백 제거
                 .filter(name -> !name.isBlank()) // 공백 자격증은 제거
-                .filter(name -> !name.contains(REQUIRED_CERTIFICATION_NAME)) // 추가 자격증 속 필수 자격증명 제거
+                .filter(name -> !name.equals(REQUIRED_CERTIFICATION_NAME)) // 추가 자격증 속 필수 자격증명 제거
                 .distinct() // 중복 자격증명 제거
                 .map(name -> TrainerCertification.additional(trainerProfileId, name)) // ADDITIONAL 타입 도메인으로 변환
                 .forEach(certifications::add); // 변환딘 추가 자격증들을 리스트에 추가
