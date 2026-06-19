@@ -1,22 +1,17 @@
 package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "feedbacks")
-@EntityListeners(AuditingEntityListener.class)
-public class FeedbackJpaEntity {
+public class FeedbackJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,19 +36,9 @@ public class FeedbackJpaEntity {
     @Column(name = "status", nullable = false)
     private String status;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
     @Builder
-    public FeedbackJpaEntity(Long id, Long ptReservationId, Long ptCurriculumId, Long trainerProfileId, Long userId, String content, String status, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt) {
+    private FeedbackJpaEntity(Long id, Long ptReservationId, Long ptCurriculumId,
+                              Long trainerProfileId, Long userId, String content, String status) {
         this.id = id;
         this.ptReservationId = ptReservationId;
         this.ptCurriculumId = ptCurriculumId;
@@ -61,8 +46,5 @@ public class FeedbackJpaEntity {
         this.userId = userId;
         this.content = content;
         this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.deletedAt = deletedAt;
     }
 }

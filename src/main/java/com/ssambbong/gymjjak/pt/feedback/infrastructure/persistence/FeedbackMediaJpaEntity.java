@@ -1,15 +1,12 @@
 package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.presentation.CreatedAtEntity;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
@@ -17,8 +14,7 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "feedback_media")
-@EntityListeners(AuditingEntityListener.class)
-public class FeedbackMediaJpaEntity {
+public class FeedbackMediaJpaEntity extends CreatedAtEntity {
 
     @Id
     @GeneratedValue(strategy = IDENTITY)
@@ -34,10 +30,6 @@ public class FeedbackMediaJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "media_type", nullable = false)
     private FeedbackMediaType mediaType;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     @Builder
     private FeedbackMediaJpaEntity(Long id, Long feedbackId, Long fileId, FeedbackMediaType mediaType) {

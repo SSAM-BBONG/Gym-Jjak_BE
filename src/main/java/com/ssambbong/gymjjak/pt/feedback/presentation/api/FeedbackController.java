@@ -78,8 +78,8 @@ public class FeedbackController {
                    @PathVariable Long ptReservationId,
                    @RequestBody @Valid CreateFeedbackRequest request
     ) {
-        Long feedbackId = feedbackCommandUseCase.createFeedback(authUser.userId(), ptReservationId, request.toCommand()
-        );
+        Long feedbackId = feedbackCommandUseCase.createFeedback(
+                request.toCommand(authUser.userId(), ptReservationId));
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 GlobalApiResponse.created(FeedbackResponseCode.FEEDBACK_CREATED,
                         CreateFeedbackResponse.from(feedbackId))

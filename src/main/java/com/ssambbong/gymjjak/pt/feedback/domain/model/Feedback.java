@@ -1,12 +1,12 @@
 package com.ssambbong.gymjjak.pt.feedback.domain.model;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Builder
 public class Feedback {
 
     private final Long id;
@@ -18,9 +18,22 @@ public class Feedback {
     private final String status;
     private final LocalDateTime createdAt;
 
+    @Builder(access = AccessLevel.PUBLIC)
+    private Feedback(Long id, Long ptReservationId, Long ptCurriculumId,
+                     Long trainerProfileId, Long userId, String content,
+                     String status, LocalDateTime createdAt) {
+        this.id = id;
+        this.ptReservationId = ptReservationId;
+        this.ptCurriculumId = ptCurriculumId;
+        this.trainerProfileId = trainerProfileId;
+        this.userId = userId;
+        this.content = content;
+        this.status = status;
+        this.createdAt = createdAt;
+    }
 
-    public static Feedback create(Long ptReservationId, Long ptCurriculumId, Long trainerProfileId, Long userId, String content)
-    {
+    public static Feedback create(Long ptReservationId, Long ptCurriculumId,
+                                  Long trainerProfileId, Long userId, String content) {
         return Feedback.builder()
                 .ptReservationId(ptReservationId)
                 .ptCurriculumId(ptCurriculumId)
@@ -31,11 +44,9 @@ public class Feedback {
                 .build();
     }
 
-    // DB 복원 시
     public static Feedback restore(Long id, Long ptReservationId, Long ptCurriculumId,
                                    Long trainerProfileId, Long userId, String content,
-                                   String status, LocalDateTime createdAt)
-    {
+                                   String status, LocalDateTime createdAt) {
         return Feedback.builder()
                 .id(id)
                 .ptReservationId(ptReservationId)
@@ -48,8 +59,3 @@ public class Feedback {
                 .build();
     }
 }
-
-
-
-
-

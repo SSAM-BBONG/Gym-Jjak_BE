@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.feedback.application.service;
 
+import com.ssambbong.gymjjak.pt.feedback.application.command.CreateFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtCurriculumQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
@@ -30,37 +31,34 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
     private final TrainerQueryPort trainerQueryPort;
 
     @Override
-    public Long createFeedback(Long userId, Long ptReservationId, CreateFeedbackCommand command) {
-        log.debug("[FeedbackCreate] userId={}, ptReservationId={} 피드백 등록 시작", userId, ptReservationId);
+    public Long createFeedback(CreateFeedbackCommand command) {
+        log.debug("[FeedbackCreate] userId={}, ptReservationId={} 피드백 등록 시작",
+                command.userId(), command.ptReservationId());
 
         // 예약 조회
-        PtReservationQueryPort.ReservationInfo reservation = ptReservationQueryPort.findById(ptReservationId);
+        PtReservationQueryPort.ReservationInfo reservation =
+                ptReservationQueryPort.findById(command.ptReservationId());
 
         // 트레이너 본인 예약인지 확인
-        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(userId)
-                .orElseThrow(() -> {
-                    log.warn("[FeedbackCreate] userId={} 트레이너 프로필 없음", userId);
-                    return new FeedbackForbiddenException();
-                });
+        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(command.userId())
+                .orElseThrow(FeedbackForbiddenException::new);
 
         if (!reservation.trainerProfileId().equals(trainerProfileId)) {
-            log.warn("[FeedbackCreate] userId={} 본인 수강생 예약이 아님", userId);
             throw new FeedbackForbiddenException();
         }
 
-        // 커리뮬럼이 해당 코스 소속인지 확인
+        // 커리큘럼이 해당 코스 소속인지 확인
         ptCurriculumQueryPort.findByIdAndPtCourseId(command.ptCurriculumId(), reservation.ptCourseId());
 
         // 중복 피드백 확인
-        if (feedbackRepository.existsByPtReservationIdAndPtCurriculumId(ptReservationId, command.ptCurriculumId())) {
-            log.warn("[FeedbackCreate] ptReservationId={}, ptCurriculumId={} 이미 피드백 존재",
-                    ptReservationId, command.ptCurriculumId());
+        if (feedbackRepository.existsByPtReservationIdAndPtCurriculumId(
+                command.ptReservationId(), command.ptCurriculumId())) {
             throw new FeedbackAlreadyExistsException();
         }
 
         // 피드백 저장
         Feedback saved = feedbackRepository.save(
-                Feedback.create(ptReservationId, command.ptCurriculumId(),
+                Feedback.create(command.ptReservationId(), command.ptCurriculumId(),
                         trainerProfileId, reservation.userId(), command.content())
         );
 

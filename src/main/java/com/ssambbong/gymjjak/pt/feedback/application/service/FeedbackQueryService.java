@@ -71,14 +71,10 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
 
         // 1. 피드백 조회
         Feedback feedback = feedbackRepository.findById(feedbackId)
-                .orElseThrow(() -> {
-            log.warn("[FeedbackDetail] 피드백 없음 feedbackId={}", feedbackId);
-            return new FeedbackNotFoundException();
-        });
+                .orElseThrow(FeedbackNotFoundException::new);
 
         // 2. path param의 ptReservationId와 피드백의 예약 ID 일치 확인
         if (!feedback.getPtReservationId().equals(ptReservationId)) {
-            log.warn("[FeedbackDetail] 예약 불일치 feedbackId={}, ptReservationId={}", feedbackId, ptReservationId);
             throw new FeedbackNotFoundException();
         }
 
@@ -115,13 +111,9 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
             return;
         }
         Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(userId)
-                .orElseThrow(() -> {
-                    log.warn("[FeedbackList] 접근 권한 없음 userId={}", userId);
-                    return new FeedbackForbiddenException();
-                });
+                .orElseThrow(FeedbackForbiddenException::new);
 
         if (!trainerProfileId.equals(reservation.trainerProfileId())) {
-            log.warn("[FeedbackList] 본인 강습 아님 userId={}, trainerProfileId={}", userId, trainerProfileId);
             throw new FeedbackForbiddenException();
         }
     }
@@ -132,13 +124,9 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         if (feedback.getUserId().equals(userId)) return;
 
         Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(userId)
-                .orElseThrow(() -> {
-                    log.warn("[FeedbackDetail] 접근 권한 없음 userId={}", userId);
-                    return new FeedbackForbiddenException();
-                });
+                .orElseThrow(FeedbackForbiddenException::new);
 
         if (!trainerProfileId.equals(feedback.getTrainerProfileId())) {
-            log.warn("[FeedbackDetail] 본인 강습 아님 userId={}, trainerProfileId={}", userId, trainerProfileId);
             throw new FeedbackForbiddenException();
         }
     }
