@@ -35,8 +35,13 @@ public enum TrainerApplicationResponseCode implements ResponseCode {
     ),
 
     TRAINER_APPLICATION_APPROVED(
-            "TRAINER_APPLICATION_200_5",
+            "TRAINER_APPLICATION_201_5",
             "트레이너 신청 승인이 완료되었습니다."
+    ),
+
+    TRAINER_APPLICATION_REJECTED(
+            "TRAINER_APPLICATION_201_6",
+            "트레이너 신청 반려가 완료되었습니다."
     );
 
     private final String code;

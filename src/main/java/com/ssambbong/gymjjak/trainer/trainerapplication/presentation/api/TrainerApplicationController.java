@@ -4,11 +4,13 @@ import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.CreateTrainerApplicationRequest;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.UpdateTrainerApplicationRequest;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.CreateTrainerApplicationResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationDetailResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationResponseCode;
@@ -54,8 +56,8 @@ public class TrainerApplicationController {
         Long trainerApplicationId = trainerApplicationCommandUseCase.createTrainerApplication(
                 new CreateTrainerApplicationCommand(
                         authUser.userId(),
-                        request.profileImageFileId(),
-                        request.certificateFileId(),
+                        toCommand(request.profileImageFile()),
+                        toCommand(request.certificateFile()),
                         request.qualifications(),
                         request.awardHistories(),
                         request.introduction()
@@ -67,6 +69,21 @@ public class TrainerApplicationController {
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_CREATED,
                         new CreateTrainerApplicationResponse(trainerApplicationId)
                 ));
+    }
+
+    private UploadedFileMetadataCommand toCommand(
+            UploadedFileMetadataRequest request
+    ) {
+        if (request == null) {
+            return null;
+        }
+
+        return new UploadedFileMetadataCommand(
+                request.fileKey(),
+                request.originalName(),
+                request.contentType(),
+                request.fileSize()
+        );
     }
 
     @PatchMapping("/{trainerApplicationId}")
