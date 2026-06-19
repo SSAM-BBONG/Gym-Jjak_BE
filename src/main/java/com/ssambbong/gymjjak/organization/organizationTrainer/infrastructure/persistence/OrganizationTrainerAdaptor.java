@@ -44,6 +44,7 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
                 WHERE ot.organization_id = :organizationId
                   AND ot.removed_at IS NULL
                   AND tp.deleted_at IS NULL
+                  AND u.deleted_at IS NULL
                 ORDER BY ot.registered_at ASC
                 """)
                 .setParameter("organizationId", organizationId)
