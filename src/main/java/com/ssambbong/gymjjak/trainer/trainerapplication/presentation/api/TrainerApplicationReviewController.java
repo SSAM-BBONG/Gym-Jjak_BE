@@ -3,16 +3,15 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.ApproveTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.RejectTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.FindTrainerApplicationsCondition;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationListResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationReviewDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationReviewQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.FindTrainerApplicationsRequest;
-import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.ApproveTrainerApplicationResponse;
-import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationListResponse;
-import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationResponseCode;
-import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationReviewDetailResponse;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.RejectTrainerApplicationRequest;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -118,8 +117,8 @@ public class TrainerApplicationReviewController {
                 )
         );
 
-        return ResponseEntity.status(200).body(
-                GlobalApiResponse.ok(
+        return ResponseEntity.status(201).body(
+                GlobalApiResponse.created(
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_APPROVED,
                         new ApproveTrainerApplicationResponse(
                                 trainerApplicationId,
@@ -127,7 +126,60 @@ public class TrainerApplicationReviewController {
                         )
                 )
         );
+    }
 
+    @PatchMapping("/{trainerApplicationId}/reject")
+    @Operation(
+            summary = "트레이너 신청 반려",
+            description = "관리자가 PENDING 상태의 트레이너 신청을 반려합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "트레이너 신청 반려 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "반려 사유 누락 또는 잘못된 요청"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "관리자 권한 없음"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "트레이너 신청서를 찾을 수 없음"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "PENDING 상태가 아니어서 반려할 수 없음"
+            )
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<
+            GlobalApiResponse<Void>
+            > rejectTrainerApplication(
+            @PathVariable @Positive long trainerApplicationId,
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody @Valid RejectTrainerApplicationRequest request
+    ) {
+        trainerApplicationCommandUseCase.rejectTrainerApplication(
+                new RejectTrainerApplicationCommand(
+                        trainerApplicationId,
+                        authUser.userId(),
+                        request.rejectReason()
+                )
+        );
 
+        return ResponseEntity.status(201).body(
+                GlobalApiResponse.created(
+                        TrainerApplicationResponseCode.TRAINER_APPLICATION_REJECTED,
+                        null
+                )
+        );
     }
 }
