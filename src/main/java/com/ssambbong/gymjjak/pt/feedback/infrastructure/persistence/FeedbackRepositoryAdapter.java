@@ -36,8 +36,18 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
         try {
             return mapper.toDomain(repository.save(mapper.toEntity(feedback)));
         } catch (DataIntegrityViolationException e) {
-            throw new FeedbackAlreadyExistsException();
+            if (isDuplicateFeedbackViolation(e)) {
+                throw new FeedbackAlreadyExistsException();
+            }
+            throw e;
         }
+    }
+
+    private boolean isDuplicateFeedbackViolation(DataIntegrityViolationException e) {
+        return Optional.ofNullable(e.getMostSpecificCause())
+                .map(Throwable::getMessage)
+                .map(msg -> msg.contains("uk_feedbacks_reservation_curriculum"))
+                .orElse(false);
     }
 
     @Override
