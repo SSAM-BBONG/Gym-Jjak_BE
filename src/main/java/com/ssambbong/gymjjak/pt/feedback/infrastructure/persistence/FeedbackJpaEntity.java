@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -50,4 +51,18 @@ public class FeedbackJpaEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Builder
+    public FeedbackJpaEntity(Long id, Long ptReservationId, Long ptCurriculumId, Long trainerProfileId, Long userId, String content, String status, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt) {
+        this.id = id;
+        this.ptReservationId = ptReservationId;
+        this.ptCurriculumId = ptCurriculumId;
+        this.trainerProfileId = trainerProfileId;
+        this.userId = userId;
+        this.content = content;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.deletedAt = deletedAt;
+    }
 }

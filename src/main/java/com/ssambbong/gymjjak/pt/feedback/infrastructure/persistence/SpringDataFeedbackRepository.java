@@ -12,4 +12,6 @@ public interface SpringDataFeedbackRepository extends JpaRepository<FeedbackJpaE
     List<FeedbackJpaEntity> findAllByPtReservationIdAndDeletedAtIsNull(Long ptReservationId);
 
     Optional<FeedbackJpaEntity> findByIdAndDeletedAtIsNull(Long id);
+
+    boolean existsByPtReservationIdAndPtCurriculumIdAndDeletedAtIsNull(Long ptReservationId, Long ptCurriculumId);
 }

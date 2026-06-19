@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -37,4 +38,12 @@ public class FeedbackMediaJpaEntity {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Builder
+    private FeedbackMediaJpaEntity(Long id, Long feedbackId, Long fileId, FeedbackMediaType mediaType) {
+        this.id = id;
+        this.feedbackId = feedbackId;
+        this.fileId = fileId;
+        this.mediaType = mediaType;
+    }
 }

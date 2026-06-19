@@ -39,6 +39,11 @@ public class PtCurriculumRepositoryAdapter implements PtCurriculumRepository {
         return repository.findById(ptCurriculumId).map(this::toDomain);
     }
 
+    @Override
+    public Optional<PtCurriculum> findByIdAndPtCourseId(Long ptCurriculumId, Long ptCourseId) {
+        return repository.findByIdAndPtCourseId(ptCurriculumId, ptCourseId).map(this::toDomain);
+    }
+
     private PtCurriculum toDomain(PtCurriculumJpaEntity entity) {
         return PtCurriculum.restore(
                 entity.getId(),
