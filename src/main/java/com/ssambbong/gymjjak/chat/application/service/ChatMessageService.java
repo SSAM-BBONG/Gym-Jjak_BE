@@ -1,10 +1,12 @@
 package com.ssambbong.gymjjak.chat.application.service;
 
+import com.ssambbong.gymjjak.chat.application.command.SendChatMessageCommand;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.chat.application.port.TrainerView;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageQuery;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatMessageUseCase;
+import com.ssambbong.gymjjak.chat.domain.model.ChatMessage;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatMessageRepository;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
@@ -24,19 +26,35 @@ public class ChatMessageService implements ChatMessageUseCase {
 
     @Override
     @Transactional
+    public ChatMessage sendMessage(SendChatMessageCommand command) {
+        ChatRoom chatRoom = chatRoomRepository.findById(command.chatRoomId())
+                .orElseThrow(ChatRoomNotFoundException::new);
+
+        validateAccess(command.senderId(), chatRoom);
+
+        ChatMessage message = ChatMessage.create(command.chatRoomId(), command.senderId(), command.content());
+        return chatMessageRepository.save(message);
+    }
+
+    @Override
+    @Transactional
     public ChatMessageListResult getMessages(Long requesterId, ChatMessageQuery query) {
         ChatRoom chatRoom = chatRoomRepository.findById(query.chatRoomId())
                 .orElseThrow(ChatRoomNotFoundException::new);
 
-        if (!requesterId.equals(chatRoom.getUserId())) {
+        validateAccess(requesterId, chatRoom);
+
+        return chatMessageRepository.findMessages(query, requesterId);
+    }
+
+    private void validateAccess(Long userId, ChatRoom chatRoom) {
+        if (!userId.equals(chatRoom.getUserId())) {
             Long trainerUserId = trainerQueryPort.findActiveTrainer(chatRoom.getTrainerProfileId())
                     .map(TrainerView::userId)
                     .orElseThrow(ChatRoomAccessDeniedException::new);
-            if (!requesterId.equals(trainerUserId)) {
+            if (!userId.equals(trainerUserId)) {
                 throw new ChatRoomAccessDeniedException();
             }
         }
-
-        return chatMessageRepository.findMessages(query, requesterId);
     }
 }

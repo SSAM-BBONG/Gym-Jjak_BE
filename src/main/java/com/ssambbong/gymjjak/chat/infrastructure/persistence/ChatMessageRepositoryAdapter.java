@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.chat.infrastructure.persistence;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageItem;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageQuery;
+import com.ssambbong.gymjjak.chat.domain.model.ChatMessage;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,11 @@ import java.util.List;
 public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
 
     private final SpringDataChatMessageRepository repository;
+
+    @Override
+    public ChatMessage save(ChatMessage message) {
+        return repository.save(ChatMessageJpaEntity.from(message)).toDomain();
+    }
 
     @Override
     public ChatMessageListResult findMessages(ChatMessageQuery query, Long readerId) {
