@@ -401,7 +401,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         // 필수자격증 null 검증, TODO : 커스텀 예외처리 하기
         if (certificateFileId == null) {
             throw new IllegalStateException(
-                    "FileUseCase 등록 결과에 PROFILE_IMAGE가 누락되었습니다."
+                    "자격증 파일 등록 결과가 존재하지 않습니다."
             );
         }
 
