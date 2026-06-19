@@ -12,21 +12,21 @@ import java.util.List;
 public class FeedbackMediaRepositoryAdapter implements FeedbackMediaRepository {
 
     private final SpringDataFeedbackMediaRepository repository;
+    private final FeedbackMediaPersistenceMapper mapper;
 
     @Override
     public List<FeedbackMedia> findAllByFeedbackId(Long feedbackId) {
         return repository.findAllByFeedbackIdOrderByIdAsc(feedbackId)
                 .stream()
-                .map(this::toDomain)
+                .map(mapper::toDomain)
                 .toList();
     }
 
-    private FeedbackMedia toDomain(FeedbackMediaJpaEntity entity) {
-        return FeedbackMedia.restore(
-                entity.getId(),
-                entity.getFeedbackId(),
-                entity.getMediaType(),
-                entity.getFileId()
-        );
+    @Override
+    public void saveAll(List<FeedbackMedia> mediaList) {
+        List<FeedbackMediaJpaEntity> entities = mediaList.stream()
+                .map(mapper::toEntity)
+                .toList();
+        repository.saveAll(entities);
     }
 }

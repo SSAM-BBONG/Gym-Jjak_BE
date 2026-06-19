@@ -32,7 +32,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
 
     @Override
     public List<FeedbackListView> findFeedbacksByReservation(Long userId, Long ptReservationId) {
-        log.debug("[FeedbackList] userId={}, ptReservationId={}", userId, ptReservationId);
+        log.debug("event=feedback_list_query userId={} ptReservationId={}", userId, ptReservationId);
 
         // 1. 예약 조회
         PtReservationQueryPort.ReservationInfo reservation =
@@ -60,25 +60,21 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
                 .map(c -> toListView(c, feedbackMap.get(c.ptCurriculumId())))
                 .toList();
 
-        log.info("[FeedbackList] ptReservationId={} 조회 완료, 커리큘럼 수={}", ptReservationId, result.size());
+        log.info("event=feedback_list_query_complete ptReservationId={} curriculumCount={}", ptReservationId, result.size());
 
         return result;
     }
 
     @Override
     public FeedbackDetailView findFeedbackDetail(Long userId, Long ptReservationId, Long feedbackId) {
-        log.debug("[FeedbackDetail] userId={}, ptReservationId={}, feedbackId={}", userId, ptReservationId, feedbackId);
+        log.debug("event=feedback_detail_query userId={} ptReservationId={} feedbackId={}", userId, ptReservationId, feedbackId);
 
         // 1. 피드백 조회
         Feedback feedback = feedbackRepository.findById(feedbackId)
-                .orElseThrow(() -> {
-            log.warn("[FeedbackDetail] 피드백 없음 feedbackId={}", feedbackId);
-            return new FeedbackNotFoundException();
-        });
+                .orElseThrow(FeedbackNotFoundException::new);
 
         // 2. path param의 ptReservationId와 피드백의 예약 ID 일치 확인
         if (!feedback.getPtReservationId().equals(ptReservationId)) {
-            log.warn("[FeedbackDetail] 예약 불일치 feedbackId={}, ptReservationId={}", feedbackId, ptReservationId);
             throw new FeedbackNotFoundException();
         }
 
@@ -96,7 +92,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
                         .map(m -> new MediaView(m.getId(), m.getMediaType(), m.getFileId()))
                         .toList();
 
-        log.info("[FeedbackDetail] feedbackId={} 조회 완료", feedbackId);
+        log.info("event=feedback_detail_query_complete feedbackId={}", feedbackId);
 
         return new FeedbackDetailView(
                 curriculum.sessionNo(),
@@ -115,13 +111,9 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
             return;
         }
         Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(userId)
-                .orElseThrow(() -> {
-                    log.warn("[FeedbackList] 접근 권한 없음 userId={}", userId);
-                    return new FeedbackForbiddenException();
-                });
+                .orElseThrow(FeedbackForbiddenException::new);
 
         if (!trainerProfileId.equals(reservation.trainerProfileId())) {
-            log.warn("[FeedbackList] 본인 강습 아님 userId={}, trainerProfileId={}", userId, trainerProfileId);
             throw new FeedbackForbiddenException();
         }
     }
@@ -132,13 +124,9 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         if (feedback.getUserId().equals(userId)) return;
 
         Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(userId)
-                .orElseThrow(() -> {
-                    log.warn("[FeedbackDetail] 접근 권한 없음 userId={}", userId);
-                    return new FeedbackForbiddenException();
-                });
+                .orElseThrow(FeedbackForbiddenException::new);
 
         if (!trainerProfileId.equals(feedback.getTrainerProfileId())) {
-            log.warn("[FeedbackDetail] 본인 강습 아님 userId={}, trainerProfileId={}", userId, trainerProfileId);
             throw new FeedbackForbiddenException();
         }
     }
