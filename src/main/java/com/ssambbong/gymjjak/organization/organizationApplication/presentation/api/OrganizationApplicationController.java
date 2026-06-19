@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.organization.organizationApplication.application.qu
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationQueryUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
+import com.ssambbong.gymjjak.organization.organizationApplication.presentation.api.mapper.OrganizationApplicationMapper;
 import com.ssambbong.gymjjak.organization.organizationApplication.presentation.api.request.OrganizationApplicationCreateRequest;
 import com.ssambbong.gymjjak.organization.organizationApplication.presentation.api.request.RejectOrganizationApplicationRequest;
 import com.ssambbong.gymjjak.organization.organizationApplication.presentation.api.response.*;
@@ -38,6 +39,7 @@ public class OrganizationApplicationController {
 
     private final OrganizationApplicationCommandUsecase organizationApplicationCommandUsecase;
     private final OrganizationApplicationQueryUsecase organizationApplicationQueryUsecase;
+    private final OrganizationApplicationMapper organizationApplicationMapper;
 
     @Operation(summary = "조직 신청", description = "사용자가 조직(헬스장) 등록을 신청합니다.")
     @ApiResponses({
@@ -127,7 +129,7 @@ public class OrganizationApplicationController {
     ) {
         ApplicationListQuery query = new ApplicationListQuery(page, size);
         ApplicationListResult result = organizationApplicationQueryUsecase.findPendingOrganizationApplications(query);
-        FindAllOrganizationApplicationsListResponse response = FindAllOrganizationApplicationsListResponse.from(result);
+        FindAllOrganizationApplicationsListResponse response = organizationApplicationMapper.toListResponse(result);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
