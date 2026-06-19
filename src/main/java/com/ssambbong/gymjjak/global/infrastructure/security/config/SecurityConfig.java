@@ -62,12 +62,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/logout").authenticated()
 
                         // 회원가입, 로그인, 토큰 재발급 등 인증 없이 접근 가능
-                        .requestMatchers("/api/auth/**").permitAll()
-
                         // Swagger 사용 시 허용
                         .requestMatchers(
+                                "/api/auth/**",
+                                "/oauth2/**",
+                                "/login/oauth2/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
 
@@ -145,6 +145,10 @@ public class SecurityConfig {
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
+                )
+
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/api/users/me", true)
                 )
 
                 // JWT 필터를 UsernamePasswordAuthenticationFilter 앞에 등록
