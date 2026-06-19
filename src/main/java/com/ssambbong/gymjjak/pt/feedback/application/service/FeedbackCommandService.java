@@ -7,6 +7,8 @@ import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.usecase.FeedbackCommandUseCase;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackAlreadyExistsException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
+import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMedia;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackMediaRepository;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,8 +36,16 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
 
     @Override
     public Long createFeedback(CreateFeedbackCommand command) {
-        log.debug("[FeedbackCreate] userId={}, ptReservationId={} 피드백 등록 시작",
-                command.userId(), command.ptReservationId());
+        log.debug("event=feedback_create userId={} ptReservationId={} ptCurriculumId={}",
+                command.userId(), command.ptReservationId(), command.ptCurriculumId());
+
+        // 미디어 타입 중복 검증 (BEFORE/AFTER 각 1개)
+        Set<FeedbackMediaType> mediaTypes = command.media().stream()
+                .map(CreateFeedbackCommand.MediaCommand::mediaType)
+                .collect(Collectors.toSet());
+        if (mediaTypes.size() != command.media().size()) {
+            throw new FeedbackMediaInvalidException();
+        }
 
         // 예약 조회
         PtReservationQueryPort.ReservationInfo reservation =
@@ -68,7 +80,7 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
                 .toList();
         feedbackMediaRepository.saveAll(mediaList);
 
-        log.info("[FeedbackCreate] feedbackId={} 피드백 등록 완료", saved.getId());
+        log.info("event=feedback_create_complete feedbackId={}", saved.getId());
         return saved.getId();
     }
 }

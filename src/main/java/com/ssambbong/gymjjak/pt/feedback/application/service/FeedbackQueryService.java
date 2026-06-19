@@ -32,7 +32,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
 
     @Override
     public List<FeedbackListView> findFeedbacksByReservation(Long userId, Long ptReservationId) {
-        log.debug("[FeedbackList] userId={}, ptReservationId={}", userId, ptReservationId);
+        log.debug("event=feedback_list_query userId={} ptReservationId={}", userId, ptReservationId);
 
         // 1. 예약 조회
         PtReservationQueryPort.ReservationInfo reservation =
@@ -60,14 +60,14 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
                 .map(c -> toListView(c, feedbackMap.get(c.ptCurriculumId())))
                 .toList();
 
-        log.info("[FeedbackList] ptReservationId={} 조회 완료, 커리큘럼 수={}", ptReservationId, result.size());
+        log.info("event=feedback_list_query_complete ptReservationId={} curriculumCount={}", ptReservationId, result.size());
 
         return result;
     }
 
     @Override
     public FeedbackDetailView findFeedbackDetail(Long userId, Long ptReservationId, Long feedbackId) {
-        log.debug("[FeedbackDetail] userId={}, ptReservationId={}, feedbackId={}", userId, ptReservationId, feedbackId);
+        log.debug("event=feedback_detail_query userId={} ptReservationId={} feedbackId={}", userId, ptReservationId, feedbackId);
 
         // 1. 피드백 조회
         Feedback feedback = feedbackRepository.findById(feedbackId)
@@ -92,7 +92,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
                         .map(m -> new MediaView(m.getId(), m.getMediaType(), m.getFileId()))
                         .toList();
 
-        log.info("[FeedbackDetail] feedbackId={} 조회 완료", feedbackId);
+        log.info("event=feedback_detail_query_complete feedbackId={}", feedbackId);
 
         return new FeedbackDetailView(
                 curriculum.sessionNo(),
