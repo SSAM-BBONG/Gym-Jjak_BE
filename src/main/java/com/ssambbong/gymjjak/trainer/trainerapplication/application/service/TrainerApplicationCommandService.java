@@ -212,6 +212,50 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         return trainerProfileId;
     }
 
+    @Override
+    @Transactional
+    public void rejectTrainerApplication(RejectTrainerApplicationCommand command) {
+
+        // command 값 검증
+        if (command == null) {
+            throw new InvalidTrainerApplicationException(
+                    "command 값은 필수입니다."
+            );
+        }
+
+        log.info(
+                "event=trainer_application_reject_started, " +
+                        "trainerApplicationId={}, adminId={}",
+                command.trainerApplicationId(), command.adminId()
+        );
+
+        TrainerApplication trainerApplication =
+                trainerApplicationRepository.findByIdForUpdate(
+                        command.trainerApplicationId()
+                ).orElseThrow(() ->
+                        new TrainerApplicationNotFoundException(
+                                command.trainerApplicationId()
+                        )
+                );
+
+        TrainerApplication rejectTrainerApplication =
+                trainerApplication.reject(
+                        command.adminId(),
+                        command.rejectReason(),
+                        LocalDateTime.now()
+                );
+
+        trainerApplicationRepository.save(rejectTrainerApplication);
+
+        log.info(
+                "event=trainer_application_reject_succeeded, " +
+                        "trainerApplicationId={}, applicantUserId={}, adminId={}",
+                rejectTrainerApplication.getTrainerApplicationId(),
+                rejectTrainerApplication.getUserId(),
+                command.adminId()
+        );
+    }
+
     private void validateApproveCommand(ApproveTrainerApplicationCommand command) {
         if (command == null) {
             throw new InvalidTrainerApplicationException("command는 필수입니다.");

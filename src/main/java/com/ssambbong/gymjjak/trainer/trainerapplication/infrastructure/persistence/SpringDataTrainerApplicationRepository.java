@@ -79,7 +79,7 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
     Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(
             @Param("trainerApplicationId") Long trainerApplicationId);
 
-    @Lock(LockModeType.WRITE)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select ta
             from TrainerApplicationJpaEntity ta
