@@ -26,7 +26,6 @@ public record CreateTrainerApplicationCommand(
         String introduction
 ) {
     public CreateTrainerApplicationCommand {
-
         if (applicantUserId == null || applicantUserId <= 0) {
             throw new InvalidTrainerApplicationException(
                     "applicantUserId는 1 이상이어야 합니다."
@@ -39,16 +38,39 @@ public record CreateTrainerApplicationCommand(
             );
         }
 
-        qualifications = qualifications == null
-                ? List.of()
-                : List.copyOf(qualifications);
+        qualifications = normalizeList(
+                qualifications,
+                "qualifications"
+        );
 
-        awardHistories = awardHistories == null
-                ? List.of()
-                : List.copyOf(awardHistories);
+        awardHistories = normalizeList(
+                awardHistories,
+                "awardHistories"
+        );
 
         introduction = introduction == null
                 ? null
                 : introduction.trim();
+    }
+
+    private static List<String> normalizeList(
+            List<String> values,
+            String fieldName
+    ) {
+        if (values == null) {
+            return List.of();
+        }
+
+        if (values.stream().anyMatch(
+                value -> value == null || value.isBlank()
+        )) {
+            throw new InvalidTrainerApplicationException(
+                    fieldName + "에는 null 또는 공백 값을 포함할 수 없습니다."
+            );
+        }
+
+        return values.stream()
+                .map(String::trim)
+                .toList();
     }
 }

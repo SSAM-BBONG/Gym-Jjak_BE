@@ -313,7 +313,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     private RegisteredTrainerApplicationFiles registerTrainerApplicationFiles(
             CreateTrainerApplicationCommand command
     ) {
-        // file 생성 도메인 List 만들기
+        // file 등록 도메인 List 만들기 => 이걸 한번에 File 도메인으로 보냄
         List<CreateFileCommand> fileCommands = new ArrayList<>();
 
         // 프로필 이미지 메타 데이터 추출
@@ -352,12 +352,36 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         List<FileRegistrationResult> results =
                 fileUseCase.registerFiles(fileCommands);
 
-        return resolveRegisteredFiles(results);
+        try {
+            // 트레이너 신청에 필요한 id 값으로 변환해서 반환
+            return resolveRegisteredFiles(
+                    results,
+                    profileImageFile != null);
+        } catch (RuntimeException exception) {
+            // 파일 결과 해석 실패 시, 보상 삭제
+            deleteRegistrationResultsSafely(results, exception);
+            throw exception;
+        }
+
+    }
+
+    // 등록 메서드 실패시, 등록 메서드 내부에서 결과 목록 정리
+    private void deleteRegistrationResultsSafely(
+            List<FileRegistrationResult> results,
+            RuntimeException exception) {
+        // 등록 결과 포함된 모든 파일 id 순회하면서 삭제
+        for (FileRegistrationResult result : results) {
+            deleteFileSafely(
+                    result.fileId(),
+                    exception
+            );
+        }
     }
 
     // 파일등록 결과(fileId로 반환) 처리 메서드
     private RegisteredTrainerApplicationFiles resolveRegisteredFiles(
-            List<FileRegistrationResult> results
+            List<FileRegistrationResult> results,
+            boolean profileImageRequested
     ) {
         // 초기화
         Long profileImageFileId = null;
@@ -377,7 +401,14 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         // 필수자격증 null 검증, TODO : 커스텀 예외처리 하기
         if (certificateFileId == null) {
             throw new IllegalStateException(
-                    "자격증 파일 등록 결과가 존재하지 않습니다."
+                    "FileUseCase 등록 결과에 PROFILE_IMAGE가 누락되었습니다."
+            );
+        }
+
+        // 프로필 이미지 파일 요청이 존재하지만, id로 null 값이 왔을 때
+        if (profileImageRequested && profileImageFileId == null) {
+            throw new IllegalStateException(
+                    "프로필 이미지 파일 등록 결과가 존재하지 않습니다."
             );
         }
 
