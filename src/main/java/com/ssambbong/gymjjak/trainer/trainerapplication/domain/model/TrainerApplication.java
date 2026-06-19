@@ -194,6 +194,12 @@ public class TrainerApplication {
             );
         }
 
+        if (adminId == null) {
+            throw new InvalidTrainerApplicationException(
+                    "반려 관리자 ID는 필수입니다."
+            );
+        }
+
         if (rejectReason == null || rejectReason.isBlank()) {
             throw new InvalidTrainerApplicationException(
                     "반려 사유는 필수입니다."
