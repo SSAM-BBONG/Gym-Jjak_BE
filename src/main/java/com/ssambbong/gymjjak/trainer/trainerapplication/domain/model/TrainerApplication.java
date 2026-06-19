@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.domain.model;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.ForbiddenTrainerApplicationCancelException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationStatusConflictException;
 import lombok.AccessLevel;
@@ -225,5 +226,21 @@ public class TrainerApplication {
                 adminId,
                 reviewedAt
         );
+    }
+
+    public void validateCancel(Long requesterId) {
+        if (!isOwner(requesterId)) {
+            throw new ForbiddenTrainerApplicationCancelException(
+                    requesterId,
+                    this.trainerApplicationId
+            );
+        }
+
+        if (!isPending()) {
+            throw new TrainerApplicationStatusConflictException(
+                    this.trainerApplicationId,
+                    this.status
+            );
+        }
     }
 }

@@ -13,4 +13,6 @@ public interface TrainerApplicationRepository {
     boolean existsDuplicateBlockingApplicationByUserId(Long userId);
 
     Optional<TrainerApplication> findByIdForUpdate(Long trainerApplicationId);
+
+    void deleteById(Long trainerApplicationId);
 }

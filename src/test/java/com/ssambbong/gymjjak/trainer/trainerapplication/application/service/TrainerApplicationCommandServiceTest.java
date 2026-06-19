@@ -1,11 +1,10 @@
-package com.ssambbong.gymjjak.trainer.trainerApplication.applicaion.service;
+package com.ssambbong.gymjjak.trainer.trainerapplication.application.service;
 
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.RejectTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.service.TrainerApplicationCommandService;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationNotFoundException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationStatusConflictException;

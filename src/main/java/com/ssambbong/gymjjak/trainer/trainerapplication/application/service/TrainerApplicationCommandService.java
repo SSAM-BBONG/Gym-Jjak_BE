@@ -256,6 +256,96 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         );
     }
 
+    @Override
+    public void cancelTrainerApplication(CancelTrainerApplicationCommand command) {
+
+        if (command == null) {
+            throw new InvalidTrainerApplicationException(
+                    "command 값은 필수입니다."
+            );
+        }
+
+        log.info(
+                "event=trainer_application_cancel_start," +
+                        "trainerApplicationId={}, requesterId={}",
+                command.trainerApplicationId(), command.requesterId()
+        );
+
+        TrainerApplication deletedApplication =
+                // 신청서 삭제만 트랜잭션 걸기 조회 후, 신청서 삭제
+                transactionTemplate.execute(status -> {
+                    TrainerApplication trainerApplication =
+                            trainerApplicationRepository.findByIdForUpdate(
+                                    command.trainerApplicationId()
+                            ).orElseThrow(() ->
+                                    new TrainerApplicationNotFoundException(
+                                            command.trainerApplicationId()
+                                    )
+                            );
+
+                    // 취소 가능 상태 검증
+                    trainerApplication.validateCancel(
+                            command.requesterId()
+                    );
+
+                    // 삭제 요청
+                   trainerApplicationRepository.deleteById(
+                           command.trainerApplicationId()
+                   );
+
+                   return trainerApplication;
+                });
+
+        if (deletedApplication == null) {
+            throw new IllegalStateException(
+                    "트레이너 신청 취소 트랜잭션 결과가 없습니다."
+            );
+        }
+
+        // 이후 파일 삭제
+        deleteCanceledApplicationFilesSafely(
+                deletedApplication
+        );
+
+        log.info(
+                "event=trainer_application_cancel_succeeded, " +
+                        "trainerApplicationId={}, requesterId={}",
+                command.trainerApplicationId(),
+                command.requesterId()
+        );
+    }
+
+    private void deleteCanceledApplicationFilesSafely(TrainerApplication deletedApplication) {
+
+        deleteCanceledApplicationFileSafely(
+                deletedApplication.getProfileFileId(),
+                deletedApplication.getTrainerApplicationId()
+        );
+
+        deleteCanceledApplicationFileSafely(
+                deletedApplication.getCertificateFileId(),
+                deletedApplication.getTrainerApplicationId()
+        );
+    }
+
+    private void deleteCanceledApplicationFileSafely(Long fileId, Long trainerApplicationId) {
+        if (fileId == null) {
+            return;
+        }
+
+        try {
+            fileUseCase.deleteFile(fileId);
+        } catch (RuntimeException exception) {
+            log.error(
+                    "event=trainer_application_cancel_file_cleanup_failed, " +
+                            "trainerApplicationId={}, fileID={}",
+                    trainerApplicationId, fileId, exception
+            );
+        }
+    }
+
+
+    // ===== 신청서 승인 =====
     private void validateApproveCommand(ApproveTrainerApplicationCommand command) {
         if (command == null) {
             throw new InvalidTrainerApplicationException("command는 필수입니다.");

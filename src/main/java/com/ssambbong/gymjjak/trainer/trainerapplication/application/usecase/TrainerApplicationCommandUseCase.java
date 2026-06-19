@@ -1,9 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase;
 
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.ApproveTrainerApplicationCommand;
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.RejectTrainerApplicationCommand;
-import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.*;
 
 public interface TrainerApplicationCommandUseCase {
 
@@ -14,4 +11,6 @@ public interface TrainerApplicationCommandUseCase {
     Long approveTrainerApplication(ApproveTrainerApplicationCommand command);
 
     void rejectTrainerApplication(RejectTrainerApplicationCommand command);
+
+    void cancelTrainerApplication(CancelTrainerApplicationCommand command);
 }

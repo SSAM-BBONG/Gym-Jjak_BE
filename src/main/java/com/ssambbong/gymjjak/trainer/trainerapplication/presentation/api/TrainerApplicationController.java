@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CancelTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UploadedFileMetadataCommand;
@@ -141,10 +142,57 @@ public class TrainerApplicationController {
         TrainerApplicationDetailResult result =
                 trainerApplicationQueryUseCase.getMyTrainerApplication(authUser.userId());
 
-        return ResponseEntity.ok(
+        return ResponseEntity.status(201).body(
                 GlobalApiResponse.ok(
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_DETAIL_FOUND,
                         TrainerApplicationDetailResponse.from(result)
+                )
+        );
+    }
+
+    @DeleteMapping("/{trainerApplicationId}")
+    @Operation(
+            summary = "트레이너 신청 취소",
+            description = "사용자가 본인의 PENDING 상태 트레이너 신청을 취소하고 삭제합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "트레이너 신청 취소 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "본인의 트레이너 신청서가 아님"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "트레이너 신청서를 찾을 수 없음"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "PENDING 상태가 아니어서 취소할 수 없음"
+            )
+    })
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<GlobalApiResponse<Void>>  cancelTrainerApplication(
+            @PathVariable Long trainerApplicationId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        trainerApplicationCommandUseCase.cancelTrainerApplication(
+                new CancelTrainerApplicationCommand(
+                        trainerApplicationId,
+                        authUser.userId()
+                )
+        );
+
+        return ResponseEntity.status(200).body(
+                GlobalApiResponse.ok(
+                        TrainerApplicationResponseCode.TRAINER_APPLICATION_CANCELED,
+                        null
                 )
         );
     }

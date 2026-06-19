@@ -74,6 +74,11 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
                 .map(trainerApplicationPersistenceMapper::toDomain);
     }
 
+    @Override
+    public void deleteById(Long trainerApplicationId) {
+        springDataTrainerApplicationRepository.deleteById(trainerApplicationId);
+    }
+
     // 내 수강신청 조회
     @Override
     public Optional<TrainerApplicationDetailResult> findLatestDetailByUserId(Long userId) {
