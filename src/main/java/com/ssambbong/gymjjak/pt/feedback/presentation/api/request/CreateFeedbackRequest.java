@@ -12,7 +12,7 @@ import java.util.List;
 public record CreateFeedbackRequest(
         @NotNull Long ptCurriculumId,
         @NotBlank String content,
-        @NotEmpty @Valid List<MediaRequest> media
+        @NotEmpty @Valid List<@NotNull MediaRequest> media
 ) {
     public FeedbackCommandUseCase.CreateFeedbackCommand toCommand() {
         return new FeedbackCommandUseCase.CreateFeedbackCommand(

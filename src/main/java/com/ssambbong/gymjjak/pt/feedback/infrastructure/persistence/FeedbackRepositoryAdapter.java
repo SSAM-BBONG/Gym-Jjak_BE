@@ -1,8 +1,10 @@
 package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackAlreadyExistsException;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -31,7 +33,11 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
 
     @Override
     public Feedback save(Feedback feedback) {
-        return mapper.toDomain(repository.save(mapper.toEntity(feedback)));
+        try {
+            return mapper.toDomain(repository.save(mapper.toEntity(feedback)));
+        } catch (DataIntegrityViolationException e) {
+            throw new FeedbackAlreadyExistsException();
+        }
     }
 
     @Override
