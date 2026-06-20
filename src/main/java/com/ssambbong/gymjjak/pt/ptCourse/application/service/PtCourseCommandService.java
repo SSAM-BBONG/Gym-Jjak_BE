@@ -141,12 +141,15 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 )
         ));
 
-        return results.stream()
-                .filter(r -> r.fileType() == FileType.PT_THUMBNAIL)
-                .map(FileRegistrationResult::fileId)
-                .filter(id -> id != null)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("썸네일 파일 등록 결과가 존재하지 않습니다."));
+        if (results.size() != 1 || results.get(0).fileId() == null) {
+            log.error(
+                    "event=pt_course_thumbnail_register_failed, reason=unexpected_result, userId={}, resultSize={}",
+                    userId, results.size()
+            );
+            throw new IllegalStateException("썸네일 파일 등록 결과가 존재하지 않습니다.");
+        }
+
+        return results.get(0).fileId();
     }
 
     // 스케줄 슬롯 중복 검증용 정규화 키 생성 (파싱 실패 시 도메인 예외로 변환)
