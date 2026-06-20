@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CancelTrainerApplicationCommand;
@@ -174,11 +175,23 @@ public class TrainerApplicationController {
             return null;
         }
 
-        return fileUrlUseCase.getUrl(
-                fileId,
-                requesterId,
-                isAdmin
-        );
+        try {
+            return fileUrlUseCase.getUrl(
+                    fileId,
+                    requesterId,
+                    isAdmin
+            );
+        } catch (FileNotFoundException exception) {
+            log.warn(
+                    "event=trainer_application_file_url_not_found, " +
+                            "fileId={}, requesterId={}, isAdmin={}",
+                    fileId,
+                    requesterId,
+                    isAdmin
+            );
+
+            return null;
+        }
     }
 
     @DeleteMapping("/{trainerApplicationId}")
