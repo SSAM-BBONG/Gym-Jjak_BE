@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.chat.application.service;
 
 import com.ssambbong.gymjjak.chat.application.command.SendChatMessageCommand;
+import com.ssambbong.gymjjak.chat.application.port.ChatMetricsPort;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageQuery;
@@ -15,9 +16,11 @@ import com.ssambbong.gymjjak.chat.exception.ChatRoomClosedException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
 import com.ssambbong.gymjjak.chat.exception.TrainerNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatMessageService implements ChatMessageUseCase {
@@ -25,6 +28,7 @@ public class ChatMessageService implements ChatMessageUseCase {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final ChatMetricsPort chatMetricsPort;
 
     @Override
     @Transactional
@@ -38,7 +42,13 @@ public class ChatMessageService implements ChatMessageUseCase {
         validateParticipant(command.chatRoomId(), command.senderId());
 
         ChatMessage message = ChatMessage.create(command.chatRoomId(), command.senderId(), command.content());
-        return chatMessageRepository.save(message);
+        ChatMessage saved = chatMessageRepository.save(message);
+        try {
+            chatMetricsPort.recordMessageSent();
+        } catch (Exception e) {
+            log.warn("event=metrics_record_failed metric=message_sent", e);
+        }
+        return saved;
     }
 
     @Override

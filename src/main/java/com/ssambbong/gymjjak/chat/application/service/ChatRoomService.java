@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.chat.application.service;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
+import com.ssambbong.gymjjak.chat.application.port.ChatMetricsPort;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
@@ -33,6 +34,7 @@ public class ChatRoomService implements ChatRoomUseCase {
     private final ChatRoomRepository chatRoomRepository;
     private final TrainerQueryPort trainerQueryPort;
     private final FileUrlUseCase fileUrlUseCase;
+    private final ChatMetricsPort chatMetricsPort;
 
     @Override
     @Transactional
@@ -60,6 +62,11 @@ public class ChatRoomService implements ChatRoomUseCase {
                 throw new PtCourseNotFoundException();
             }
             throw e;
+        }
+        try {
+            chatMetricsPort.recordChatRoomCreated();
+        } catch (Exception e) {
+            log.warn("event=metrics_record_failed metric=chat_room_created", e);
         }
         log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerProfileId: {}",
                 saved.getId(), command.userId(), command.trainerProfileId());

@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaEntity, Long> {
 
     boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status);
+    long countByStatus(ChatRoomStatus status);
 
 @Modifying(clearAutomatically = true)
     @Query("UPDATE ChatRoomJpaEntity c SET c.userLeft = true WHERE c.id = :id AND c.status != com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus.DELETED")
@@ -22,7 +23,7 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
     @Query("UPDATE ChatRoomJpaEntity c SET c.trainerLeft = true WHERE c.id = :id AND c.status != com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus.DELETED")
     void markTrainerLeft(@Param("id") Long chatRoomId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query(value = """
             UPDATE chat_rooms
             SET status = CASE WHEN user_left = true AND trainer_left = true THEN 'DELETED' ELSE 'CLOSED' END,

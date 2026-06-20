@@ -66,6 +66,11 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
                 .toList();
     }
 
+    @Override
+    public long countActive() {
+        return repository.countByStatus(ChatRoomStatus.ACTIVE);
+    }
+
     private ChatRoom toDomain(ChatRoomJpaEntity entity) {
         return ChatRoom.restore(
                 entity.getId(),
