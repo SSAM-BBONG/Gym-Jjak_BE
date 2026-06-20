@@ -5,6 +5,8 @@ import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import static org.springframework.util.StringUtils.hasText;
+
 public class User {
 
     private final Long id;
@@ -16,6 +18,8 @@ public class User {
     private UserRole role;
     private UserStatus status;
     private boolean onboardingCompleted;
+    private SocialProvider socialProvider;
+    private String socialId;
     private LocalDateTime  lastLoginAt;
     private final LocalDateTime  createdAt;
     private LocalDateTime  updatedAt;
@@ -31,6 +35,8 @@ public class User {
             UserRole role,
             UserStatus status,
             boolean onboardingCompleted,
+            SocialProvider socialProvider,
+            String socialId,
             LocalDateTime  lastLoginAt,
             LocalDateTime  createdAt,
             LocalDateTime  updatedAt,
@@ -38,13 +44,15 @@ public class User {
     ) {
         this.id = id;
         this.username = normalizeRequiredText(username, UserErrorCode.USERNAME_REQUIRED);
-        this.password = validateRequired(password, UserErrorCode.PASSWORD_REQUIRED);
+        this.password = normalizeNullableText(password);
         this.name = normalizeRequiredText(name, UserErrorCode.NAME_REQUIRED);
-        this.nickname = normalizeRequiredText(nickname, UserErrorCode.NICKNAME_REQUIRED);
-        this.phone = normalizeRequiredText(phone, UserErrorCode.PHONE_REQUIRED);
+        this.nickname = normalizeNullableText(nickname);
+        this.phone =  normalizeNullableText(phone);
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.status = Objects.requireNonNull(status, "status는 필수입니다.");
         this.onboardingCompleted = onboardingCompleted;
+        this.socialProvider = socialProvider;
+        this.socialId = socialId;
         this.lastLoginAt = lastLoginAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -71,6 +79,34 @@ public class User {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null
+        );
+    }
+
+    public static User registerSocial(
+            String username,
+            String name,
+            SocialProvider socialProvider,
+            String socialId,
+            LocalDateTime now
+    ) {
+        return new User(
+                null,
+                username,
+                null,
+                name,
+                null,
+                null,
+                UserRole.USER,
+                UserStatus.ACTIVE,
+                false,
+                Objects.requireNonNull(socialProvider, "socialProvider는 필수입니다."),
+                validateRequired(socialId, UserErrorCode.SOCIAL_ID_REQUIRED),
+                null,
+                now,
+                now,
                 null
         );
     }
@@ -85,6 +121,8 @@ public class User {
             UserRole role,
             UserStatus status,
             boolean onboardingCompleted,
+            SocialProvider socialProvider,
+            String socialId,
             LocalDateTime  lastLoginAt,
             LocalDateTime  createdAt,
             LocalDateTime  updatedAt,
@@ -100,6 +138,8 @@ public class User {
                 role,
                 status,
                 onboardingCompleted,
+                socialProvider,
+                socialId,
                 lastLoginAt,
                 createdAt,
                 updatedAt,
@@ -107,12 +147,36 @@ public class User {
         );
     }
 
-    public void completeOnboarding() {
-        if (this.onboardingCompleted) {
-            throw new UserException(UserErrorCode.ONBOARDING_ALREADY_COMPLETED);
+    public void completeSocialSignup(
+            String nickname,
+            String phone,
+            LocalDateTime updatedAt
+    ) {
+        validateUsableUser();
+
+        if (!isSocialUser()) {
+            throw new UserException(UserErrorCode.NOT_SOCIAL_USER);
         }
 
-        this.onboardingCompleted = true;
+        if (isSocialSignupCompleted()) {
+            throw new UserException(UserErrorCode.SOCIAL_SIGNUP_ALREADY_COMPLETED);
+        }
+
+        this.nickname = normalizeRequiredText(nickname, UserErrorCode.NICKNAME_REQUIRED);
+        this.phone = normalizeRequiredText(phone, UserErrorCode.PHONE_REQUIRED);
+        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
+    }
+
+    public boolean isSocialUser() {
+        return this.socialProvider != null && hasText(this.socialId);
+    }
+
+    public boolean isSocialSignupCompleted() {
+        if (!isSocialUser()) {
+            return true;
+        }
+
+        return hasText(this.nickname) && hasText(this.phone);
     }
 
     public void updateProfile(
@@ -242,6 +306,19 @@ public class User {
         return validated.trim();
     }
 
+    private static String normalizeNullableText(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+
     public void changeStatus(UserStatus status) {
         this.status = status;
     }
@@ -276,6 +353,14 @@ public class User {
 
     public UserStatus getStatus() {
         return status;
+    }
+
+    public SocialProvider getSocialProvider() {
+        return socialProvider;
+    }
+
+    public String getSocialId() {
+        return socialId;
     }
 
     public LocalDateTime  getCreatedAt() {

@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
+import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
@@ -104,6 +105,18 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
         if (updatedCount == 0) {
             throw new UserException(UserErrorCode.USER_NOT_FOUND);
         }
+    }
+
+    @Override
+    public Optional<User> findBySocialProviderAndSocialId(
+            SocialProvider socialProvider,
+            String socialId
+    ) {
+        return springDataUserRepository.findBySocialProviderAndSocialId(
+                        socialProvider,
+                        socialId
+                )
+                .map(userPersistenceMapper::toDomain);
     }
 
     private RuntimeException mapToUserException(DataIntegrityViolationException e) {

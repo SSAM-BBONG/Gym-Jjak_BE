@@ -85,6 +85,16 @@ public class UserCommandService implements UserCommandUseCase {
 
         user.releaseSuspensionIfExpired(now);
 
+        if (user.getPassword() == null) {
+            log.warn("event=user_login_failed reason=social_login_required userId={}, username={}, provider={}",
+                    user.getId(),
+                    user.getUsername(),
+                    user.getSocialProvider()
+            );
+
+            throw new UserException(UserErrorCode.SOCIAL_LOGIN_REQUIRED);
+        }
+
         if (!userPort.matchesPassword(command.password(), user.getPassword())) {
             throw new UserException(UserErrorCode.LOGIN_FAILED);
         }
@@ -379,5 +389,27 @@ public class UserCommandService implements UserCommandUseCase {
         }
 
         return null;
+    }
+
+    @Override
+    public void completeSocialSignup(CompleteSocialSignupCommand command) {
+        User user = userPort.findById(command.userId())
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        if (userPort.existsByNickname(command.nickname())) {
+            throw new UserException(UserErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        if (userPort.existsByPhone(command.phone())) {
+            throw new UserException(UserErrorCode.DUPLICATE_PHONE);
+        }
+
+        user.completeSocialSignup(
+                command.nickname(),
+                command.phone(),
+                LocalDateTime.now()
+        );
+
+        userPort.save(user);
     }
 }

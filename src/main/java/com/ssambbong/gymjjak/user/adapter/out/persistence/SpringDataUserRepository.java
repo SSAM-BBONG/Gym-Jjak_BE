@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
+import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -151,6 +152,11 @@ order by u.id desc
             @Param("name") String name,
             @Param("cursor") Long cursor,
             Pageable pageable
+    );
+
+    Optional<UserJpaEntity> findBySocialProviderAndSocialId(
+            SocialProvider socialProvider,
+            String socialId
     );
 
 

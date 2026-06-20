@@ -31,5 +31,7 @@ public interface UserCommandUseCase {
 
     CursorResult<FindBlacklistUserResult> findBlacklistUsers(String name, Long cursor, int size);
 
+    void completeSocialSignup(CompleteSocialSignupCommand command);
+
 
 }
