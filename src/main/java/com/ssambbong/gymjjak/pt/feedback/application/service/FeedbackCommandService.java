@@ -74,6 +74,16 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackAlreadyExistsException();
         }
 
+        // 미디어 파일 일괄 등록 전 필수값 검증
+        for (CreateFeedbackCommand.MediaCommand m : command.media()) {
+            if (m.file() == null || m.file().fileKey() == null || m.file().fileKey().isBlank()
+                    || m.file().originalName() == null || m.file().originalName().isBlank()
+                    || m.file().contentType() == null || m.file().contentType().isBlank()
+                    || m.file().fileSize() == null || m.file().fileSize() <= 0) {
+                throw new FeedbackMediaInvalidException();
+            }
+        }
+
         // 미디어 파일 일괄 등록
         List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(), command.media());
 
@@ -83,7 +93,8 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
                         trainerProfileId, reservation.userId(), command.content())
         );
 
-        // 파일 등록 결과와 미디어 타입을 인덱스 기준으로 매핑하여 저장
+        // registerFiles()는 입력 순서와 동일한 순서로 결과를 반환한다 (Stream.toList() 삽입 순서 보장).
+        // 인덱스 기준으로 mediaType과 fileId를 매핑한다.
         List<FeedbackMedia> mediaList = IntStream.range(0, command.media().size())
                 .mapToObj(i -> FeedbackMedia.create(
                         saved.getId(),
