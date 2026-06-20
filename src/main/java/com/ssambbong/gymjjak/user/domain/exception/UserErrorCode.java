@@ -39,7 +39,8 @@ public enum UserErrorCode implements ErrorCode {
     NOT_SOCIAL_USER(HttpStatus.BAD_REQUEST, "USER_400_NOT_SOCIAL_USER", "소셜 로그인 회원만 사용할 수 있는 기능입니다."),
     SOCIAL_SIGNUP_ALREADY_COMPLETED(HttpStatus.CONFLICT, "USER_409_SOCIAL_SIGNUP_ALREADY_COMPLETED", "이미 소셜 회원가입 추가 정보 입력이 완료되었습니다."),
     SOCIAL_LOGIN_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_SOCIAL_LOGIN_REQUIRED", "소셜 로그인으로 가입된 계정입니다. 소셜 로그인으로 로그인해 주세요."),
-    UNSUPPORTED_SOCIAL_PROVIDER(HttpStatus.BAD_REQUEST, "USER_400_UNSUPPORTED_SOCIAL_PROVIDER", "지원하지 않는 소셜 로그인 제공자입니다.");
+    UNSUPPORTED_SOCIAL_PROVIDER(HttpStatus.BAD_REQUEST, "USER_400_UNSUPPORTED_SOCIAL_PROVIDER", "지원하지 않는 소셜 로그인 제공자입니다."),
+    AUTHORIZATION_FAILED(HttpStatus.UNAUTHORIZED, "USER_401_006", "인증 정보가 없습니다.");
 
 
     private final HttpStatus httpStatus;

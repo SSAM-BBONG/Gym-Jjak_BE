@@ -15,6 +15,8 @@ import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.SignupRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
 import com.ssambbong.gymjjak.user.application.result.LoginResult;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -93,6 +95,10 @@ public class UserAuthController {
     public ResponseEntity<GlobalApiResponse<Void>> logout( @AuthenticationPrincipal AuthUser authUser,
                                                            HttpServletResponse response) {
 
+        if (authUser == null) {
+            throw new UserException(UserErrorCode.AUTHORIZATION_FAILED);
+        }
+
         userCommandUseCase.logout(new LogoutCommand(authUser.userId()));
 
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
@@ -128,6 +134,11 @@ public class UserAuthController {
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody CompleteSocialSignupRequest request
     ) {
+
+        if (authUser == null) {
+            throw new UserException(UserErrorCode.AUTHORIZATION_FAILED);
+        }
+
         userCommandUseCase.completeSocialSignup(
                 new CompleteSocialSignupCommand(
                         authUser.userId(),

@@ -5,8 +5,6 @@ import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-import static org.springframework.util.StringUtils.hasText;
-
 public class User {
 
     private final Long id;

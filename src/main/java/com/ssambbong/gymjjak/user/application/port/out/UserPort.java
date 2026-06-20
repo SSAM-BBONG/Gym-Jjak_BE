@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.user.application.port.out;
 
 import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
+import com.ssambbong.gymjjak.user.application.result.PageResult;
 import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
@@ -41,9 +42,9 @@ public interface UserPort {
 
     void updatePassword(Long userId, String encodedPassword, LocalDateTime updatedAt);
 
-    List<FindUserResult> findUsers(String name, Long cursor, int size);
+    PageResult<FindUserResult> findUsers(String name, int page, int size);
 
-    List<FindBlacklistUserResult> findBlacklistUsers(String name, Long cursor, int size);
+    PageResult<FindBlacklistUserResult> findBlacklistUsers(String name, int page, int size);
 
     Optional<User> findBySocialProviderAndSocialId(
             SocialProvider socialProvider,
