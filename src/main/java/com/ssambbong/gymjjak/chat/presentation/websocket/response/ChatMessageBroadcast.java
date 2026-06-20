@@ -9,6 +9,7 @@ public record ChatMessageBroadcast(
         Long chatRoomId,
         Long senderId,
         String content,
+        boolean read,
         LocalDateTime createdAt
 ) {
     public static ChatMessageBroadcast from(ChatMessage message) {
@@ -17,6 +18,7 @@ public record ChatMessageBroadcast(
                 message.getChatRoomId(),
                 message.getSenderId(),
                 message.getContent(),
+                message.isRead(),
                 message.getCreatedAt()
         );
     }

@@ -6,5 +6,6 @@ import com.ssambbong.gymjjak.chat.domain.model.ChatMessage;
 
 public interface ChatMessageRepository {
     ChatMessage save(ChatMessage message);
+    void markAsRead(Long messageId);
     ChatMessageListResult findMessages(ChatMessageQuery query, Long readerId);
 }

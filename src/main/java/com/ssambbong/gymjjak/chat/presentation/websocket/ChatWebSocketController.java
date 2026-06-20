@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
@@ -20,6 +21,7 @@ public class ChatWebSocketController {
 
     private final ChatMessageUseCase chatMessageUseCase;
     private final SimpMessagingTemplate messagingTemplate;
+    private final SimpUserRegistry simpUserRegistry;
 
     @MessageMapping("/chat.send")
     public void sendMessage(
@@ -32,11 +34,24 @@ public class ChatWebSocketController {
                 request.content()
         );
 
-        ChatMessage saved = chatMessageUseCase.sendMessage(command);
+        ChatMessage saved = chatMessageUseCase.createMessage(command);
 
-        messagingTemplate.convertAndSend(
-                "/topic/chat.room." + saved.getChatRoomId(),
-                ChatMessageBroadcast.from(saved)
-        );
+        String destination = "/topic/chat.room." + saved.getChatRoomId();
+        boolean isRead = simpUserRegistry.findSubscriptions(
+                s -> s.getDestination().equals(destination)
+        ).size() == 2;
+
+        if (isRead) {
+            chatMessageUseCase.markAsRead(saved.getId());
+        }
+
+        messagingTemplate.convertAndSend(destination, new ChatMessageBroadcast(
+                saved.getId(),
+                saved.getChatRoomId(),
+                saved.getSenderId(),
+                saved.getContent(),
+                isRead,
+                saved.getCreatedAt()
+        ));
     }
 }

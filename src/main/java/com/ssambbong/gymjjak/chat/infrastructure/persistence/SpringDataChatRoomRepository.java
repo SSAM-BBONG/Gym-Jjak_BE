@@ -14,7 +14,7 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
 
     boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status);
 
-    @Modifying(clearAutomatically = true)
+@Modifying(clearAutomatically = true)
     @Query("UPDATE ChatRoomJpaEntity c SET c.userLeft = true WHERE c.id = :id AND c.status != com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus.DELETED")
     void markUserLeft(@Param("id") Long chatRoomId);
 
@@ -36,7 +36,7 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
                 cr.chat_room_id AS chatRoomId,
                 CASE WHEN cr.user_id = :requesterId THEN tp.trainer_name ELSE u.nickname END AS partnerName,
                 CASE WHEN cr.user_id = :requesterId THEN 'TRAINER' ELSE 'USER' END AS partnerRole,
-                CASE WHEN cr.user_id = :requesterId THEN f.file_url ELSE NULL END AS partnerProfileImageUrl,
+                CASE WHEN cr.user_id = :requesterId THEN tp.profile_file_id ELSE NULL END AS partnerProfileFileId,
                 (SELECT cm.content FROM chat_messages cm
                  WHERE cm.chat_room_id = cr.chat_room_id
                  ORDER BY cm.created_at DESC LIMIT 1) AS lastMessage,
@@ -48,7 +48,6 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
             FROM chat_rooms cr
             LEFT JOIN trainer_profiles tp ON cr.trainer_profile_id = tp.trainer_profile_id
             LEFT JOIN users u ON cr.user_id = u.user_id
-            LEFT JOIN files f ON tp.profile_file_id = f.file_id
             WHERE (cr.user_id = :requesterId OR tp.user_id = :requesterId)
               AND cr.status != 'DELETED'
               AND NOT (cr.user_id = :requesterId AND cr.user_left = true)

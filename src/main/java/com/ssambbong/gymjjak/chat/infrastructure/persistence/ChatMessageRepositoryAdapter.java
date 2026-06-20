@@ -22,6 +22,11 @@ public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
     }
 
     @Override
+    public void markAsRead(Long messageId) {
+        repository.markAsRead(messageId);
+    }
+
+    @Override
     public ChatMessageListResult findMessages(ChatMessageQuery query, Long readerId) {
         repository.markMessagesAsRead(query.chatRoomId(), readerId);
 

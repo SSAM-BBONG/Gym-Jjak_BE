@@ -51,7 +51,7 @@ public class ChatMessageController {
             @AuthenticationPrincipal AuthUser authUser
     ) {
         ChatMessageQuery query = new ChatMessageQuery(chatRoomId, cursor, size);
-        ChatMessageListResult result = chatMessageUseCase.getMessages(authUser.userId(), query);
+        ChatMessageListResult result = chatMessageUseCase.findMessages(authUser.userId(), query);
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 ChatMessageResponseCode.CHAT_MESSAGE_LIST_FETCHED,
                 ChatMessageListResponse.from(result)
