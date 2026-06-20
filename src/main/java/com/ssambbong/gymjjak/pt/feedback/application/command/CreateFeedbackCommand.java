@@ -12,7 +12,7 @@ public record CreateFeedbackCommand(
         List<MediaCommand> media
 ) {
     public record MediaCommand(
-            Long fileId,
+            UploadedFileMetadataCommand file,
             FeedbackMediaType mediaType
     ) {}
 }

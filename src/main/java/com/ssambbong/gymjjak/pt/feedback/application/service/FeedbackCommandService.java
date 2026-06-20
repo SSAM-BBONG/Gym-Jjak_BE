@@ -1,5 +1,9 @@
 package com.ssambbong.gymjjak.pt.feedback.application.service;
 
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
+import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.feedback.application.command.CreateFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtCurriculumQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtReservationQueryPort;
@@ -21,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -33,6 +38,7 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
     private final PtReservationQueryPort ptReservationQueryPort;
     private final PtCurriculumQueryPort ptCurriculumQueryPort;
     private final TrainerQueryPort trainerQueryPort;
+    private final FileUseCase fileUseCase;
 
     @Override
     public Long createFeedback(CreateFeedbackCommand command) {
@@ -68,19 +74,50 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackAlreadyExistsException();
         }
 
+        // 미디어 파일 일괄 등록
+        List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(), command.media());
+
         // 피드백 저장
         Feedback saved = feedbackRepository.save(
                 Feedback.create(command.ptReservationId(), command.ptCurriculumId(),
                         trainerProfileId, reservation.userId(), command.content())
         );
 
-        // 미디어 저장
-        List<FeedbackMedia> mediaList = command.media().stream()
-                .map(m -> FeedbackMedia.create(saved.getId(), m.mediaType(), m.fileId()))
+        // 파일 등록 결과와 미디어 타입을 인덱스 기준으로 매핑하여 저장
+        List<FeedbackMedia> mediaList = IntStream.range(0, command.media().size())
+                .mapToObj(i -> FeedbackMedia.create(
+                        saved.getId(),
+                        command.media().get(i).mediaType(),
+                        fileResults.get(i).fileId()
+                ))
                 .toList();
         feedbackMediaRepository.saveAll(mediaList);
 
         log.info("event=feedback_create_complete feedbackId={}", saved.getId());
         return saved.getId();
+    }
+
+    private List<FileRegistrationResult> registerMediaFiles(Long userId,
+                                                             List<CreateFeedbackCommand.MediaCommand> media) {
+        List<CreateFileCommand> fileCommands = media.stream()
+                .map(m -> new CreateFileCommand(
+                        userId,
+                        m.file().fileKey(),
+                        m.file().originalName(),
+                        m.file().contentType(),
+                        m.file().fileSize(),
+                        FileType.FEEDBACK_VIDEO
+                ))
+                .toList();
+
+        List<FileRegistrationResult> results = fileUseCase.registerFiles(fileCommands);
+
+        if (results.size() != media.size()) {
+            log.error("event=feedback_media_register_failed reason=unexpected_result userId={} expected={} actual={}",
+                    userId, media.size(), results.size());
+            throw new IllegalStateException("미디어 파일 등록 결과가 올바르지 않습니다.");
+        }
+
+        return results;
     }
 }
