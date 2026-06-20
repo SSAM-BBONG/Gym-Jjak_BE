@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.chat.infrastructure.internal;
 
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
-import com.ssambbong.gymjjak.chat.application.port.TrainerView;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -11,7 +10,7 @@ import java.util.Optional;
 public class TrainerQueryAdapter implements TrainerQueryPort {
 
     @Override
-    public Optional<TrainerView> findActiveTrainer(Long trainerProfileId) {
-        return Optional.of(new TrainerView(trainerProfileId));
+    public Optional<Long> findActiveTrainerUserId(Long trainerProfileId) {
+        return Optional.of(trainerProfileId);
     }
 }

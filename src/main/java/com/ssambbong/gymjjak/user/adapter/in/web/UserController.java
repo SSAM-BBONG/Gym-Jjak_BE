@@ -11,15 +11,14 @@ import com.ssambbong.gymjjak.user.application.command.UpdatePasswordCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateUserStatusCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
-import com.ssambbong.gymjjak.user.application.result.CursorResult;
 import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
+import com.ssambbong.gymjjak.user.application.result.PageResult;
 import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -131,13 +130,13 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/all")
-    @Operation(summary = "관리자 회원 목록 조회", description = "회원을 조회한다.")
-    public ResponseEntity<GlobalApiResponse<CursorResponse<FindUserResponse>>> findUsers(
+    @Operation(summary = "관리자 회원 목록 조회", description = "회원을 페이지 기반으로 조회한다.")
+    public ResponseEntity<GlobalApiResponse<PageResponse<FindUserResponse>>> findUsers(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        CursorResult<FindUserResult> result = userCommandUseCase.findUsers(name, cursor, size);
+        PageResult<FindUserResult> result = userCommandUseCase.findUsers(name, page, size);
 
         List<FindUserResponse> content = result.content().stream()
                 .map(FindUserResponse::from)
@@ -146,10 +145,16 @@ public class UserController {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         UserResponseCode.USER_FOUND,
-                        new CursorResponse<>(
+                        new PageResponse<>(
                                 content,
-                                result.nextCursor(),
-                                result.hasNext()
+                                result.page(),
+                                result.size(),
+                                result.totalElements(),
+                                result.totalPages(),
+                                result.first(),
+                                result.last(),
+                                result.hasNext(),
+                                result.hasPrevious()
                         )
                 )
         );
@@ -157,14 +162,14 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/blacklist")
-    @Operation(summary = "관리자 블랙리스트 회원 목록 조회", description = "블랙리스트 회원을 조회한다.")
-    public ResponseEntity<GlobalApiResponse<CursorResponse<FindBlacklistUserResponse>>> findSuspendedUsers(
+    @Operation(summary = "관리자 블랙리스트 회원 목록 조회", description = "블랙리스트 회원을 페이지 기반으로 조회한다.")
+    public ResponseEntity<GlobalApiResponse<PageResponse<FindBlacklistUserResponse>>> findSuspendedUsers(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        CursorResult<FindBlacklistUserResult> result =
-                userCommandUseCase.findBlacklistUsers(name, cursor, size);
+        PageResult<FindBlacklistUserResult> result =
+                userCommandUseCase.findBlacklistUsers(name, page, size);
 
         List<FindBlacklistUserResponse> content = result.content().stream()
                 .map(FindBlacklistUserResponse::from)
@@ -173,10 +178,16 @@ public class UserController {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         UserResponseCode.USER_FOUND,
-                        new CursorResponse<>(
+                        new PageResponse<>(
                                 content,
-                                result.nextCursor(),
-                                result.hasNext()
+                                result.page(),
+                                result.size(),
+                                result.totalElements(),
+                                result.totalPages(),
+                                result.first(),
+                                result.last(),
+                                result.hasNext(),
+                                result.hasPrevious()
                         )
                 )
         );

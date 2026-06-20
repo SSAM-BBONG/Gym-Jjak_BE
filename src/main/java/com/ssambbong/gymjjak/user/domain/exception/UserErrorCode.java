@@ -34,7 +34,14 @@ public enum UserErrorCode implements ErrorCode {
     USER_STATUS_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_8", "회원 정지 또는 영구 정지 시 제재 사유는 필수입니다."),
     INVALID_USER_STATUS(HttpStatus.BAD_REQUEST, "USER_400_9", "변경할 수 없는 회원 상태입니다."),
     PASSWORD_CONFIRM_NOT_MATCHED(HttpStatus.BAD_REQUEST, "USER_400_10", "새 비밀번호와 비밀번호 확인이 일치하지 않습니다."),
-    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "USER_400_11", "기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.");
+    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "USER_400_11", "기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."),
+    SOCIAL_ID_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_SOCIAL_ID_REQUIRED", "소셜 식별자는 필수입니다."),
+    NOT_SOCIAL_USER(HttpStatus.BAD_REQUEST, "USER_400_NOT_SOCIAL_USER", "소셜 로그인 회원만 사용할 수 있는 기능입니다."),
+    SOCIAL_SIGNUP_ALREADY_COMPLETED(HttpStatus.CONFLICT, "USER_409_SOCIAL_SIGNUP_ALREADY_COMPLETED", "이미 소셜 회원가입 추가 정보 입력이 완료되었습니다."),
+    SOCIAL_LOGIN_REQUIRED(HttpStatus.BAD_REQUEST, "USER_400_SOCIAL_LOGIN_REQUIRED", "소셜 로그인으로 가입된 계정입니다. 소셜 로그인으로 로그인해 주세요."),
+    UNSUPPORTED_SOCIAL_PROVIDER(HttpStatus.BAD_REQUEST, "USER_400_UNSUPPORTED_SOCIAL_PROVIDER", "지원하지 않는 소셜 로그인 제공자입니다."),
+    AUTHORIZATION_FAILED(HttpStatus.UNAUTHORIZED, "USER_401_006", "인증 정보가 없습니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.global.infrastructure.security.config;
 
+import com.ssambbong.gymjjak.global.infrastructure.security.oauth.OAuth2SuccessHandler;
 import com.ssambbong.gymjjak.global.presentation.security.JwtAuthenticationFilter;
 import com.ssambbong.gymjjak.global.presentation.security.handler.CustomAccessDeniedHandler;
 import com.ssambbong.gymjjak.global.presentation.security.handler.CustomAuthenticationEntryPoint;
@@ -35,6 +36,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -68,7 +70,8 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/ws/**"
                         ).permitAll()
 
                         .requestMatchers("/api/token/reissue").permitAll()
@@ -148,7 +151,7 @@ public class SecurityConfig {
                 )
 
                 .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/api/users/me", true)
+                        .successHandler(oAuth2SuccessHandler)
                 )
 
                 // JWT 필터를 UsernamePasswordAuthenticationFilter 앞에 등록
@@ -224,10 +227,5 @@ public class SecurityConfig {
             AuthenticationConfiguration configuration
     ) throws Exception {
         return configuration.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }
