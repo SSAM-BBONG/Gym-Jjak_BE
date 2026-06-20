@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.feedback.presentation.api.request;
 
 import com.ssambbong.gymjjak.pt.feedback.application.command.CreateFeedbackCommand;
+import com.ssambbong.gymjjak.pt.feedback.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -22,13 +23,21 @@ public record CreateFeedbackRequest(
                 ptCurriculumId,
                 content,
                 media.stream()
-                        .map(m -> new CreateFeedbackCommand.MediaCommand(m.fileId(), m.mediaType()))
+                        .map(m -> new CreateFeedbackCommand.MediaCommand(
+                                new UploadedFileMetadataCommand(
+                                        m.file().fileKey(),
+                                        m.file().originalName(),
+                                        m.file().contentType(),
+                                        m.file().fileSize()
+                                ),
+                                m.mediaType()
+                        ))
                         .toList()
         );
     }
 
     public record MediaRequest(
-            @NotNull Long fileId,
+            @NotNull @Valid UploadedFileMetadataRequest file,   // Long fileId → UploadedFileMetadataRequest file
             @NotNull FeedbackMediaType mediaType
     ) {}
 }
