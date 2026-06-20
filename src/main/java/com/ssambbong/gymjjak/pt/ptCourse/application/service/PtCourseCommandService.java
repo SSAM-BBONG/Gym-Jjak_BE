@@ -140,7 +140,13 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                         FileType.PT_THUMBNAIL
                 )
         ));
-        return results.get(0).fileId();
+
+        return results.stream()
+                .filter(r -> r.fileType() == FileType.PT_THUMBNAIL)
+                .map(FileRegistrationResult::fileId)
+                .filter(id -> id != null)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("썸네일 파일 등록 결과가 존재하지 않습니다."));
     }
 
     // 스케줄 슬롯 중복 검증용 정규화 키 생성 (파싱 실패 시 도메인 예외로 변환)
