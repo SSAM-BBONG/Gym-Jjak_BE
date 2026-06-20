@@ -2,7 +2,6 @@ package com.ssambbong.gymjjak.chat.application.service;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
-import com.ssambbong.gymjjak.chat.application.port.TrainerView;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
@@ -34,7 +33,7 @@ public class ChatRoomService implements ChatRoomUseCase {
     @Override
     @Transactional
     public Long createChatRoom(CreateChatRoomCommand command) {
-        trainerQueryPort.findActiveTrainer(command.trainerProfileId())
+        trainerQueryPort.findActiveTrainerUserId(command.trainerProfileId())
                 .orElseThrow(TrainerNotFoundException::new);
 
         if (chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(
@@ -86,8 +85,7 @@ public class ChatRoomService implements ChatRoomUseCase {
         if (requesterId.equals(chatRoom.getUserId())) {
             chatRoom.leaveAsUser();
         } else {
-            Long trainerUserId = trainerQueryPort.findActiveTrainer(chatRoom.getTrainerProfileId())
-                    .map(TrainerView::userId)
+            Long trainerUserId = trainerQueryPort.findActiveTrainerUserId(chatRoom.getTrainerProfileId())
                     .orElseThrow(ChatRoomAccessDeniedException::new);
             if (requesterId.equals(trainerUserId)) {
                 chatRoom.leaveAsTrainer();
