@@ -4,10 +4,13 @@ import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
 import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.ChangePtCourseStatusCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
@@ -124,6 +127,35 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 saved.getId()
         );
         return saved.getId();
+    }
+
+    // PT 상태 변경
+    @Override
+    public void changePtCourseStatus(ChangePtCourseStatusCommand command) {
+        log.debug("event=pt_course_status_change_started, userId={}, ptCourseId={}, status={}",
+                command.userId(), command.ptCourseId(), command.status());
+
+        // PT 존재 여부 검증
+        PtCourse ptCourse = ptCourseRepository.findById(command.ptCourseId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_course_status_change_failed, reason=not_found, ptCourseId={}",
+                            command.ptCourseId());
+                    return new PtCourseNotFoundException();
+                });
+
+        // 본인 PT인지 여부 검증
+        TrainerProfileQueryPort.TrainerInfo trainerInfo =
+                trainerProfileQueryPort.findByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+            log.warn("event=pt_course_status_change_failed, reason=forbidden, userId={}, ptCourseId={}",
+                    command.userId(), command.ptCourseId());
+            throw new PtCourseForbiddenException();
+        }
+
+        ptCourse.changeStatus(command.status());
+        ptCourseRepository.update(ptCourse);
+        log.info("event=pt_course_status_change_succeeded, ptCourseId={}, status={}",
+                command.ptCourseId(), command.status());
     }
 
     // 썸네일 파일 등록. thumbnailFile이 null이면 null 반환.

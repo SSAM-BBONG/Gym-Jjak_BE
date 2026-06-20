@@ -43,7 +43,7 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         if (ptCourse.getStatus() == PtCourseStatus.DELETED) {
             entity.softDelete(); // status=DELETED + deletedAt=now()
         } else {
-            entity.updateStatus(ptCourse.getStatus()); // BLOCKED/VISIBLE 상태만 변경
+            entity.updateStatus(ptCourse.getStatus()); // VISIBLE/BLOCKED/VISIBLE 상태 변경
         }
         // save() 없이 @Transactional 더티체킹으로 자동 UPDATE
     }

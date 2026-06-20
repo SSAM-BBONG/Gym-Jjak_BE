@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.domain.model;
 
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseStatusInvalidException;
 
 public class PtCourse {
 
@@ -112,10 +113,20 @@ public class PtCourse {
         );
     }
 
+    // 트레이너가 강습 공개 여부 전환 (VISIBLE/HIDDEN)
+    public void changeStatus(PtCourseStatus newStatus) {
+        if (newStatus != PtCourseStatus.VISIBLE && newStatus != PtCourseStatus.HIDDEN) {
+            throw new PtCourseStatusInvalidException();
+        }
+        this.status = newStatus;
+    }
+
+    // 관리자가 강습을 BLOCKED 상태로 전환
     public void blind() {
         this.status = PtCourseStatus.BLOCKED;
     }
 
+    // 관리자가 강습을 VISIBLE 상태로 복원
     public void unblind() {
         this.status = PtCourseStatus.VISIBLE;
     }
