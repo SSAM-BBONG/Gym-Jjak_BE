@@ -8,8 +8,11 @@ import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAccessDeniedException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAlreadyExistsException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
@@ -29,6 +32,7 @@ public class ChatRoomService implements ChatRoomUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final FileUrlUseCase fileUrlUseCase;
 
     @Override
     @Transactional
@@ -103,7 +107,21 @@ public class ChatRoomService implements ChatRoomUseCase {
     @Transactional(readOnly = true)
     public ChatRoomListResult getChatRooms(Long requesterId) {
         List<ChatRoomSummary> rooms = chatRoomRepository.findChatRoomsByRequesterId(requesterId);
-        long totalUnreadCount = rooms.stream().mapToLong(ChatRoomSummary::unreadCount).sum();
-        return new ChatRoomListResult(rooms.size(), totalUnreadCount, rooms);
+
+        List<Long> fileIds = rooms.stream()
+                .map(ChatRoomSummary::partnerProfileFileId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        Map<Long, String> urlMap = fileIds.isEmpty()
+                ? Map.of()
+                : fileUrlUseCase.getUrls(fileIds, requesterId, false);
+
+        List<ChatRoomSummary> roomsWithUrl = rooms.stream()
+                .map(s -> s.withProfileImageUrl(urlMap.get(s.partnerProfileFileId())))
+                .toList();
+
+        long totalUnreadCount = roomsWithUrl.stream().mapToLong(ChatRoomSummary::unreadCount).sum();
+        return new ChatRoomListResult(rooms.size(), totalUnreadCount, roomsWithUrl);
     }
 }

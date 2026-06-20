@@ -4,7 +4,6 @@ import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
-import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -17,7 +16,6 @@ import java.util.Optional;
 public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
 
     private final SpringDataChatRoomRepository repository;
-    private final FileUrlUseCase fileUrlUseCase;
 
     @Override
     public ChatRoom save(ChatRoom chatRoom) {
@@ -55,20 +53,16 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     public List<ChatRoomSummary> findChatRoomsByRequesterId(Long requesterId) {
         return repository.findChatRoomSummariesByRequesterId(requesterId)
                 .stream()
-                .map(p -> {
-                    String profileImageUrl = p.getPartnerProfileFileId() != null
-                            ? fileUrlUseCase.getUrl(p.getPartnerProfileFileId(), requesterId, false)
-                            : null;
-                    return new ChatRoomSummary(
-                            p.getChatRoomId(),
-                            p.getPartnerName(),
-                            p.getPartnerRole(),
-                            profileImageUrl,
-                            p.getLastMessage(),
-                            p.getLastMessageAt(),
-                            p.getUnreadCount()
-                    );
-                })
+                .map(p -> new ChatRoomSummary(
+                        p.getChatRoomId(),
+                        p.getPartnerName(),
+                        p.getPartnerRole(),
+                        p.getPartnerProfileFileId(),
+                        null,
+                        p.getLastMessage(),
+                        p.getLastMessageAt(),
+                        p.getUnreadCount()
+                ))
                 .toList();
     }
 

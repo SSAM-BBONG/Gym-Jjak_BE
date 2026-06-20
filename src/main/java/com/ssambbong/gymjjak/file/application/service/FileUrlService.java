@@ -12,6 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class FileUrlService implements FileUrlUseCase {
@@ -32,5 +36,22 @@ public class FileUrlService implements FileUrlUseCase {
             return fileUseCase.getPresignedUrl(new GetPresignedUrlCommand(fileId, requesterId, isAdmin));
         }
         return fileStoragePort.getPublicUrl(file.getFileUrl());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, String> getUrls(List<Long> fileIds, Long requesterId, boolean isAdmin) {
+        return fileRepository.findAllByIds(fileIds).stream()
+                .collect(Collectors.toMap(
+                        File::getFileId,
+                        file -> {
+                            FilePolicy policy = FilePolicy.from(file.getFileType());
+                            if (policy.isRequiresOwnershipCheck()) {
+                                return fileUseCase.getPresignedUrl(
+                                        new GetPresignedUrlCommand(file.getFileId(), requesterId, isAdmin));
+                            }
+                            return fileStoragePort.getPublicUrl(file.getFileUrl());
+                        }
+                ));
     }
 }

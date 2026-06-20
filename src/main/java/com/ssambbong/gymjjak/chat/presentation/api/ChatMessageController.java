@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.chat.presentation.api;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatMessageQuery;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatMessageUseCase;
+import com.ssambbong.gymjjak.chat.presentation.api.mapper.ChatMapper;
 import com.ssambbong.gymjjak.chat.presentation.api.response.ChatMessageListResponse;
 import com.ssambbong.gymjjak.chat.presentation.api.response.ChatMessageResponseCode;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 public class ChatMessageController {
 
     private final ChatMessageUseCase chatMessageUseCase;
+    private final ChatMapper chatMapper;
 
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "채팅 메시지 목록 조회", description = "채팅방의 메시지 목록을 커서 기반 페이지네이션으로 조회한다. cursor 미입력 시 최신 메시지부터 조회한다.")
@@ -54,7 +56,7 @@ public class ChatMessageController {
         ChatMessageListResult result = chatMessageUseCase.findMessages(authUser.userId(), query);
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 ChatMessageResponseCode.CHAT_MESSAGE_LIST_FETCHED,
-                ChatMessageListResponse.from(result)
+                chatMapper.toListResponse(result)
         ));
     }
 }
