@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.global.presentation.security.JwtAuthenticationConve
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -30,13 +31,16 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
-            if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
-                String token = authHeader.substring(BEARER_PREFIX.length());
-                try {
-                    JwtClaims claims = authenticateAccessTokenUseCase.authenticate(token);
-                    Authentication authentication = jwtAuthenticationConverter.toAuthentication(claims);
-                    accessor.setUser(authentication);
-                } catch (AuthException ignored) {}
+            if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
+                throw new MessageDeliveryException("Authorization header missing");
+            }
+            String token = authHeader.substring(BEARER_PREFIX.length());
+            try {
+                JwtClaims claims = authenticateAccessTokenUseCase.authenticate(token);
+                Authentication authentication = jwtAuthenticationConverter.toAuthentication(claims);
+                accessor.setUser(authentication);
+            } catch (AuthException e) {
+                throw new MessageDeliveryException("Invalid JWT token");
             }
         }
 

@@ -1,10 +1,13 @@
 package com.ssambbong.gymjjak.chat;
 
 import com.ssambbong.gymjjak.chat.application.command.SendChatMessageCommand;
+import com.ssambbong.gymjjak.chat.application.port.ChatMetricsPort;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatMessageUseCase;
 import com.ssambbong.gymjjak.chat.domain.model.ChatMessage;
+import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
 import com.ssambbong.gymjjak.chat.presentation.websocket.ChatWebSocketController;
 import com.ssambbong.gymjjak.chat.presentation.websocket.request.SendChatMessageRequest;
+import com.ssambbong.gymjjak.chat.presentation.websocket.response.ChatErrorResponse;
 import com.ssambbong.gymjjak.chat.presentation.websocket.response.ChatMessageBroadcast;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +28,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InOrder;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +37,7 @@ class ChatWebSocketControllerTest {
     @Mock private ChatMessageUseCase chatMessageUseCase;
     @Mock private SimpMessagingTemplate messagingTemplate;
     @Mock private SimpUserRegistry simpUserRegistry;
+    @Mock private ChatMetricsPort chatMetricsPort;
 
     @InjectMocks
     private ChatWebSocketController controller;
@@ -103,9 +108,10 @@ class ChatWebSocketControllerTest {
 
             controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authUser);
 
-            verify(chatMessageUseCase).markAsRead(99L);
+            InOrder inOrder = inOrder(chatMessageUseCase, messagingTemplate);
+            inOrder.verify(chatMessageUseCase).markAsRead(99L);
             ArgumentCaptor<ChatMessageBroadcast> captor = ArgumentCaptor.forClass(ChatMessageBroadcast.class);
-            verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
+            inOrder.verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
             assertThat(captor.getValue().read()).isTrue();
         }
 
@@ -121,6 +127,36 @@ class ChatWebSocketControllerTest {
             ArgumentCaptor<ChatMessageBroadcast> captor = ArgumentCaptor.forClass(ChatMessageBroadcast.class);
             verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
             assertThat(captor.getValue().read()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("예외 처리 - @MessageExceptionHandler")
+    class ExceptionHandler {
+
+        @Test
+        @DisplayName("ApplicationException 발생 시 에러 코드와 메시지를 담아 반환하고 메트릭을 기록한다")
+        void handlesApplicationException() {
+            ChatRoomNotFoundException e = new ChatRoomNotFoundException();
+
+            ChatErrorResponse response = controller.handleApplicationException(e);
+
+            assertThat(response.code()).isEqualTo(e.getErrorCode().getCode());
+            assertThat(response.message()).isEqualTo(e.getMessage());
+            assertThat(response.timestamp()).isNotNull();
+            verify(chatMetricsPort).recordWebSocketError(e.getErrorCode().getCode());
+        }
+
+        @Test
+        @DisplayName("예상치 못한 예외 발생 시 INTERNAL_ERROR를 반환하고 메트릭을 기록한다")
+        void handlesUnexpectedException() {
+            Exception e = new RuntimeException("DB 연결 실패");
+
+            ChatErrorResponse response = controller.handleException(e);
+
+            assertThat(response.code()).isEqualTo("INTERNAL_ERROR");
+            assertThat(response.timestamp()).isNotNull();
+            verify(chatMetricsPort).recordWebSocketError("INTERNAL_ERROR");
         }
     }
 }

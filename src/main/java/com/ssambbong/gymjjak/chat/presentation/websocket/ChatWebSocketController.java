@@ -55,14 +55,7 @@ public class ChatWebSocketController {
             chatMessageUseCase.markAsRead(saved.getId());
         }
 
-        messagingTemplate.convertAndSend(destination, new ChatMessageBroadcast(
-                saved.getId(),
-                saved.getChatRoomId(),
-                saved.getSenderId(),
-                saved.getContent(),
-                isRead,
-                saved.getCreatedAt()
-        ));
+        messagingTemplate.convertAndSend(destination, ChatMessageBroadcast.from(saved, isRead));
     }
 
     @MessageExceptionHandler(ApplicationException.class)

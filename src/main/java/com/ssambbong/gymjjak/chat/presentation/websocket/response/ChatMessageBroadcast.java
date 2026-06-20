@@ -12,13 +12,13 @@ public record ChatMessageBroadcast(
         boolean read,
         LocalDateTime createdAt
 ) {
-    public static ChatMessageBroadcast from(ChatMessage message) {
+    public static ChatMessageBroadcast from(ChatMessage message, boolean isRead) {
         return new ChatMessageBroadcast(
                 message.getId(),
                 message.getChatRoomId(),
                 message.getSenderId(),
                 message.getContent(),
-                message.isRead(),
+                isRead,
                 message.getCreatedAt()
         );
     }
