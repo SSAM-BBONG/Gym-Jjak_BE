@@ -189,7 +189,16 @@ public class TrainerApplicationController {
                     requesterId,
                     isAdmin
             );
-
+            return null;
+        } catch (RuntimeException exception) {
+            log.error(
+                    "event=trainer_application_file_url_resolve_failed," +
+                            "fileId={}, requesterId={}, isAdmin={}",
+                    fileId,
+                    requesterId,
+                    isAdmin,
+                    exception
+            );
             return null;
         }
     }
