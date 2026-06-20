@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.ApproveTrainerApplicationCommand;
@@ -32,6 +33,8 @@ public class TrainerApplicationReviewController {
 
     private final TrainerApplicationReviewQueryUseCase trainerApplicationReviewQueryUseCase;
     private final TrainerApplicationCommandUseCase trainerApplicationCommandUseCase;
+    // file 도메인 직접 의존
+    private final FileUrlUseCase fileUrlUseCase;
 
     @GetMapping
     @Operation(
@@ -79,17 +82,49 @@ public class TrainerApplicationReviewController {
     })
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<GlobalApiResponse<TrainerApplicationReviewDetailResponse>> getTrainerApplicationReviewDetail(
-            @PathVariable long trainerApplicationId
+            @PathVariable long trainerApplicationId,
+            @AuthenticationPrincipal AuthUser authUser
             ) {
 
         TrainerApplicationReviewDetailResult result =
                 trainerApplicationReviewQueryUseCase.getTrainerApplicationReviewDetail(trainerApplicationId);
 
+        String profileImageUrl = resolveFileUrl(
+                result.profileImageFileId(),
+                authUser.userId(),
+                true
+        );
+
+        String certificateUrl = resolveFileUrl(
+                result.certificateFileId(),
+                authUser.userId(),
+                true
+        );
+
         return ResponseEntity.status(200).body(
                 GlobalApiResponse.ok(
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_REVIEW_DETAIL_FOUND,
-                        TrainerApplicationReviewDetailResponse.from(result)
+                        TrainerApplicationReviewDetailResponse.from(
+                                result,
+                                profileImageUrl,
+                                certificateUrl)
                 )
+        );
+    }
+
+    private String resolveFileUrl(
+            Long fileId,
+            Long requesterId,
+            boolean isAdmin
+    ) {
+        if (fileId == null) {
+            return null;
+        }
+
+        return fileUrlUseCase.getUrl(
+                fileId,
+                requesterId,
+                isAdmin
         );
     }
 
