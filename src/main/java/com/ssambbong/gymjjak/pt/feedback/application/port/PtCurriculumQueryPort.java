@@ -12,9 +12,14 @@ public interface PtCurriculumQueryPort {
     // 커리큘럼 ID로 단건 조회
     CurriculumSummary findById(Long ptCurriculumId);
 
+    // 커리큘럼 ID + 코스 ID로 단건 조회 (피드백 등록 시 해당 코스의 회차인지 검증용)
+    CurriculumSummary findByIdAndPtCourseId(Long ptCurriculumId, Long ptCourseId);
+
     record CurriculumSummary(
             Long ptCurriculumId,
             int sessionNo,
             String title
     ) {}
+
+
 }

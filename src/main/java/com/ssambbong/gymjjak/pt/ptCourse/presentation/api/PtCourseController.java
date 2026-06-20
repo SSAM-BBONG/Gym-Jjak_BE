@@ -3,9 +3,11 @@ package com.ssambbong.gymjjak.pt.ptCourse.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.CreatePtCourseRequest;
+import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.CreatePtCourseResponse;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.PtCourseDetailResponse;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.PtCourseViewResponse;
@@ -59,7 +61,7 @@ public class PtCourseController {
                 request.title(),
                 request.description(),
                 request.price(),
-                request.thumbnailFileId(),
+                toMetadataCommand(request.thumbnailFile()),
                 request.curriculums().stream()
                         .map(c -> new CreatePtCourseCommand.CurriculumData(c.sessionNo(), c.title(), c.content()))
                         .toList(),
@@ -107,5 +109,16 @@ public class PtCourseController {
                 GlobalApiResponse.ok(
                         PtCourseResponseCode.PT_COURSE_DETAIL,
                         response));
+    }
+
+    // UploadedFileMetadataRequest → UploadedFileMetadataCommand 변환 (null 허용)
+    private UploadedFileMetadataCommand toMetadataCommand(UploadedFileMetadataRequest request) {
+        if (request == null) return null;
+        return new UploadedFileMetadataCommand(
+                request.fileKey(),
+                request.originalName(),
+                request.contentType(),
+                request.fileSize()
+        );
     }
 }

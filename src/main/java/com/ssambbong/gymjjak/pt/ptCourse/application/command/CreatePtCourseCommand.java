@@ -9,7 +9,7 @@ public record CreatePtCourseCommand(
         String title,
         String description,
         int price,
-        Long thumbnailFileId,
+        UploadedFileMetadataCommand thumbnailFile,
         List<CurriculumData> curriculums,
         List<ScheduleData> schedules
 ) {

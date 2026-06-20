@@ -34,4 +34,12 @@ public class PtCurriculumQueryAdapter implements PtCurriculumQueryPort {
                 .map(c -> new CurriculumSummary(c.getId(), c.getSessionNo(), c.getTitle()))
                 .orElseThrow(CurriculumNotFoundException::new);
     }
+
+    @Override
+    public CurriculumSummary findByIdAndPtCourseId(Long ptCurriculumId, Long ptCourseId) {
+        return ptCurriculumRepository.findByIdAndPtCourseId(ptCurriculumId, ptCourseId)
+                .map(c -> new CurriculumSummary(c.getId(), c.getSessionNo(), c.getTitle()))
+                .orElseThrow(CurriculumNotFoundException::new);
+
+    }
 }

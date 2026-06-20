@@ -1,7 +1,12 @@
 package com.ssambbong.gymjjak.pt.feedback.domain.model;
 
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 
+@Getter
 public class Feedback {
 
     private final Long id;
@@ -13,8 +18,10 @@ public class Feedback {
     private final String status;
     private final LocalDateTime createdAt;
 
-
-    public Feedback(Long id, Long ptReservationId, Long ptCurriculumId, Long trainerProfileId, Long userId, String content, String status, LocalDateTime createdAt) {
+    @Builder(access = AccessLevel.PUBLIC)
+    private Feedback(Long id, Long ptReservationId, Long ptCurriculumId,
+                     Long trainerProfileId, Long userId, String content,
+                     String status, LocalDateTime createdAt) {
         this.id = id;
         this.ptReservationId = ptReservationId;
         this.ptCurriculumId = ptCurriculumId;
@@ -25,48 +32,30 @@ public class Feedback {
         this.createdAt = createdAt;
     }
 
-    // DB 복원 시
+    public static Feedback create(Long ptReservationId, Long ptCurriculumId,
+                                  Long trainerProfileId, Long userId, String content) {
+        return Feedback.builder()
+                .ptReservationId(ptReservationId)
+                .ptCurriculumId(ptCurriculumId)
+                .trainerProfileId(trainerProfileId)
+                .userId(userId)
+                .content(content)
+                .status("ACTIVE")
+                .build();
+    }
+
     public static Feedback restore(Long id, Long ptReservationId, Long ptCurriculumId,
                                    Long trainerProfileId, Long userId, String content,
                                    String status, LocalDateTime createdAt) {
-        return new Feedback(id, ptReservationId, ptCurriculumId,
-                trainerProfileId, userId, content, status, createdAt);
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Long getPtReservationId() {
-        return ptReservationId;
-    }
-
-    public Long getPtCurriculumId() {
-        return ptCurriculumId;
-    }
-
-    public Long getTrainerProfileId() {
-        return trainerProfileId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+        return Feedback.builder()
+                .id(id)
+                .ptReservationId(ptReservationId)
+                .ptCurriculumId(ptCurriculumId)
+                .trainerProfileId(trainerProfileId)
+                .userId(userId)
+                .content(content)
+                .status(status)
+                .createdAt(createdAt)
+                .build();
     }
 }
-
-
-
-
-

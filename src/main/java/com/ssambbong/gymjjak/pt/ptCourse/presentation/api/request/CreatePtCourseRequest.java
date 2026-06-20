@@ -1,12 +1,12 @@
 package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 
@@ -33,9 +33,9 @@ public record CreatePtCourseRequest(
         @Min(0)
         int price,
 
-        @Schema(description = "썸네일 파일 ID (선택)", example = "1")
-        @Positive
-        Long thumbnailFileId,
+        @Schema(description = "썸네일 파일 메타데이터 (선택). S3 업로드 완료 후 전달.")
+        @Valid
+        UploadedFileMetadataRequest thumbnailFile,
 
         @Schema(description = "커리큘럼 목록")
         @NotEmpty
