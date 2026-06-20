@@ -17,11 +17,11 @@ public record TrainerApplicationDetailResponse(
         @Schema(description = "신청자 유저 ID", example = "1")
         Long userId,
 
-        @Schema(description = "프로필 이미지 파일 ID. 프론트에서 파일 URL 조회에 사용합니다.", example = "15")
-        Long profileImageFileId,
+        @Schema(description = "프로필 이미지 URL. 프로필 이미지가 없으면 null입니다.")
+        String profileImageUrl,
 
-        @Schema(description = "필수 자격증 파일 ID. 프론트에서 파일 URL 조회에 사용합니다.", example = "26")
-        Long certificateFileId,
+        @Schema(description = "필수 자격증 조회용 Presigned URL. URL은 1시간 동안 유효합니다.")
+        String certificateUrl,
 
         @Schema(description = "사용자가 입력한 자격증 목록")
         List<String> qualifications,
@@ -52,12 +52,16 @@ public record TrainerApplicationDetailResponse(
 
 ) {
 
-        public static TrainerApplicationDetailResponse from(TrainerApplicationDetailResult result) {
+        public static TrainerApplicationDetailResponse from(
+                TrainerApplicationDetailResult result,
+                String profileImageUrl,
+                String certificateUrl
+        ) {
                 return TrainerApplicationDetailResponse.builder()
                         .trainerApplicationId(result.trainerApplicationId())
                         .userId(result.userId())
-                        .profileImageFileId(result.profileImageFileId())
-                        .certificateFileId(result.certificateFileId())
+                        .profileImageUrl(profileImageUrl)
+                        .certificateUrl(certificateUrl)
                         .qualifications(result.qualifications())
                         .awardHistories(result.awardHistories())
                         .introduction(result.introduction())

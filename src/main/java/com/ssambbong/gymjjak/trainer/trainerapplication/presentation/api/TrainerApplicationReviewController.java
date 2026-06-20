@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.ApproveTrainerApplicationCommand;
@@ -18,12 +20,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @Validated
 @RestController
 @RequestMapping("/api/trainer-applications")
@@ -32,6 +36,8 @@ public class TrainerApplicationReviewController {
 
     private final TrainerApplicationReviewQueryUseCase trainerApplicationReviewQueryUseCase;
     private final TrainerApplicationCommandUseCase trainerApplicationCommandUseCase;
+    // file 도메인 직접 의존
+    private final FileUrlUseCase fileUrlUseCase;
 
     @GetMapping
     @Operation(
@@ -79,18 +85,71 @@ public class TrainerApplicationReviewController {
     })
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<GlobalApiResponse<TrainerApplicationReviewDetailResponse>> getTrainerApplicationReviewDetail(
-            @PathVariable long trainerApplicationId
+            @PathVariable @Positive long trainerApplicationId,
+            @AuthenticationPrincipal AuthUser authUser
             ) {
 
         TrainerApplicationReviewDetailResult result =
                 trainerApplicationReviewQueryUseCase.getTrainerApplicationReviewDetail(trainerApplicationId);
 
+        String profileImageUrl = resolveFileUrl(
+                result.profileImageFileId(),
+                authUser.userId(),
+                true
+        );
+
+        String certificateUrl = resolveFileUrl(
+                result.certificateFileId(),
+                authUser.userId(),
+                true
+        );
+
         return ResponseEntity.status(200).body(
                 GlobalApiResponse.ok(
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_REVIEW_DETAIL_FOUND,
-                        TrainerApplicationReviewDetailResponse.from(result)
+                        TrainerApplicationReviewDetailResponse.from(
+                                result,
+                                profileImageUrl,
+                                certificateUrl)
                 )
         );
+    }
+
+    private String resolveFileUrl(
+            Long fileId,
+            Long requesterId,
+            boolean isAdmin
+    ) {
+        if (fileId == null) {
+            return null;
+        }
+
+        try {
+            return fileUrlUseCase.getUrl(
+                    fileId,
+                    requesterId,
+                    isAdmin
+            );
+        } catch (FileNotFoundException exception) {
+            log.warn(
+                    "event=trainer_application_file_url_not_found, " +
+                            "fileId={}, requesterId={}, isAdmin={}",
+                    fileId,
+                    requesterId,
+                    isAdmin
+            );
+            return null;
+        } catch (RuntimeException exception) {
+            log.error(
+                    "event=trainer_application_file_url_resolve_failed," +
+                            "fileId={}, requesterId={}, isAdmin={}",
+                    fileId,
+                    requesterId,
+                    isAdmin,
+                    exception
+            );
+            return null;
+        }
     }
 
     @PatchMapping("/{trainerApplicationId}/approve")
