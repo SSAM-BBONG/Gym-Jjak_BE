@@ -12,34 +12,23 @@ import java.util.List;
 public class PtCourseScheduleRepositoryAdapter implements PtCourseScheduleRepository {
 
     private final SpringDataPtCourseScheduleRepository repository;
+    private final PtCourseSchedulePersistenceMapper mapper;
 
     @Override
     public List<PtCourseSchedule> saveAll(List<PtCourseSchedule> schedules) {
         List<PtCourseScheduleJpaEntity> entities = schedules.stream()
-                .map(s -> new PtCourseScheduleJpaEntity(
-                        s.getPtCourseId(), s.getDayOfWeek(), s.getStartTime(), s.getEndTime()
-                ))
+                .map(mapper::toEntity)
                 .toList();
 
         return repository.saveAll(entities).stream()
-                .map(this::toDomain)
+                .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public List<PtCourseSchedule> findAllByPtCourseId(Long ptCourseId) {
         return repository.findAllByPtCourseId(ptCourseId).stream()
-                .map(this::toDomain)
+                .map(mapper::toDomain)
                 .toList();
-    }
-
-    private PtCourseSchedule toDomain(PtCourseScheduleJpaEntity entity) {
-        return PtCourseSchedule.restore(
-                entity.getId(),
-                entity.getPtCourseId(),
-                entity.getDayOfWeek(),
-                entity.getStartTime(),
-                entity.getEndTime()
-        );
     }
 }
