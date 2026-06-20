@@ -6,7 +6,7 @@ public interface ChatRoomSummaryProjection {
     Long getChatRoomId();
     String getPartnerName();
     String getPartnerRole();
-    String getPartnerProfileImageUrl();
+    Long getPartnerProfileFileId();
     String getLastMessage();
     LocalDateTime getLastMessageAt();
     Long getUnreadCount();
