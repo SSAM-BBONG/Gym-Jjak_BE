@@ -40,7 +40,7 @@ class PtCourseCommandServiceTest {
         return new CreatePtCourseCommand(
                 1L, 1L, 1L,
                 title, description, price,
-                1L,
+                null,
                 curriculums,
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
@@ -164,7 +164,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 List.of() // 빈 스케줄
         );
@@ -187,7 +187,7 @@ class PtCourseCommandServiceTest {
                 new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")
         );
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 curriculums,
                 List.of(
                         new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"),
@@ -210,7 +210,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 null,
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
@@ -230,7 +230,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 null
         );
