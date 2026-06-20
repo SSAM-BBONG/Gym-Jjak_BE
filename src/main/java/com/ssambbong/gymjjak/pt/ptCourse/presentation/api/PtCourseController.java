@@ -119,6 +119,8 @@ public class PtCourseController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "상태 변경 성공",
                     content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "400", description = "허용되지 않는 상태값 (VISIBLE/HIDDEN만 가능)",
+                    content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "403", description = "본인 강습 아님",
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
