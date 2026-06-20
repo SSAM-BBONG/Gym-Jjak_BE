@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.global.domain.auth.AuthException;
 import com.ssambbong.gymjjak.global.domain.auth.JwtClaims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -51,14 +52,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String resolveToken(HttpServletRequest request) {
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (!StringUtils.hasText(authorizationHeader)) {
+        if (StringUtils.hasText(authorizationHeader)) {
+            if (!authorizationHeader.startsWith(BEARER_PREFIX)) {
+                return null;
+            }
+
+            return authorizationHeader.substring(BEARER_PREFIX.length());
+        }
+
+        if (request.getCookies() == null) {
             return null;
         }
 
-        if (!authorizationHeader.startsWith(BEARER_PREFIX)) {
-            return null;
+        for (Cookie cookie : request.getCookies()) {
+            if ("accessToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
         }
 
-        return authorizationHeader.substring(BEARER_PREFIX.length());
+        return null;
     }
 }

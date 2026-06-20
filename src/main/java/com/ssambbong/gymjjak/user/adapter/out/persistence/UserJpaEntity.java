@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
+import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
 import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import jakarta.persistence.*;
@@ -16,7 +17,10 @@ import java.time.LocalDateTime;
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
                 @UniqueConstraint(name = "uk_users_nickname", columnNames = "nickname"),
-                @UniqueConstraint(name = "uk_users_phone", columnNames = "phone")
+                @UniqueConstraint(name = "uk_users_phone", columnNames = "phone"),
+                @UniqueConstraint(
+                                name = "uk_users_social_provider_social_id",
+                                columnNames = {"social_provider", "social_id"})
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -54,6 +58,13 @@ public class UserJpaEntity extends BaseTimeEntity {
 
     @Column(name = "onboarding_completed", nullable = false)
     private boolean onboardingCompleted;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "social_provider", length = 20)
+    private SocialProvider socialProvider;
+
+    @Column(name = "social_id", length = 100)
+    private String socialId;
 
     @Column(name = "last_login_at", columnDefinition = "DATETIME(6)")
     private LocalDateTime  lastLoginAt;
