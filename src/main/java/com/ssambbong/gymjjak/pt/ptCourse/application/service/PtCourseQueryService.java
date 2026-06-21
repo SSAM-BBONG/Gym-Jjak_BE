@@ -2,9 +2,12 @@ package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseStatusInvalidException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.TrainerProfileNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -31,6 +34,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final CategoryQueryUseCase categoryQueryUseCase;
     private final OrganizationQueryPort organizationQueryPort;
     private final TrainerProfileQueryPort trainerProfileQueryPort;
+    private final PtReservationCountQueryPort ptReservationCountQueryPort;
 
     @Override
     public List<PtCourseListView> findAllPtCourses() {
@@ -58,6 +62,50 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         log.info("[PtCourseDetail] ptCourseId={} 조회 완료", ptCourseId);
         return toDetailView(ptCourse);
+    }
+
+    @Override
+    public List<MyPtCourseListView> findMyPtCourses(Long userId, PtCourseStatus status) {
+        log.debug("event=pt_my_courses_find userId={}, status={}", userId, status);
+
+        // 전체(null)/활성화(VISIBLE)/비활성화(HIDDEN)만 허용
+        if (status == PtCourseStatus.BLOCKED || status == PtCourseStatus.DELETED) {
+            throw new PtCourseStatusInvalidException();
+        }
+
+        // 로그인한 userId로 트레이너 프로필 ID 조회
+        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        try {
+            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+        } catch (TrainerProfileNotFoundException e) {
+            log.warn("event=pt_my_courses_find_failed reason=trainer_not_found, userId={}", userId);
+            throw e;
+        }
+
+        // 같은 트레이너의 강습이므로 trainerName은 1회만 조회 후 전체 카드에 재사용
+        String trainerName = trainerProfileQueryPort
+                .findSummaryById(trainerInfo.trainerProfileId())
+                .trainerName();
+
+        // status=null이면 VISIBLE+HIDDEN 전체, 지정 시 해당 status만
+        List<PtCourse> courses = ptCourseRepository
+                .findAllByTrainerProfileId(trainerInfo.trainerProfileId(), status);
+
+        // 강습별 예약 수 집계 후 뷰 조합
+        List<MyPtCourseListView> result = courses.stream()
+                .map(course -> new MyPtCourseListView(
+                        course.getId(),
+                        course.getThumbnailFileId(),
+                        course.getTitle(),
+                        trainerName,
+                        course.getStatus(),
+                        ptReservationCountQueryPort.countActiveByPtCourseId(course.getId()),
+                        ptReservationCountQueryPort.countTotalByPtCourseId(course.getId())
+                ))
+                .toList();
+
+        log.info("event=pt_my_courses_find_succeeded userId={}, count={}", userId, result.size());
+        return result;
     }
 
     // categoryId -> categoryName 매핑

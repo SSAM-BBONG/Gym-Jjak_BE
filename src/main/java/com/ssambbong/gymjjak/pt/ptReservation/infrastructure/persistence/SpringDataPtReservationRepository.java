@@ -29,4 +29,10 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     // status 지정 -> 필터
     List<PtReservationJpaEntity> findAllByUserIdAndStatusOrderByReservedStartAtDesc(Long userId, PtReservationStatus status);
 
+    // pt 도메인 강습별 예약 수 집계용
+    int countByPtCourseIdAndStatusIn(Long ptCourseId,
+                                     List<PtReservationStatus> statuses);
+
+    long countByPtCourseId(Long ptCourseId);
+
 }

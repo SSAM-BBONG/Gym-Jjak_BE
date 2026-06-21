@@ -47,4 +47,18 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         }
         // save() 없이 @Transactional 더티체킹으로 자동 UPDATE
     }
+
+    @Override
+    public List<PtCourse> findAllByTrainerProfileId(Long trainerProfileId, PtCourseStatus status) {
+        List<PtCourseJpaEntity> entities = (status == null)
+                // status 미지정 → VISIBLE + HIDDEN만 (BLOCKED, DELETED 제외)
+                ? repository.findAllByTrainerProfileIdAndStatusInOrderByCreatedAtDesc(
+                trainerProfileId, List.of(PtCourseStatus.VISIBLE, PtCourseStatus.HIDDEN))
+                : repository.findAllByTrainerProfileIdAndStatusOrderByCreatedAtDesc(
+                trainerProfileId, status);
+
+        return entities.stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }
