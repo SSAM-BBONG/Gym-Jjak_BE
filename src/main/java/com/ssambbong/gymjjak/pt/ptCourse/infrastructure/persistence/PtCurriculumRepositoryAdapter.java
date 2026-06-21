@@ -13,39 +13,33 @@ import java.util.Optional;
 public class PtCurriculumRepositoryAdapter implements PtCurriculumRepository {
 
     private final SpringDataPtCurriculumRepository repository;
+    private final PtCurriculumPersistenceMapper mapper;
 
     @Override
     public List<PtCurriculum> saveAll(List<PtCurriculum> curriculums) {
         List<PtCurriculumJpaEntity> entities = curriculums.stream()
-                .map(c -> new PtCurriculumJpaEntity(
-                        c.getPtCourseId(), c.getSessionNo(), c.getTitle(), c.getContent()
-                ))
+                .map(mapper::toEntity)
                 .toList();
 
         return repository.saveAll(entities).stream()
-                .map(this::toDomain)
+                .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public List<PtCurriculum> findAllByPtCourseId(Long ptCourseId) {
         return repository.findAllByPtCourseIdOrderBySessionNoAsc(ptCourseId).stream()
-                .map(this::toDomain)
+                .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public Optional<PtCurriculum> findById(Long ptCurriculumId) {
-        return repository.findById(ptCurriculumId).map(this::toDomain);
+        return repository.findById(ptCurriculumId).map(mapper::toDomain);
     }
 
-    private PtCurriculum toDomain(PtCurriculumJpaEntity entity) {
-        return PtCurriculum.restore(
-                entity.getId(),
-                entity.getPtCourseId(),
-                entity.getSessionNo(),
-                entity.getTitle(),
-                entity.getContent()
-        );
+    @Override
+    public Optional<PtCurriculum> findByIdAndPtCourseId(Long ptCurriculumId, Long ptCourseId) {
+        return repository.findByIdAndPtCourseId(ptCurriculumId, ptCourseId).map(mapper::toDomain);
     }
 }

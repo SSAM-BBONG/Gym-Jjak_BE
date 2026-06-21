@@ -13,4 +13,5 @@ public interface ChatRoomRepository {
     boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status);
     void leaveChatRoom(ChatRoom chatRoom);
     List<ChatRoomSummary> findChatRoomsByRequesterId(Long requesterId);
+    long countActive();
 }

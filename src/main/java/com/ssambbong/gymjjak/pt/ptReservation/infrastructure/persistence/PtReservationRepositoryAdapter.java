@@ -15,6 +15,7 @@ import java.util.Optional;
 public class PtReservationRepositoryAdapter implements PtReservationRepository {
 
     private final SpringDataPtReservationRepository repository;
+    private final PtReservationPersistenceMapper mapper;
 
     @Override
     public PtReservation save(PtReservation ptReservation) {
@@ -31,7 +32,7 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 ptReservation.getTotalSessionCount(),
                 ptReservation.getStatus()
         );
-        return toDomain((PtReservationJpaEntity) repository.save(entity));
+        return mapper.toDomain((PtReservationJpaEntity) repository.save(entity));
     }
 
     @Override
@@ -50,30 +51,12 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 : repository.findAllByUserIdAndStatusOrderByReservedStartAtDesc(userId, status);
 
         return entities.stream()
-                .map(this::toDomain)
+                .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public Optional<PtReservation> findById(Long id) {
-        return repository.findById(id).map(this::toDomain);
-    }
-
-    // JpaEntity -> domain 변환
-    private PtReservation toDomain(PtReservationJpaEntity entity) {
-        return PtReservation.restore(
-                entity.getId(),
-                entity.getUserId(),
-                entity.getPtCourseId(),
-                entity.getOrganizationId(),
-                entity.getTrainerProfileId(),
-                entity.getReservedStartAt(),
-                entity.getReservedEndAt(),
-                entity.getCancelledAt(),
-                entity.getCompletedAt(),
-                entity.getProgressCount(),
-                entity.getTotalSessionCount(),
-                entity.getStatus()
-        );
+        return repository.findById(id).map(mapper::toDomain);
     }
 }

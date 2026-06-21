@@ -45,7 +45,7 @@ public interface SpringDataChatMessageRepository extends JpaRepository<ChatMessa
             @Param("size") int size
     );
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query(value = """
             UPDATE chat_messages
             SET is_read = true
@@ -53,6 +53,9 @@ public interface SpringDataChatMessageRepository extends JpaRepository<ChatMessa
               AND sender_id != :readerId
               AND is_read = false
             """, nativeQuery = true)
-    void
-    markMessagesAsRead(@Param("chatRoomId") Long chatRoomId, @Param("readerId") Long readerId);
+    void markMessagesAsRead(@Param("chatRoomId") Long chatRoomId, @Param("readerId") Long readerId);
+
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE chat_messages SET is_read = true WHERE chat_message_id = :messageId", nativeQuery = true)
+    void markAsRead(@Param("messageId") Long messageId);
 }

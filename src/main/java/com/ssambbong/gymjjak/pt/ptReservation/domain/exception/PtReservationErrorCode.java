@@ -19,7 +19,10 @@ public enum PtReservationErrorCode implements ErrorCode {
     PT_RESERVATION_DUPLICATE(HttpStatus.CONFLICT, "PT_RESERVATION_003", "이미 예약된 시간입니다."),
 
     // 본인 예약이 아닌 경우
-    PT_RESERVATION_FORBIDDEN(HttpStatus.FORBIDDEN, "PT_RESERVATION_004", "본인의 예약만 조회할 수 있습니다.");
+    PT_RESERVATION_FORBIDDEN(HttpStatus.FORBIDDEN, "PT_RESERVATION_004", "본인의 예약만 조회할 수 있습니다."),
+
+    // RESERVED는 예약 생성 시에만 자동 설정되므로 직접 변경 불가
+    PT_RESERVATION_STATUS_INVALID(HttpStatus.CONFLICT, "PT_RESERVATION_005", "변경할 수 없는 상태값입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.domain.model;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.ForbiddenTrainerApplicationCancelException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationStatusConflictException;
 import lombok.AccessLevel;
@@ -180,5 +181,66 @@ public class TrainerApplication {
                 adminId,
                 reviewedAt
         );
+    }
+
+    public TrainerApplication reject(
+            Long adminId,
+            String rejectReason,
+            LocalDateTime reviewedAt
+    ) {
+        if (!isPending()) {
+            throw new TrainerApplicationStatusConflictException(
+                    this.trainerApplicationId,
+                    this.status
+            );
+        }
+
+        if (adminId == null) {
+            throw new InvalidTrainerApplicationException(
+                    "반려 관리자 ID는 필수입니다."
+            );
+        }
+
+        if (rejectReason == null || rejectReason.isBlank()) {
+            throw new InvalidTrainerApplicationException(
+                    "반려 사유는 필수입니다."
+            );
+        }
+
+        if (reviewedAt == null) {
+            throw new InvalidTrainerApplicationException(
+                    "반려 처리 시각은 필수입니다."
+            );
+        }
+
+        return new TrainerApplication(
+                this.trainerApplicationId,
+                this.userId,
+                this.profileFileId,
+                this.certificateFileId,
+                this.qualifications,
+                this.awardHistories,
+                this.introduction,
+                TrainerApplicationStatus.REJECTED,
+                rejectReason,
+                adminId,
+                reviewedAt
+        );
+    }
+
+    public void validateCancel(Long requesterId) {
+        if (!isOwner(requesterId)) {
+            throw new ForbiddenTrainerApplicationCancelException(
+                    requesterId,
+                    this.trainerApplicationId
+            );
+        }
+
+        if (!isPending()) {
+            throw new TrainerApplicationStatusConflictException(
+                    this.trainerApplicationId,
+                    this.status
+            );
+        }
     }
 }

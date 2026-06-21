@@ -12,4 +12,10 @@ public interface FeedbackRepository {
 
     // 피드백 ID로 단건 조회
     Optional<Feedback> findById(Long feedbackId);
+
+    // 피드백 등록
+    Feedback save(Feedback feedback);
+
+    // 동일 예약 - 회차 피드백 중복 여부 확인
+    boolean existsByPtReservationIdAndPtCurriculumId(Long ptReservationId, Long ptCurriculumId);
 }
