@@ -12,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +28,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -36,7 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ChatRoomController.class)
-@AutoConfigureMockMvc(addFilters = false)
 class ChatRoomControllerTest {
 
     @Autowired
@@ -84,6 +83,7 @@ class ChatRoomControllerTest {
 
             mockMvc.perform(post("/api/chat/rooms")
                             .with(authentication(userAuth))
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(11L, 1L)))
                     .andDo(print())
@@ -97,6 +97,7 @@ class ChatRoomControllerTest {
 
             mockMvc.perform(post("/api/chat/rooms")
                             .with(authentication(userAuth))
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(999L, 1L)))
                     .andDo(print())
@@ -111,6 +112,7 @@ class ChatRoomControllerTest {
 
             mockMvc.perform(post("/api/chat/rooms")
                             .with(authentication(userAuth))
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(11L, 1L)))
                     .andDo(print())
@@ -125,6 +127,7 @@ class ChatRoomControllerTest {
 
             mockMvc.perform(post("/api/chat/rooms")
                             .with(authentication(userAuth))
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(11L, 999L)))
                     .andDo(print())
@@ -143,7 +146,8 @@ class ChatRoomControllerTest {
             doThrow(new ChatRoomNotFoundException()).when(chatRoomUseCase).leaveChatRoom(anyLong(), anyLong());
 
             mockMvc.perform(patch("/api/chat/rooms/999/leave")
-                            .with(authentication(userAuth)))
+                            .with(authentication(userAuth))
+                            .with(csrf()))
                     .andDo(print())
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.code").value("CHAT_001"));
@@ -155,7 +159,8 @@ class ChatRoomControllerTest {
             doThrow(new ChatRoomAccessDeniedException()).when(chatRoomUseCase).leaveChatRoom(anyLong(), anyLong());
 
             mockMvc.perform(patch("/api/chat/rooms/1/leave")
-                            .with(authentication(userAuth)))
+                            .with(authentication(userAuth))
+                            .with(csrf()))
                     .andDo(print())
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.code").value("CHAT_003"));
@@ -167,7 +172,8 @@ class ChatRoomControllerTest {
             doThrow(new ChatRoomClosedException()).when(chatRoomUseCase).leaveChatRoom(anyLong(), anyLong());
 
             mockMvc.perform(patch("/api/chat/rooms/1/leave")
-                            .with(authentication(userAuth)))
+                            .with(authentication(userAuth))
+                            .with(csrf()))
                     .andDo(print())
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("CHAT_005"));
@@ -179,7 +185,8 @@ class ChatRoomControllerTest {
             doThrow(new ChatRoomAlreadyLeftException()).when(chatRoomUseCase).leaveChatRoom(anyLong(), anyLong());
 
             mockMvc.perform(patch("/api/chat/rooms/1/leave")
-                            .with(authentication(userAuth)))
+                            .with(authentication(userAuth))
+                            .with(csrf()))
                     .andDo(print())
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.code").value("CHAT_004"));

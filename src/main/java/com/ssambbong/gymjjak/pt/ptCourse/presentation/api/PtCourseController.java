@@ -2,10 +2,12 @@ package com.ssambbong.gymjjak.pt.ptCourse.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.ChangePtCourseStatusCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.ChangePtCourseStatusRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.CreatePtCourseRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.CreatePtCourseResponse;
@@ -110,6 +112,32 @@ public class PtCourseController {
                         PtCourseResponseCode.PT_COURSE_DETAIL,
                         response));
     }
+
+    // PT 강습 상태 변경
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "PT 강습 상태 변경", description = "트레이너가 본인 PT 강습을 VISIBLE/HIDDEN으로 전환한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "상태 변경 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "400", description = "허용되지 않는 상태값 (VISIBLE/HIDDEN만 가능)",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/{ptCourseId}/status")
+    public ResponseEntity<GlobalApiResponse<Void>> changePtCourseStatus(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId,
+            @RequestBody @Valid ChangePtCourseStatusRequest request
+    ) {
+        ptCourseCommandUseCase.changePtCourseStatus(
+                new ChangePtCourseStatusCommand(authUser.userId(), ptCourseId, request.status())
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_STATUS_UPDATED, null));
+    }
+
 
     // UploadedFileMetadataRequest → UploadedFileMetadataCommand 변환 (null 허용)
     private UploadedFileMetadataCommand toMetadataCommand(UploadedFileMetadataRequest request) {

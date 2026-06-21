@@ -57,12 +57,18 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
                         p.getChatRoomId(),
                         p.getPartnerName(),
                         p.getPartnerRole(),
-                        p.getPartnerProfileImageUrl(),
+                        p.getPartnerProfileFileId(),
+                        null,
                         p.getLastMessage(),
                         p.getLastMessageAt(),
                         p.getUnreadCount()
                 ))
                 .toList();
+    }
+
+    @Override
+    public long countActive() {
+        return repository.countByStatus(ChatRoomStatus.ACTIVE);
     }
 
     private ChatRoom toDomain(ChatRoomJpaEntity entity) {

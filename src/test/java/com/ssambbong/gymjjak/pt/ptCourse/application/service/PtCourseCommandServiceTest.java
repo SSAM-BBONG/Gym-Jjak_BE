@@ -1,6 +1,10 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
+import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.service.PtCourseCommandService;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
@@ -31,6 +35,7 @@ class PtCourseCommandServiceTest {
     @Mock private PtCurriculumRepository ptCurriculumRepository;
     @Mock private PtCourseScheduleRepository ptCourseScheduleRepository;
     @Mock private TrainerProfileQueryPort trainerProfileQueryPort;
+    @Mock private FileUseCase fileUseCase;
 
     @InjectMocks
     private PtCourseCommandService ptCourseCommandService;
@@ -40,7 +45,7 @@ class PtCourseCommandServiceTest {
         return new CreatePtCourseCommand(
                 1L, 1L, 1L,
                 title, description, price,
-                1L,
+                null,
                 curriculums,
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
@@ -164,7 +169,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 List.of() // 빈 스케줄
         );
@@ -187,7 +192,7 @@ class PtCourseCommandServiceTest {
                 new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")
         );
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 curriculums,
                 List.of(
                         new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"),
@@ -210,7 +215,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 null,
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
@@ -225,12 +230,69 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
+    @DisplayName("thumbnailFile이 있으면 파일 등록 후 ptCourseId가 반환된다")
+    void createPtCourse_withThumbnail_success() {
+
+        // given
+        UploadedFileMetadataCommand thumbnailFile =
+                new UploadedFileMetadataCommand("file-key", "thumb.jpg", "image/jpeg", 1024L);
+        CreatePtCourseCommand command = new CreatePtCourseCommand(
+                1L, 1L, 1L, "제목", "설명", 50000, thumbnailFile,
+                List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
+                List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
+        );
+
+        when(trainerProfileQueryPort.findByUserId(1L))
+                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(fileUseCase.registerFiles(any()))
+                .thenReturn(List.of(new FileRegistrationResult(99L, FileType.PT_THUMBNAIL)));
+
+        PtCourse savedPtCourse = PtCourse.restore(
+                1L, 1L, 1L, 1L, 1L, 99L, "제목", "설명", 50000, 1, PtCourseStatus.VISIBLE
+        );
+        when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
+        when(ptCurriculumRepository.saveAll(any())).thenReturn(List.of());
+        when(ptCourseScheduleRepository.saveAll(any())).thenReturn(List.of());
+
+        // when
+        Long ptCourseId = ptCourseCommandService.createPtCourse(command);
+
+        // then
+        assertEquals(1L, ptCourseId);
+        verify(fileUseCase).registerFiles(any());
+    }
+
+    @Test
+    @DisplayName("파일 등록 결과가 비어있으면 IllegalStateException이 발생한다")
+    void createPtCourse_thumbnailRegisterFailed_throwsException() {
+
+        // given
+        UploadedFileMetadataCommand thumbnailFile =
+                new UploadedFileMetadataCommand("file-key", "thumb.jpg", "image/jpeg", 1024L);
+        CreatePtCourseCommand command = new CreatePtCourseCommand(
+                1L, 1L, 1L, "제목", "설명", 50000, thumbnailFile,
+                List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
+                List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
+        );
+
+        when(trainerProfileQueryPort.findByUserId(1L))
+                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(fileUseCase.registerFiles(any())).thenReturn(List.of());
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+                () -> ptCourseCommandService.createPtCourse(command));
+
+        verify(ptCourseRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("스케줄이 null이면 PtCourseInvalidException이 발생해야 한다")
     void createPtCourse_nullSchedules_throwsException() {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, 1L,
+                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 null
         );
