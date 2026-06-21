@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
@@ -107,8 +108,9 @@ public class PtReservationController {
     @PreAuthorize("hasAuthority('TRAINER')")
     @Operation(summary = "PT 예약 상태 변경", description = "트레이너가 본인 PT 예약 상태를 변경한다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "상태 변경 성공", content = @Content(schema = @Schema())),
-            @ApiResponse(responseCode = "400", description = "허용되지 않는 상태값 (RESERVED는 설정 불가)", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "200", description = "상태 변경 성공",
+                    content = @Content(schema = @Schema(implementation = ChangePtReservationStatusResponse.class))),
+            @ApiResponse(responseCode = "409", description = "허용되지 않는 상태값 (RESERVED는 설정 불가)", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "403", description = "본인 예약 아님", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음", content = @Content(schema = @Schema()))
     })
@@ -118,14 +120,13 @@ public class PtReservationController {
             @PathVariable Long ptReservationId,
             @RequestBody @Valid ChangePtReservationStatusRequest request
     ) {
-        ChangePtReservationStatusResponse response =
-        ptReservationCommandUseCase.changePtReservationStatus(
+        PtReservation reservation = ptReservationCommandUseCase.changePtReservationStatus(
                 new ChangePtReservationStatusCommand(authUser.userId(), ptReservationId, request.status()));
-        return ResponseEntity.ok(
-                GlobalApiResponse.ok(
-                        PtReservationResponseCode.PT_RESERVATION_STATUS_UPDATED,
-                        response
-                )
+        ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
+                reservation.getStatus(),
+                reservation.getProgressCount(),
+                reservation.getTotalSessionCount()
         );
+        return ResponseEntity.ok(GlobalApiResponse.ok(PtReservationResponseCode.PT_RESERVATION_STATUS_UPDATED, response));
     }
 }

@@ -2,7 +2,6 @@ package com.ssambbong.gymjjak.pt.ptReservation.domain.repository;
 
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
-import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.PtReservationJpaEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;

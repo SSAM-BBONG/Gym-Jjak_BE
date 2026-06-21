@@ -116,9 +116,9 @@ public class PtReservation {
         );
     }
 
-    // RESERVED는 예약 생성 시에만 자동 설정. 직접 변경 불가
+    // RESERVED는 예약 생성 시에만 자동 설정. 직접 변경 불가. null 불허
     public void changeStatus(PtReservationStatus newStatus) {
-        if (newStatus == PtReservationStatus.RESERVED) {
+        if (newStatus == null || newStatus == PtReservationStatus.RESERVED) {
             throw new PtReservationStatusInvalidException();
         }
         this.status = newStatus;

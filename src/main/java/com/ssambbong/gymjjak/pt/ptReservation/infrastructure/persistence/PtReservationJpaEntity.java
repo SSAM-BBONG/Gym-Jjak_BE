@@ -84,12 +84,13 @@ public class PtReservationJpaEntity extends BaseLifecycleTimeEntity {
         this.status = status;
     }
 
+    // 타임스탬프는 최초 1회만 기록 (재요청 시 덮어쓰기 방지)
     public void updateStatus(PtReservationStatus status) {
         this.status = status;
-        if (status == PtReservationStatus.CANCELLED) {
+        if (status == PtReservationStatus.CANCELLED && getCancelledAt() == null) {
             super.cancel();
         }
-        if (status == PtReservationStatus.COMPLETED) {
+        if (status == PtReservationStatus.COMPLETED && getCompletedAt() == null) {
             super.complete();
         }
     }

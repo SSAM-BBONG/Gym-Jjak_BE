@@ -9,10 +9,10 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
-import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.ChangePtReservationStatusResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -68,7 +68,10 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     }
 
     @Override
-    public ChangePtReservationStatusResponse changePtReservationStatus(ChangePtReservationStatusCommand command) {
+    public PtReservation changePtReservationStatus(ChangePtReservationStatusCommand command) {
+        if (command.userId() == null || command.ptReservationId() == null || command.status() == null) {
+            throw new PtReservationInvalidException();
+        }
         log.debug("event=pt_reservation_status_change userId={}, ptReservationId={}, status={}",
                 command.userId(), command.ptReservationId(), command.status());
 
@@ -102,11 +105,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         log.info("event=pt_reservation_status_change_succeeded ptReservationId={}, status={}",
                 command.ptReservationId(), command.status());
 
-        return new ChangePtReservationStatusResponse(
-                reservation.getStatus(),
-                reservation.getProgressCount(),
-                reservation.getTotalSessionCount()
-        );
+        return reservation;
     }
 
 }
