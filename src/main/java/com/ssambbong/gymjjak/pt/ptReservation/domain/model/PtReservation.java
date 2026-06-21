@@ -1,14 +1,13 @@
 package com.ssambbong.gymjjak.pt.ptReservation.domain.model;
 
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationStatusInvalidException;
 
 import java.time.LocalDateTime;
 
 public class PtReservation {
 
-    // DB 저장 후 자동 부여. 새로 만들 때는 null
     private final Long id;
-
     private final Long userId;
     private final Long ptCourseId;
     private final Long organizationId;
@@ -116,6 +115,24 @@ public class PtReservation {
                 status
         );
     }
+
+    // RESERVED는 예약 생성 시에만 자동 설정. 직접 변경 불가. 종결 상태(CANCELLED/COMPLETED)에서 다른 상태로 전이 불가
+    public void changeStatus(PtReservationStatus newStatus) {
+        if (newStatus == null || newStatus == PtReservationStatus.RESERVED) {
+            throw new PtReservationStatusInvalidException();
+        }
+        if (this.status == PtReservationStatus.CANCELLED || this.status == PtReservationStatus.COMPLETED) {
+            throw new PtReservationStatusInvalidException();
+        }
+        this.status = newStatus;
+        if (newStatus == PtReservationStatus.CANCELLED) {
+            this.cancelledAt = LocalDateTime.now();
+        }
+        if (newStatus == PtReservationStatus.COMPLETED) {
+            this.completedAt = LocalDateTime.now();
+        }
+    }
+
     // getter
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
