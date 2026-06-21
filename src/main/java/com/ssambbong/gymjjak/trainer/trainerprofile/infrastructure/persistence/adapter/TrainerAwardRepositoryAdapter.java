@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TrainerAwardRepositoryAdapter implements TrainerAwardRepository {
 
-    private final SpringDataTrainerAwardRepository springDataTrainerAwardRepository;
+    private final SpringDataTrainerAwardRepository repository;
     private final TrainerAwardPersistenceMapper mapper;
 
 
@@ -24,6 +24,14 @@ public class TrainerAwardRepositoryAdapter implements TrainerAwardRepository {
                 .map(mapper::toEntity)
                 .toList();
 
-        springDataTrainerAwardRepository.saveAll(entities);
+        repository.saveAll(entities);
+    }
+
+    @Override
+    public List<TrainerAward> findAllByTrainerProfileId(Long trainerProfileId) {
+        return repository.findAllByTrainerProfileIdOrderByTrainerAwardIdAsc(trainerProfileId)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

@@ -1,7 +1,10 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response;
 
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.TrainerAwardResult;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
+@Builder
 public record TrainerAwardResponse(
         @Schema(description = "트레이너 수상 경력 ID", example = "5")
         Long trainerAwardId,
@@ -12,4 +15,12 @@ public record TrainerAwardResponse(
         )
         String name
 ) {
+        public static TrainerAwardResponse from(
+                TrainerAwardResult result
+        ) {
+                return TrainerAwardResponse.builder()
+                        .trainerAwardId(result.trainerAwardId())
+                        .name(result.name())
+                        .build();
+        }
 }

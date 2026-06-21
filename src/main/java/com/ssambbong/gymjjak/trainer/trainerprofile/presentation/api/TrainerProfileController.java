@@ -2,8 +2,10 @@ package com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.MyTrainerProfileResult;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.usecase.TrainerProfileQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response.MyTrainerProfileResponse;
+import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response.TrainerProfileResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TrainerProfileController {
 
-//    private final TrainerProfileQueryUseCase trainerProfileQueryUseCase;
+    private final TrainerProfileQueryUseCase trainerProfileQueryUseCase;
 
     @GetMapping("/me")
     @PreAuthorize("hasAuthority('TRAINER')")
@@ -55,6 +57,16 @@ public class TrainerProfileController {
             > getMyTrainerProfile(
             @AuthenticationPrincipal AuthUser authUser
             ) {
-        return null;
+        MyTrainerProfileResult result =
+                trainerProfileQueryUseCase.getMyTrainerProfile(
+                        authUser.userId()
+                );
+
+        return ResponseEntity.status(200).body(
+                GlobalApiResponse.ok(
+                        TrainerProfileResponseCode.MY_TRAINER_PROFILE_FOUND,
+                        MyTrainerProfileResponse.from(result)
+                )
+        );
     }
 }

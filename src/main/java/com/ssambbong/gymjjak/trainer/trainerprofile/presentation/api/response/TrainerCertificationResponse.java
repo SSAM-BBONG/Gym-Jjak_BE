@@ -1,8 +1,11 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response;
 
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.TrainerCertificationResult;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerCertificationType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
+@Builder
 public record TrainerCertificationResponse(
 
         @Schema(description = "트레이너 자격증 ID", example = "7")
@@ -19,4 +22,15 @@ public record TrainerCertificationResponse(
         )
         String fileUrl
 ) {
+
+        public static TrainerCertificationResponse from(
+                TrainerCertificationResult result
+        ) {
+            return TrainerCertificationResponse.builder()
+                    .trainerCertificationId(result.trainerCertificationId())
+                    .name(result.name())
+                    .certificationType(result.certificationType())
+                    .fileUrl(result.fileUrl())
+                    .build();
+        }
 }

@@ -1,11 +1,14 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response;
 
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.MyTrainerProfileResult;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerProfileStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Builder
 public record MyTrainerProfileResponse(
 
         @Schema(description = "트레이너 프로필 ID", example = "3")
@@ -35,4 +38,27 @@ public record MyTrainerProfileResponse(
         @Schema(description = "트레이너 수상 경력 목록")
         List<TrainerAwardResponse> awards
 ) {
+     public static MyTrainerProfileResponse from(
+             MyTrainerProfileResult result
+     ) {
+             return MyTrainerProfileResponse.builder()
+                     .trainerProfileId(result.trainerProfileId())
+                     .profileImageUrl(result.profileImageUrl())
+                     .trainerName(result.trainerName())
+                     .introduction(result.introduction())
+                     .averageRating(result.averageRating())
+                     .reviewCount(result.reviewCount())
+                     .status(result.status())
+                     .certifications(
+                             result.certifications().stream()
+                             .map(TrainerCertificationResponse::from)
+                             .toList()
+                     )
+                     .awards(
+                             result.awards().stream()
+                                     .map(TrainerAwardResponse::from)
+                                     .toList()
+                     )
+                     .build();
+     }
 }
