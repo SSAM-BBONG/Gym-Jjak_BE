@@ -22,12 +22,13 @@ public class CourseReservationFeedbackQueryAdapter implements CourseReservationF
         if (reservationIds.isEmpty()) return Map.of();
 
         // 예약 ID 목록으로 최근 피드백 날짜 배치 조회 (N+1 방지)
-        List<Object[]> rows = feedbackRepository.findLastCreatedAtGroupByReservationId(reservationIds);
+        List<SpringDataFeedbackRepository.LastFeedbackRow> rows =
+                feedbackRepository.findLastCreatedAtGroupByReservationId(reservationIds);
 
-        // [reservationId, MAX(createdAt)] → Map<reservationId, LocalDate> 변환
+        // 타입 안전 프로젝션으로 reservationId → lastPtDate 변환
         return rows.stream().collect(Collectors.toMap(
-                row -> ((Number) row[0]).longValue(),
-                row -> ((java.time.LocalDateTime) row[1]).toLocalDate()
+                SpringDataFeedbackRepository.LastFeedbackRow::getPtReservationId,
+                row -> row.getLastCreatedAt().toLocalDate()
         ));
     }
 }

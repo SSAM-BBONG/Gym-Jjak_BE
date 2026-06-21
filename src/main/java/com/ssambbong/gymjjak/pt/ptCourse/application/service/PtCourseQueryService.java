@@ -73,8 +73,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     public List<MyPtCourseListView> findMyPtCourses(Long userId, PtCourseStatus status) {
         log.debug("event=pt_my_courses_find userId={}, status={}", userId, status);
 
-        // 전체(null)/활성화(VISIBLE)/비활성화(HIDDEN)만 허용
-        if (status == PtCourseStatus.BLOCKED || status == PtCourseStatus.DELETED) {
+        // null·VISIBLE·HIDDEN만 허용 (enum 추가 시 의도치 않은 통과 방지)
+        if (status != null && status != PtCourseStatus.VISIBLE && status != PtCourseStatus.HIDDEN) {
             throw new PtCourseStatusInvalidException();
         }
 

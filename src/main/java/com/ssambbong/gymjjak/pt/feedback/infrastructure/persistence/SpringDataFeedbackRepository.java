@@ -19,13 +19,19 @@ public interface SpringDataFeedbackRepository extends JpaRepository<FeedbackJpaE
     // 동일 예약 + 커리큘럼에 피드백 중복 여부 확인
     boolean existsByPtReservationIdAndPtCurriculumIdAndDeletedAtIsNull(Long ptReservationId, Long ptCurriculumId);
 
+    // 타입 안전 프로젝션 — Object[] 캐스팅 없이 reservationId·lastCreatedAt 바인딩
+    interface LastFeedbackRow {
+        Long getPtReservationId();
+        LocalDateTime getLastCreatedAt();
+    }
+
     // 예약 ID 목록별 가장 최근 피드백 생성일 배치 조회 (N+1 방지)
     @Query("""
-            SELECT f.ptReservationId, MAX(f.createdAt)
+            SELECT f.ptReservationId AS ptReservationId, MAX(f.createdAt) AS lastCreatedAt
             FROM FeedbackJpaEntity f
             WHERE f.ptReservationId IN :reservationIds
               AND f.deletedAt IS NULL
             GROUP BY f.ptReservationId
             """)
-    List<Object[]> findLastCreatedAtGroupByReservationId(@Param("reservationIds") List<Long> reservationIds);
+    List<LastFeedbackRow> findLastCreatedAtGroupByReservationId(@Param("reservationIds") List<Long> reservationIds);
 }
