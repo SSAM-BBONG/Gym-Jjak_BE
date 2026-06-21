@@ -63,6 +63,6 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
     public void updateStatus(PtReservation ptReservation) {
         PtReservationJpaEntity entity = repository.findById(ptReservation.getId())
                 .orElseThrow(PtReservationNotFoundException::new);
-        entity.updateStatus(ptReservation.getStatus());
+        entity.updateStatus(ptReservation.getStatus(), ptReservation.getCancelledAt(), ptReservation.getCompletedAt());
     }
 }

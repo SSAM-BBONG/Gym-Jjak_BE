@@ -116,12 +116,21 @@ public class PtReservation {
         );
     }
 
-    // RESERVED는 예약 생성 시에만 자동 설정. 직접 변경 불가. null 불허
+    // RESERVED는 예약 생성 시에만 자동 설정. 직접 변경 불가. 종결 상태(CANCELLED/COMPLETED)에서 다른 상태로 전이 불가
     public void changeStatus(PtReservationStatus newStatus) {
         if (newStatus == null || newStatus == PtReservationStatus.RESERVED) {
             throw new PtReservationStatusInvalidException();
         }
+        if (this.status == PtReservationStatus.CANCELLED || this.status == PtReservationStatus.COMPLETED) {
+            throw new PtReservationStatusInvalidException();
+        }
         this.status = newStatus;
+        if (newStatus == PtReservationStatus.CANCELLED) {
+            this.cancelledAt = LocalDateTime.now();
+        }
+        if (newStatus == PtReservationStatus.COMPLETED) {
+            this.completedAt = LocalDateTime.now();
+        }
     }
 
     // getter

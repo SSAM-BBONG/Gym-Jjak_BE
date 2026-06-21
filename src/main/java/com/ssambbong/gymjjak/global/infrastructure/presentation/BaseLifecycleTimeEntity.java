@@ -33,7 +33,15 @@ public abstract class BaseLifecycleTimeEntity {
         this.cancelledAt = LocalDateTime.now();
     }
 
+    protected void cancel(LocalDateTime at) {
+        this.cancelledAt = at;
+    }
+
     protected void complete() {
         this.completedAt = LocalDateTime.now();
+    }
+
+    protected void complete(LocalDateTime at) {
+        this.completedAt = at;
     }
 }
