@@ -50,4 +50,7 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             """)
     List<Object[]> countTotalGroupByPtCourseId(@Param("ptCourseIds") List<Long> ptCourseIds);
 
+    // 강습별 수강생 목록 조회 (최신 예약일순)
+    List<PtReservationJpaEntity> findAllByPtCourseIdOrderByReservedStartAtDesc(Long ptCourseId);
+
 }

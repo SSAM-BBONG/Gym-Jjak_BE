@@ -1,10 +1,9 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
-import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
-import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
-import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseStatusInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.TrainerProfileNotFoundException;
@@ -13,11 +12,14 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,23 +37,26 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final OrganizationQueryPort organizationQueryPort;
     private final TrainerProfileQueryPort trainerProfileQueryPort;
     private final PtReservationCountQueryPort ptReservationCountQueryPort;
+    private final PtReservationRepository ptReservationRepository;
+    private final UserNicknameQueryPort userNicknameQueryPort;
+    private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
 
     @Override
     public List<PtCourseListView> findAllPtCourses() {
-        log.debug("[PtCourseList] 목록 조회 시작");
+        log.debug("event=pt_courses_find_all");
 
         Map<Long, String> categoryMap = buildCategoryMap();
         List<PtCourseListView> result = ptCourseRepository.findAllVisible().stream()
                 .map(ptCourse -> toListView(ptCourse, categoryMap))
                 .toList();
 
-        log.info("[PtCourseList] 조회된 PT 강습 수={}", result.size());
+        log.info("event=pt_courses_find_all_succeeded count={}", result.size());
         return result;
     }
 
     @Override
     public PtCourseDetailView findPtCourseDetail(Long ptCourseId) {
-        log.debug("[PtCourseDetail] ptCourseId={}", ptCourseId);
+        log.debug("event=pt_course_detail_find ptCourseId={}", ptCourseId);
 
         PtCourse ptCourse = ptCourseRepository.findById(ptCourseId)
                 .orElseThrow(PtCourseNotFoundException::new);
@@ -60,7 +65,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
             throw new PtCourseNotFoundException();
         }
 
-        log.info("[PtCourseDetail] ptCourseId={} 조회 완료", ptCourseId);
+        log.info("event=pt_course_detail_find_succeeded ptCourseId={}", ptCourseId);
         return toDetailView(ptCourse);
     }
 
@@ -68,8 +73,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     public List<MyPtCourseListView> findMyPtCourses(Long userId, PtCourseStatus status) {
         log.debug("event=pt_my_courses_find userId={}, status={}", userId, status);
 
-        // 전체(null)/활성화(VISIBLE)/비활성화(HIDDEN)만 허용
-        if (status == PtCourseStatus.BLOCKED || status == PtCourseStatus.DELETED) {
+        // null·VISIBLE·HIDDEN만 허용 (enum 추가 시 의도치 않은 통과 방지)
+        if (status != null && status != PtCourseStatus.VISIBLE && status != PtCourseStatus.HIDDEN) {
             throw new PtCourseStatusInvalidException();
         }
 
@@ -110,6 +115,58 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         log.info("event=pt_my_courses_find_succeeded userId={}, count={}", userId, result.size());
         return result;
+    }
+
+    @Override
+    public CourseReservationListView findCourseReservations(Long userId, Long ptCourseId) {
+        log.debug("event=pt_course_reservations_find userId={}, ptCourseId={}", userId, ptCourseId);
+
+        // 강습 존재 여부 확인
+        PtCourse ptCourse = ptCourseRepository.findById(ptCourseId)
+                .orElseThrow(() -> {
+                    log.warn("event=pt_course_reservations_find_failed reason=course_not_found ptCourseId={}", ptCourseId);
+                    return new PtCourseNotFoundException();
+                });
+
+        // 본인 강습 여부 확인 (트레이너 프로필 ID 비교)
+        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        try {
+            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+        } catch (TrainerProfileNotFoundException e) {
+            log.warn("event=pt_course_reservations_find_failed reason=trainer_not_found userId={}", userId);
+            throw e;
+        }
+        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+            throw new PtCourseForbiddenException();
+        }
+
+        // 강습에 속한 예약 전체 조회
+        List<PtReservation> reservations = ptReservationRepository.findAllByPtCourseId(ptCourseId);
+
+        // userId 목록으로 닉네임 한 번에 조회 (N+1 방지)
+        List<Long> userIds = reservations.stream().map(PtReservation::getUserId).toList();
+        Map<Long, String> nicknameMap = userNicknameQueryPort.findNicknamesByUserIds(userIds);
+
+        // 예약 ID 목록으로 마지막 피드백 날짜 한 번에 조회 (N+1 방지)
+        List<Long> reservationIds = reservations.stream().map(PtReservation::getId).toList();
+        Map<Long, LocalDate> lastFeedbackDateMap =
+                courseReservationFeedbackQueryPort.findLastFeedbackDatesByReservationIds(reservationIds);
+
+        List<CourseReservationView> reservationViews = reservations.stream()
+                .map(r -> new CourseReservationView(
+                        r.getId(),
+                        nicknameMap.getOrDefault(r.getUserId(), null),
+                        r.getStatus(),
+                        lastFeedbackDateMap.getOrDefault(r.getId(), null), // 피드백 없으면 null
+                        r.getProgressCount(),
+                        r.getTotalSessionCount()
+                ))
+                .toList();
+
+        log.info("event=pt_course_reservations_find_succeeded ptCourseId={}, count={}",
+                ptCourseId, reservationViews.size());
+
+        return new CourseReservationListView(ptCourse.getTitle(), reservationViews);
     }
 
     // categoryId -> categoryName 매핑
@@ -156,13 +213,13 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<CurriculumView> curriculums = ptCurriculumRepository.findAllByPtCourseId(ptCourse.getId()).stream()
                 .map(c -> new CurriculumView(c.getId(), c.getSessionNo(), c.getTitle(), c.getContent()))
                 .toList();
-        log.debug("[PtCourseDetail] ptCourseId={} 커리큘럼 수={}", ptCourse.getId(), curriculums.size());
+        log.debug("event=pt_course_detail_find ptCourseId={} curriculum_count={}", ptCourse.getId(), curriculums.size());
 
         // 스케쥴 조회 (도메인 모델 -> View 변환)
         List<ScheduleView> schedules = ptCourseScheduleRepository.findAllByPtCourseId(ptCourse.getId()).stream()
                 .map(s -> new ScheduleView(s.getId(), s.getDayOfWeek(), s.getStartTime(), s.getEndTime()))
                 .toList();
-        log.debug("[PtCourseDetail] ptCourseId={} 스케줄 수={}", ptCourse.getId(), schedules.size());
+        log.debug("event=pt_course_detail_find ptCourseId={} schedule_count={}", ptCourse.getId(), schedules.size());
 
         return new PtCourseDetailView(
                 ptCourse.getId(),
