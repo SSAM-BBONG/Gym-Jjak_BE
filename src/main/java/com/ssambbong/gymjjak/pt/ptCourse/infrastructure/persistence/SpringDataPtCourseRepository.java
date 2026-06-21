@@ -10,11 +10,11 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
     // VISIBLE 상태 전체 목록 최신순
     List<PtCourseJpaEntity> findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(PtCourseStatus status);
 
-    // 내 강습 전체 조회 — VISIBLE + HIDDEN만 (BLOCKED, DELETED 제외)
-    List<PtCourseJpaEntity> findAllByTrainerProfileIdAndStatusInOrderByCreatedAtDesc(
+    // 내 강습 전체 조회 — VISIBLE + HIDDEN만 (BLOCKED, DELETED 제외, soft delete 안전)
+    List<PtCourseJpaEntity> findAllByTrainerProfileIdAndStatusInAndDeletedAtIsNullOrderByCreatedAtDesc(
             Long trainerProfileId, List<PtCourseStatus> statuses);
 
-    // 내 강습 특정 status 필터 조회
-    List<PtCourseJpaEntity> findAllByTrainerProfileIdAndStatusOrderByCreatedAtDesc(
+    // 내 강습 특정 status 필터 조회 (soft delete 안전)
+    List<PtCourseJpaEntity> findAllByTrainerProfileIdAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
             Long trainerProfileId, PtCourseStatus status);
 }

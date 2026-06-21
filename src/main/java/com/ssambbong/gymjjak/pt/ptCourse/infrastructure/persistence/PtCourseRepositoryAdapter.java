@@ -51,10 +51,10 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
     @Override
     public List<PtCourse> findAllByTrainerProfileId(Long trainerProfileId, PtCourseStatus status) {
         List<PtCourseJpaEntity> entities = (status == null)
-                // status 미지정 → VISIBLE + HIDDEN만 (BLOCKED, DELETED 제외)
-                ? repository.findAllByTrainerProfileIdAndStatusInOrderByCreatedAtDesc(
+                // status 미지정 → VISIBLE + HIDDEN만 (BLOCKED, DELETED 제외, soft delete 안전)
+                ? repository.findAllByTrainerProfileIdAndStatusInAndDeletedAtIsNullOrderByCreatedAtDesc(
                 trainerProfileId, List.of(PtCourseStatus.VISIBLE, PtCourseStatus.HIDDEN))
-                : repository.findAllByTrainerProfileIdAndStatusOrderByCreatedAtDesc(
+                : repository.findAllByTrainerProfileIdAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
                 trainerProfileId, status);
 
         return entities.stream()
