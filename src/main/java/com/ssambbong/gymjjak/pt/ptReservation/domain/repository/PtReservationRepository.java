@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.ptReservation.domain.repository;
 
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.PtReservationJpaEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,4 +25,7 @@ public interface PtReservationRepository {
 
     // 예약 1건 상세 조회 (본인 확인용)
     Optional<PtReservation> findById(Long id);
+
+    // PT 상태 변경
+    void updateStatus(PtReservation ptReservation);
 }

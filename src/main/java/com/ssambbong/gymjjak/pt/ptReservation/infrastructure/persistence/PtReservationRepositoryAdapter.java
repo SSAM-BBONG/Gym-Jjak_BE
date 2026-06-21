@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
@@ -26,8 +27,6 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 ptReservation.getTrainerProfileId(),
                 ptReservation.getReservedStartAt(),
                 ptReservation.getReservedEndAt(),
-                ptReservation.getCancelledAt(),
-                ptReservation.getCompletedAt(),
                 ptReservation.getProgressCount(),
                 ptReservation.getTotalSessionCount(),
                 ptReservation.getStatus()
@@ -58,5 +57,12 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
     @Override
     public Optional<PtReservation> findById(Long id) {
         return repository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public void updateStatus(PtReservation ptReservation) {
+        PtReservationJpaEntity entity = repository.findById(ptReservation.getId())
+                .orElseThrow(PtReservationNotFoundException::new);
+        entity.updateStatus(ptReservation.getStatus());
     }
 }

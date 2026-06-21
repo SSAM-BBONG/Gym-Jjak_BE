@@ -3,11 +3,16 @@ package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
+import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.ChangePtReservationStatusResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +26,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
     private final PtReservationRepository ptReservationRepository;
     private final PtCourseRepository ptCourseRepository;
+    private final TrainerQueryPort trainerQueryPort;
 
     @Override
     public Long createPtReservation(CreatePtReservationCommand command) {
@@ -60,4 +66,47 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         log.info("event=pt_reservation_create_succeeded ptReservationId={}", saved.getId());
         return saved.getId();
     }
+
+    @Override
+    public ChangePtReservationStatusResponse changePtReservationStatus(ChangePtReservationStatusCommand command) {
+        log.debug("event=pt_reservation_status_change userId={}, ptReservationId={}, status={}",
+                command.userId(), command.ptReservationId(), command.status());
+
+        // 예약 조회
+        PtReservation reservation = ptReservationRepository.findById(command.ptReservationId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_reservation_status_change_failed reason=not_found, ptReservationId={}",
+                            command.ptReservationId());
+                    return new PtReservationNotFoundException();
+                });
+
+        // 트레이너 프로필 조회 (트레이너만 변경 가능)
+        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(command.userId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_reservation_status_change_failed reason=forbidden, userId={}",
+                            command.userId());
+                    return new PtReservationForbiddenException();
+                });
+
+        // 본인 예약인지 확인 (본인 강습의 예약만 상태 변경 가능)
+        if (!reservation.getTrainerProfileId().equals(trainerProfileId)) {
+            log.warn("event=pt_reservation_status_change_failed reason=forbidden, userId={}, ptReservationId={}",
+                    command.userId(), command.ptReservationId());
+            throw new PtReservationForbiddenException();
+        }
+
+        // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
+        reservation.changeStatus(command.status());
+        ptReservationRepository.updateStatus(reservation);
+
+        log.info("event=pt_reservation_status_change_succeeded ptReservationId={}, status={}",
+                command.ptReservationId(), command.status());
+
+        return new ChangePtReservationStatusResponse(
+                reservation.getStatus(),
+                reservation.getProgressCount(),
+                reservation.getTotalSessionCount()
+        );
+    }
+
 }

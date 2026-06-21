@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseLifecycleTimeEntity;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "pt_reservations")
 @EntityListeners(AuditingEntityListener.class)
-public class PtReservationJpaEntity {
+public class PtReservationJpaEntity extends BaseLifecycleTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,14 +48,6 @@ public class PtReservationJpaEntity {
     @Column(name = "reserved_end_at", nullable = false)
     private LocalDateTime reservedEndAt;
 
-    // 취소 시간. 취소 전에는 null
-    @Column(name = "cancelled_at")
-    private LocalDateTime cancelledAt;
-
-    // 완료 시간. 완료 전에는 null
-    @Column(name = "completed_at")
-    private LocalDateTime completedAt;
-
     // 완료된 회차 수. 생성 시 0
     @Column(name = "progress_count", nullable = false)
     private int progressCount;
@@ -68,14 +61,6 @@ public class PtReservationJpaEntity {
     @Column(name = "status", nullable = false, length = 30)
     private PtReservationStatus status;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     // repoAdapter에서 새 예약 저장할 떄 사용
     public PtReservationJpaEntity(
             Long userId,
@@ -84,8 +69,6 @@ public class PtReservationJpaEntity {
             Long trainerProfileId,
             LocalDateTime reservedStartAt,
             LocalDateTime reservedEndAt,
-            LocalDateTime cancelledAt,
-            LocalDateTime completedAt,
             int progressCount,
             int totalSessionCount,
             PtReservationStatus status
@@ -96,10 +79,18 @@ public class PtReservationJpaEntity {
         this.trainerProfileId = trainerProfileId;
         this.reservedStartAt = reservedStartAt;
         this.reservedEndAt = reservedEndAt;
-        this.cancelledAt = cancelledAt;
-        this.completedAt = completedAt;
         this.progressCount = progressCount;
         this.totalSessionCount = totalSessionCount;
         this.status = status;
+    }
+
+    public void updateStatus(PtReservationStatus status) {
+        this.status = status;
+        if (status == PtReservationStatus.CANCELLED) {
+            super.cancel();
+        }
+        if (status == PtReservationStatus.COMPLETED) {
+            super.complete();
+        }
     }
 }
