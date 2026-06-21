@@ -2,16 +2,20 @@ package com.ssambbong.gymjjak.pt.ptReservation.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.request.ChangePtReservationStatusRequest;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.request.CreatePtReservationRequest;
-import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.CreatePtReservationResponse;
-import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.MyPtReservationDetailResponse;
-import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.MyPtReservationsResponse;
-import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.PtReservationResponseCode;
+import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -99,5 +103,30 @@ public class PtReservationController {
                         response
                 )
         );
+    }
+
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "PT 예약 상태 변경", description = "트레이너가 본인 PT 예약 상태를 변경한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "상태 변경 성공",
+                    content = @Content(schema = @Schema(implementation = ChangePtReservationStatusResponse.class))),
+            @ApiResponse(responseCode = "409", description = "허용되지 않는 상태값 (RESERVED는 설정 불가)", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "본인 예약 아님", content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음", content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/reservations/{ptReservationId}/status")
+    public ResponseEntity<GlobalApiResponse<ChangePtReservationStatusResponse>> changePtReservationStatus(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptReservationId,
+            @RequestBody @Valid ChangePtReservationStatusRequest request
+    ) {
+        PtReservation reservation = ptReservationCommandUseCase.changePtReservationStatus(
+                new ChangePtReservationStatusCommand(authUser.userId(), ptReservationId, request.status()));
+        ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
+                reservation.getStatus(),
+                reservation.getProgressCount(),
+                reservation.getTotalSessionCount()
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(PtReservationResponseCode.PT_RESERVATION_STATUS_UPDATED, response));
     }
 }
