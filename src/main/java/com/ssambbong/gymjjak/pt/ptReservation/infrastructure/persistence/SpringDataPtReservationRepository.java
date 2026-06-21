@@ -29,4 +29,25 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     // status 지정 -> 필터
     List<PtReservationJpaEntity> findAllByUserIdAndStatusOrderByReservedStartAtDesc(Long userId, PtReservationStatus status);
 
+    // ptCourse 도메인 강습별 활성 예약 수 배치 집계 (N+1 방지)
+    @Query("""
+            SELECT r.ptCourseId, COUNT(r)
+            FROM PtReservationJpaEntity r
+            WHERE r.ptCourseId IN :ptCourseIds
+              AND r.status IN :statuses
+            GROUP BY r.ptCourseId
+            """)
+    List<Object[]> countActiveGroupByPtCourseId(
+            @Param("ptCourseIds") List<Long> ptCourseIds,
+            @Param("statuses") List<PtReservationStatus> statuses);
+
+    // ptCourse 도메인 강습별 전체 예약 수 배치 집계 (N+1 방지)
+    @Query("""
+            SELECT r.ptCourseId, COUNT(r)
+            FROM PtReservationJpaEntity r
+            WHERE r.ptCourseId IN :ptCourseIds
+            GROUP BY r.ptCourseId
+            """)
+    List<Object[]> countTotalGroupByPtCourseId(@Param("ptCourseIds") List<Long> ptCourseIds);
+
 }

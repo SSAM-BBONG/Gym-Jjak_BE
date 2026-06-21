@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.usecase;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
+
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
@@ -11,6 +13,9 @@ public interface PtCourseQueryUseCase {
 
     // 상세 조회
     PtCourseDetailView findPtCourseDetail(Long ptCourseId);
+
+    // 내 강습 목록 조회 (트레이너 전용)
+    List<MyPtCourseListView> findMyPtCourses(Long userId, PtCourseStatus status);
 
     // ──── 목록 뷰 ────
     record PtCourseListView(
@@ -75,5 +80,16 @@ public interface PtCourseQueryUseCase {
             DayOfWeek dayOfWeek,
             LocalTime startTime,
             LocalTime endTime
+    ) {}
+
+    // ──── 내 강습 목록 뷰 ────
+    record MyPtCourseListView(
+            Long ptCourseId,
+            Long thumbnailFileId,
+            String title,
+            String trainerName,
+            PtCourseStatus status,
+            int activeReservationCount,   // RESERVED + IN_PROGRESS 수
+            int totalReservationCount     // 전체 예약 수
     ) {}
 }
