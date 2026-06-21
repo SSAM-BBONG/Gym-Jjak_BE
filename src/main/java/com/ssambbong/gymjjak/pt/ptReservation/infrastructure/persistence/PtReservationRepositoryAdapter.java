@@ -59,4 +59,13 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
     public Optional<PtReservation> findById(Long id) {
         return repository.findById(id).map(mapper::toDomain);
     }
+
+    // 강습별 수강생 목록 조회
+    @Override
+    public List<PtReservation> findAllByPtCourseId(Long ptCourseId) {
+        return repository.findAllByPtCourseIdOrderByReservedStartAtDesc(ptCourseId)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }

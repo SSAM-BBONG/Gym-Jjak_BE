@@ -24,4 +24,7 @@ public interface PtReservationRepository {
 
     // 예약 1건 상세 조회 (본인 확인용)
     Optional<PtReservation> findById(Long id);
+
+    // 강습별 수강생 목록 조회
+    List<PtReservation> findAllByPtCourseId(Long ptCourseId);
 }
