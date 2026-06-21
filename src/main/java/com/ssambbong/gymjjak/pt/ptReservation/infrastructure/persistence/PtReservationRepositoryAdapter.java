@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,6 +61,7 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
     }
 
     @Override
+    @Transactional
     public void updateStatus(PtReservation ptReservation) {
         PtReservationJpaEntity entity = repository.findById(ptReservation.getId())
                 .orElseThrow(PtReservationNotFoundException::new);
