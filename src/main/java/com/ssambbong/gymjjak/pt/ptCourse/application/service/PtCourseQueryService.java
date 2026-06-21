@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,20 +43,20 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
     @Override
     public List<PtCourseListView> findAllPtCourses() {
-        log.debug("[PtCourseList] 목록 조회 시작");
+        log.debug("event=pt_courses_find_all");
 
         Map<Long, String> categoryMap = buildCategoryMap();
         List<PtCourseListView> result = ptCourseRepository.findAllVisible().stream()
                 .map(ptCourse -> toListView(ptCourse, categoryMap))
                 .toList();
 
-        log.info("[PtCourseList] 조회된 PT 강습 수={}", result.size());
+        log.info("event=pt_courses_find_all_succeeded count={}", result.size());
         return result;
     }
 
     @Override
     public PtCourseDetailView findPtCourseDetail(Long ptCourseId) {
-        log.debug("[PtCourseDetail] ptCourseId={}", ptCourseId);
+        log.debug("event=pt_course_detail_find ptCourseId={}", ptCourseId);
 
         PtCourse ptCourse = ptCourseRepository.findById(ptCourseId)
                 .orElseThrow(PtCourseNotFoundException::new);
@@ -64,7 +65,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
             throw new PtCourseNotFoundException();
         }
 
-        log.info("[PtCourseDetail] ptCourseId={} 조회 완료", ptCourseId);
+        log.info("event=pt_course_detail_find_succeeded ptCourseId={}", ptCourseId);
         return toDetailView(ptCourse);
     }
 
@@ -212,13 +213,13 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<CurriculumView> curriculums = ptCurriculumRepository.findAllByPtCourseId(ptCourse.getId()).stream()
                 .map(c -> new CurriculumView(c.getId(), c.getSessionNo(), c.getTitle(), c.getContent()))
                 .toList();
-        log.debug("[PtCourseDetail] ptCourseId={} 커리큘럼 수={}", ptCourse.getId(), curriculums.size());
+        log.debug("event=pt_course_detail_find ptCourseId={} curriculum_count={}", ptCourse.getId(), curriculums.size());
 
         // 스케쥴 조회 (도메인 모델 -> View 변환)
         List<ScheduleView> schedules = ptCourseScheduleRepository.findAllByPtCourseId(ptCourse.getId()).stream()
                 .map(s -> new ScheduleView(s.getId(), s.getDayOfWeek(), s.getStartTime(), s.getEndTime()))
                 .toList();
-        log.debug("[PtCourseDetail] ptCourseId={} 스케줄 수={}", ptCourse.getId(), schedules.size());
+        log.debug("event=pt_course_detail_find ptCourseId={} schedule_count={}", ptCourse.getId(), schedules.size());
 
         return new PtCourseDetailView(
                 ptCourse.getId(),

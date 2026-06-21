@@ -169,6 +169,29 @@ public class PtCourseController {
                 PtCourseResponseCode.MY_PT_COURSES_FETCHED, response));
     }
 
+    // 강습별 수강생 목록 조회 (트레이너 전용)
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "강습별 수강생 목록 조회", description = "트레이너가 본인 강습의 수강생 목록을 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = PtCourseReservationListResponse.class))),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/{ptCourseId}/reservations")
+    public ResponseEntity<GlobalApiResponse<PtCourseReservationListResponse>> findCourseReservations(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId
+    ) {
+        PtCourseReservationListResponse response = PtCourseReservationListResponse.from(
+                ptCourseQueryUseCase.findCourseReservations(authUser.userId(), ptCourseId)
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtCourseResponseCode.COURSE_RESERVATIONS_FETCHED, response));
+    }
+
 
     // UploadedFileMetadataRequest → UploadedFileMetadataCommand 변환 (null 허용)
     private UploadedFileMetadataCommand toMetadataCommand(UploadedFileMetadataRequest request) {
