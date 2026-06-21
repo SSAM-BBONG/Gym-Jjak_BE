@@ -43,8 +43,22 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         if (ptCourse.getStatus() == PtCourseStatus.DELETED) {
             entity.softDelete(); // status=DELETED + deletedAt=now()
         } else {
-            entity.updateStatus(ptCourse.getStatus()); // BLOCKED/VISIBLE 상태만 변경
+            entity.updateStatus(ptCourse.getStatus()); // VISIBLE/BLOCKED/VISIBLE 상태 변경
         }
         // save() 없이 @Transactional 더티체킹으로 자동 UPDATE
+    }
+
+    @Override
+    public List<PtCourse> findAllByTrainerProfileId(Long trainerProfileId, PtCourseStatus status) {
+        List<PtCourseJpaEntity> entities = (status == null)
+                // status 미지정 → VISIBLE + HIDDEN만 (BLOCKED, DELETED 제외, soft delete 안전)
+                ? repository.findAllByTrainerProfileIdAndStatusInAndDeletedAtIsNullOrderByCreatedAtDesc(
+                trainerProfileId, List.of(PtCourseStatus.VISIBLE, PtCourseStatus.HIDDEN))
+                : repository.findAllByTrainerProfileIdAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
+                trainerProfileId, status);
+
+        return entities.stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

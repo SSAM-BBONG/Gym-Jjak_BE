@@ -16,6 +16,7 @@ public class OAuth2UserInfoFactory {
     ) {
         return switch (registrationId.toLowerCase()) {
             case "google" -> new GoogleOAuth2UserInfo(attributes);
+            case "naver" -> new NaverOAuth2UserInfo(attributes);
             default -> throw new UserException(UserErrorCode.UNSUPPORTED_SOCIAL_PROVIDER);
         };
     }
