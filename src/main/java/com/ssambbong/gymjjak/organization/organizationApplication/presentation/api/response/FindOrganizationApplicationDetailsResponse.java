@@ -20,6 +20,6 @@ public record FindOrganizationApplicationDetailsResponse(
         String instagramUrl,
         String blogUrl,
         String facilityPhone,
-        Long businessLicenseFileId
+        String businessLicenseFileUrl
 ) {
 }
