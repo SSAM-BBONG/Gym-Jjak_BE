@@ -12,6 +12,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
@@ -137,6 +138,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
             throw e;
         }
         if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+            log.warn("event=pt_course_reservations_find_failed reason=forbidden userId={}, ptCourseId={}", userId, ptCourseId);
             throw new PtCourseForbiddenException();
         }
 
@@ -167,6 +169,53 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourseId, reservationViews.size());
 
         return new CourseReservationListView(ptCourse.getTitle(), reservationViews);
+    }
+
+    @Override
+    public ReservationDetailView findReservationDetail(Long userId, Long ptReservationId) {
+        log.debug("event=pt_reservation_detail_find userId={}, ptReservationId={}", userId, ptReservationId);
+
+        // 예약 존재 여부 확인
+        PtReservation reservation = ptReservationRepository.findById(ptReservationId)
+                .orElseThrow(() -> {
+                    log.warn("event=pt_reservation_detail_find_failed reason=reservation_not_found ptReservationId={}", ptReservationId);
+                    return new PtReservationNotFoundException();
+                });
+
+        // 예약에서 ptCourseId 추출 후 강습 조회
+        PtCourse ptCourse = ptCourseRepository.findById(reservation.getPtCourseId())
+                .orElseThrow(PtCourseNotFoundException::new);
+
+        // 트레이너 프로필 조회
+        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        try {
+            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+        } catch (TrainerProfileNotFoundException e) {
+            log.warn("event=pt_reservation_detail_find_failed reason=trainer_not_found userId={}", userId);
+            throw e;
+        }
+
+        // 본인 강습 여부 확인
+        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+            log.warn("event=pt_reservation_detail_find_failed reason=forbidden userId={}, ptReservationId={}", userId, ptReservationId);
+            throw new PtCourseForbiddenException();
+        }
+
+        // 수강생 프로필 조회 (nickname, email, phone)
+        UserNicknameQueryPort.StudentProfile studentProfile =
+                userNicknameQueryPort.findUserDetail(reservation.getUserId());
+
+        log.info("event=pt_reservation_detail_find_succeeded ptReservationId={}", ptReservationId);
+
+        return new ReservationDetailView(
+                studentProfile.nickname(),
+                studentProfile.email(),
+                studentProfile.phone(),
+                reservation.getStatus(),
+                reservation.getProgressCount(),
+                reservation.getTotalSessionCount(),
+                ptCourse.getTitle()
+        );
     }
 
     // categoryId -> categoryName 매핑
