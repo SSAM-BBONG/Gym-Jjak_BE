@@ -24,7 +24,6 @@ public class OrganizationApplicationQueryService implements OrganizationApplicat
 
     @Override
     public List<OrganizationApplication> findMyOrganizationApplications(Long applicantUserId) {
-
         return organizationApplicationRepository.findAllByApplicantUserId(applicantUserId);
     }
 
