@@ -26,4 +26,14 @@ public class TrainerCertificationRepositoryAdapter implements TrainerCertificati
 
         repository.saveAll(entities);
     }
+
+    @Override
+    public List<TrainerCertification> findAllByTrainerProfileId(Long trainerProfileId) {
+        return repository.findAllByTrainerProfileIdOrderByTrainerCertificationIdAsc(
+                trainerProfileId
+        )
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }

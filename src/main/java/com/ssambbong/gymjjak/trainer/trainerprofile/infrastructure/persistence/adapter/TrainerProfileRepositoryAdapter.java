@@ -8,6 +8,9 @@ import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.r
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
+
 @Repository
 @RequiredArgsConstructor
 public class TrainerProfileRepositoryAdapter implements TrainerProfileRepository {
@@ -22,5 +25,11 @@ public class TrainerProfileRepositoryAdapter implements TrainerProfileRepository
                 repository.save(mapper.toEntity(trainerProfile));
 
         return mapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<TrainerProfile> findByUserId(Long userId) {
+        return repository.findByUserId(userId)
+                .map(mapper::toDomain);
     }
 }

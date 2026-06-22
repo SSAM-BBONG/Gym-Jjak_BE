@@ -7,4 +7,6 @@ import java.util.List;
 public interface TrainerAwardRepository {
 
     void saveAll(List<TrainerAward> trainerAwards);
+
+    List<TrainerAward> findAllByTrainerProfileId(Long trainerProfileId);
 }

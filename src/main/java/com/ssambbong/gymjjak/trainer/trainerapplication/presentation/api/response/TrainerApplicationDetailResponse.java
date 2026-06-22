@@ -20,8 +20,20 @@ public record TrainerApplicationDetailResponse(
         @Schema(description = "프로필 이미지 URL. 프로필 이미지가 없으면 null입니다.")
         String profileImageUrl,
 
+        @Schema(
+                description = "프로필 이미지 원본 파일명. 프로필 이미지가 없으면 null입니다.",
+                example = "profile-image.png"
+        )
+        String profileImageOriginalName,
+
         @Schema(description = "필수 자격증 조회용 Presigned URL. URL은 1시간 동안 유효합니다.")
         String certificateUrl,
+
+        @Schema(
+                description = "필수 자격증 원본 파일명",
+                example = "생활스포츠지도사_자격증.pdf"
+        )
+        String certificateOriginalName,
 
         @Schema(description = "사용자가 입력한 자격증 목록")
         List<String> qualifications,
@@ -55,13 +67,17 @@ public record TrainerApplicationDetailResponse(
         public static TrainerApplicationDetailResponse from(
                 TrainerApplicationDetailResult result,
                 String profileImageUrl,
-                String certificateUrl
+                String profileImageOriginalName,
+                String certificateUrl,
+                String certificateOriginalName
         ) {
                 return TrainerApplicationDetailResponse.builder()
                         .trainerApplicationId(result.trainerApplicationId())
                         .userId(result.userId())
                         .profileImageUrl(profileImageUrl)
+                        .profileImageOriginalName(profileImageOriginalName)
                         .certificateUrl(certificateUrl)
+                        .certificateOriginalName(certificateOriginalName)
                         .qualifications(result.qualifications())
                         .awardHistories(result.awardHistories())
                         .introduction(result.introduction())

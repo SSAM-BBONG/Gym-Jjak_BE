@@ -19,6 +19,12 @@ public record TrainerApplicationReviewDetailResponse(
         @Schema(description = "프로필 이미지 URL. 프로필 이미지가 없으면 null입니다.")
         String profileImageUrl,
 
+        @Schema(
+                description = "프로필 이미지 원본 파일명. 파일이 없으면 null입니다.",
+                example = "profile-image.png"
+        )
+        String profileImageOriginalName,
+
         @Schema(description = "신청자 이름", example = "김정수")
         String name,
 
@@ -37,6 +43,12 @@ public record TrainerApplicationReviewDetailResponse(
         @Schema(description = "필수 자격증 조회용 Presigned URL. URL은 1시간 동안 유효합니다.")
         String certificateUrl,
 
+        @Schema(
+                description = "필수 자격증 원본 파일명. 파일 조회에 실패하면 null입니다.",
+                example = "생활스포츠지도사_자격증.pdf"
+        )
+        String certificateOriginalName,
+
         @Schema(description = "신청자가 입력한 수상/대회경력 목록")
         List<String> awardHistories,
 
@@ -47,18 +59,22 @@ public record TrainerApplicationReviewDetailResponse(
     public static TrainerApplicationReviewDetailResponse from(
             TrainerApplicationReviewDetailResult result,
             String profileImageUrl,
-            String certificateUrl
+            String profileImageOriginalName,
+            String certificateUrl,
+            String certificateOriginalName
             ) {
         return TrainerApplicationReviewDetailResponse.builder()
                 .trainerApplicationId(result.trainerApplicationId())
                 .userId(result.userId())
                 .profileImageUrl(profileImageUrl)
+                .profileImageOriginalName(profileImageOriginalName)
                 .name(result.name())
                 .username(result.username())
                 .nickname(result.nickname())
                 .introduction(result.introduction())
                 .qualifications(result.qualifications())
                 .certificateUrl(certificateUrl)
+                .certificateOriginalName(certificateOriginalName)
                 .awardHistories(result.awardHistories())
                 .status(result.status())
                 .build();

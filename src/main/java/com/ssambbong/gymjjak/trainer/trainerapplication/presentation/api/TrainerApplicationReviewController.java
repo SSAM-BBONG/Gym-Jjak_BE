@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
@@ -92,13 +93,13 @@ public class TrainerApplicationReviewController {
         TrainerApplicationReviewDetailResult result =
                 trainerApplicationReviewQueryUseCase.getTrainerApplicationReviewDetail(trainerApplicationId);
 
-        String profileImageUrl = resolveFileUrl(
+        FileUrlResult profileImageFile = resolveFileUrl(
                 result.profileImageFileId(),
                 authUser.userId(),
                 true
         );
 
-        String certificateUrl = resolveFileUrl(
+        FileUrlResult certificateFile = resolveFileUrl(
                 result.certificateFileId(),
                 authUser.userId(),
                 true
@@ -109,13 +110,16 @@ public class TrainerApplicationReviewController {
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_REVIEW_DETAIL_FOUND,
                         TrainerApplicationReviewDetailResponse.from(
                                 result,
-                                profileImageUrl,
-                                certificateUrl)
+                                profileImageFile == null ? null : profileImageFile.url(),
+                                profileImageFile == null ? null : profileImageFile.originalName(),
+                                certificateFile == null ? null : certificateFile.url(),
+                                certificateFile == null ? null : certificateFile.originalName()
+                        )
                 )
         );
     }
 
-    private String resolveFileUrl(
+    private FileUrlResult resolveFileUrl(
             Long fileId,
             Long requesterId,
             boolean isAdmin
@@ -130,10 +134,10 @@ public class TrainerApplicationReviewController {
                     fileId,
                     requesterId,
                     isAdmin
-            ).url();
+            );
         } catch (FileNotFoundException exception) {
             log.warn(
-                    "event=trainer_application_file_url_not_found, " +
+                    "event=trainer_application_file_not_found, " +
                             "fileId={}, requesterId={}, isAdmin={}",
                     fileId,
                     requesterId,
@@ -142,7 +146,7 @@ public class TrainerApplicationReviewController {
             return null;
         } catch (RuntimeException exception) {
             log.error(
-                    "event=trainer_application_file_url_resolve_failed," +
+                    "event=trainer_application_file_resolve_failed," +
                             "fileId={}, requesterId={}, isAdmin={}",
                     fileId,
                     requesterId,
