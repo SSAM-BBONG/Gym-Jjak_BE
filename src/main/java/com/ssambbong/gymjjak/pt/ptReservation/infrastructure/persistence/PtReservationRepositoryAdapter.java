@@ -1,10 +1,13 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationStatusInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,8 +29,6 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 ptReservation.getTrainerProfileId(),
                 ptReservation.getReservedStartAt(),
                 ptReservation.getReservedEndAt(),
-                ptReservation.getCancelledAt(),
-                ptReservation.getCompletedAt(),
                 ptReservation.getProgressCount(),
                 ptReservation.getTotalSessionCount(),
                 ptReservation.getStatus()
@@ -58,5 +59,25 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
     @Override
     public Optional<PtReservation> findById(Long id) {
         return repository.findById(id).map(mapper::toDomain);
+    }
+
+    // 강습별 수강생 목록 조회
+    @Override
+    public List<PtReservation> findAllByPtCourseId(Long ptCourseId) {
+        return repository.findAllByPtCourseIdOrderByReservedStartAtDesc(ptCourseId)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(PtReservation ptReservation) {
+        PtReservationJpaEntity entity = repository.findById(ptReservation.getId())
+                .orElseThrow(PtReservationNotFoundException::new);
+        if (entity.getCancelledAt() != null || entity.getCompletedAt() != null) {
+            throw new PtReservationStatusInvalidException();
+        }
+        entity.updateStatus(ptReservation.getStatus(), ptReservation.getCancelledAt(), ptReservation.getCompletedAt());
     }
 }

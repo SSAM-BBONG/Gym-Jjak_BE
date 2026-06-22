@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.Organ
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrganizationTrainerRepository {
 
@@ -12,6 +13,14 @@ public interface OrganizationTrainerRepository {
     long countActiveByOrganizationId(Long organizationId);
 
     List<TrainerSummary> findTrainersByOrganizationId(Long organizationId);
+
+    Optional<OrganizationTrainer> findActiveByIdAndOrganizationId(Long organizationTrainerId, Long organizationId);
+
+    void remove(Long organizationTrainerId);
+
+    long countAllActive();
+
+    long countActiveOrganizations();
 
     record TrainerSummary(
             Long organizationTrainerId,

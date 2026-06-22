@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organization.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.organization.organization.application.command.OrganizationUpdateCommand;
@@ -10,11 +11,7 @@ import com.ssambbong.gymjjak.organization.organization.application.usecase.Organ
 import com.ssambbong.gymjjak.organization.organization.presentation.api.mapper.OrganizationMapper;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.request.OrganizationUpdateRequest;
-import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindMyOrganizationResponse;
-import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationResponse;
-import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationsListResponse;
-import com.ssambbong.gymjjak.organization.organization.presentation.api.response.FindOrganizationsResponse;
-import com.ssambbong.gymjjak.organization.organization.presentation.api.response.OrganizationResponseCode;
+import com.ssambbong.gymjjak.organization.organization.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -41,6 +38,7 @@ public class OrganizationController {
     private final OrganizationQueryUseCase organizationQueryUseCase;
     private final OrganizationCommandUseCase organizationCommandUseCase;
     private final OrganizationMapper organizationMapper;
+    private final FileUrlUseCase fileUrlUseCase;
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "조직 목록 조회 (관리자)", description = "관리자가 전체 조직 목록을 조회합니다.")
@@ -108,10 +106,16 @@ public class OrganizationController {
     ) {
         Organization organization = organizationQueryUseCase.findMyOrganization(authUser.userId());
 
+        // 조직 계정은 파일 업로더(신청자)와 다른 계정이므로 소유권 체크 우회 허용
+        // findMyOrganization()으로 본인 조직만 조회되고 fileId도 DB에서 가져오므로 우회 불가
+        boolean isOrganization = authUser.role().equals("ORGANIZATION");
+        String businessLicenseFileUrl = fileUrlUseCase.getUrl(
+                organization.getBusinessLicenseFileId(), authUser.userId(), isOrganization).url();
+
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         OrganizationResponseCode.ORGANIZATION_FOUND,
-                        FindMyOrganizationResponse.of(organization)
+                        organizationMapper.toMyOrganizationResponse(organization, businessLicenseFileUrl)
                 )
         );
     }

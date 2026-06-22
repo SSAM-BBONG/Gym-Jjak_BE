@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
@@ -138,7 +139,7 @@ public class TrainerApplicationController {
             @ApiResponse(responseCode = "401", description = "인증 실패"),
             @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음")
     })
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     public ResponseEntity<GlobalApiResponse<TrainerApplicationDetailResponse>> getMyTrainerApplication(
             @AuthenticationPrincipal AuthUser authUser
     ) {
@@ -146,11 +147,11 @@ public class TrainerApplicationController {
         TrainerApplicationDetailResult result =
                 trainerApplicationQueryUseCase.getMyTrainerApplication(authUser.userId());
 
-        String profileImageUrl = resolveFileUrl(
+        FileUrlResult profileImageFile = resolveFileUrl(
                 result.profileImageFileId(), authUser.userId(), false
         );
 
-        String certificateUrl = resolveFileUrl(
+        FileUrlResult certificateFile = resolveFileUrl(
                 result.certificateFileId(), authUser.userId(), false
         );
 
@@ -159,14 +160,17 @@ public class TrainerApplicationController {
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_DETAIL_FOUND,
                         TrainerApplicationDetailResponse.from(
                                 result,
-                                profileImageUrl,
-                                certificateUrl)
+                                profileImageFile == null ? null : profileImageFile.url(),
+                                profileImageFile == null ? null : profileImageFile.originalName(),
+                                certificateFile == null ? null : certificateFile.url(),
+                                certificateFile == null ? null : certificateFile.originalName()
+                        )
                 )
         );
     }
 
-    // File 도메인에서 Id로 URL 받기
-    private String resolveFileUrl(
+    // File 도메인에서 Id로 FileResult 받기
+    private FileUrlResult resolveFileUrl(
             Long fileId,
             Long requesterId,
             boolean isAdmin
@@ -183,7 +187,7 @@ public class TrainerApplicationController {
             );
         } catch (FileNotFoundException exception) {
             log.warn(
-                    "event=trainer_application_file_url_not_found, " +
+                    "event=trainer_application_file_not_found, " +
                             "fileId={}, requesterId={}, isAdmin={}",
                     fileId,
                     requesterId,
@@ -192,7 +196,7 @@ public class TrainerApplicationController {
             return null;
         } catch (RuntimeException exception) {
             log.error(
-                    "event=trainer_application_file_url_resolve_failed," +
+                    "event=trainer_application_file_resolve_failed," +
                             "fileId={}, requesterId={}, isAdmin={}",
                     fileId,
                     requesterId,

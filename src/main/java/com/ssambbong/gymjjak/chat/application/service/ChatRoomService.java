@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 
 import java.util.List;
@@ -120,12 +121,15 @@ public class ChatRoomService implements ChatRoomUseCase {
                 .filter(Objects::nonNull)
                 .toList();
 
-        Map<Long, String> urlMap = fileIds.isEmpty()
+        Map<Long, FileUrlResult> urlMap = fileIds.isEmpty()
                 ? Map.of()
                 : fileUrlUseCase.getUrls(fileIds, requesterId, false);
 
         List<ChatRoomSummary> roomsWithUrl = rooms.stream()
-                .map(s -> s.withProfileImageUrl(urlMap.get(s.partnerProfileFileId())))
+                .map(s -> s.withProfileImageUrl(
+                        s.partnerProfileFileId() != null && urlMap.containsKey(s.partnerProfileFileId())
+                                ? urlMap.get(s.partnerProfileFileId()).url()
+                                : null))
                 .toList();
 
         long totalUnreadCount = roomsWithUrl.stream().mapToLong(ChatRoomSummary::unreadCount).sum();

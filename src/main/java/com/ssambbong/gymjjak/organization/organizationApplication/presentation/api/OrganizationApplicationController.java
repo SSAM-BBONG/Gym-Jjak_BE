@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
@@ -40,6 +41,7 @@ public class OrganizationApplicationController {
     private final OrganizationApplicationCommandUsecase organizationApplicationCommandUsecase;
     private final OrganizationApplicationQueryUsecase organizationApplicationQueryUsecase;
     private final OrganizationApplicationMapper organizationApplicationMapper;
+    private final FileUrlUseCase fileUrlUseCase;
 
     @Operation(summary = "조직 신청", description = "사용자가 조직(헬스장) 등록을 신청합니다.")
     @ApiResponses({
@@ -157,6 +159,9 @@ public class OrganizationApplicationController {
         OrganizationApplication organizationApplicationDetails =
                 organizationApplicationQueryUsecase.findOrganizationApplicationDetails(applicationId, requestUserId, isAdmin);
 
+        String businessLicenseFileUrl = fileUrlUseCase.getUrl(
+                organizationApplicationDetails.getBusinessLicenseFileId(), requestUserId, isAdmin).url();
+
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_DETAILS_FOUND,
@@ -177,7 +182,7 @@ public class OrganizationApplicationController {
                                 organizationApplicationDetails.getInstagramUrl(),
                                 organizationApplicationDetails.getBlogUrl(),
                                 organizationApplicationDetails.getFacilityPhone(),
-                                organizationApplicationDetails.getBusinessLicenseFileId()
+                                businessLicenseFileUrl
                         )
                 )
         );
