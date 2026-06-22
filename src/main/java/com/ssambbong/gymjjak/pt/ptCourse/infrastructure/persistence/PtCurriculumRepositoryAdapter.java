@@ -42,4 +42,19 @@ public class PtCurriculumRepositoryAdapter implements PtCurriculumRepository {
     public Optional<PtCurriculum> findByIdAndPtCourseId(Long ptCurriculumId, Long ptCourseId) {
         return repository.findByIdAndPtCourseId(ptCurriculumId, ptCourseId).map(mapper::toDomain);
     }
+
+    // id가 있는 커리큘럼 필드 수정
+    @Override
+    public void update(PtCurriculum curriculum) {
+        repository.findById(curriculum.getId()).ifPresent(entity ->
+                entity.updateFields(curriculum.getSessionNo(), curriculum.getTitle(), curriculum.getContent())
+        );
+    }
+
+    // upsert 시 요청에 없는 커리큘럼 일괄 삭제
+    @Override
+    public void deleteAllByIdIn(List<Long> ids) {
+        if (ids.isEmpty()) return;
+        repository.deleteAllByIdIn(ids);
+    }
 }

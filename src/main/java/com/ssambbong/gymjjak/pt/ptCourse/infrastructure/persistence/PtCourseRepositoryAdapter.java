@@ -40,10 +40,21 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         PtCourseJpaEntity entity = repository.findById(ptCourse.getId())
                 .orElseThrow(PtCourseNotFoundException::new);
 
+        // 강습 필드 수정 (제목·설명·카테고리·태그·가격·썸네일·총 회차)
+        entity.updateFields(
+                ptCourse.getCategoryId(),
+                ptCourse.getTagId(),
+                ptCourse.getThumbnailFileId(),
+                ptCourse.getTitle(),
+                ptCourse.getDescription(),
+                ptCourse.getPrice(),
+                ptCourse.getTotalSessionCount()
+        );
+
         if (ptCourse.getStatus() == PtCourseStatus.DELETED) {
             entity.softDelete(); // status=DELETED + deletedAt=now()
         } else {
-            entity.updateStatus(ptCourse.getStatus()); // VISIBLE/BLOCKED/VISIBLE 상태 변경
+            entity.updateStatus(ptCourse.getStatus()); // VISIBLE/HIDDEN/BLOCKED 상태 변경
         }
         // save() 없이 @Transactional 더티체킹으로 자동 UPDATE
     }

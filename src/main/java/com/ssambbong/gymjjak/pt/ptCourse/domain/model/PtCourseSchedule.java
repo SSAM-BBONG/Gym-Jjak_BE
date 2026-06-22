@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.domain.model;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.InvalidScheduleException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 
 import java.time.DayOfWeek;
@@ -28,13 +29,13 @@ public class PtCourseSchedule {
             throw new PtCourseInvalidException();
         }
         if (dayOfWeek == null || startTime == null || endTime == null) {
-            throw new PtCourseInvalidException();
+            throw new InvalidScheduleException();
         }
         DayOfWeek parsedDay;
         try {
             parsedDay = DayOfWeek.valueOf(dayOfWeek);
         } catch (IllegalArgumentException e) {
-            throw new PtCourseInvalidException();
+            throw new InvalidScheduleException();
         }
 
         LocalTime parsedStart;
@@ -43,11 +44,11 @@ public class PtCourseSchedule {
             parsedStart = LocalTime.parse(startTime);
             parsedEnd = LocalTime.parse(endTime);
         } catch (java.time.format.DateTimeParseException e) {
-            throw new PtCourseInvalidException();
+            throw new InvalidScheduleException();
         }
 
         if (!parsedEnd.isAfter(parsedStart)) {
-            throw new PtCourseInvalidException();
+            throw new InvalidScheduleException();
         }
         return new PtCourseSchedule(null, ptCourseId, parsedDay, parsedStart, parsedEnd);
     }

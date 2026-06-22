@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -29,8 +30,16 @@ public class PtCurriculumJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    // 신규 커리큘럼 생성 시
     public PtCurriculumJpaEntity(Long ptCourseId, int sessionNo, String title, String content) {
         this.ptCourseId = ptCourseId;
+        this.sessionNo = sessionNo;
+        this.title = title;
+        this.content = content;
+    }
+
+    // 커리큘럼 내용 수정
+    public void updateFields(int sessionNo, String title, String content) {
         this.sessionNo = sessionNo;
         this.title = title;
         this.content = content;

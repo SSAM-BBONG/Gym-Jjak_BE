@@ -31,4 +31,19 @@ public class PtCourseScheduleRepositoryAdapter implements PtCourseScheduleReposi
                 .map(mapper::toDomain)
                 .toList();
     }
+
+    // id가 있는 스케줄 필드 수정 — 더티체킹으로 UPDATE
+    @Override
+    public void update(PtCourseSchedule schedule) {
+        repository.findById(schedule.getId()).ifPresent(entity ->
+                entity.updateFields(schedule.getDayOfWeek(), schedule.getStartTime(), schedule.getEndTime())
+        );
+    }
+
+    // upsert 시 요청에 없는 스케줄 일괄 삭제
+    @Override
+    public void deleteAllByIdIn(List<Long> ids) {
+        if (ids.isEmpty()) return;
+        repository.deleteAllByIdIn(ids);
+    }
 }

@@ -6,8 +6,11 @@ import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.ChangePtCourseStatusCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.UpdatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
@@ -38,6 +41,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
     private final PtCurriculumRepository ptCurriculumRepository;
     private final PtCourseScheduleRepository ptCourseScheduleRepository;
     private final TrainerProfileQueryPort trainerProfileQueryPort;
+    private final PtReservationCountQueryPort ptReservationCountQueryPort;
     private final FileUseCase fileUseCase;
 
     @Override
@@ -127,6 +131,105 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 saved.getId()
         );
         return saved.getId();
+    }
+
+    // PT 강습 수정
+    @Override
+    public Long updatePtCourse(UpdatePtCourseCommand command) {
+        log.debug("event=pt_course_update_started userId={}, ptCourseId={}", command.userId(), command.ptCourseId());
+
+        // 강습 존재 여부 확인
+        PtCourse ptCourse = ptCourseRepository.findById(command.ptCourseId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_course_update_failed reason=not_found ptCourseId={}", command.ptCourseId());
+                    return new PtCourseNotFoundException();
+                });
+
+        // 본인 강습 여부 확인
+        TrainerProfileQueryPort.TrainerInfo trainerInfo =
+                trainerProfileQueryPort.findByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+            log.warn("event=pt_course_update_failed reason=forbidden userId={}, ptCourseId={}", command.userId(), command.ptCourseId());
+            throw new PtCourseForbiddenException();
+        }
+
+        // 커리큘럼 변경 시 활성 수강생 0명 확인
+        if (command.curriculums() != null && !command.curriculums().isEmpty()) {
+            int activeCount = ptReservationCountQueryPort
+                    .countActiveByPtCourseIds(List.of(command.ptCourseId()))
+                    .getOrDefault(command.ptCourseId(), 0);
+            if (activeCount > 0) {
+                log.warn("event=pt_course_update_failed reason=curriculum_update_not_allowed ptCourseId={}, activeCount={}", command.ptCourseId(), activeCount);
+                throw new CurriculumUpdateNotAllowedException();
+            }
+        }
+
+        // 강습 필드 수정
+        ptCourse.update(
+                command.categoryId(),
+                command.tagId(),
+                command.thumbnailFileId(),
+                command.title(),
+                command.description(),
+                command.price(),
+                command.curriculums() != null ? command.curriculums().size() : ptCourse.getTotalSessionCount()
+        );
+        ptCourseRepository.update(ptCourse);
+
+        // 커리큘럼 upsert
+        if (command.curriculums() != null) {
+            // DB에 있는 기존 커리큘럼 ID 목록
+            List<Long> existingIds = ptCurriculumRepository.findAllByPtCourseId(command.ptCourseId())
+                    .stream().map(PtCurriculum::getId).toList();
+
+            // 요청에 id가 있는 항목 → 수정
+            List<Long> requestIds = command.curriculums().stream()
+                    .filter(c -> c.id() != null).map(UpdatePtCourseCommand.CurriculumData::id).toList();
+
+            // 요청에 없는 기존 커리큘럼 → 삭제
+            List<Long> toDelete = existingIds.stream().filter(id -> !requestIds.contains(id)).toList();
+            ptCurriculumRepository.deleteAllByIdIn(toDelete);
+
+            // 수정 또는 신규 생성
+            for (UpdatePtCourseCommand.CurriculumData c : command.curriculums()) {
+                if (c.id() != null) {
+                    ptCurriculumRepository.update(PtCurriculum.restore(c.id(), command.ptCourseId(), c.sessionNo(), c.title(), c.content()));
+                } else {
+                    ptCurriculumRepository.saveAll(List.of(PtCurriculum.create(command.ptCourseId(), c.sessionNo(), c.title(), c.content())));
+                }
+            }
+        }
+
+        // 스케줄 upsert
+        if (command.schedules() != null) {
+            List<Long> existingScheduleIds = ptCourseScheduleRepository.findAllByPtCourseId(command.ptCourseId())
+                    .stream().map(PtCourseSchedule::getId).toList();
+
+            List<Long> requestScheduleIds = command.schedules().stream()
+                    .filter(s -> s.id() != null).map(UpdatePtCourseCommand.ScheduleData::id).toList();
+
+            List<Long> toDeleteSchedules = existingScheduleIds.stream().filter(id -> !requestScheduleIds.contains(id)).toList();
+            ptCourseScheduleRepository.deleteAllByIdIn(toDeleteSchedules);
+
+            for (UpdatePtCourseCommand.ScheduleData s : command.schedules()) {
+                if (s.id() != null) {
+                    PtCourseSchedule restored = PtCourseSchedule.restore(
+                            s.id(), command.ptCourseId(),
+                            java.time.DayOfWeek.valueOf(s.dayOfWeek()),
+                            java.time.LocalTime.parse(s.startTime()),
+                            java.time.LocalTime.parse(s.endTime())
+                    );
+                    ptCourseScheduleRepository.update(restored);
+                } else {
+                    ptCourseScheduleRepository.saveAll(List.of(
+                            PtCourseSchedule.create(command.ptCourseId(), s.dayOfWeek(), s.startTime(), s.endTime())
+                    ));
+                }
+            }
+        }
+
+        log.info("event=pt_course_update_succeeded ptCourseId={}", command.ptCourseId());
+        return command.ptCourseId();
     }
 
     // PT 상태 변경

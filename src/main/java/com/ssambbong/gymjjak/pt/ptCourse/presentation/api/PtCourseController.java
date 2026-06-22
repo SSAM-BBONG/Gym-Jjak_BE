@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCas
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.ChangePtCourseStatusRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.CreatePtCourseRequest;
+import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.UpdatePtCourseRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -110,6 +111,30 @@ public class PtCourseController {
                 GlobalApiResponse.ok(
                         PtCourseResponseCode.PT_COURSE_DETAIL,
                         response));
+    }
+
+    // PT 강습 수정 (트레이너 전용)
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "PT 강습 수정", description = "트레이너가 본인 PT 강습 정보를 수정한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공",
+                    content = @Content(schema = @Schema(implementation = UpdatePtCourseResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 또는 수강생이 있어 커리큘럼 수정 불가",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @PutMapping("/{ptCourseId}")
+    public ResponseEntity<GlobalApiResponse<UpdatePtCourseResponse>> updatePtCourse(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId,
+            @RequestBody @Valid UpdatePtCourseRequest request
+    ) {
+        Long updatedId = ptCourseCommandUseCase.updatePtCourse(request.toCommand(authUser.userId(), ptCourseId));
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtCourseResponseCode.PT_COURSE_UPDATED, new UpdatePtCourseResponse(updatedId)));
     }
 
     // PT 강습 상태 변경
