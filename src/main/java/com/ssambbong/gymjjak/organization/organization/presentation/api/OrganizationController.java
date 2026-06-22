@@ -106,8 +106,11 @@ public class OrganizationController {
     ) {
         Organization organization = organizationQueryUseCase.findMyOrganization(authUser.userId());
 
+        // 조직 계정은 파일 업로더(신청자)와 다른 계정이므로 소유권 체크 우회 허용
+        // findMyOrganization()으로 본인 조직만 조회되고 fileId도 DB에서 가져오므로 우회 불가
+        boolean isOrganization = authUser.role().equals("ORGANIZATION");
         String businessLicenseFileUrl = fileUrlUseCase.getUrl(
-                organization.getBusinessLicenseFileId(), organization.getOwnerUserId(), false).url();
+                organization.getBusinessLicenseFileId(), authUser.userId(), isOrganization).url();
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
