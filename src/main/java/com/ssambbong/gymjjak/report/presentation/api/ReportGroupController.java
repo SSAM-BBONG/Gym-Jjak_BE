@@ -50,7 +50,7 @@ public class ReportGroupController {
     public ResponseEntity<GlobalApiResponse<AdminReportListResponse>> findReportGroups(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam ReportTargetType targetType,
-            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "page는 0 이상이어야 합니다.") int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
         log.info("[ReportGroupController] 관리자 신고 목록 조회 API 호출 - adminId: {}, targetType: {}",
