@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCas
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseStatusInvalidException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.StudentNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.TrainerProfileNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
@@ -203,7 +204,11 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         // 수강생 프로필 조회 (nickname, email, phone)
         UserNicknameQueryPort.StudentProfile studentProfile =
-                userNicknameQueryPort.findUserDetail(reservation.getUserId());
+                userNicknameQueryPort.findUserDetail(reservation.getUserId())
+                        .orElseThrow(() -> {
+                            log.warn("event=pt_reservation_detail_find_failed reason=student_not_found userId={}", reservation.getUserId());
+                            return new StudentNotFoundException();
+                        });
 
         log.info("event=pt_reservation_detail_find_succeeded ptReservationId={}", ptReservationId);
 

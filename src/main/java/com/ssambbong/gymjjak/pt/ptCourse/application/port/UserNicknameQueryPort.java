@@ -1,9 +1,8 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.port;
 
-import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface UserNicknameQueryPort {
 
@@ -12,7 +11,7 @@ public interface UserNicknameQueryPort {
     Map<Long, String> findNicknamesByUserIds(List<Long> userIds);
 
     // 수강생 상세 조회용 단건 프로필 조회 (nickname + email + phone)
-    StudentProfile findUserDetail(Long userId);
+    Optional<StudentProfile> findUserDetail(Long userId);
     record StudentProfile(
             String nickname,
             String email,

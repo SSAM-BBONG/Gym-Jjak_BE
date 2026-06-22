@@ -3,11 +3,11 @@ package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.UserNicknameQueryPort;
 import com.ssambbong.gymjjak.user.adapter.out.persistence.SpringDataUserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -31,13 +31,12 @@ public class UserNicknameQueryAdapter implements UserNicknameQueryPort {
 
     // 상세 조회용 단건 프로필 조회
     @Override
-    public StudentProfile findUserDetail(Long userId) {
+    public Optional<StudentProfile> findUserDetail(Long userId) {
         return userRepository.findById(userId)
                 .map(user -> new StudentProfile(
                         user.getNickname(),
                         user.getUsername(), // username = 이메일 로그인 ID
                         user.getPhone()
-                ))
-                .orElse(null);
+                ));
     }
 }
