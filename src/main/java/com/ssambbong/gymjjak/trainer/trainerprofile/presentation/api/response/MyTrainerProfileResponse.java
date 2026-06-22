@@ -19,7 +19,8 @@ public record MyTrainerProfileResponse(
 
         @Schema(
                 description = "프로필 이미지 원본 파일명. 파일이 없으면 null입니다.",
-                example = "profile-image.png"
+                example = "profile-image.png",
+                nullable = true
         )
         String profileImageOriginalName,
 
