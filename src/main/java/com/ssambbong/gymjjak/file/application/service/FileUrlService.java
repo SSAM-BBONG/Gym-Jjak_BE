@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.file.application.service;
 
 import com.ssambbong.gymjjak.file.application.command.GetPresignedUrlCommand;
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.file.domain.model.File;
@@ -26,31 +27,37 @@ public class FileUrlService implements FileUrlUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public String getUrl(Long fileId, Long requesterId, boolean isAdmin) {
+    public FileUrlResult getUrl(Long fileId, Long requesterId, boolean isAdmin) {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new FileNotFoundException(fileId));
 
         FilePolicy policy = FilePolicy.from(file.getFileType());
 
+        String url;
         if (policy.isRequiresOwnershipCheck()) {
-            return fileUseCase.getPresignedUrl(new GetPresignedUrlCommand(fileId, requesterId, isAdmin));
+            url = fileUseCase.getPresignedUrl(new GetPresignedUrlCommand(fileId, requesterId, isAdmin));
+        } else {
+            url = fileStoragePort.getPublicUrl(file.getFileUrl());
         }
-        return fileStoragePort.getPublicUrl(file.getFileUrl());
+        return new FileUrlResult(url, file.getOriginalName());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, String> getUrls(List<Long> fileIds, Long requesterId, boolean isAdmin) {
+    public Map<Long, FileUrlResult> getUrls(List<Long> fileIds, Long requesterId, boolean isAdmin) {
         return fileRepository.findAllByIds(fileIds).stream()
                 .collect(Collectors.toMap(
                         File::getFileId,
                         file -> {
                             FilePolicy policy = FilePolicy.from(file.getFileType());
+                            String url;
                             if (policy.isRequiresOwnershipCheck()) {
-                                return fileUseCase.getPresignedUrl(
+                                url = fileUseCase.getPresignedUrl(
                                         new GetPresignedUrlCommand(file.getFileId(), requesterId, isAdmin));
+                            } else {
+                                url = fileStoragePort.getPublicUrl(file.getFileUrl());
                             }
-                            return fileStoragePort.getPublicUrl(file.getFileUrl());
+                            return new FileUrlResult(url, file.getOriginalName());
                         }
                 ));
     }

@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.domain.repository;
 
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,4 +19,7 @@ public interface PtCourseRepository {
 
     // 상태 변경 (blind/unblind/delete)
     void update(PtCourse ptCourse);
+
+    // status=null → VISIBLE+HIDDEN 전체 / status 지정 → 해당 status만
+    List<PtCourse> findAllByTrainerProfileId(Long trainerProfileId, PtCourseStatus status);
 }

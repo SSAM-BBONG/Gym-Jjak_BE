@@ -125,11 +125,12 @@ public class TrainerApplicationReviewController {
         }
 
         try {
+            // FileUrlUseCase 반환 타입이 FileUrlResult로 변경됨에 따라 .url()로 추출
             return fileUrlUseCase.getUrl(
                     fileId,
                     requesterId,
                     isAdmin
-            );
+            ).url();
         } catch (FileNotFoundException exception) {
             log.warn(
                     "event=trainer_application_file_url_not_found, " +

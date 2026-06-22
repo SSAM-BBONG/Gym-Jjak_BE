@@ -3,22 +3,20 @@ package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
+import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-/*
-* 비즈니스 로직
-* 1. PT 강습 존재 여부 확인
-* 2. 중복 예약 여부 확인
-* 3. 예약 생성 및 저장
-* */
 
 @Slf4j
 @Service
@@ -28,47 +26,86 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
     private final PtReservationRepository ptReservationRepository;
     private final PtCourseRepository ptCourseRepository;
+    private final TrainerQueryPort trainerQueryPort;
 
     @Override
     public Long createPtReservation(CreatePtReservationCommand command) {
-
-        log.debug("[PtReservationCreate] userId={}, ptCourseId={}, start={}, end={}",
+        log.debug("event=pt_reservation_create userId={}, ptCourseId={}, start={}, end={}",
                 command.userId(), command.ptCourseId(),
                 command.reservedStartAt(), command.reservedEndAt());
 
-        // 1. PT 강습 조회 → organizationId, trainerProfileId, totalSessionCount 가져오기
         PtCourse ptCourse = ptCourseRepository.findById(command.ptCourseId())
                 .orElseThrow(() -> {
-                    log.warn("[PtReservationCreate] 존재하지 않는 PT 강습 - ptCourseId={}", command.ptCourseId());
+                    log.warn("event=pt_reservation_create_failed reason=pt_course_not_found, ptCourseId={}",
+                            command.ptCourseId());
                     return new PtCourseNotFoundException();
                 });
 
-        // 2. 중복 예약 확인 → 같은 PT 강습 + 시간 겹치면 예외
         if (ptReservationRepository.existsByPtCourseIdAndTimeOverlap(
                 command.ptCourseId(),
                 command.reservedStartAt(),
                 command.reservedEndAt()
         )) {
-            log.warn("[PtReservationCreate] 중복 예약 시도 감지 - userId={}, ptCourseId={}, start={}, end={}",
+            log.warn("event=pt_reservation_create_failed reason=duplicate, userId={}, ptCourseId={}, start={}, end={}",
                     command.userId(), command.ptCourseId(), command.reservedStartAt(), command.reservedEndAt());
             throw new PtReservationDuplicateException();
         }
 
-        // 3. 도메인 객체 생성
         PtReservation ptReservation = PtReservation.create(
                 command.userId(),
                 command.ptCourseId(),
-                ptCourse.getOrganizationId(),       // pt_course에서 복사
-                ptCourse.getTrainerProfileId(),     // pt_course에서 복사
+                ptCourse.getOrganizationId(),
+                ptCourse.getTrainerProfileId(),
                 command.reservedStartAt(),
                 command.reservedEndAt(),
-                ptCourse.getTotalSessionCount()     // pt_course에서 복사
+                ptCourse.getTotalSessionCount()
         );
 
-        // 4. 저장 후 id 반환
         PtReservation saved = ptReservationRepository.save(ptReservation);
 
-        log.info("[PtReservationCreate] ptReservationId={}", saved.getId());
+        log.info("event=pt_reservation_create_succeeded ptReservationId={}", saved.getId());
         return saved.getId();
     }
+
+    @Override
+    public PtReservation changePtReservationStatus(ChangePtReservationStatusCommand command) {
+        if (command.userId() == null || command.ptReservationId() == null || command.status() == null) {
+            throw new PtReservationInvalidException();
+        }
+        log.debug("event=pt_reservation_status_change userId={}, ptReservationId={}, status={}",
+                command.userId(), command.ptReservationId(), command.status());
+
+        // 예약 조회
+        PtReservation reservation = ptReservationRepository.findById(command.ptReservationId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_reservation_status_change_failed reason=not_found, ptReservationId={}",
+                            command.ptReservationId());
+                    return new PtReservationNotFoundException();
+                });
+
+        // 트레이너 프로필 조회 (트레이너만 변경 가능)
+        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(command.userId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_reservation_status_change_failed reason=forbidden, userId={}",
+                            command.userId());
+                    return new PtReservationForbiddenException();
+                });
+
+        // 본인 예약인지 확인 (본인 강습의 예약만 상태 변경 가능)
+        if (!reservation.getTrainerProfileId().equals(trainerProfileId)) {
+            log.warn("event=pt_reservation_status_change_failed reason=forbidden, userId={}, ptReservationId={}",
+                    command.userId(), command.ptReservationId());
+            throw new PtReservationForbiddenException();
+        }
+
+        // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
+        reservation.changeStatus(command.status());
+        ptReservationRepository.updateStatus(reservation);
+
+        log.info("event=pt_reservation_status_change_succeeded ptReservationId={}, status={}",
+                command.ptReservationId(), command.status());
+
+        return reservation;
+    }
+
 }
