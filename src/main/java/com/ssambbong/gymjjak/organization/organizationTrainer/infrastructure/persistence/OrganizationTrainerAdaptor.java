@@ -6,7 +6,9 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -28,6 +30,28 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
     public long countActiveByOrganizationId(Long organizationId) {
         return springDataOrganizationTrainerRepository
                 .countByOrganizationIdAndRemovedAtIsNull(organizationId);
+    }
+
+    @Override
+    public Optional<OrganizationTrainer> findActiveByIdAndOrganizationId(Long organizationTrainerId, Long organizationId) {
+        return springDataOrganizationTrainerRepository
+                .findByOrganizationTrainerIdAndOrganizationIdAndRemovedAtIsNull(organizationTrainerId, organizationId)
+                .map(OrganizationTrainerJpaEntity::toDomain);
+    }
+
+    @Override
+    public void remove(Long organizationTrainerId) {
+        springDataOrganizationTrainerRepository.markRemoved(organizationTrainerId, LocalDateTime.now());
+    }
+
+    @Override
+    public long countAllActive() {
+        return springDataOrganizationTrainerRepository.countByRemovedAtIsNull();
+    }
+
+    @Override
+    public long countActiveOrganizations() {
+        return springDataOrganizationTrainerRepository.countDistinctOrganizationsWithActiveTrainers();
     }
 
     @Override
