@@ -52,7 +52,7 @@ public class OrganizationController {
     })
     @GetMapping
     public ResponseEntity<GlobalApiResponse<FindOrganizationsListResponse>> getAllOrganizations(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword
     ) {

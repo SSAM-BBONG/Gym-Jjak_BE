@@ -22,6 +22,9 @@ public interface PtCourseQueryUseCase {
     // 강습별 수강생 목록 조회 (트레이너 전용)
     CourseReservationListView findCourseReservations(Long userId, Long ptCourseId);
 
+    // 수강생 상세 조회 (트레이너 전용)
+    ReservationDetailView findReservationDetail(Long userId, Long ptReservationId);
+
     // ──── 목록 뷰 ────
     record PtCourseListView(
             Long ptCourseId,
@@ -112,5 +115,16 @@ public interface PtCourseQueryUseCase {
             LocalDate lastPtDate,      // 가장 최근 피드백 날짜, 없으면 null
             int progressCount,
             int totalSessionCount
+    ) {}
+
+    // 수강생 상세 뷰
+    record ReservationDetailView(
+            String nickname,
+            String email,
+            String phone,
+            PtReservationStatus status,
+            int progressCount,
+            int totalSessionCount,
+            String title
     ) {}
 }

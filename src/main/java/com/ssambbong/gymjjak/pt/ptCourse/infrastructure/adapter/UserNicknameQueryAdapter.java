@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -15,7 +16,7 @@ public class UserNicknameQueryAdapter implements UserNicknameQueryPort {
 
     private final SpringDataUserRepository userRepository;
 
-
+    // 목록 조회용 닉네임 배치 조회
     @Override
     public Map<Long, String> findNicknamesByUserIds(List<Long> userIds) {
         if (userIds.isEmpty()) return Map.of();
@@ -25,6 +26,17 @@ public class UserNicknameQueryAdapter implements UserNicknameQueryPort {
                 .collect(Collectors.toMap(
                         user -> user.getId(),
                         user -> user.getNickname()
+                ));
+    }
+
+    // 상세 조회용 단건 프로필 조회
+    @Override
+    public Optional<StudentProfile> findUserDetail(Long userId) {
+        return userRepository.findById(userId)
+                .map(user -> new StudentProfile(
+                        user.getNickname(),
+                        user.getUsername(), // username = 이메일 로그인 ID
+                        user.getPhone()
                 ));
     }
 }

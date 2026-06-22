@@ -68,7 +68,7 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
                 query.targetType(), query.page(), query.size());
 
         // 페이지 요청 객체 생성
-        PageRequest pageRequest = PageRequest.of(query.page() - 1, query.size());
+        PageRequest pageRequest = PageRequest.of(query.page(), query.size());
 
         // JPA repo 조회
         // 수동 블라인드 처리된 그룹은 목록에서 제외하는 필터링

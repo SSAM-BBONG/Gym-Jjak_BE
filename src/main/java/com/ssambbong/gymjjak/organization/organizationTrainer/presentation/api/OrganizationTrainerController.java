@@ -69,7 +69,7 @@ public class OrganizationTrainerController {
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "403", description = "권한 없음",
                     content = @Content(schema = @Schema())),
-            @ApiResponse(responseCode = "404", description = "소속 트레이너를 찾을 수 없음",
+            @ApiResponse(responseCode = "404", description = "조직 또는 소속 트레이너를 찾을 수 없음",
                     content = @Content(schema = @Schema()))
     })
     @DeleteMapping("/{organizationTrainerId}")

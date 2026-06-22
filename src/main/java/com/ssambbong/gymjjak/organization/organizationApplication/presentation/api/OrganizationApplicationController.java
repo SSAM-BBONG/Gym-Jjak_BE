@@ -126,7 +126,7 @@ public class OrganizationApplicationController {
     })
     @GetMapping
     public ResponseEntity<GlobalApiResponse<FindAllOrganizationApplicationsListResponse>> findAllOrganizationApplications(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
         ApplicationListQuery query = new ApplicationListQuery(page, size);

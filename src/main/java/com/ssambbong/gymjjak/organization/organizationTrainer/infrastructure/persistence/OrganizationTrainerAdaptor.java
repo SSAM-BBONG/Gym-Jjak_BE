@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.pe
 
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
+import com.ssambbong.gymjjak.organization.organizationTrainer.exception.OrganizationTrainerNotFoundException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -41,7 +42,8 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
 
     @Override
     public void remove(Long organizationTrainerId) {
-        springDataOrganizationTrainerRepository.markRemoved(organizationTrainerId, LocalDateTime.now());
+        int affected = springDataOrganizationTrainerRepository.markRemoved(organizationTrainerId, LocalDateTime.now());
+        if (affected == 0) throw new OrganizationTrainerNotFoundException();
     }
 
     @Override
