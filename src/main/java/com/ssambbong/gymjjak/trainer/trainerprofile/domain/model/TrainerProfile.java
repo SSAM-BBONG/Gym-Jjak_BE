@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.domain.model;
 
+import com.ssambbong.gymjjak.trainer.trainerprofile.domain.exception.InvalidTrainerProfileException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -83,6 +84,30 @@ public class TrainerProfile {
                 averageRating,
                 reviewCount,
                 status
+        );
+    }
+
+    // 트레이너 프로필 수정
+    public TrainerProfile updateEditableInfo(
+            Long profileFileId,
+            String introduction
+    ) {
+        if (introduction ==null) {
+            throw new InvalidTrainerProfileException(
+                    "자기소개는 null일 수 없습니다."
+            );
+        }
+
+        return new TrainerProfile(
+                this.trainerProfileId,
+                this.userId,
+                this.applicationId,
+                profileFileId,
+                this.trainerName,
+                introduction,
+                this.averageRating,
+                this.reviewCount,
+                this.status
         );
     }
 }

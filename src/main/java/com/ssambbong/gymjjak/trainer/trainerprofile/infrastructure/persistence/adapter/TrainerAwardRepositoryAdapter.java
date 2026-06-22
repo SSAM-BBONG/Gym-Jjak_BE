@@ -34,4 +34,9 @@ public class TrainerAwardRepositoryAdapter implements TrainerAwardRepository {
                 .map(mapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public void deleteAllByTrainerProfileId(Long trainerProfileId) {
+        repository.deleteAllByTrainerProfileId(trainerProfileId);
+    }
 }
