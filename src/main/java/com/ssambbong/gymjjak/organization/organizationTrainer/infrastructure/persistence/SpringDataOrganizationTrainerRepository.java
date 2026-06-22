@@ -19,8 +19,8 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
             Long organizationTrainerId, Long organizationId);
 
     @Modifying
-    @Query("UPDATE OrganizationTrainerJpaEntity e SET e.removedAt = :removedAt WHERE e.organizationTrainerId = :id")
-    void markRemoved(@Param("id") Long organizationTrainerId, @Param("removedAt") LocalDateTime removedAt);
+    @Query("UPDATE OrganizationTrainerJpaEntity e SET e.removedAt = :removedAt WHERE e.organizationTrainerId = :id AND e.removedAt IS NULL")
+    int markRemoved(@Param("id") Long organizationTrainerId, @Param("removedAt") LocalDateTime removedAt);
 
     long countByRemovedAtIsNull();
 
