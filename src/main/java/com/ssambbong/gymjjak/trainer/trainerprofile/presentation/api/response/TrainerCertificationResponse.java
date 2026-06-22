@@ -20,7 +20,13 @@ public record TrainerCertificationResponse(
         @Schema(
                 description = "자격증 파일 URL. 파일이 없는 추가 자격증은 null입니다."
         )
-        String fileUrl
+        String fileUrl,
+
+        @Schema(
+                description = "자격증 파일 원본 이미지",
+                example = "사업자등록증.png"
+        )
+        String fileOriginalName
 ) {
 
         public static TrainerCertificationResponse from(
@@ -31,6 +37,7 @@ public record TrainerCertificationResponse(
                     .name(result.name())
                     .certificationType(result.certificationType())
                     .fileUrl(result.fileUrl())
+                    .fileOriginalName(result.fileOriginalName())
                     .build();
         }
 }

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.application.service;
 
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.file.exception.FileAccessDeniedException;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
@@ -67,7 +68,7 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
                         .toList();
 
         // 프로필 이미지 url
-        String profileImageUrl = resolveFileUrl(
+        FileUrlResult profileImageFile = resolveFile(
                 profile.getProfileFileId(),
                 requesterId
         );
@@ -84,7 +85,8 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
 
         return new MyTrainerProfileResult(
                 profile.getTrainerProfileId(),
-                profileImageUrl,
+                profileImageFile == null ? null : profileImageFile.url(),
+                profileImageFile == null ? null : profileImageFile.originalName(),
                 profile.getTrainerName(),
                 profile.getIntroduction(),
                 profile.getAverageRating(),
@@ -108,19 +110,23 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
     private TrainerCertificationResult toCertificationResult(
             TrainerCertification certification, Long requesterId
     ) {
+
+        FileUrlResult file = resolveFile(
+                certification.getFileId(),
+                requesterId
+        );
+
         return new TrainerCertificationResult(
                 certification.getTrainerCertificationId(),
                 certification.getName(),
                 certification.getCertificationType(),
-                resolveFileUrl(
-                        certification.getFileId(),
-                        requesterId
-                )
+                file == null ? null : file.url(),
+                file == null ? null : file.originalName()
         );
     }
 
     // fileId -> fileURL
-    private String resolveFileUrl(Long fileId, Long requesterId) {
+    private FileUrlResult resolveFile(Long fileId, Long requesterId) {
         if (fileId == null) {
             return null;
         }
@@ -152,7 +158,7 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
                     exception
             );
 
-            return null;
+            throw exception;
         }
     }
 }

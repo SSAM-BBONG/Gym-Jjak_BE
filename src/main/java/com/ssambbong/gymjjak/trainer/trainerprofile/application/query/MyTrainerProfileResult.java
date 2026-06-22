@@ -8,6 +8,7 @@ import java.util.List;
 public record MyTrainerProfileResult(
     Long trainerProfileId,
     String profileImageUrl,
+    String profileImageOriginalName,
     String trainerName,
     String introduction,
     BigDecimal averageRating,

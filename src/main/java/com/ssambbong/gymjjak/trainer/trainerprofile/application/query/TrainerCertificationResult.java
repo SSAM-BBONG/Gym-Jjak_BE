@@ -6,6 +6,7 @@ public record TrainerCertificationResult(
         Long trainerCertificationId,
         String name,
         TrainerCertificationType certificationType,
-        String fileUrl
+        String fileUrl,
+        String fileOriginalName
 ) {
 }

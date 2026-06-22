@@ -17,6 +17,12 @@ public record MyTrainerProfileResponse(
         @Schema(description = "프로필 이미지 URL")
         String profileImageUrl,
 
+        @Schema(
+                description = "프로필 이미지 원본 파일명. 파일이 없으면 null입니다.",
+                example = "profile-image.png"
+        )
+        String profileImageOriginalName,
+
         @Schema(description = "트레이너 이름", example = "홍길동")
         String trainerName,
 
@@ -44,6 +50,7 @@ public record MyTrainerProfileResponse(
              return MyTrainerProfileResponse.builder()
                      .trainerProfileId(result.trainerProfileId())
                      .profileImageUrl(result.profileImageUrl())
+                     .profileImageOriginalName(result.profileImageOriginalName())
                      .trainerName(result.trainerName())
                      .introduction(result.introduction())
                      .averageRating(result.averageRating())
