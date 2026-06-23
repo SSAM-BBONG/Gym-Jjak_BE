@@ -153,8 +153,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             throw new PtCourseForbiddenException();
         }
 
-        // 커리큘럼 변경 시 활성 수강생 0명 확인
-        if (command.curriculums() != null && !command.curriculums().isEmpty()) {
+        // 커리큘럼 변경 시 활성 수강생 0명 확인 (빈 리스트 = 전체 삭제도 변경에 해당)
+        if (command.curriculums() != null) {
             int activeCount = ptReservationCountQueryPort
                     .countActiveByPtCourseIds(List.of(command.ptCourseId()))
                     .getOrDefault(command.ptCourseId(), 0);
@@ -195,7 +195,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     .filter(c -> c.id() != null).map(UpdatePtCourseCommand.CurriculumData::id).toList();
             if (!existingIds.containsAll(requestIds)) {
                 log.warn("event=pt_course_update_failed reason=invalid_curriculum_id ptCourseId={}", command.ptCourseId());
-                throw new PtCourseNotFoundException();
+                throw new PtCourseInvalidException();
             }
 
             // 요청에 없는 기존 커리큘럼 → 삭제
@@ -214,6 +214,12 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         // 스케줄 upsert
         if (command.schedules() != null) {
+            // 빈 리스트 = 스케줄 전체 삭제 → 최소 1개 필수
+            if (command.schedules().isEmpty()) {
+                log.warn("event=pt_course_update_failed reason=no_schedule ptCourseId={}", command.ptCourseId());
+                throw new PtCourseInvalidException();
+            }
+
             // 스케줄 슬롯 중복 검증 (생성과 동일 규칙)
             long distinctSchedule = command.schedules().stream()
                     .map(s -> normalizeScheduleKey(s.dayOfWeek(), s.startTime(), s.endTime()))
@@ -232,7 +238,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             // 소유권: 요청 id ⊆ 기존 id
             if (!existingScheduleIds.containsAll(requestScheduleIds)) {
                 log.warn("event=pt_course_update_failed reason=invalid_schedule_id ptCourseId={}", command.ptCourseId());
-                throw new PtCourseNotFoundException();
+                throw new PtCourseInvalidException();
             }
 
             List<Long> toDeleteSchedules = existingScheduleIds.stream().filter(id -> !requestScheduleIds.contains(id)).toList();

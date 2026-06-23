@@ -126,7 +126,7 @@ public class PtCourseController {
             @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
                     content = @Content(schema = @Schema()))
     })
-    @PutMapping("/{ptCourseId}")
+    @PatchMapping("/{ptCourseId}")
     public ResponseEntity<GlobalApiResponse<UpdatePtCourseResponse>> updatePtCourse(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long ptCourseId,
