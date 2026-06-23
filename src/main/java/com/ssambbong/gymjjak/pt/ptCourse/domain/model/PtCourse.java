@@ -121,6 +121,23 @@ public class PtCourse {
         this.status = newStatus;
     }
 
+    // 트레이너가 강습 수정
+    public void update(Long categoryId, Long tagId, Long thumbnailFileId,
+                       String title, String description, int price, int totalSessionCount) {
+        if (title == null || title.isBlank()) throw new PtCourseInvalidException();
+        if (description == null || description.isBlank()) throw new PtCourseInvalidException();
+        if (price < 0) throw new PtCourseInvalidException();
+        if (totalSessionCount < 1) throw new PtCourseInvalidException();
+
+        this.categoryId = categoryId;
+        this.tagId = tagId;
+        this.thumbnailFileId = thumbnailFileId;
+        this.title = title;
+        this.description = description;
+        this.price = price;
+        this.totalSessionCount = totalSessionCount;
+    }
+
     // 관리자가 강습을 BLOCKED 상태로 전환
     public void blind() {
         this.status = PtCourseStatus.BLOCKED;

@@ -45,6 +45,9 @@ public class TrainerProfileCommandService implements TrainerProfileCommandUseCas
 
     @Override
     public Long updateMyTrainerProfile(UpdateTrainerProfileCommand command) {
+        // command 값 검증
+        validateRequiredCommand(command);
+
         // 이미지 상태값 검증
         validateProfileImageUpdate(
                 command.profileImageAction(),
@@ -119,6 +122,16 @@ public class TrainerProfileCommandService implements TrainerProfileCommandUseCas
         );
 
         return trainerProfileId;
+    }
+
+    private void validateRequiredCommand(UpdateTrainerProfileCommand command) {
+        if (command == null) {
+            throw new InvalidTrainerProfileException("command는 필수입니다.");
+        }
+
+        if (command.requesterId() == null) {
+            throw new InvalidTrainerProfileException("requesterId는 필수입니다.");
+        }
     }
 
     // 이전 프로필 이미지 파일 삭제 메서드

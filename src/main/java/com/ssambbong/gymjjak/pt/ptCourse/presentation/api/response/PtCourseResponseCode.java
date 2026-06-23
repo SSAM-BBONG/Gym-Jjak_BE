@@ -13,7 +13,8 @@ public enum PtCourseResponseCode implements ResponseCode {
     PT_COURSE_STATUS_UPDATED("PT_COURSE_200_STATUS", "PT 강습 상태 변경 성공"),
     MY_PT_COURSES_FETCHED("PT_COURSE_200_MY_LIST", "내 강습 목록 조회 성공"),
     COURSE_RESERVATIONS_FETCHED("PT_COURSE_200_RESERVATIONS", "수강생 목록 조회 성공"),
-    STUDENT_DETAIL_FETCHED("PT_COURSE_200_STUDENT_DETAIL", "수강생 상세 조회 성공");
+    STUDENT_DETAIL_FETCHED("PT_COURSE_200_STUDENT_DETAIL", "수강생 상세 조회 성공"),
+    PT_COURSE_UPDATED("PT_COURSE_UPDATED", "PT 강습 수정 성공");
 
     private final String code;
     private final String message;
