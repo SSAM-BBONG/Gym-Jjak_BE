@@ -1,9 +1,6 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.presentation.api;
 
-import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
-import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
-import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
@@ -43,7 +40,6 @@ public class OrganizationApplicationController {
     private final OrganizationApplicationCommandUsecase organizationApplicationCommandUsecase;
     private final OrganizationApplicationQueryUsecase organizationApplicationQueryUsecase;
     private final OrganizationApplicationMapper organizationApplicationMapper;
-    private final FileUseCase fileUseCase;
     private final FileUrlUseCase fileUrlUseCase;
 
     @Operation(summary = "조직 신청", description = "사용자가 조직(헬스장) 등록을 신청합니다.")
@@ -58,17 +54,8 @@ public class OrganizationApplicationController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody @Valid OrganizationApplicationCreateRequest request) {
 
-        Long fileId = fileUseCase.registerFiles(List.of(
-                new CreateFileCommand(authUser.userId(),
-                        request.businessLicenseFile().fileKey(),
-                        request.businessLicenseFile().originalName(),
-                        request.businessLicenseFile().contentType(),
-                        request.businessLicenseFile().fileSize(),
-                        FileType.BUSINESS_LICENSE)
-        )).get(0).fileId();
-
         Long organizationApplicationId = organizationApplicationCommandUsecase.createOrganizationApplication(
-                organizationApplicationMapper.toCommand(request, authUser.userId(), fileId));
+                organizationApplicationMapper.toCommand(request, authUser.userId()));
 
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
