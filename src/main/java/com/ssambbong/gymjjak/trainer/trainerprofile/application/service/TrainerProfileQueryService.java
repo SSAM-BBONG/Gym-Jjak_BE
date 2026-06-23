@@ -4,9 +4,7 @@ import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.file.exception.FileAccessDeniedException;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
-import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.MyTrainerProfileResult;
-import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.TrainerAwardResult;
-import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.TrainerCertificationResult;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.*;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.usecase.TrainerProfileQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.exception.TrainerProfileNotFoundException;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerAward;
@@ -44,7 +42,10 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
         TrainerProfile profile =
                 trainerProfileRepository.findByUserId(requesterId)
                         .orElseThrow(() ->
-                                new TrainerProfileNotFoundException(requesterId)
+                                new TrainerProfileNotFoundException(
+                                        "userId",
+                                        requesterId
+                                )
                         );
         // 자격증 조회
         List<TrainerCertificationResult> certifications =
@@ -96,6 +97,110 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
                 awards
         );
 
+    }
+
+    @Override
+    public TrainerProfileDetailResult getTrainerProfileDetail(Long trainerProfileId) {
+        log.info(
+                "event=trainer_profile_detail_query_start," +
+                        "trainerProfileId={}",
+                trainerProfileId
+        );
+
+        TrainerProfile profile =
+                trainerProfileRepository.findById(trainerProfileId)
+                        .orElseThrow(() ->
+                                new TrainerProfileNotFoundException(
+                                        "trainerProfileId",
+                                        trainerProfileId
+                                )
+                        );
+
+        // 필수 자격증 리스트 반환
+        List<TrainerCertificationSummaryResult> certifications =
+                trainerCertificationRepository.findAllByTrainerProfileId(
+                        profile.getTrainerProfileId()
+                ).stream()
+                        .map(this::toCertificationSummaryResult)
+                        .toList();
+
+
+        // 수상 결겨 리스트 반환
+        List<TrainerAwardResult> awards =
+                trainerAwardRepository.findAllByTrainerProfileId(
+                        profile.getTrainerProfileId()
+                ).stream()
+                        .map(this::toAwardResult)
+                        .toList();
+
+        // 공개 이미지 url 반환
+        String profileImageUrl =
+                resolvePublicProfileImageUrl(
+                        profile.getProfileFileId()
+                );
+
+        log.info(
+                "event=trainer_profile_detail_query_succeeded, " +
+                        "trainerProfileId={}, certificationCount={}, awardCount={}",
+                trainerProfileId,
+                certifications.size(),
+                awards.size()
+        );
+
+        return new TrainerProfileDetailResult(
+                profile.getTrainerProfileId(),
+                profileImageUrl,
+                profile.getTrainerName(),
+                profile.getIntroduction(),
+                profile.getAverageRating(),
+                profile.getReviewCount(),
+                profile.getStatus(),
+                certifications,
+                awards
+        );
+    }
+
+    private String resolvePublicProfileImageUrl(Long profileFileId) {
+
+        if (profileFileId == null) {
+            return null;
+        }
+
+        try {
+            FileUrlResult file =
+                    fileUrlUseCase.getUrl(
+                            profileFileId,
+                            null,
+                            false
+                    );
+
+            return file.url();
+        } catch (FileNotFoundException exception) {
+            log.warn(
+                    "event=trainer_profile_public_image_not_found, " +
+                            "profileFileId={}",
+                    profileFileId
+            );
+
+            return null;
+        } catch (RuntimeException exception) {
+            log.error(
+                    "event=trainer_profile_public_image_resolve_failed, " +
+                            "profileFileId={}",
+                    profileFileId,
+                    exception
+            );
+
+            return null;
+        }
+    }
+
+    private TrainerCertificationSummaryResult toCertificationSummaryResult(TrainerCertification certification) {
+        return new TrainerCertificationSummaryResult(
+                certification.getTrainerCertificationId(),
+                certification.getName(),
+                certification.getCertificationType()
+        );
     }
 
     // domain -> application 변환

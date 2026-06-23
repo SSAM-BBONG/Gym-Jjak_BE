@@ -32,4 +32,10 @@ public class TrainerProfileRepositoryAdapter implements TrainerProfileRepository
         return repository.findByUserId(userId)
                 .map(mapper::toDomain);
     }
+
+    @Override
+    public Optional<TrainerProfile> findById(Long trainerProfileId) {
+        return repository.findById(trainerProfileId)
+                .map(mapper::toDomain);
+    }
 }

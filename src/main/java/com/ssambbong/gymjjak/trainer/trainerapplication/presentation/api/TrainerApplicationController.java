@@ -14,7 +14,7 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.Trai
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.CreateTrainerApplicationRequest;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.UpdateTrainerApplicationRequest;
-import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.UploadedFileMetadataRequest;
+import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.CreateTrainerApplicationResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationDetailResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationResponseCode;
