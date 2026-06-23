@@ -27,9 +27,9 @@ public interface UserCommandUseCase {
 
     void updatePassword(UpdatePasswordCommand command);
 
-    PageResult<FindUserResult> findUsers(String name, int page, int size);
+    PageResult<FindUserResult> findUsers(String keyword, int page, int size);
 
-    PageResult<FindBlacklistUserResult> findBlacklistUsers(String name, int page, int size);
+    PageResult<FindBlacklistUserResult> findBlacklistUsers(String keyword, int page, int size);
 
     void completeSocialSignup(CompleteSocialSignupCommand command);
 

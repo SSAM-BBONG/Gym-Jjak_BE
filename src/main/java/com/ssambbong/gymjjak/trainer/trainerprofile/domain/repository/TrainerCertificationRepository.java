@@ -9,4 +9,8 @@ public interface TrainerCertificationRepository {
     void saveAll(List<TrainerCertification> trainerCertifications);
 
     List<TrainerCertification> findAllByTrainerProfileId(Long trainerProfileId);
+
+    void deleteAllAdditionalByTrainerProfileId(
+            Long trainerProfileId
+    );
 }

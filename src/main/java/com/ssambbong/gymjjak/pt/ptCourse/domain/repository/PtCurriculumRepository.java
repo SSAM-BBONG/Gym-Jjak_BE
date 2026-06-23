@@ -11,4 +11,6 @@ public interface PtCurriculumRepository {
     Optional<PtCurriculum> findById(Long ptCurriculumId);
     // 커리큘럼 ID + 코스 ID로 단건 조회
     Optional<PtCurriculum> findByIdAndPtCourseId(Long ptCurriculumId, Long ptCourseId);
+    void update(PtCurriculum curriculum);
+    void deleteAllByIdIn(List<Long> ids);
 }

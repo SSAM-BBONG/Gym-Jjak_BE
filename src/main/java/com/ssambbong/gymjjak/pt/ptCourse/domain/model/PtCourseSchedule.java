@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.domain.model;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.InvalidScheduleException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 
 import java.time.DayOfWeek;
@@ -28,13 +29,13 @@ public class PtCourseSchedule {
             throw new PtCourseInvalidException();
         }
         if (dayOfWeek == null || startTime == null || endTime == null) {
-            throw new PtCourseInvalidException();
+            throw new InvalidScheduleException();
         }
         DayOfWeek parsedDay;
         try {
             parsedDay = DayOfWeek.valueOf(dayOfWeek);
         } catch (IllegalArgumentException e) {
-            throw new PtCourseInvalidException();
+            throw new InvalidScheduleException();
         }
 
         LocalTime parsedStart;
@@ -43,18 +44,43 @@ public class PtCourseSchedule {
             parsedStart = LocalTime.parse(startTime);
             parsedEnd = LocalTime.parse(endTime);
         } catch (java.time.format.DateTimeParseException e) {
-            throw new PtCourseInvalidException();
+            throw new InvalidScheduleException();
         }
 
         if (!parsedEnd.isAfter(parsedStart)) {
-            throw new PtCourseInvalidException();
+            throw new InvalidScheduleException();
         }
         return new PtCourseSchedule(null, ptCourseId, parsedDay, parsedStart, parsedEnd);
     }
 
-    // 데이터 복원 시
+    // 데이터 복원 시 (DB → 도메인, 검증 없음)
     public static PtCourseSchedule restore(Long id, Long ptCourseId, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
         return new PtCourseSchedule(id, ptCourseId, dayOfWeek, startTime, endTime);
+    }
+
+    // 수정 경로용 (create와 동일한 파싱·시간 검증 + id 보존)
+    public static PtCourseSchedule update(Long id, Long ptCourseId, String dayOfWeek, String startTime, String endTime) {
+        if (dayOfWeek == null || startTime == null || endTime == null) {
+            throw new InvalidScheduleException();
+        }
+        DayOfWeek parsedDay;
+        try {
+            parsedDay = DayOfWeek.valueOf(dayOfWeek);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidScheduleException();
+        }
+        LocalTime parsedStart;
+        LocalTime parsedEnd;
+        try {
+            parsedStart = LocalTime.parse(startTime);
+            parsedEnd = LocalTime.parse(endTime);
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new InvalidScheduleException();
+        }
+        if (!parsedEnd.isAfter(parsedStart)) {
+            throw new InvalidScheduleException();
+        }
+        return new PtCourseSchedule(id, ptCourseId, parsedDay, parsedStart, parsedEnd);
     }
 
     public Long getId() {

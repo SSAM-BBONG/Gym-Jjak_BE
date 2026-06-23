@@ -115,20 +115,20 @@ where u.id = :userId
             u.status
         )
         from UserJpaEntity u
-        where (:name is null
-               or trim(:name) = ''
-               or lower(u.name) like lower(concat('%', trim(:name), '%')))
+        where (:keyword is null
+               or trim(:keyword) = ''
+               or lower(u.name) like lower(concat('%', trim(:keyword), '%')))
         """,
             countQuery = """
         select count(u)
         from UserJpaEntity u
-        where (:name is null
-               or trim(:name) = ''
-               or lower(u.name) like lower(concat('%', trim(:name), '%')))
+        where (:keyword is null
+               or trim(:keyword) = ''
+               or lower(u.name) like lower(concat('%', trim(:keyword), '%')))
         """
     )
     Page<FindUserResult> findUsers(
-            @Param("name") String name,
+            @Param("keyword") String keyword,
             Pageable pageable
     );
 
@@ -148,9 +148,9 @@ where u.id = :userId
         where u.status in :userStatuses
           and b.status = :blacklistStatus
           and b.deletedAt is null
-          and (:name is null
-               or trim(:name) = ''
-               or lower(u.name) like lower(concat('%', trim(:name), '%')))
+          and (:keyword is null
+               or trim(:keyword) = ''
+               or lower(u.name) like lower(concat('%', trim(:keyword), '%')))
         """,
             countQuery = """
         select count(u)
@@ -159,15 +159,15 @@ where u.id = :userId
         where u.status in :userStatuses
           and b.status = :blacklistStatus
           and b.deletedAt is null
-          and (:name is null
-               or trim(:name) = ''
-               or lower(u.name) like lower(concat('%', trim(:name), '%')))
+          and (:keyword is null
+               or trim(:keyword) = ''
+               or lower(u.name) like lower(concat('%', trim(:keyword), '%')))
         """
     )
     Page<FindBlacklistUserResult> findBlacklistUsers(
             @Param("userStatuses") List<UserStatus> userStatuses,
             @Param("blacklistStatus") BlacklistStatus blacklistStatus,
-            @Param("name") String name,
+            @Param("keyword") String keyword,
             Pageable pageable
     );
 

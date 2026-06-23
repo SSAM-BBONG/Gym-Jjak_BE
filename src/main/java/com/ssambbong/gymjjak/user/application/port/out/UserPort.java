@@ -42,9 +42,9 @@ public interface UserPort {
 
     void updatePassword(Long userId, String encodedPassword, LocalDateTime updatedAt);
 
-    PageResult<FindUserResult> findUsers(String name, int page, int size);
+    PageResult<FindUserResult> findUsers(String keyword, int page, int size);
 
-    PageResult<FindBlacklistUserResult> findBlacklistUsers(String name, int page, int size);
+    PageResult<FindBlacklistUserResult> findBlacklistUsers(String keyword, int page, int size);
 
     Optional<User> findBySocialProviderAndSocialId(
             SocialProvider socialProvider,
