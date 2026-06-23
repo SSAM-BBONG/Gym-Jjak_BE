@@ -146,6 +146,10 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").hasAuthority("ADMIN")
 //                        .requestMatchers("/actuator/**").permitAll()
 
+                        // Calendar API
+                        .requestMatchers("/api/calendar/**")
+                        .authenticated()
+
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

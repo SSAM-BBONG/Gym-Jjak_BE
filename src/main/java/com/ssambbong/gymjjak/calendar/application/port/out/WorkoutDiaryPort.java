@@ -21,5 +21,15 @@ public interface WorkoutDiaryPort {
             String content
     );
 
+    boolean existsByIdAndUserId(
+            Long workoutDiaryId,
+            Long userId
+    );
+
+    void deleteWorkoutDiary(
+            Long userId,
+            Long workoutDiaryId
+    );
+
 
 }

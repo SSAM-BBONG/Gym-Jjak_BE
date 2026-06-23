@@ -50,7 +50,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
     }
 
     @Override
-    public Long updateWorkoutDiary(
+    public void updateWorkoutDiary(
             Long userId,
             Long workoutDiaryId,
             UpdateWorkoutDiaryCommand command
@@ -64,7 +64,23 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 command.title(),
                 command.content()
         );
+    }
 
-        return workoutDiaryId;
+    @Override
+    public void deleteWorkoutDiary(
+            Long userId,
+            Long workoutDiaryId
+    ) {
+        boolean exists = workoutDiaryPort.existsByIdAndUserId(
+                workoutDiaryId,
+                userId
+        );
+        if (!exists) {
+            throw new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND);
+        }
+        workoutDiaryPort.deleteWorkoutDiary(
+                userId,
+                workoutDiaryId
+        );
     }
 }
