@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request;
 
+import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

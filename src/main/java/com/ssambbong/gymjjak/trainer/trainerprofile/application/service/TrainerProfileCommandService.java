@@ -271,7 +271,10 @@ public class TrainerProfileCommandService implements TrainerProfileCommandUseCas
     ) {
         return trainerProfileRepository.findByUserId(requesterId)
                 .orElseThrow(() ->
-                        new TrainerProfileNotFoundException(requesterId)
+                        new TrainerProfileNotFoundException(
+                                "userId",
+                                requesterId
+                        )
                 );
     }
 

@@ -9,4 +9,6 @@ public interface TrainerProfileRepository {
     TrainerProfile save(TrainerProfile trainerProfile);
 
     Optional<TrainerProfile> findByUserId(Long userId);
+
+    Optional<TrainerProfile> findById(Long trainerProfileId);
 }

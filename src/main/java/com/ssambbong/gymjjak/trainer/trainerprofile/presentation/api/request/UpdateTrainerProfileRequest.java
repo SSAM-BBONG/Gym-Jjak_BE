@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.request;
 
+import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.command.ProfileImageUpdateAction;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -30,7 +31,7 @@ public record UpdateTrainerProfileRequest(
                         """
         )
         @Valid
-        TrainerProfileImageFileRequest profileImageFile,
+        UploadedFileMetadataRequest profileImageFile,
 
         @Schema(
                 description = """
