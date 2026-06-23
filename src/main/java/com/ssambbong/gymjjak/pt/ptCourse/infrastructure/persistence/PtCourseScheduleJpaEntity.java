@@ -33,8 +33,16 @@ public class PtCourseScheduleJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 
+    // 신규 스케줄 생성 시
     public PtCourseScheduleJpaEntity(Long ptCourseId, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
         this.ptCourseId = ptCourseId;
+        this.dayOfWeek = dayOfWeek;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+    // 스케줄 수정
+    public void updateFields(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
         this.endTime = endTime;

@@ -82,4 +82,16 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
         this.status = PtCourseStatus.DELETED;
         super.delete(); // BaseTimeEntity.delete() → deletedAt = now()
     }
+
+    // 강습 정보 수정 (제목·설명·카테고리·태그·가격·썸네일·총 회차) — 더티체킹으로 UPDATE
+    public void updateFields(Long categoryId, Long tagId, Long thumbnailFileId,
+                             String title, String description, int price, int totalSessionCount) {
+        this.categoryId = categoryId;
+        this.tagId = tagId;
+        this.thumbnailFileId = thumbnailFileId;
+        this.title = title;
+        this.description = description;
+        this.price = price;
+        this.totalSessionCount = totalSessionCount;
+    }
 }
