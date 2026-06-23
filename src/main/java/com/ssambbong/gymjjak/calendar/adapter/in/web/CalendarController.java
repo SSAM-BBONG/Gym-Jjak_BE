@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/calendar")
 public class CalendarController {
 
-    private final WorkoutDiaryUsecase createWorkoutDiaryUsecase;
+    private final WorkoutDiaryUsecase workoutDiaryUsecase;
 
     @PostMapping("/diaries")
     @Operation(summary = "운동 일지 작성", description = "운동 일지를 캘린더에 작성한다.")
@@ -28,7 +28,7 @@ public class CalendarController {
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody CreateWorkoutDiaryRequest request
     ) {
-        createWorkoutDiaryUsecase.createWorkoutDiary(
+        workoutDiaryUsecase.createWorkoutDiary(
                 authUser.userId(),
                 new CreateWorkoutDiaryCommand(
                         request.diaryDate(),
@@ -51,7 +51,7 @@ public class CalendarController {
             @PathVariable Long workoutDiaryId,
             @Valid @RequestBody UpdateWorkoutDiaryRequest request
     ) {
-        createWorkoutDiaryUsecase.updateWorkoutDiary(
+        workoutDiaryUsecase.updateWorkoutDiary(
                 authUser.userId(),
                 workoutDiaryId,
                 request.toCommand()
@@ -62,4 +62,22 @@ public class CalendarController {
                         CalendarResponseCode.DIARY_UPDATED)
         );
     }
+
+    @DeleteMapping("/diaries/{workoutDiaryId}")
+    @Operation(summary = "운동 일지 삭제", description = "운동 일지를 삭제한다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteWorkoutDiary(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long workoutDiaryId
+    ) {
+        workoutDiaryUsecase.deleteWorkoutDiary(
+                authUser.userId(),
+                workoutDiaryId
+        );
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(CalendarResponseCode.DIARY_DELETED)
+        );
+    }
+
+
 }

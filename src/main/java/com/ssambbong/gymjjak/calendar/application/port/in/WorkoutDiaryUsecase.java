@@ -10,9 +10,14 @@ public interface WorkoutDiaryUsecase {
             CreateWorkoutDiaryCommand command
     );
 
-    Long updateWorkoutDiary(
+    void updateWorkoutDiary(
             Long userId,
             Long workoutDiaryId,
             UpdateWorkoutDiaryCommand command
+    );
+
+    void deleteWorkoutDiary(
+            Long userId,
+            Long workoutDiaryId
     );
 }

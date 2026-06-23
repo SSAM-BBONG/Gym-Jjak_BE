@@ -15,4 +15,6 @@ public interface WorkoutDiaryJpaRepository extends JpaRepository<WorkoutDiaryJpa
 
     Optional<WorkoutDiaryJpaEntity> findByIdAndUserId(Long id, Long userId);
 
+    boolean existsByIdAndUserId(Long id, Long userId);
+
 }
