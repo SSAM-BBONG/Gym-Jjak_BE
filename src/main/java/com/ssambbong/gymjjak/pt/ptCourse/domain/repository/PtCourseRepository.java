@@ -14,6 +14,9 @@ public interface PtCourseRepository {
     // 단건 조회
     Optional<PtCourse> findById(Long id);
 
+    // 커리큘럼 수정 시 동시 예약 삽입 방지용 비관적 잠금 조회
+    Optional<PtCourse> findByIdForUpdate(Long id);
+
     // VISIBLE 상태 전체 목록 조회
     List<PtCourse> findAllVisible();
 

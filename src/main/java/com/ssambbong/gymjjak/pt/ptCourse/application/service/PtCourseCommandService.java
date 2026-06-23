@@ -138,8 +138,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
     public Long updatePtCourse(UpdatePtCourseCommand command) {
         log.debug("event=pt_course_update_started userId={}, ptCourseId={}", command.userId(), command.ptCourseId());
 
-        // 강습 존재 여부 확인
-        PtCourse ptCourse = ptCourseRepository.findById(command.ptCourseId())
+        // 강습 존재 여부 확인 — 커리큘럼 수정 경합 방지를 위해 비관적 잠금 조회
+        PtCourse ptCourse = ptCourseRepository.findByIdForUpdate(command.ptCourseId())
                 .orElseThrow(() -> {
                     log.warn("event=pt_course_update_failed reason=not_found ptCourseId={}", command.ptCourseId());
                     return new PtCourseNotFoundException();
@@ -193,6 +193,10 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             // 요청에 id가 있는 항목 → 수정 (소유권: 요청 id ⊆ 기존 id)
             List<Long> requestIds = command.curriculums().stream()
                     .filter(c -> c.id() != null).map(UpdatePtCourseCommand.CurriculumData::id).toList();
+            if (requestIds.size() != requestIds.stream().distinct().count()) {
+                log.warn("event=pt_course_update_failed reason=duplicate_curriculum_id ptCourseId={}", command.ptCourseId());
+                throw new PtCourseInvalidException();
+            }
             if (!existingIds.containsAll(requestIds)) {
                 log.warn("event=pt_course_update_failed reason=invalid_curriculum_id ptCourseId={}", command.ptCourseId());
                 throw new PtCourseInvalidException();
@@ -234,6 +238,10 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
             List<Long> requestScheduleIds = command.schedules().stream()
                     .filter(s -> s.id() != null).map(UpdatePtCourseCommand.ScheduleData::id).toList();
+            if (requestScheduleIds.size() != requestScheduleIds.stream().distinct().count()) {
+                log.warn("event=pt_course_update_failed reason=duplicate_schedule_id ptCourseId={}", command.ptCourseId());
+                throw new PtCourseInvalidException();
+            }
 
             // 소유권: 요청 id ⊆ 기존 id
             if (!existingScheduleIds.containsAll(requestScheduleIds)) {

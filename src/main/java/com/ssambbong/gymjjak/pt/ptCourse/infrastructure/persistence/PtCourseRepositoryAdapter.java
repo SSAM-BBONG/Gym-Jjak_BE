@@ -28,6 +28,11 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
     }
 
     @Override
+    public Optional<PtCourse> findByIdForUpdate(Long id) {
+        return repository.findByIdForUpdate(id).map(mapper::toDomain);
+    }
+
+    @Override
     public List<PtCourse> findAllVisible() {
         return repository.findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(PtCourseStatus.VISIBLE)
                 .stream()
