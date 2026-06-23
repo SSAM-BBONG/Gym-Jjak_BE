@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,12 +33,13 @@ public class PtCourseScheduleRepositoryAdapter implements PtCourseScheduleReposi
                 .toList();
     }
 
-    // id가 있는 스케줄 필드 수정 — 더티체킹으로 UPDATE
+    // id가 있는 스케줄 필드 수정 — 소유권 검증 후 dirty checking으로 UPDATE, 미존재 시 예외
     @Override
     public void update(PtCourseSchedule schedule) {
-        repository.findById(schedule.getId()).ifPresent(entity ->
-                entity.updateFields(schedule.getDayOfWeek(), schedule.getStartTime(), schedule.getEndTime())
-        );
+        PtCourseScheduleJpaEntity entity = repository
+                .findByIdAndPtCourseId(schedule.getId(), schedule.getPtCourseId())
+                .orElseThrow(PtCourseNotFoundException::new);
+        entity.updateFields(schedule.getDayOfWeek(), schedule.getStartTime(), schedule.getEndTime());
     }
 
     // upsert 시 요청에 없는 스케줄 일괄 삭제

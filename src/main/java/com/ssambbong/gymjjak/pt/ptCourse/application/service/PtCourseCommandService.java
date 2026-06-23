@@ -178,13 +178,25 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         // 커리큘럼 upsert
         if (command.curriculums() != null) {
+            // sessionNo 중복 검증 (생성과 동일 규칙)
+            long distinctSessionNo = command.curriculums().stream()
+                    .map(UpdatePtCourseCommand.CurriculumData::sessionNo).distinct().count();
+            if (distinctSessionNo != command.curriculums().size()) {
+                log.warn("event=pt_course_update_failed reason=duplicate_session_no ptCourseId={}", command.ptCourseId());
+                throw new PtCourseInvalidException();
+            }
+
             // DB에 있는 기존 커리큘럼 ID 목록
             List<Long> existingIds = ptCurriculumRepository.findAllByPtCourseId(command.ptCourseId())
                     .stream().map(PtCurriculum::getId).toList();
 
-            // 요청에 id가 있는 항목 → 수정
+            // 요청에 id가 있는 항목 → 수정 (소유권: 요청 id ⊆ 기존 id)
             List<Long> requestIds = command.curriculums().stream()
                     .filter(c -> c.id() != null).map(UpdatePtCourseCommand.CurriculumData::id).toList();
+            if (!existingIds.containsAll(requestIds)) {
+                log.warn("event=pt_course_update_failed reason=invalid_curriculum_id ptCourseId={}", command.ptCourseId());
+                throw new PtCourseNotFoundException();
+            }
 
             // 요청에 없는 기존 커리큘럼 → 삭제
             List<Long> toDelete = existingIds.stream().filter(id -> !requestIds.contains(id)).toList();
@@ -202,24 +214,36 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         // 스케줄 upsert
         if (command.schedules() != null) {
+            // 스케줄 슬롯 중복 검증 (생성과 동일 규칙)
+            long distinctSchedule = command.schedules().stream()
+                    .map(s -> normalizeScheduleKey(s.dayOfWeek(), s.startTime(), s.endTime()))
+                    .distinct().count();
+            if (distinctSchedule != command.schedules().size()) {
+                log.warn("event=pt_course_update_failed reason=duplicate_schedule ptCourseId={}", command.ptCourseId());
+                throw new PtCourseInvalidException();
+            }
+
             List<Long> existingScheduleIds = ptCourseScheduleRepository.findAllByPtCourseId(command.ptCourseId())
                     .stream().map(PtCourseSchedule::getId).toList();
 
             List<Long> requestScheduleIds = command.schedules().stream()
                     .filter(s -> s.id() != null).map(UpdatePtCourseCommand.ScheduleData::id).toList();
 
+            // 소유권: 요청 id ⊆ 기존 id
+            if (!existingScheduleIds.containsAll(requestScheduleIds)) {
+                log.warn("event=pt_course_update_failed reason=invalid_schedule_id ptCourseId={}", command.ptCourseId());
+                throw new PtCourseNotFoundException();
+            }
+
             List<Long> toDeleteSchedules = existingScheduleIds.stream().filter(id -> !requestScheduleIds.contains(id)).toList();
             ptCourseScheduleRepository.deleteAllByIdIn(toDeleteSchedules);
 
             for (UpdatePtCourseCommand.ScheduleData s : command.schedules()) {
                 if (s.id() != null) {
-                    PtCourseSchedule restored = PtCourseSchedule.restore(
-                            s.id(), command.ptCourseId(),
-                            java.time.DayOfWeek.valueOf(s.dayOfWeek()),
-                            java.time.LocalTime.parse(s.startTime()),
-                            java.time.LocalTime.parse(s.endTime())
+                    // update() 사용 — 파싱·시간순 검증 포함
+                    ptCourseScheduleRepository.update(
+                            PtCourseSchedule.update(s.id(), command.ptCourseId(), s.dayOfWeek(), s.startTime(), s.endTime())
                     );
-                    ptCourseScheduleRepository.update(restored);
                 } else {
                     ptCourseScheduleRepository.saveAll(List.of(
                             PtCourseSchedule.create(command.ptCourseId(), s.dayOfWeek(), s.startTime(), s.endTime())

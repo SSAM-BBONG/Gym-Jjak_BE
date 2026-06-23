@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCurriculum;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,12 +44,13 @@ public class PtCurriculumRepositoryAdapter implements PtCurriculumRepository {
         return repository.findByIdAndPtCourseId(ptCurriculumId, ptCourseId).map(mapper::toDomain);
     }
 
-    // id가 있는 커리큘럼 필드 수정
+    // id가 있는 커리큘럼 필드 수정 — 소유권 검증 후 dirty checking으로 UPDATE, 미존재 시 예외
     @Override
     public void update(PtCurriculum curriculum) {
-        repository.findById(curriculum.getId()).ifPresent(entity ->
-                entity.updateFields(curriculum.getSessionNo(), curriculum.getTitle(), curriculum.getContent())
-        );
+        PtCurriculumJpaEntity entity = repository
+                .findByIdAndPtCourseId(curriculum.getId(), curriculum.getPtCourseId())
+                .orElseThrow(PtCourseNotFoundException::new);
+        entity.updateFields(curriculum.getSessionNo(), curriculum.getTitle(), curriculum.getContent());
     }
 
     // upsert 시 요청에 없는 커리큘럼 일괄 삭제
