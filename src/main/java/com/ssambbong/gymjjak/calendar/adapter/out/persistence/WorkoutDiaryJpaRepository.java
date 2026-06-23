@@ -13,4 +13,6 @@ public interface WorkoutDiaryJpaRepository extends JpaRepository<WorkoutDiaryJpa
             LocalDate diaryDate
     );
 
+    Optional<WorkoutDiaryJpaEntity> findByIdAndUserId(Long id, Long userId);
+
 }

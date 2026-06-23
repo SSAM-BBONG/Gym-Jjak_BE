@@ -40,4 +40,25 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
         workoutDiaryJpaRepository.save(entity);
 
     }
+
+    @Override
+    public void updateWorkoutDiary(
+            Long userId,
+            Long workoutDiaryId,
+            Long categoryId,
+            String title,
+            String content
+    ) {
+        WorkoutDiaryJpaEntity workoutDiary = workoutDiaryJpaRepository.findByIdAndUserId(
+                        workoutDiaryId,
+                        userId
+                )
+                .orElseThrow(() -> new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND));
+
+        workoutDiary.update(
+                categoryId,
+                title,
+                content
+        );
+    }
 }
