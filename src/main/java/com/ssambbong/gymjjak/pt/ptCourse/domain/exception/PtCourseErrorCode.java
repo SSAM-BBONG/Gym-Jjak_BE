@@ -34,7 +34,10 @@ public enum PtCourseErrorCode implements ErrorCode {
     CURRICULUM_UPDATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "CURRICULUM_UPDATE_NOT_ALLOWED", "수강생이 있어 커리큘럼을 수정할 수 없습니다."),
 
     // 스케줄 시간 형식 오류
-    INVALID_SCHEDULE(HttpStatus.BAD_REQUEST, "INVALID_SCHEDULE", "수업 시간 형식이 올바르지 않습니다.");
+    INVALID_SCHEDULE(HttpStatus.BAD_REQUEST, "INVALID_SCHEDULE", "수업 시간 형식이 올바르지 않습니다."),
+
+    // API 요청 구조 오류 (중복 sessionNo/ID, 빈 스케줄 등 서비스 레이어 입력 검증)
+    PT_COURSE_REQUEST_INVALID(HttpStatus.BAD_REQUEST, "PT_COURSE_008", "PT 강습 요청이 유효하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

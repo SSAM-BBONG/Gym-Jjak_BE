@@ -14,6 +14,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAll
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseRequestInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
@@ -54,7 +55,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     "event=pt_course_create_failed, reason=no_curriculum, userId={}",
                     command.userId()
             );
-            throw new PtCourseInvalidException();
+            throw new PtCourseRequestInvalidException();
         }
 
         long distinctSessionNo = command.curriculums().stream()
@@ -66,7 +67,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     "event=pt_course_create_failed, reason=duplicate_session_no, userId={}",
                     command.userId()
             );
-            throw new PtCourseInvalidException();
+            throw new PtCourseRequestInvalidException();
         }
 
         int scheduleCount = command.schedules() == null ? 0 : command.schedules().size();
@@ -76,7 +77,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     "event=pt_course_create_failed, reason=no_schedule, userId={}",
                     command.userId()
             );
-            throw new PtCourseInvalidException();
+            throw new PtCourseRequestInvalidException();
         }
 
         long distinctSchedule = command.schedules().stream()
@@ -88,7 +89,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     "event=pt_course_create_failed, reason=duplicate_schedule, userId={}",
                     command.userId()
             );
-            throw new PtCourseInvalidException();
+            throw new PtCourseRequestInvalidException();
         }
 
         log.info(
@@ -183,7 +184,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     .map(UpdatePtCourseCommand.CurriculumData::sessionNo).distinct().count();
             if (distinctSessionNo != command.curriculums().size()) {
                 log.warn("event=pt_course_update_failed reason=duplicate_session_no ptCourseId={}", command.ptCourseId());
-                throw new PtCourseInvalidException();
+                throw new PtCourseRequestInvalidException();
             }
 
             // DB에 있는 기존 커리큘럼 ID 목록
@@ -195,11 +196,11 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     .filter(c -> c.id() != null).map(UpdatePtCourseCommand.CurriculumData::id).toList();
             if (requestIds.size() != requestIds.stream().distinct().count()) {
                 log.warn("event=pt_course_update_failed reason=duplicate_curriculum_id ptCourseId={}", command.ptCourseId());
-                throw new PtCourseInvalidException();
+                throw new PtCourseRequestInvalidException();
             }
             if (!existingIds.containsAll(requestIds)) {
                 log.warn("event=pt_course_update_failed reason=invalid_curriculum_id ptCourseId={}", command.ptCourseId());
-                throw new PtCourseInvalidException();
+                throw new PtCourseRequestInvalidException();
             }
 
             // 요청에 없는 기존 커리큘럼 → 삭제
@@ -221,7 +222,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             // 빈 리스트 = 스케줄 전체 삭제 → 최소 1개 필수
             if (command.schedules().isEmpty()) {
                 log.warn("event=pt_course_update_failed reason=no_schedule ptCourseId={}", command.ptCourseId());
-                throw new PtCourseInvalidException();
+                throw new PtCourseRequestInvalidException();
             }
 
             // 스케줄 슬롯 중복 검증 (생성과 동일 규칙)
@@ -230,7 +231,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     .distinct().count();
             if (distinctSchedule != command.schedules().size()) {
                 log.warn("event=pt_course_update_failed reason=duplicate_schedule ptCourseId={}", command.ptCourseId());
-                throw new PtCourseInvalidException();
+                throw new PtCourseRequestInvalidException();
             }
 
             List<Long> existingScheduleIds = ptCourseScheduleRepository.findAllByPtCourseId(command.ptCourseId())
@@ -240,13 +241,13 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                     .filter(s -> s.id() != null).map(UpdatePtCourseCommand.ScheduleData::id).toList();
             if (requestScheduleIds.size() != requestScheduleIds.stream().distinct().count()) {
                 log.warn("event=pt_course_update_failed reason=duplicate_schedule_id ptCourseId={}", command.ptCourseId());
-                throw new PtCourseInvalidException();
+                throw new PtCourseRequestInvalidException();
             }
 
             // 소유권: 요청 id ⊆ 기존 id
             if (!existingScheduleIds.containsAll(requestScheduleIds)) {
                 log.warn("event=pt_course_update_failed reason=invalid_schedule_id ptCourseId={}", command.ptCourseId());
-                throw new PtCourseInvalidException();
+                throw new PtCourseRequestInvalidException();
             }
 
             List<Long> toDeleteSchedules = existingScheduleIds.stream().filter(id -> !requestScheduleIds.contains(id)).toList();
