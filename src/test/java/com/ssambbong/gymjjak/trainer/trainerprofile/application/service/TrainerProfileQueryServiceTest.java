@@ -2,6 +2,10 @@ package com.ssambbong.gymjjak.trainer.trainerprofile.application.service;
 
 import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.port.out.TrainerProfileSearchQueryPort;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.SearchTrainerCondition;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.SearchTrainerListResult;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.SearchTrainerResult;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.TrainerProfileDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerAward;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerCertification;
@@ -40,6 +44,9 @@ class TrainerProfileQueryServiceTest {
 
     @InjectMocks
     private TrainerProfileQueryService service;
+
+    @Mock
+    private TrainerProfileSearchQueryPort trainerProfileSearchQueryPort;
 
     @Test
     void 프로필_ID로_공개_상세_정보를_조회한다() {
@@ -133,5 +140,62 @@ class TrainerProfileQueryServiceTest {
         // 필수 자격증 파일 ID 200은 URL 조회 금지
         verify(fileUrlUseCase, never())
                 .getUrl(200L, null, false);
+    }
+
+    @Test
+    void 조건에_맞는_트레이너를_검색한다() {
+        // given
+        SearchTrainerCondition condition =
+                new SearchTrainerCondition(
+                        "trainer",
+                        0,
+                        10
+                );
+
+        SearchTrainerListResult expectedResult =
+                new SearchTrainerListResult(
+                        List.of(
+                                new SearchTrainerResult(
+                                        7L,
+                                        "홍길동",
+                                        "trainer01@test.com",
+                                        "운동왕"
+                                ),
+                                new SearchTrainerResult(
+                                        8L,
+                                        "김철수",
+                                        "trainer02@test.com",
+                                        "헬스왕"
+                                )
+                        ),
+                        0,
+                        10,
+                        2L,
+                        1,
+                        false
+                );
+
+        when(trainerProfileSearchQueryPort.searchTrainers(condition))
+                .thenReturn(expectedResult);
+
+        // when
+        SearchTrainerListResult result =
+                service.searchTrainers(condition);
+
+        // then
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.content().get(0).trainerProfileId())
+                .isEqualTo(7L);
+        assertThat(result.content().get(0).username())
+                .isEqualTo("trainer01@test.com");
+
+        assertThat(result.page()).isZero();
+        assertThat(result.size()).isEqualTo(10);
+        assertThat(result.totalElements()).isEqualTo(2L);
+        assertThat(result.totalPages()).isEqualTo(1);
+        assertThat(result.hasNext()).isFalse();
+
+        verify(trainerProfileSearchQueryPort)
+                .searchTrainers(condition);
     }
 }
