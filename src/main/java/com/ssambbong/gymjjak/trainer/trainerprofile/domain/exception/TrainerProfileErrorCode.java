@@ -9,6 +9,12 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum TrainerProfileErrorCode implements ErrorCode {
 
+    TRAINER_PROFILE_INVALID_REQUEST(
+            HttpStatus.BAD_REQUEST,
+            "TRAINER_PROFILE_400_1",
+            "트레이너 프로필 수정 요청값이 유효하지 않습니다."
+    ),
+
     TRAINER_PROFILE_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "TRAINER_PROFILE_404_1",

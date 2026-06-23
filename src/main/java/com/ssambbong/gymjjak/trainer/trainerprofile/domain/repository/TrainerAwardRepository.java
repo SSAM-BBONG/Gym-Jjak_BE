@@ -9,4 +9,6 @@ public interface TrainerAwardRepository {
     void saveAll(List<TrainerAward> trainerAwards);
 
     List<TrainerAward> findAllByTrainerProfileId(Long trainerProfileId);
+
+    void deleteAllByTrainerProfileId(Long trainerProfileId);
 }

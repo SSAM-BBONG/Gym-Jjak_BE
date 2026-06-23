@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.adapter;
 
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerCertification;
+import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerCertificationType;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.repository.TrainerCertificationRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.entity.TrainerCertificationJpaEntity;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.mapper.TrainerCertificationPersistenceMapper;
@@ -35,5 +36,14 @@ public class TrainerCertificationRepositoryAdapter implements TrainerCertificati
                 .stream()
                 .map(mapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public void deleteAllAdditionalByTrainerProfileId(Long trainerProfileId) {
+
+        repository.deleteAllByTrainerProfileIdAndCertificationType(
+                trainerProfileId,
+                TrainerCertificationType.ADDITIONAL
+        );
     }
 }
