@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.organization.organizationApplication.application.po
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
+import com.ssambbong.gymjjak.organization.organizationApplication.exception.BusinessLicenseFileRegistrationFailedException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateBusinessRegistrationNumberException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateRequestedLoginIdException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.OrganizationApplicationNotFoundException;
@@ -38,6 +39,10 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     @Override
     public Long createOrganizationApplication(OrganizationApplicationCreateCommand command) {
 
+        if (command.businessLicenseFile() == null) {
+            throw new BusinessLicenseFileRegistrationFailedException();
+        }
+
         boolean alreadyExist = organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber());
         if (alreadyExist) {
             throw new DuplicateBusinessRegistrationNumberException();
@@ -48,7 +53,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
             throw new DuplicateRequestedLoginIdException();
         }
 
-        FileRegistrationResult fileResult = fileUseCase.registerFiles(List.of(
+        List<FileRegistrationResult> fileResults = fileUseCase.registerFiles(List.of(
                 new CreateFileCommand(
                         command.applicantUserId(),
                         command.businessLicenseFile().fileKey(),
@@ -56,7 +61,13 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
                         command.businessLicenseFile().contentType(),
                         command.businessLicenseFile().fileSize(),
                         FileType.BUSINESS_LICENSE)
-        )).get(0);
+        ));
+
+        if (fileResults.isEmpty() || fileResults.get(0).fileId() == null) {
+            throw new BusinessLicenseFileRegistrationFailedException();
+        }
+
+        FileRegistrationResult fileResult = fileResults.get(0);
 
         try {
             return saveOrganizationApplication(command, fileResult.fileId());
