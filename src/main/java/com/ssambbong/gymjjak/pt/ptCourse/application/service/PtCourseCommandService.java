@@ -4,11 +4,22 @@ import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
 import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
-import com.ssambbong.gymjjak.pt.ptCourse.application.command.*;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.ChangePtCourseStatusCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.DeletePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.UpdatePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.*;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseCannotDeleteException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseHasActiveReservationException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseRequestInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCurriculum;
@@ -299,12 +310,18 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         log.debug("event=pt_course_delete_started userId={} ptCourseId={}",
                 command.userId(), command.ptCourseId());
 
-        // PT 존재 여부 확인 (soft delete된 강습 포함 -> 404)
+        // PT 존재 여부 확인
         PtCourse ptCourse = ptCourseRepository.findById(command.ptCourseId())
                 .orElseThrow(() -> {
                     log.warn("event=pt_course_delete_failed reason=not_found ptCourseId={}", command.ptCourseId());
                     return new PtCourseNotFoundException();
                 });
+
+        // 이미 삭제된 강습은 404 처리
+        if (ptCourse.getStatus() == PtCourseStatus.DELETED) {
+            log.warn("event=pt_course_delete_failed reason=already_deleted ptCourseId={}", command.ptCourseId());
+            throw new PtCourseNotFoundException();
+        }
 
         // 본인 강습 여부 확인
         TrainerProfileQueryPort.TrainerInfo trainerInfo =
