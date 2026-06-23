@@ -273,14 +273,14 @@ public class UserCommandService implements UserCommandUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FindUserResult> findUsers(String name, int page, int size) {
-        log.debug("event=users_find_start, name={}, page={}, size={}", name, page, size);
+    public PageResult<FindUserResult> findUsers(String keyword, int page, int size) {
+        log.debug("event=users_find_start, name={}, page={}, size={}", keyword, page, size);
 
-        PageResult<FindUserResult> result = userPort.findUsers(name, page, size);
+        PageResult<FindUserResult> result = userPort.findUsers(keyword, page, size);
 
         log.info(
                 "event=users_find_succeed, name={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
-                name,
+                keyword,
                 page,
                 size,
                 result.content().size(),
@@ -294,20 +294,20 @@ public class UserCommandService implements UserCommandUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FindBlacklistUserResult> findBlacklistUsers(String name, int page, int size) {
+    public PageResult<FindBlacklistUserResult> findBlacklistUsers(String keyword, int page, int size) {
         log.debug(
                 "event=users_findBlacklistUsers_start, name={}, page={}, size={}",
-                name,
+                keyword,
                 page,
                 size
         );
 
         PageResult<FindBlacklistUserResult> result =
-                userPort.findBlacklistUsers(name, page, size);
+                userPort.findBlacklistUsers(keyword, page, size);
 
         log.info(
                 "event=users_findBlacklistUsers_succeed, name={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
-                name,
+                keyword,
                 page,
                 size,
                 result.content().size(),

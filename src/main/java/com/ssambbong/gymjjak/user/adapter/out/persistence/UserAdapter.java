@@ -173,9 +173,9 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     }
 
     @Override
-    public PageResult<FindUserResult> findUsers(String name, int page, int size) {
+    public PageResult<FindUserResult> findUsers(String keyword, int page, int size) {
         Page<FindUserResult> result = springDataUserRepository.findUsers(
-                name,
+                keyword,
                 PageRequest.of(
                         page,
                         size,
@@ -198,7 +198,7 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
 
     @Override
     public PageResult<FindBlacklistUserResult> findBlacklistUsers(
-            String name,
+            String keyword,
             int page,
             int size
     ) {
@@ -206,7 +206,7 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
                 springDataUserRepository.findBlacklistUsers(
                         List.of(UserStatus.DAY_7, UserStatus.ETERNAL),
                         BlacklistStatus.ACTIVE,
-                        name,
+                        keyword,
                         PageRequest.of(
                                 page,
                                 size,

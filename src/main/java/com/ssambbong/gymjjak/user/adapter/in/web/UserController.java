@@ -132,11 +132,11 @@ public class UserController {
     @GetMapping("/all")
     @Operation(summary = "관리자 회원 목록 조회", description = "회원을 페이지 기반으로 조회한다.")
     public ResponseEntity<GlobalApiResponse<PageResponse<FindUserResponse>>> findUsers(
-            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        PageResult<FindUserResult> result = userCommandUseCase.findUsers(name, page, size);
+        PageResult<FindUserResult> result = userCommandUseCase.findUsers(keyword, page, size);
 
         List<FindUserResponse> content = result.content().stream()
                 .map(FindUserResponse::from)
@@ -164,12 +164,12 @@ public class UserController {
     @GetMapping("/blacklist")
     @Operation(summary = "관리자 블랙리스트 회원 목록 조회", description = "블랙리스트 회원을 페이지 기반으로 조회한다.")
     public ResponseEntity<GlobalApiResponse<PageResponse<FindBlacklistUserResponse>>> findSuspendedUsers(
-            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
         PageResult<FindBlacklistUserResult> result =
-                userCommandUseCase.findBlacklistUsers(name, page, size);
+                userCommandUseCase.findBlacklistUsers(keyword, page, size);
 
         List<FindBlacklistUserResponse> content = result.content().stream()
                 .map(FindBlacklistUserResponse::from)
