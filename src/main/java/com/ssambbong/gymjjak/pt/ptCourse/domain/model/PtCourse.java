@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.domain.model;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseCannotDeleteException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseStatusInvalidException;
 
@@ -138,6 +139,14 @@ public class PtCourse {
         this.totalSessionCount = totalSessionCount;
     }
 
+    // 트레이너가 강습 삭제 — BLOCKED(관리자 제재 중)이면 거부
+    public void delete() {
+        if (this.status == PtCourseStatus.BLOCKED) {
+            throw new PtCourseCannotDeleteException();
+        }
+        this.status = PtCourseStatus.DELETED;
+    }
+
     // 관리자가 강습을 BLOCKED 상태로 전환
     public void blind() {
         this.status = PtCourseStatus.BLOCKED;
@@ -161,7 +170,4 @@ public class PtCourse {
     public int getTotalSessionCount() { return totalSessionCount; }
     public PtCourseStatus getStatus() { return status; }
 
-    public void delete() {
-        this.status = PtCourseStatus.DELETED;
-    }
 }

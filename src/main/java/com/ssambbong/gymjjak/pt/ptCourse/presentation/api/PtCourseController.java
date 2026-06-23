@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.ChangePtCourseStatusCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.DeletePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
@@ -238,6 +239,31 @@ public class PtCourseController {
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtCourseResponseCode.STUDENT_DETAIL_FETCHED, response));
+    }
+
+    // PT 강습 삭제 (트레이너 전용)
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "PT 강습 삭제", description = "트레이너가 본인 PT 강습을 삭제한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "삭제 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "BLOCKED 상태이거나 활성 예약 존재",
+                    content = @Content(schema = @Schema()))
+    })
+    @DeleteMapping("/{ptCourseId}")
+    public ResponseEntity<GlobalApiResponse<Void>> deletePtCourse(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId
+    ) {
+        ptCourseCommandUseCase.deletePtCourse(new DeletePtCourseCommand(authUser.userId(), ptCourseId));
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                PtCourseResponseCode.PT_COURSE_DELETED,
+                null));
     }
 
 

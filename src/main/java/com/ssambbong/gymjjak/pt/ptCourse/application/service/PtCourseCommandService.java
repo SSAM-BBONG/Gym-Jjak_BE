@@ -4,17 +4,10 @@ import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
 import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
-import com.ssambbong.gymjjak.pt.ptCourse.application.command.ChangePtCourseStatusCommand;
-import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
-import com.ssambbong.gymjjak.pt.ptCourse.application.command.UpdatePtCourseCommand;
-import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.*;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseRequestInvalidException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.*;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
@@ -299,6 +292,43 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         log.info("event=pt_course_status_change_succeeded, ptCourseId={}, status={}",
                 command.ptCourseId(), command.status());
     }
+
+    // PT 강습 삭제
+    @Override
+    public void deletePtCourse(DeletePtCourseCommand command) {
+        log.debug("event=pt_course_delete_started userId={} ptCourseId={}",
+                command.userId(), command.ptCourseId());
+
+        // PT 존재 여부 확인 (soft delete된 강습 포함 -> 404)
+        PtCourse ptCourse = ptCourseRepository.findById(command.ptCourseId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_course_delete_failed reason=not_found ptCourseId={}", command.ptCourseId());
+                    return new PtCourseNotFoundException();
+                });
+
+        // 본인 강습 여부 확인
+        TrainerProfileQueryPort.TrainerInfo trainerInfo =
+                trainerProfileQueryPort.findByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+            log.warn("event=pt_course_delete_failed reason=forbidden userId={} ptCourseId={}", command.userId(), command.ptCourseId());
+            throw new PtCourseForbiddenException();
+        }
+
+        // 활성 예약 존재 시 삭제 거부
+        int activeCount = ptReservationCountQueryPort.countActiveByPtCourseIds(
+                List.of(command.ptCourseId()))
+                .getOrDefault(command.ptCourseId(), 0);
+        if (activeCount > 0) {
+            log.warn("event=pt_course_delete_failed reason=has_active_reservation ptCourseId={} activeCount={}", command.ptCourseId(), activeCount);
+            throw new PtCourseHasActiveReservationException();
+        }
+
+        ptCourse.delete();
+        ptCourseRepository.update(ptCourse);
+
+        log.info("event=pt_course_delete_succeeded ptCourseId={}", command.ptCourseId());
+    }
+
 
     // 썸네일 파일 등록. thumbnailFile이 null이면 null 반환.
     private Long registerThumbnailFile(Long userId, UploadedFileMetadataCommand thumbnailFile) {
