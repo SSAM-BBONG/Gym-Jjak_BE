@@ -57,7 +57,8 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         );
 
         if (ptCourse.getStatus() == PtCourseStatus.DELETED) {
-            entity.softDelete(); // status=DELETED + deletedAt=now()
+            // 도메인에서 결정한 deletedAt을 그대로 반영
+            entity.softDelete(ptCourse.getDeletedAt());
         } else {
             entity.updateStatus(ptCourse.getStatus()); // VISIBLE/HIDDEN/BLOCKED 상태 변경
         }

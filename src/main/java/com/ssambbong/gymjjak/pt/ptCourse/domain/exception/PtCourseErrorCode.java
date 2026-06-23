@@ -37,7 +37,14 @@ public enum PtCourseErrorCode implements ErrorCode {
     INVALID_SCHEDULE(HttpStatus.BAD_REQUEST, "INVALID_SCHEDULE", "수업 시간 형식이 올바르지 않습니다."),
 
     // API 요청 구조 오류 (중복 sessionNo/ID, 빈 스케줄 등 서비스 레이어 입력 검증)
-    PT_COURSE_REQUEST_INVALID(HttpStatus.BAD_REQUEST, "PT_COURSE_008", "PT 강습 요청이 유효하지 않습니다.");
+    PT_COURSE_REQUEST_INVALID(HttpStatus.BAD_REQUEST, "PT_COURSE_008", "PT 강습 요청이 유효하지 않습니다."),
+
+    // BLOCKED 상태로 삭제 불가 (관리자 제재 중)
+    PT_COURSE_CANNOT_DELETE(HttpStatus.CONFLICT, "PT_COURSE_009", "BLOCKED 상태의 PT 강습은 삭제할 수 없습니다."),
+
+    // 활성 예약(RESERVED/IN_PROGRESS)이 있어 삭제 불가
+    PT_COURSE_HAS_ACTIVE_RESERVATION(HttpStatus.CONFLICT, "PT_COURSE_010", "진행 중인 예약이 있어 PT 강습을 삭제할 수 없습니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;
