@@ -45,7 +45,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication organizationApplication = OrganizationApplication.create(
                 command.applicantUserId(),
                 command.requestedLoginId(),
-                command.fileId(),
+                command.businessLicenseFileId(),
                 command.businessRegistrationNumber(),
                 command.businessName(),
                 command.representativeName(),

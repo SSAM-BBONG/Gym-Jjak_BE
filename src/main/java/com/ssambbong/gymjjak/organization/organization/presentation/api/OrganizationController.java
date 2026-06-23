@@ -90,6 +90,25 @@ public class OrganizationController {
         );
     }
 
+    @Operation(summary = "조직 상세 조회 (사용자)", description = "사용자가 특정 조직의 상세 정보를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = FindOrganizationDetailResponse.class))),
+            @ApiResponse(responseCode = "404", description = "조직을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/{organizationId}/detail")
+    public ResponseEntity<GlobalApiResponse<FindOrganizationDetailResponse>> findOrganizationDetail(
+            @PathVariable Long organizationId
+    ) {
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        OrganizationResponseCode.ORGANIZATION_DETAIL_FOUND,
+                        organizationMapper.toDetailResponse(organizationQueryUseCase.findOrganizationDetail(organizationId))
+                )
+        );
+    }
+
     @PreAuthorize("hasAuthority('ORGANIZATION')")
     @Operation(summary = "내 조직 정보 조회", description = "조직 계정이 본인 조직 정보를 조회합니다.")
     @ApiResponses({
