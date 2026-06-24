@@ -25,4 +25,7 @@ public interface PtCourseRepository {
 
     // status=null → VISIBLE+HIDDEN 전체 / status 지정 → 해당 status만
     List<PtCourse> findAllByTrainerProfileId(Long trainerProfileId, PtCourseStatus status);
+
+    // 예약 수 기준 인기 강습 조회 (VISIBLE, soft delete 제외)
+    List<PtCourse> findPopular(int limit);
 }

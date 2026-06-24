@@ -266,6 +266,17 @@ public class PtCourseController {
                 null));
     }
 
+    // 누구나 인기 강습 조회 가능 (PT 메인 페이지용)
+    @Operation(summary = "인기 강습 조회", description = "예약 수 기준 상위 8개 VISIBLE 강습을 조회한다.")
+    @GetMapping("/popular")
+    public ResponseEntity<GlobalApiResponse<List<PopularPtCourseResponse>>> findPopularPtCourses() {
+        List<PopularPtCourseResponse> response = ptCourseQueryUseCase.findPopular().stream()
+                .map(PopularPtCourseResponse::from)
+                .toList();
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_POPULAR, response));
+    }
+
 
     // UploadedFileMetadataRequest → UploadedFileMetadataCommand 변환 (null 허용)
     private UploadedFileMetadataCommand toMetadataCommand(UploadedFileMetadataRequest request) {

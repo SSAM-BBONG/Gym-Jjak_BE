@@ -27,4 +27,16 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
     // 내 강습 특정 status 필터 조회 (soft delete 안전)
     List<PtCourseJpaEntity> findAllByTrainerProfileIdAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
             Long trainerProfileId, PtCourseStatus status);
+
+    // pt_reservations 수로 GROUP BY 정렬, VISIBLE + soft delete 제외
+    @Query(value = """
+    SELECT pc.* FROM pt_courses pc
+    LEFT JOIN pt_reservations pr
+        ON pr.pt_course_id = pc.pt_course_id AND pr.deleted_at IS NULL
+    WHERE pc.deleted_at IS NULL AND pc.status = 'VISIBLE'
+    GROUP BY pc.pt_course_id
+    ORDER BY COUNT(pr.pt_reservation_id) DESC
+    LIMIT :limit
+    """, nativeQuery = true)
+    List<PtCourseJpaEntity> findPopular(@Param("limit") int limit);
 }

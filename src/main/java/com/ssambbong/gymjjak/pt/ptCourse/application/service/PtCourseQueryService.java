@@ -42,6 +42,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final PtReservationRepository ptReservationRepository;
     private final UserNicknameQueryPort userNicknameQueryPort;
     private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
+    private final TagQueryUseCase tagQueryUseCase;
 
     @Override
     public List<PtCourseListView> findAllPtCourses() {
@@ -221,6 +222,46 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 reservation.getTotalSessionCount(),
                 ptCourse.getTitle()
         );
+    }
+
+    // 인기 강습 조회
+    @Override
+    public List<PopularCourseView> findPopular() {
+        log.debug("event=pt_courses_popular_find");
+
+        // 태그 ID → 이름 매핑 (N+1 방지)
+        Map<Long, String> tagMap = tagQueryUseCase.handle().stream()
+                .collect(Collectors.toMap(
+                        TagQueryUseCase.TagView::tagId,
+                        TagQueryUseCase.TagView::name
+                ));
+
+        Map<Long, String> categoryMap = buildCategoryMap();
+
+        List<PopularCourseView> result = ptCourseRepository.findPopular(8).stream()
+                .map(ptCourse -> {
+                    OrganizationQueryPort.OrganizationInfo org =
+                            organizationQueryPort.findById(ptCourse.getOrganizationId());
+                    TrainerProfileQueryPort.TrainerDisplayInfo trainer =
+                            trainerProfileQueryPort.findById(ptCourse.getTrainerProfileId());
+
+                    return new PopularCourseView(
+                            ptCourse.getId(),
+                            ptCourse.getTitle(),
+                            ptCourse.getPrice(),
+                            ptCourse.getThumbnailFileId(),
+                            ptCourse.getCategoryId(),
+                            categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
+                            ptCourse.getTagId(),
+                            tagMap.getOrDefault(ptCourse.getTagId(), null),
+                            trainer.trainerName(),
+                            org.roadAddress()
+                    );
+                })
+                .toList();
+
+        log.info("event=pt_courses_popular_find_succeeded count={}", result.size());
+        return result;
     }
 
     // categoryId -> categoryName 매핑
