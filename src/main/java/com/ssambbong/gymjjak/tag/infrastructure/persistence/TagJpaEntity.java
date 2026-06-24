@@ -18,7 +18,7 @@ public class TagJpaEntity extends BaseTimeEntity {
     @Column(name = "tag_id")
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true, length = 50)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
     public TagJpaEntity(String name) {
