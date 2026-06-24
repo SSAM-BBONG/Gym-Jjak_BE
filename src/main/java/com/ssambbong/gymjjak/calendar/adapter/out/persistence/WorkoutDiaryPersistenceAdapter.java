@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.calendar.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -85,5 +87,16 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
                 .orElseThrow(() -> new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND));
 
         workoutDiaryJpaRepository.delete(workoutDiary);
+    }
+
+    @Override
+    public Optional<CalendarDayDiaryResult> findDiaryByUserIdAndDate(
+            Long userId,
+            LocalDate date
+    ) {
+        return workoutDiaryJpaRepository.findCalendarDayDiaryByUserIdAndDate(
+                userId,
+                date
+        );
     }
 }

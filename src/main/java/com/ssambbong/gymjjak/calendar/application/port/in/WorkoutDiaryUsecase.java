@@ -2,6 +2,9 @@ package com.ssambbong.gymjjak.calendar.application.port.in;
 
 import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.command.UpdateWorkoutDiaryCommand;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarDayResult;
+
+import java.time.LocalDate;
 
 public interface WorkoutDiaryUsecase {
 
