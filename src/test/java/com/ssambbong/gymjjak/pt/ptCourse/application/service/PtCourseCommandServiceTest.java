@@ -69,7 +69,7 @@ class PtCourseCommandServiceTest {
                 1L, 1L, 1L, 1L, 1L, 1L,
                 "체계적인 가슴 집중 PT",
                 "가슴 근육 발달에 특화된 12주 프로그램",
-                50000, 2, PtCourseStatus.VISIBLE
+                50000, 2, PtCourseStatus.VISIBLE, null
         );
         when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
         when(ptCurriculumRepository.saveAll(any())).thenReturn(List.of());
@@ -248,7 +248,7 @@ class PtCourseCommandServiceTest {
                 .thenReturn(List.of(new FileRegistrationResult(99L, FileType.PT_THUMBNAIL)));
 
         PtCourse savedPtCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, 99L, "제목", "설명", 50000, 1, PtCourseStatus.VISIBLE
+                1L, 1L, 1L, 1L, 1L, 99L, "제목", "설명", 50000, 1, PtCourseStatus.VISIBLE, null
         );
         when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
         when(ptCurriculumRepository.saveAll(any())).thenReturn(List.of());
