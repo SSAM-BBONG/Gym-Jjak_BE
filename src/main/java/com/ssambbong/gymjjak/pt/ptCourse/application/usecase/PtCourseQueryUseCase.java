@@ -70,7 +70,7 @@ public interface PtCourseQueryUseCase {
             List<String> awards,
             List<CurriculumView> curriculums,
             List<ScheduleView> schedules,
-            // 미구현 (빈 배열 반환)
+            // TODO: 강사평 구현 후 List<ReviewQueryPort.ReviewSummary> 로 교체
             List<Object> recentReviews
     ) {}
 

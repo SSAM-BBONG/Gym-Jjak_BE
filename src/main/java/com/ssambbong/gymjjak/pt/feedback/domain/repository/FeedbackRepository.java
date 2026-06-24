@@ -16,6 +16,9 @@ public interface FeedbackRepository {
     // 피드백 등록
     Feedback save(Feedback feedback);
 
+    // 피드백 내용 수정
+    void update(Feedback feedback);
+
     // 동일 예약 - 회차 피드백 중복 여부 확인
     boolean existsByPtReservationIdAndPtCurriculumId(Long ptReservationId, Long ptCurriculumId);
 }

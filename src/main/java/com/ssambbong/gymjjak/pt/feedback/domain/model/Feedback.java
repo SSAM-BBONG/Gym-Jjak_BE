@@ -14,7 +14,7 @@ public class Feedback {
     private final Long ptCurriculumId;
     private final Long trainerProfileId;
     private final Long userId;
-    private final String content;
+    private String content;
     private final String status;
     private final LocalDateTime createdAt;
 
@@ -57,5 +57,10 @@ public class Feedback {
                 .status(status)
                 .createdAt(createdAt)
                 .build();
+    }
+
+    // 피드백 내용 수정
+    public void update(String content) {
+        this.content = content;
     }
 }
