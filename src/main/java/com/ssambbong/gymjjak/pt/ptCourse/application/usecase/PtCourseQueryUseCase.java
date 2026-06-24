@@ -25,6 +25,9 @@ public interface PtCourseQueryUseCase {
     // 수강생 상세 조회 (트레이너 전용)
     ReservationDetailView findReservationDetail(Long userId, Long ptReservationId);
 
+    // 인기 강습 조회
+    List<PopularCourseView> findPopular();
+
     // ──── 목록 뷰 ────
     record PtCourseListView(
             Long ptCourseId,
@@ -126,5 +129,19 @@ public interface PtCourseQueryUseCase {
             int progressCount,
             int totalSessionCount,
             String title
+    ) {}
+
+    // ──── 인기 강습 뷰 ────
+    record PopularCourseView(
+            Long ptCourseId,
+            String title,
+            int price,
+            Long thumbnailFileId,
+            Long categoryId,
+            String categoryName,
+            Long tagId,
+            String tagName,
+            String trainerName,
+            String roadAddress
     ) {}
 }
