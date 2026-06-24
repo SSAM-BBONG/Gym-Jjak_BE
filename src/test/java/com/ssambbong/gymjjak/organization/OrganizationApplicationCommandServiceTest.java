@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.organization;
 
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.OrgApplicationMetricsPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.service.OrganizationApplicationCommandService;
@@ -38,7 +39,7 @@ class OrganizationApplicationCommandServiceTest {
     private OrganizationApplicationCreateCommand command(Long fileId) {
         return new OrganizationApplicationCreateCommand(
                 1L,
-                fileId,
+                fileId == null ? null : new UploadedFileMetadataCommand("file-key-" + fileId, "사업자등록증.pdf", "application/pdf", 1024L),
                 "gymjjak123",
                 "1234567890",
                 "짐짝헬스장",
