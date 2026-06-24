@@ -232,7 +232,8 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
                 keyword,
                 PageRequest.of(
                         page,
-                        size
+                        size,
+                        Sort.by(Sort.Direction.DESC, "id")
                 )
         );
 

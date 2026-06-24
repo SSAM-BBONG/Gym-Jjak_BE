@@ -320,6 +320,7 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<FindTrainerUserResult> findTrainerUsers(String keyword, int page, int size) {
         log.debug(
                 "event=users_findTrainerUsers_start, keyword={}, page={}, size={}",
