@@ -32,7 +32,7 @@ public class TrainerReviewJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "pt_reservation_id", nullable = false, unique = true)
     private Long ptReservationId;
 
-    @Column(name = "rating", nullable = false)
+    @Column(name = "rating", nullable = false, columnDefinition = "TINYINT")
     private int rating;
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")

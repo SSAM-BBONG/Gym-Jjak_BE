@@ -1,21 +1,17 @@
 package com.ssambbong.gymjjak.trainerReview.application.service;
 
-import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.trainerReview.application.command.CreateTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.port.PtReservationQueryPort;
+import com.ssambbong.gymjjak.trainerReview.application.port.ReservationResult;
 import com.ssambbong.gymjjak.trainerReview.application.usecase.TrainerReviewCommandUseCase;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.PtReservationNotCompletedException;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewAlreadyExistsException;
-import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewForbiddenException;
 import com.ssambbong.gymjjak.trainerReview.domain.model.TrainerReview;
 import com.ssambbong.gymjjak.trainerReview.domain.repository.TrainerReviewRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TrainerReviewCommandService implements TrainerReviewCommandUseCase {
@@ -26,14 +22,10 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
     @Override
     @Transactional
     public Long createReview(CreateTrainerReviewCommand command) {
-        PtReservationQueryPort.ReservationInfo reservation =
-                ptReservationQueryPort.findById(command.ptReservationId());
+        ReservationResult reservation =
+                ptReservationQueryPort.findReservation(command.ptReservationId(), command.userId(), command.ptCourseId());
 
-        if (!reservation.userId().equals(command.userId())) {
-            throw new TrainerReviewForbiddenException();
-        }
-
-        if (reservation.status() != PtReservationStatus.COMPLETED) {
+        if (!reservation.completed()) {
             throw new PtReservationNotCompletedException();
         }
 
@@ -44,24 +36,12 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
         TrainerReview trainerReview = TrainerReview.create(
                 command.userId(),
                 reservation.trainerProfileId(),
-                reservation.ptCourseId(),
+                command.ptCourseId(),
                 command.ptReservationId(),
                 command.rating(),
                 command.content()
         );
 
-        try {
-            return trainerReviewRepository.save(trainerReview);
-        } catch (DataIntegrityViolationException e) {
-            if (isReservationUniqueConstraint(e)) {
-                throw new TrainerReviewAlreadyExistsException(e);
-            }
-            throw e;
-        }
-    }
-
-    private boolean isReservationUniqueConstraint(DataIntegrityViolationException e) {
-        String message = e.getMostSpecificCause().getMessage();
-        return message != null && message.contains("uk_trainer_reviews_reservation");
+        return trainerReviewRepository.save(trainerReview);
     }
 }
