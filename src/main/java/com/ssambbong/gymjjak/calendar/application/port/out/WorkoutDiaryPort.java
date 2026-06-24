@@ -1,8 +1,10 @@
 package com.ssambbong.gymjjak.calendar.application.port.out;
 
+import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public interface WorkoutDiaryPort {
 
@@ -29,6 +31,11 @@ public interface WorkoutDiaryPort {
     void deleteWorkoutDiary(
             Long userId,
             Long workoutDiaryId
+    );
+
+    Optional<CalendarDayDiaryResult> findDiaryByUserIdAndDate(
+            Long userId,
+            LocalDate date
     );
 
 
