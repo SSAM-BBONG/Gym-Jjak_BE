@@ -48,7 +48,7 @@ class PtCourseQueryServiceTest {
         return PtCourse.restore(
                 id, 1L, 1L, 1L, 1L, null,
                 "맞춤 PT", "PT 소개글", 300000, 8,
-                status
+                status, null
         );
     }
 

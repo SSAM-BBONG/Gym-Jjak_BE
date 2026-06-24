@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request;
 
+import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UpdatePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -15,7 +17,7 @@ public record UpdatePtCourseRequest(
         @NotNull Long categoryId,
         Long tagId,
         @Min(0) int price,
-        Long thumbnailFileId,
+        @Valid UploadedFileMetadataRequest thumbnailFile,
 
         @Valid
         List<CurriculumRequest> curriculums,
@@ -55,6 +57,10 @@ public record UpdatePtCourseRequest(
                         .map(s -> new UpdatePtCourseCommand.ScheduleData(s.id(), s.dayOfWeek(), s.startTime(), s.endTime()))
                         .toList();
 
-        return new UpdatePtCourseCommand(userId, ptCourseId, title, description, categoryId, tagId, price, thumbnailFileId, curriculumData, scheduleData);
+        UploadedFileMetadataCommand thumbnailFileCommand = thumbnailFile == null ? null :
+                new UploadedFileMetadataCommand(
+                        thumbnailFile.fileKey(), thumbnailFile.originalName(),
+                        thumbnailFile.contentType(), thumbnailFile.fileSize());
+        return new UpdatePtCourseCommand(userId, ptCourseId, title, description, categoryId, tagId, price, thumbnailFileCommand, curriculumData, scheduleData);
     }
 }

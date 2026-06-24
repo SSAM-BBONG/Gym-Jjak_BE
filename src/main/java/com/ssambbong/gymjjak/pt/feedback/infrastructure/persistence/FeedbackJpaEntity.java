@@ -47,4 +47,9 @@ public class FeedbackJpaEntity extends BaseTimeEntity {
         this.content = content;
         this.status = status;
     }
+
+    // 피드백 내용 수정
+    public void update(String content) {
+        this.content = content;
+    }
 }
