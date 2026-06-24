@@ -3,15 +3,13 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
 import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
 import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
+import com.ssambbong.gymjjak.user.application.result.FindTrainerUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.application.result.PageResult;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
-import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
-import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
-import com.ssambbong.gymjjak.user.domain.model.User;
-import com.ssambbong.gymjjak.user.domain.model.UserStatus;
+import com.ssambbong.gymjjak.user.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -213,6 +211,30 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
                                 Sort.by(Sort.Direction.DESC, "id")
                         )
                 );
+
+        return new PageResult<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isFirst(),
+                result.isLast(),
+                result.hasNext(),
+                result.hasPrevious()
+        );
+    }
+
+    @Override
+    public PageResult<FindTrainerUserResult> findTrainerUsers(String keyword, int page, int size) {
+        Page<FindTrainerUserResult> result = springDataUserRepository.findTrainerUsers(
+                UserRole.TRAINER,
+                keyword,
+                PageRequest.of(
+                        page,
+                        size
+                )
+        );
 
         return new PageResult<>(
                 result.getContent(),
