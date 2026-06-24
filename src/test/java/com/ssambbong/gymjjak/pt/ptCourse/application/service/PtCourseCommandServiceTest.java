@@ -11,6 +11,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.service.PtCourseCommandServ
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseRequestInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseRequestInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
@@ -135,7 +136,7 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
-    @DisplayName("커리큘럼이 없으면 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("커리큘럼이 없으면 PtCourseRequestInvalidException이 발생해야 한다")
     void createPtCourse_emptyCurriculums_throwsException() {
 
         // given
@@ -144,7 +145,7 @@ class PtCourseCommandServiceTest {
         );
 
         // when & then
-        assertThrows(PtCourseInvalidException.class,
+        assertThrows(PtCourseRequestInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
@@ -153,7 +154,7 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
-    @DisplayName("커리큘럼 내 sessionNo가 중복되면 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("커리큘럼 내 sessionNo가 중복되면 PtCourseRequestInvalidException이 발생해야 한다")
     void createPtCourse_duplicateSessionNo_throwsException() {
 
         // given
@@ -164,7 +165,7 @@ class PtCourseCommandServiceTest {
         CreatePtCourseCommand command = defaultCommand("PT 강습 제목", "설명", 50000, curriculums);
 
         // when & then
-        assertThrows(PtCourseInvalidException.class,
+        assertThrows(PtCourseRequestInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
@@ -173,7 +174,7 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
-    @DisplayName("스케줄이 없으면 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("스케줄이 없으면 PtCourseRequestInvalidException이 발생해야 한다")
     void createPtCourse_emptySchedules_throwsException() {
 
         // given
@@ -184,7 +185,7 @@ class PtCourseCommandServiceTest {
         );
 
         // when & then
-        assertThrows(PtCourseInvalidException.class,
+        assertThrows(PtCourseRequestInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
@@ -193,7 +194,7 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
-    @DisplayName("스케줄 내 (요일, 시작/종료 시간) 조합이 중복되면 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("스케줄 내 (요일, 시작/종료 시간) 조합이 중복되면 PtCourseRequestInvalidException이 발생해야 한다")
     void createPtCourse_duplicateSchedule_throwsException() {
 
         // given
@@ -210,7 +211,7 @@ class PtCourseCommandServiceTest {
         );
 
         // when & then
-        assertThrows(PtCourseInvalidException.class,
+        assertThrows(PtCourseRequestInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
@@ -219,7 +220,7 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
-    @DisplayName("커리큘럼이 null이면 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("커리큘럼이 null이면 PtCourseRequestInvalidException이 발생해야 한다")
     void createPtCourse_nullCurriculums_throwsException() {
 
         // given
@@ -230,7 +231,7 @@ class PtCourseCommandServiceTest {
         );
 
         // when & then
-        assertThrows(PtCourseInvalidException.class,
+        assertThrows(PtCourseRequestInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
@@ -296,7 +297,7 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
-    @DisplayName("스케줄이 null이면 PtCourseInvalidException이 발생해야 한다")
+    @DisplayName("스케줄이 null이면 PtCourseRequestInvalidException이 발생해야 한다")
     void createPtCourse_nullSchedules_throwsException() {
 
         // given
@@ -307,7 +308,7 @@ class PtCourseCommandServiceTest {
         );
 
         // when & then
-        assertThrows(PtCourseInvalidException.class,
+        assertThrows(PtCourseRequestInvalidException.class,
                 () -> ptCourseCommandService.createPtCourse(command));
 
         verify(ptCourseRepository, never()).save(any());
