@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.file.exception.FileAccessDeniedException;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.port.out.TrainerProfileSearchQueryPort;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.*;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.usecase.TrainerProfileQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.exception.TrainerProfileNotFoundException;
@@ -30,6 +31,7 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
     private final TrainerCertificationRepository trainerCertificationRepository;
     private final TrainerAwardRepository trainerAwardRepository;
     private final FileUrlUseCase fileUrlUseCase;
+    private final TrainerProfileSearchQueryPort trainerProfileSearchQueryPort;
 
     @Override
     public MyTrainerProfileResult getMyTrainerProfile(Long requesterId) {
@@ -158,6 +160,32 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
                 certifications,
                 awards
         );
+    }
+
+    @Override
+    public SearchTrainerListResult searchTrainers(SearchTrainerCondition condition) {
+        log.info(
+                "event=trainer_profile_search_started, " +
+                        "keywordPresent={}, page={}, size={}",
+                condition.keyword() != null,
+                condition.page(),
+                condition.size()
+        );
+
+        // 검색 목록 조회
+        SearchTrainerListResult result =
+                trainerProfileSearchQueryPort.searchTrainers(condition);
+
+        log.info(
+                "event=trainer_profile_search_succeeded, " +
+                        "page={}, size={}, totalElements={}, returnedCount={}",
+                result.page(),
+                result.size(),
+                result.totalElements(),
+                result.content().size()
+        );
+
+        return result;
     }
 
     private String resolvePublicProfileImageUrl(Long profileFileId) {

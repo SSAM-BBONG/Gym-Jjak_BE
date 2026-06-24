@@ -6,14 +6,14 @@ import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.command.UpdateProfileImageFileCommand;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.command.UpdateTrainerProfileCommand;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.MyTrainerProfileResult;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.SearchTrainerCondition;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.SearchTrainerListResult;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.TrainerProfileDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.usecase.TrainerProfileCommandUseCase;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.usecase.TrainerProfileQueryUseCase;
+import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.request.SearchTrainerRequest;
 import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.request.UpdateTrainerProfileRequest;
-import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response.MyTrainerProfileResponse;
-import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response.TrainerProfileDetailResponse;
-import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response.TrainerProfileResponseCode;
-import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response.UpdateTrainerProfileResponse;
+import com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -196,6 +196,54 @@ public class TrainerProfileController {
                 request.originalName(),
                 request.contentType(),
                 request.fileSize()
+        );
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyAuthority('ORGANIZATION', 'ADMIN')")
+    @Operation(
+            summary = "트레이너 검색",
+            description = """
+                이름, 로그인 아이디, 닉네임으로 활동 중인 트레이너를 검색합니다.
+                조직 계정, admin만 사용할 수 있습니다.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "트레이너 검색 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 검색 조건"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 필요"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "조직 또는 관리자 권한 없음"
+            )
+    })
+    public ResponseEntity<GlobalApiResponse<SearchTrainerListResponse>
+            > searchTrainers(
+            @ModelAttribute @Valid SearchTrainerRequest request
+            ) {
+        SearchTrainerListResult result =
+                trainerProfileQueryUseCase.searchTrainers(
+                        new SearchTrainerCondition(
+                                request.normalizeKeyword(),
+                                request.resolvePage(),
+                                request.resolveSize()
+                        )
+                );
+
+        return ResponseEntity.status(200).body(
+                GlobalApiResponse.ok(
+                        TrainerProfileResponseCode.TRAINER_PROFILE_SEARCHED,
+                        SearchTrainerListResponse.from(result)
+                )
         );
     }
 }

@@ -126,6 +126,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
                         .hasAuthority("ADMIN")
 
+                        // 트레이너 검색 - 조직 및 관리자
+                        .requestMatchers(HttpMethod.GET, "/api/trainers/search")
+                        .hasAnyAuthority("ORGANIZATION", "ADMIN")
+
                         // 본인 프로필 조회는 TRAINER만 허용
                         .requestMatchers(HttpMethod.GET, "/api/trainers/me")
                         .hasAuthority("TRAINER")

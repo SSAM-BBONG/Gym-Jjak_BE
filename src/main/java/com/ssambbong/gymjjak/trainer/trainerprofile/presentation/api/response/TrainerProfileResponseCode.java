@@ -21,6 +21,11 @@ public enum TrainerProfileResponseCode implements ResponseCode {
     TRAINER_PROFILE_DETAIL_FOUND(
             "TRAINER_PROFILE_200_3",
             "트레이너 프로필 상세 조회에 성공했습니다."
+    ),
+
+    TRAINER_PROFILE_SEARCHED(
+            "TRAINER_PROFILE_200_4",
+            "트레이너 검색에 성공했습니다."
     );
 
     private final String code;
