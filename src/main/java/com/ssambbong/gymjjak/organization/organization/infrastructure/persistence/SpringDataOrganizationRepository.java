@@ -44,4 +44,7 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
                     """
     )
     Page<OrganizationAdminView> findAllForAdmin(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT a.requestedLoginId FROM OrganizationJpaEntity o JOIN o.application a WHERE o.organizationId = :organizationId")
+    Optional<String> findRequestedLoginIdById(@Param("organizationId") Long organizationId);
 }
