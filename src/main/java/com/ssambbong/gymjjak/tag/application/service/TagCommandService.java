@@ -10,7 +10,6 @@ import com.ssambbong.gymjjak.tag.domain.exception.TagNotFoundException;
 import com.ssambbong.gymjjak.tag.domain.model.Tag;
 import com.ssambbong.gymjjak.tag.domain.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,12 +25,8 @@ public class TagCommandService implements TagCommandUseCase {
         if (tagRepository.existsByName(command.name())) {
             throw new TagAlreadyExistsException();
         }
-        try {
-            Tag saved = tagRepository.save(Tag.create(command.name()));
-            return saved.getId();
-        } catch (DataIntegrityViolationException e) {
-            throw new TagAlreadyExistsException();
-        }
+        Tag saved = tagRepository.save(Tag.create(command.name()));
+        return saved.getId();
     }
 
     @Override
@@ -42,11 +37,7 @@ public class TagCommandService implements TagCommandUseCase {
             throw new TagAlreadyExistsException();
         }
         tag.changeName(command.name());
-        try {
-            tagRepository.save(tag);
-        } catch (DataIntegrityViolationException e) {
-            throw new TagAlreadyExistsException();
-        }
+        tagRepository.save(tag);
     }
 
     @Override

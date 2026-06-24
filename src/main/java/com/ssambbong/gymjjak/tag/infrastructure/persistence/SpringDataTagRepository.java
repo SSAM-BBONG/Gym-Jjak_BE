@@ -28,7 +28,7 @@ public interface SpringDataTagRepository extends JpaRepository<TagJpaEntity, Lon
             """, nativeQuery = true)
     List<Object[]> countPtCoursesByTagIds(@Param("tagIds") List<Long> tagIds);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             UPDATE tags SET deleted_at = NOW(6)
             WHERE tag_id = :tagId

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.tag.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.tag.domain.exception.TagNotFoundException;
 import com.ssambbong.gymjjak.tag.domain.model.Tag;
 import com.ssambbong.gymjjak.tag.domain.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class TagRepositoryAdapter implements TagRepository {
     public Tag save(Tag tag) {
         TagJpaEntity entity = tag.getId() == null
                 ? new TagJpaEntity(tag.getName())
-                : repository.findByIdAndDeletedAtIsNull(tag.getId()).orElseThrow();
+                : repository.findByIdAndDeletedAtIsNull(tag.getId()).orElseThrow(TagNotFoundException::new);
         entity.changeName(tag.getName());
         return repository.save(entity).toDomain();
     }
