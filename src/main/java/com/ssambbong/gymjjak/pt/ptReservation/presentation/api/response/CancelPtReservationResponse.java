@@ -3,7 +3,6 @@ package com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record CancelPtReservationResponse(

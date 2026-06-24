@@ -112,6 +112,10 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
     @Override
     public PtReservation cancelPtReservation(CancelPtReservationCommand command) {
+        // controller 외 진입점(batch, event handler 등) 방어
+        if (command.userId() == null || command.ptReservationId() == null) {
+            throw new PtReservationInvalidException();
+        }
         log.debug("event=pt_reservation_cancel_started userId={} ptReservationId={}",
                 command.userId(), command.ptReservationId());
 
