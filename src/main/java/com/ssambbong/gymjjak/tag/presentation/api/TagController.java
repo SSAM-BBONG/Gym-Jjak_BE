@@ -27,6 +27,7 @@ public class TagController {
     private final TagQueryUseCase tagQueryUseCase;
     private final TagCommandUseCase tagCommandUseCase;
 
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'TRAINER')")
     @Operation(summary = "태그 목록 조회", description = "관리자/트레이너가 태그 목록을 조회한다.")
     @GetMapping
     public ResponseEntity<GlobalApiResponse<?>> getTags() {
