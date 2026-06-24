@@ -30,4 +30,7 @@ public interface PtReservationRepository {
 
     // PT 상태 변경
     void updateStatus(PtReservation ptReservation);
+
+    // 특정 상태 예약 수 집계 (통계용)
+    long countByStatus(PtReservationStatus status);
 }

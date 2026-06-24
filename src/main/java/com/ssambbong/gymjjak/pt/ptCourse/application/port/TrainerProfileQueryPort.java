@@ -7,6 +7,12 @@ public interface TrainerProfileQueryPort {
 
     TrainerInfo findByUserId(Long userId);
 
+    // 활동 중인 트레이너 수
+    long countActive();
+
+    // 트레이너 프로필 -> 전체 평균 만족도
+    Double averageRating();
+
     // 목록 조회용 경량 조회 (자격증/수상 제외)
     TrainerSummaryInfo findSummaryById(Long trainerProfileId);
 

@@ -28,6 +28,9 @@ public interface PtCourseQueryUseCase {
     // 인기 강습 조회
     List<PopularCourseView> findPopular();
 
+    // PT 통계 조회
+    PtStatsView findStats();
+
     // ──── 목록 뷰 ────
     record PtCourseListView(
             Long ptCourseId,
@@ -129,6 +132,14 @@ public interface PtCourseQueryUseCase {
             int progressCount,
             int totalSessionCount,
             String title
+    ) {}
+
+    // ──── PT 통계 뷰 ────
+    record PtStatsView(
+            long organizationCount,
+            long activeTrainerCount,
+            long inProgressPtCount,
+            Double averageSatisfaction
     ) {}
 
     // ──── 인기 강습 뷰 ────

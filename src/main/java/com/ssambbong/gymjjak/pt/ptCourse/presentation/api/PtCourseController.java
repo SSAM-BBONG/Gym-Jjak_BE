@@ -266,6 +266,14 @@ public class PtCourseController {
                 null));
     }
 
+    // 누구나 PT 통계 조회 가능 (PT 메인 페이지용)
+    @Operation(summary = "PT 통계 조회", description = "등록 헬스장 수, 활동 트레이너 수, 진행 중인 PT 수, 평균 만족도를 조회한다.")
+    @GetMapping("/stats")
+    public ResponseEntity<GlobalApiResponse<PtStatsResponse>> findPtStats() {
+        PtStatsResponse response = PtStatsResponse.from(ptCourseQueryUseCase.findStats());
+        return ResponseEntity.ok(GlobalApiResponse.ok(PtCourseResponseCode.PT_STATS, response));
+    }
+
     // 누구나 인기 강습 조회 가능 (PT 메인 페이지용)
     @Operation(summary = "인기 강습 조회", description = "예약 수 기준 상위 4개 VISIBLE 강습을 조회한다.")
     @GetMapping("/popular")
