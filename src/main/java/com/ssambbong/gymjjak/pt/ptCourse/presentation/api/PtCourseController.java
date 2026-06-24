@@ -205,7 +205,7 @@ public class PtCourseController {
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
                     content = @Content(schema = @Schema()))
-    }
+    })
     @GetMapping("/{ptCourseId}/reservations")
     public ResponseEntity<GlobalApiResponse<PtCourseReservationListResponse>> findCourseReservations(
             @AuthenticationPrincipal AuthUser authUser,
