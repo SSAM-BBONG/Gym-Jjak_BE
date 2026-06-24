@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.ptReservation.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.pt.ptReservation.application.command.CancelPtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
@@ -128,5 +129,32 @@ public class PtReservationController {
                 reservation.getTotalSessionCount()
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(PtReservationResponseCode.PT_RESERVATION_STATUS_UPDATED, response));
+    }
+
+    // PT 예약 취소 (수강생 본인만 가능)
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "PT 예약 취소", description = "수강생이 본인의 PT 예약을 취소한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "취소 성공",
+                    content = @Content(schema = @Schema(implementation = CancelPtReservationResponse.class))),
+            @ApiResponse(responseCode = "403", description = "본인 예약 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "취소 불가 상태 (COMPLETED / CANCELLED)",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/reservations/me/{reservationId}/cancel")
+    public ResponseEntity<GlobalApiResponse<CancelPtReservationResponse>> cancelPtReservation(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable("reservationId") Long ptReservationId
+    ) {
+        PtReservation reservation = ptReservationCommandUseCase.cancelPtReservation(
+                new CancelPtReservationCommand(authUser.userId(), ptReservationId)
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtReservationResponseCode.PT_RESERVATION_CANCELLED,
+                CancelPtReservationResponse.from(reservation)
+        ));
     }
 }

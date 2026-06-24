@@ -13,4 +13,6 @@ public interface OrganizationApplicationQueryUsecase {
     OrganizationApplication findOrganizationApplicationDetails(Long organizationApplicationId, Long requestUserId, boolean isAdmin);
 
     ApplicationListResult findPendingOrganizationApplications(ApplicationListQuery query);
+
+    void checkLoginIdDuplicate(String requestedLoginId);
 }

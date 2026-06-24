@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -234,5 +235,22 @@ public class OrganizationApplicationController {
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_CANCEL, null));
+    }
+
+    @Operation(summary = "조직 신청 로그인 ID 중복 확인", description = "조직 신청 시 사용할 로그인 ID 중복 여부를 확인합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "사용 가능한 ID",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "이미 사용 중인 ID",
+                    content = @Content(schema = @Schema()))
+    })
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/login-id/duplicate")
+    public ResponseEntity<GlobalApiResponse<Void>> loginIdDuplicateCheck(
+            @RequestParam @NotBlank String requestedLoginId
+    ) {
+        organizationApplicationQueryUsecase.checkLoginIdDuplicate(requestedLoginId);
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(OrganizationApplicationResponseCode.LOGINID_NOT_DUPLICATE, null));
     }
 }

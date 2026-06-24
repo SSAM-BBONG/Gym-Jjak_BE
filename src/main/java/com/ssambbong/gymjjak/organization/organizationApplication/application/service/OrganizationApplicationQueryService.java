@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.organization.organizationApplication.application.us
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
+import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateRequestedLoginIdException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.OrganizationApplicationNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,14 @@ public class OrganizationApplicationQueryService implements OrganizationApplicat
     @Override
     public ApplicationListResult findPendingOrganizationApplications(ApplicationListQuery query) {
         return organizationApplicationRepository.findAllByStatus(OrganizationApplicationStatus.PENDING, query);
+    }
+
+    @Override
+    public void checkLoginIdDuplicate(String requestedLoginId) {
+
+        if (organizationApplicationRepository.existsByRequestedLoginId(requestedLoginId)) {
+            throw new DuplicateRequestedLoginIdException();
+        }
     }
 
 }

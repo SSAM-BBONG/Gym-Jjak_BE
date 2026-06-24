@@ -115,7 +115,8 @@ public class TrainerApplicationController {
                 new UpdateTrainerApplicationCommand(
                         trainerApplicationId,
                         authUser.userId(),
-                        request.profileImageFileId(),
+                        request.profileImageAction(),
+                        toCommand(request.profileImageFile()),
                         request.qualifications(),
                         request.awardHistories(),
                         request.introduction()

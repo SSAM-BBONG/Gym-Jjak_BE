@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.application.command.CancelPtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
@@ -12,6 +13,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForb
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -108,4 +110,35 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         return reservation;
     }
 
+    @Override
+    public PtReservation cancelPtReservation(CancelPtReservationCommand command) {
+        // controller 외 진입점(batch, event handler 등) 방어
+        if (command.userId() == null || command.ptReservationId() == null) {
+            throw new PtReservationInvalidException();
+        }
+        log.debug("event=pt_reservation_cancel_started userId={} ptReservationId={}",
+                command.userId(), command.ptReservationId());
+
+        // 예약 존재 여부 확인
+        PtReservation reservation = ptReservationRepository.findById(command.ptReservationId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_reservation_cancel_failed reason=not_found ptReservationId={}",
+                            command.ptReservationId());
+                    return new PtReservationNotFoundException();
+                });
+
+        // 본인 예약 여부 확인
+        if (!reservation.getUserId().equals(command.userId())) {
+            log.warn("event=pt_reservation_cancel_failed reason=forbidden userId={} ptReservationId={}",
+                    command.userId(), command.ptReservationId());
+            throw new PtReservationForbiddenException();
+        }
+
+        // 상태 변경 — 종결 상태(COMPLETED/CANCELLED)이면 도메인에서 예외 발생, cancelledAt 자동 설정
+        reservation.changeStatus(PtReservationStatus.CANCELLED);
+        ptReservationRepository.updateStatus(reservation);
+
+        log.info("event=pt_reservation_cancel_succeeded ptReservationId={}", command.ptReservationId());
+        return reservation;
+    }
 }
