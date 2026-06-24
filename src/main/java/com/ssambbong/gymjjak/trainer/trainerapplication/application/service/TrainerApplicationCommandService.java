@@ -17,6 +17,7 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.Trai
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.*;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
+import com.ssambbong.gymjjak.trainer.trainerprofile.application.command.ProfileImageUpdateAction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.ssambbong.gymjjak.trainer.trainerprofile.application.command.ProfileImageUpdateAction.KEEP;
 
 @Slf4j
 @Service
@@ -119,16 +122,22 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     }
 
     @Override
-    @Transactional
     public Long updateTrainerApplication(UpdateTrainerApplicationCommand command) {
+
+        // 필수값 검증
+        validateUpdateCommand(command);
 
         log.info(
                 "event=trainer_application_update_started, trainerApplicationId={}, requesterId={},",
                 command.trainerApplicationId(),
                 command.requesterId()
         );
-        // 필수값 검증
-        validateUpdateCommand(command);
+
+        // 프로필이미지 수정 검증
+        validateProfileImageUpdate(
+                command.profileImageAction(),
+                command.profileImageFile()
+        );
 
         TrainerApplication trainerApplication = trainerApplicationRepository.findById(command.trainerApplicationId())
                 .orElseThrow(() -> new TrainerApplicationNotFoundException(command.trainerApplicationId()));
@@ -139,23 +148,214 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         // 대기 상태 검증
         validatePendingStatus(trainerApplication);
 
-        TrainerApplication updatedTrainerApplication = trainerApplication.updateApplication(
-                command.profileImageFileId(),
-                command.qualifications(),
-                command.awardHistories(),
-                command.introduction()
+        // 수정 전 이미지
+        Long oldProfileFileId = trainerApplication.getProfileFileId();
+
+        // 신규 이미지 파일 등록 후, FileID 추출
+        Long newProfileFileId = registerNewTrainerApplicationProfileImage(command);
+
+        // 최종 이미지 파일 ID
+        Long updatedProfileFileId =
+                resolveUpdatedProfileFileId(
+                        command.profileImageAction(),
+                        oldProfileFileId,
+                        newProfileFileId
+                );
+
+        // 자기소개 수정
+        String updatedIntroduction =
+                command.introduction() == null
+                        ? trainerApplication.getIntroduction()
+                        : command.introduction();
+
+        // 수정된 트레이너 신청서 ID
+        Long updatedTrainerApplicationId;
+
+        try {
+            updatedTrainerApplicationId
+                    = transactionTemplate.execute(status ->
+                    updateTrainerApplicationInTransaction(
+                            trainerApplication,
+                            updatedProfileFileId,
+                            updatedIntroduction,
+                            command
+                    )
+            );
+
+            if (updatedTrainerApplicationId == null) {
+                throw new IllegalStateException(
+                        "트레이너 신청서 수정 결과가 존재하지 않습니다."
+                );
+            }
+        } catch (RuntimeException e) {
+            // 새로운 파일 삭제 요청
+            deleteFileSafely(
+                    newProfileFileId,
+                    e
+            );
+            throw e;
+        }
+
+        // 이전 파일 삭제 실패시, 에러 로그만 출력
+        deleteOldProfileImageSafely(
+                command.profileImageAction(),
+                oldProfileFileId,
+                newProfileFileId
         );
+
+        log.info(
+                "event=trainer_application_update_succeeded, trainerApplicationId={}, requesterId={}, profileImageAction={}",
+                updatedTrainerApplicationId,
+                command.requesterId(),
+                command.profileImageAction()
+        );
+
+        return updatedTrainerApplicationId;
+    }
+
+    private void deleteOldProfileImageSafely(
+            ProfileImageUpdateAction action,
+            Long oldProfileFileId,
+            Long newProfileFileId
+    ) {
+        // 이전, 이후 둘다 이미지 X
+        if (action == ProfileImageUpdateAction.KEEP || oldProfileFileId == null) {
+            return;
+        }
+        // 기존 파일 유지 시, return
+        if (oldProfileFileId.equals(newProfileFileId)) {
+            return;
+        }
+
+        try {
+            fileUseCase.deleteFile(oldProfileFileId);
+        } catch (RuntimeException exception) {
+            log.error(
+                    "event=trainer_application_old_profile_file_cleanup_failed, " +
+                            "oldProfileFileId={}, imageAction={}",
+                    oldProfileFileId,
+                    action,
+                    exception
+            );
+        }
+    }
+
+    // 트레이너 신청서 DB 수정 전용 메서드
+    private Long updateTrainerApplicationInTransaction(
+            TrainerApplication trainerApplication,
+            Long updatedProfileFileId,
+            String updatedIntroduction,
+            UpdateTrainerApplicationCommand command
+    ) {
+        // 트레이너 신청서 최신화
+        TrainerApplication updatedTrainerApplication =
+                trainerApplication.updateApplication(
+                        updatedProfileFileId,
+                        command.qualifications(),
+                        command.awardHistories(),
+                        updatedIntroduction
+                );
 
         TrainerApplication savedTrainerApplication =
                 trainerApplicationRepository.save(updatedTrainerApplication);
 
-        log.info(
-                "event=trainer_application_update_succeeded, trainerApplicationId={}, requesterId={}",
-                savedTrainerApplication.getTrainerApplicationId(),
-                command.requesterId()
-        );
-
         return savedTrainerApplication.getTrainerApplicationId();
+    }
+
+    // profileFileId 결정 메서드
+    private Long resolveUpdatedProfileFileId(
+            ProfileImageUpdateAction action,
+            Long currentProfileFileId,
+            Long newProfileImageFileId) {
+        return switch (action) {
+            case KEEP -> currentProfileFileId;
+            case REPLACE ->  newProfileImageFileId;
+            case DELETE -> null;
+        };
+
+    }
+
+    // 새로운 프로필 이미지 등록
+    private Long registerNewTrainerApplicationProfileImage(UpdateTrainerApplicationCommand command) {
+        // 변경 아니면 바로 return
+        if (command.profileImageAction() != ProfileImageUpdateAction.REPLACE) {
+            return null;
+        }
+
+        // 업로드된 Meta 데이터 추출
+        UploadedFileMetadataCommand file = command.profileImageFile();
+
+        // 파일 id, 타입 객체 List 추출
+        List<FileRegistrationResult> results =
+                fileUseCase.registerFiles(
+                        List.of(
+                                new CreateFileCommand(
+                                        command.requesterId(),
+                                        file.fileKey(),
+                                        file.originalName(),
+                                        file.contentType(),
+                                        file.fileSize(),
+                                        FileType.PROFILE_IMAGE
+                                )
+                        )
+                );
+
+        try {
+            // FileID 반환
+            return resolveProfileImageFileId(results);
+        } catch (RuntimeException exception) {
+            deleteRegistrationResultsSafely(results, exception);
+            throw exception;
+        }
+
+    }
+
+    private Long resolveProfileImageFileId(List<FileRegistrationResult> results) {
+        if (results == null || results.size() != 1) {
+            throw new IllegalStateException(
+                    "프로필 이미지 파일 등록 결과가 올바르지 않습니다."
+            );
+        }
+        // 첫번째 값 추출
+        FileRegistrationResult result = results.get(0);
+
+        if (result.fileType() != FileType.PROFILE_IMAGE) {
+            throw new IllegalStateException(
+                    "프로필 이미지 파일 등록 결과 타입이 일치하지 않습니다."
+            );
+        }
+
+        if (result.fileId() == null) {
+            throw new IllegalStateException(
+                    "프로필 이미지 파일 ID가 존재하지 않습니다."
+            );
+        }
+
+        return result.fileId();
+    }
+
+    // 프로필이미지 수정 검증
+    private void validateProfileImageUpdate(
+            ProfileImageUpdateAction action, UploadedFileMetadataCommand file) {
+
+        if (action == null) {
+            throw new InvalidTrainerApplicationException(
+                    "프로필 이미지 수정 방식은 필수입니다."
+            );
+        }
+
+        if (action == ProfileImageUpdateAction.REPLACE && file == null) {
+            throw new InvalidTrainerApplicationException(
+                    "프로필 이미지를 교체하려면 파일 정보가 필요합니다."
+            );
+        }
+
+        if (action != ProfileImageUpdateAction.REPLACE && file != null) {
+            throw new InvalidTrainerApplicationException(
+                    "프로필 이미지 파일 정보는 REPLACE 요청에서만 전달할 수 있습니다."
+            );
+        }
+
     }
 
     @Override
@@ -368,8 +568,10 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
             throw new InvalidTrainerApplicationException("requesterId는 필수입니다.");
         }
 
-        if (command.introduction() == null || command.introduction().isBlank()) {
-            throw new InvalidTrainerApplicationException("introduction은 필수입니다.");
+        if (command.introduction() != null && command.introduction().isBlank()) {
+            throw new InvalidTrainerApplicationException(
+                    "introduction은 공백일 수 없습니다."
+            );
         }
     }
 
