@@ -1,3 +1,6 @@
+ALTER TABLE organization_trainers ADD INDEX idx_ot_organization_id (organization_id);
+ALTER TABLE organization_trainers ADD INDEX idx_ot_trainer_profile_id (trainer_profile_id);
+
 ALTER TABLE organization_trainers DROP INDEX uk_organization_trainers_pair;
 
 ALTER TABLE organization_trainers
