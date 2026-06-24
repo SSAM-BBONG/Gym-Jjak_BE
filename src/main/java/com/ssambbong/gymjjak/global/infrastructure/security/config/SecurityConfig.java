@@ -92,6 +92,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/categories/**")
                         .hasAnyAuthority("ADMIN", "TRAINER")
 
+                        // 태그 API
+                        .requestMatchers(HttpMethod.POST, "/api/tags/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/tags/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tags/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/tags/**")
+                        .hasAnyAuthority("ADMIN", "TRAINER")
+
                         // PT API
                         .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations").hasAnyAuthority("USER", "TRAINER")
