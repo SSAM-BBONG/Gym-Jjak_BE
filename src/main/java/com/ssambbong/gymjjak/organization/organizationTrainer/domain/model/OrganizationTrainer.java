@@ -48,6 +48,10 @@ public class OrganizationTrainer {
         );
     }
 
+    public static OrganizationTrainer create(Long organizationId, Long trainerProfileId, Long registeredBy) {
+        return new OrganizationTrainer(null, organizationId, trainerProfileId, registeredBy, LocalDateTime.now(), null);
+    }
+
     public boolean isActive() {
         return removedAt == null;
     }

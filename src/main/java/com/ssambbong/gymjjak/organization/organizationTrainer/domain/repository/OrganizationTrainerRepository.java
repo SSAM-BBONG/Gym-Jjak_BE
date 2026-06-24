@@ -17,6 +17,10 @@ public interface OrganizationTrainerRepository {
 
     Optional<OrganizationTrainer> findActiveByIdAndOrganizationId(Long organizationTrainerId, Long organizationId);
 
+    Long save(OrganizationTrainer organizationTrainer);
+
+    boolean existsActiveByOrganizationIdAndTrainerProfileId(Long organizationId, Long trainerProfileId);
+
     void remove(Long organizationTrainerId);
 
     long countAllActive();

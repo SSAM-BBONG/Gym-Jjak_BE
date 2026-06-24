@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "organization_trainers")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class OrganizationTrainerJpaEntity {
 
     @Id
@@ -33,6 +35,17 @@ public class OrganizationTrainerJpaEntity {
 
     @Column(name = "removed_at")
     private LocalDateTime removedAt;
+
+    public static OrganizationTrainerJpaEntity from(OrganizationTrainer domain) {
+        return new OrganizationTrainerJpaEntity(
+                domain.getOrganizationTrainerId(),
+                domain.getOrganizationId(),
+                domain.getTrainerProfileId(),
+                domain.getRegisteredBy(),
+                domain.getRegisteredAt(),
+                domain.getRemovedAt()
+        );
+    }
 
     public OrganizationTrainer toDomain() {
         return OrganizationTrainer.restore(
