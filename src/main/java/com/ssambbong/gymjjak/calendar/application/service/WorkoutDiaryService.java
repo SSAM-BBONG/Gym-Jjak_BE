@@ -9,10 +9,12 @@ import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -26,6 +28,9 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
             Long userId,
             CreateWorkoutDiaryCommand command
     ) {
+
+        log.debug("event=workoutDiary_create_start userId={}", userId);
+
         if (workoutDiaryPort.existsByUserIdAndDiaryDate(userId, command.diaryDate())) {
             throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
         }
@@ -47,6 +52,8 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
         } catch (DataIntegrityViolationException ex) {
             throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
         }
+
+        log.debug("event=workoutDiary_create_succeed userId={}", userId);
     }
 
     @Override
@@ -55,6 +62,9 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
             Long workoutDiaryId,
             UpdateWorkoutDiaryCommand command
     ) {
+
+        log.debug("event=workoutDiary_update_start userId={}", userId);
+
         Long categoryId = workoutDiaryPortToCategory.findCategoryIdByName(command.categoryName());
 
         workoutDiaryPort.updateWorkoutDiary(
@@ -64,6 +74,8 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 command.title(),
                 command.content()
         );
+
+        log.debug("event=workoutDiary_update_succeed userId={}", userId);
     }
 
     @Override
@@ -71,6 +83,9 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
             Long userId,
             Long workoutDiaryId
     ) {
+
+        log.debug("event=workoutDiary_delete_start userId={}", userId);
+
         boolean exists = workoutDiaryPort.existsByIdAndUserId(
                 workoutDiaryId,
                 userId
@@ -82,5 +97,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 userId,
                 workoutDiaryId
         );
+
+        log.debug("event=workoutDiary_delete_succeed userId={}", userId);
     }
 }

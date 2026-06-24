@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
@@ -142,8 +143,8 @@ public class OrganizationApplicationController {
         OrganizationApplication organizationApplicationDetails =
                 organizationApplicationQueryUsecase.findOrganizationApplicationDetails(applicationId, requestUserId, isAdmin);
 
-        String businessLicenseFileUrl = fileUrlUseCase.getUrl(
-                organizationApplicationDetails.getBusinessLicenseFileId(), requestUserId, isAdmin).url();
+        FileUrlResult fileUrlResult = fileUrlUseCase.getUrl(
+                organizationApplicationDetails.getBusinessLicenseFileId(), requestUserId, isAdmin);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
@@ -165,7 +166,8 @@ public class OrganizationApplicationController {
                                 organizationApplicationDetails.getInstagramUrl(),
                                 organizationApplicationDetails.getBlogUrl(),
                                 organizationApplicationDetails.getFacilityPhone(),
-                                businessLicenseFileUrl
+                                fileUrlResult.url(),
+                                fileUrlResult.originalName()
                         )
                 )
         );

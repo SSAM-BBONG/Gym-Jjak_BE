@@ -20,4 +20,6 @@ public interface OrganizationRepository {
     void update(Organization organization);
 
     long countByStatus(OrganizationStatus status);
+
+    Optional<String> findRequestedLoginIdById(Long organizationId);
 }

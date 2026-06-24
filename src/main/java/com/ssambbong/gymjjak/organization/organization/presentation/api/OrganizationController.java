@@ -1,9 +1,11 @@
 package com.ssambbong.gymjjak.organization.organization.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.organization.organization.application.command.OrganizationUpdateCommand;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationCommandUseCase;
@@ -68,7 +70,7 @@ public class OrganizationController {
     @Operation(summary = "조직 상세 조회 (관리자)", description = "관리자가 조직의 상세 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = FindOrganizationResponse.class))),
+                    content = @Content(schema = @Schema(implementation = FindOrganizationAdminDetailResponse.class))),
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "403", description = "권한 없음",
@@ -77,15 +79,18 @@ public class OrganizationController {
                     content = @Content(schema = @Schema()))
     })
     @GetMapping("/{organizationId}")
-    public ResponseEntity<GlobalApiResponse<FindOrganizationResponse>> getOrganization(
+    public ResponseEntity<GlobalApiResponse<FindOrganizationAdminDetailResponse>> getOrganization(
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long organizationId
     ) {
-        Organization organization = organizationQueryUseCase.findOrganizationById(organizationId);
+        OrganizationAdminDetailResult result = organizationQueryUseCase.findOrganizationAdminDetail(organizationId);
+        boolean isAdmin = authUser.role().equals("ADMIN");
+        FileUrlResult fileUrlResult = fileUrlUseCase.getUrl(result.businessLicenseFileId(), authUser.userId(), isAdmin);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         OrganizationResponseCode.ORGANIZATION_FOUND,
-                        organizationMapper.toResponse(organization)
+                        organizationMapper.toAdminDetailResponse(result, fileUrlResult.url(), fileUrlResult.originalName())
                 )
         );
     }
