@@ -74,9 +74,9 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
                 .findTrainerDetailViewsByOrganizationId(organizationId)
                 .stream()
                 .map(r -> new TrainerDetailView(
-                        (String) r[0],
-                        ((Number) r[1]).doubleValue(),
-                        ((Number) r[2]).intValue()
+                        r.getTrainerName(),
+                        r.getAverageRating(),
+                        r.getReviewCount()
                 ))
                 .toList();
     }
@@ -92,11 +92,11 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
                 .findTrainerSummariesByOrganizationId(organizationId)
                 .stream()
                 .map(r -> new TrainerSummary(
-                        ((Number) r[0]).longValue(),
-                        ((Number) r[1]).longValue(),
-                        (String) r[2],
-                        (String) r[3],
-                        r[4] != null ? ((java.sql.Timestamp) r[4]).toLocalDateTime() : null
+                        r.getOrganizationTrainerId(),
+                        r.getTrainerProfileId(),
+                        r.getUsername(),
+                        r.getTrainerName(),
+                        r.getRegisteredAt()
                 ))
                 .toList();
     }

@@ -43,7 +43,7 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
               AND tp.deleted_at IS NULL
             ORDER BY ot.registered_at ASC
             """, nativeQuery = true)
-    List<Object[]> findTrainerSummariesByOrganizationId(@Param("organizationId") Long organizationId);
+    List<TrainerSummaryRow> findTrainerSummariesByOrganizationId(@Param("organizationId") Long organizationId);
 
     @Query(value = """
             SELECT tp.trainer_name,
@@ -56,7 +56,7 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
               AND tp.deleted_at IS NULL
             ORDER BY ot.registered_at ASC
             """, nativeQuery = true)
-    List<Object[]> findTrainerDetailViewsByOrganizationId(@Param("organizationId") Long organizationId);
+    List<TrainerDetailRow> findTrainerDetailViewsByOrganizationId(@Param("organizationId") Long organizationId);
 
     @Query(value = """
             SELECT COUNT(DISTINCT pr.user_id)

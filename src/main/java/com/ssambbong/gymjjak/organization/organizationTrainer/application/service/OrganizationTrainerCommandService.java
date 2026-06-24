@@ -11,6 +11,7 @@ import com.ssambbong.gymjjak.organization.organizationTrainer.exception.Organiza
 import com.ssambbong.gymjjak.organization.organizationTrainer.exception.OrganizationTrainerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,12 @@ public class OrganizationTrainerCommandService implements OrganizationTrainerCom
         OrganizationTrainer organizationTrainer = OrganizationTrainer.create(
                 organizationId, command.trainerProfileId(), command.organizationAccountId());
 
-        Long organizationTrainerId = organizationTrainerRepository.save(organizationTrainer);
+        Long organizationTrainerId;
+        try {
+            organizationTrainerId = organizationTrainerRepository.save(organizationTrainer);
+        } catch (DataIntegrityViolationException e) {
+            throw new OrganizationTrainerAlreadyExistsException();
+        }
 
         try {
             organizationTrainerMetricsPort.recordTrainerRegistered();
