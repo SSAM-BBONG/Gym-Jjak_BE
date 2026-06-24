@@ -1,16 +1,20 @@
 package com.ssambbong.gymjjak.chat.application.service;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
+import com.ssambbong.gymjjak.chat.application.port.ChatMetricsPort;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
-import com.ssambbong.gymjjak.chat.application.port.TrainerView;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAccessDeniedException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomAlreadyExistsException;
 import com.ssambbong.gymjjak.chat.exception.ChatRoomNotFoundException;
@@ -30,11 +34,13 @@ public class ChatRoomService implements ChatRoomUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final FileUrlUseCase fileUrlUseCase;
+    private final ChatMetricsPort chatMetricsPort;
 
     @Override
     @Transactional
     public Long createChatRoom(CreateChatRoomCommand command) {
-        trainerQueryPort.findActiveTrainer(command.trainerProfileId())
+        trainerQueryPort.findActiveTrainerUserId(command.trainerProfileId())
                 .orElseThrow(TrainerNotFoundException::new);
 
         if (chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(
@@ -57,6 +63,11 @@ public class ChatRoomService implements ChatRoomUseCase {
                 throw new PtCourseNotFoundException();
             }
             throw e;
+        }
+        try {
+            chatMetricsPort.recordChatRoomCreated();
+        } catch (Exception e) {
+            log.warn("event=metrics_record_failed metric=chat_room_created", e);
         }
         log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerProfileId: {}",
                 saved.getId(), command.userId(), command.trainerProfileId());
@@ -86,8 +97,7 @@ public class ChatRoomService implements ChatRoomUseCase {
         if (requesterId.equals(chatRoom.getUserId())) {
             chatRoom.leaveAsUser();
         } else {
-            Long trainerUserId = trainerQueryPort.findActiveTrainer(chatRoom.getTrainerProfileId())
-                    .map(TrainerView::userId)
+            Long trainerUserId = trainerQueryPort.findActiveTrainerUserId(chatRoom.getTrainerProfileId())
                     .orElseThrow(ChatRoomAccessDeniedException::new);
             if (requesterId.equals(trainerUserId)) {
                 chatRoom.leaveAsTrainer();
@@ -105,7 +115,24 @@ public class ChatRoomService implements ChatRoomUseCase {
     @Transactional(readOnly = true)
     public ChatRoomListResult getChatRooms(Long requesterId) {
         List<ChatRoomSummary> rooms = chatRoomRepository.findChatRoomsByRequesterId(requesterId);
-        long totalUnreadCount = rooms.stream().mapToLong(ChatRoomSummary::unreadCount).sum();
-        return new ChatRoomListResult(rooms.size(), totalUnreadCount, rooms);
+
+        List<Long> fileIds = rooms.stream()
+                .map(ChatRoomSummary::partnerProfileFileId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        Map<Long, FileUrlResult> urlMap = fileIds.isEmpty()
+                ? Map.of()
+                : fileUrlUseCase.getUrls(fileIds, requesterId, false);
+
+        List<ChatRoomSummary> roomsWithUrl = rooms.stream()
+                .map(s -> s.withProfileImageUrl(
+                        s.partnerProfileFileId() != null && urlMap.containsKey(s.partnerProfileFileId())
+                                ? urlMap.get(s.partnerProfileFileId()).url()
+                                : null))
+                .toList();
+
+        long totalUnreadCount = roomsWithUrl.stream().mapToLong(ChatRoomSummary::unreadCount).sum();
+        return new ChatRoomListResult(rooms.size(), totalUnreadCount, roomsWithUrl);
     }
 }

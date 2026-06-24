@@ -1,6 +1,9 @@
 package com.ssambbong.gymjjak.pt.ptCourse.domain.model;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseCannotDeleteException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseStatusInvalidException;
+import java.time.LocalDateTime;
 
 public class PtCourse {
 
@@ -16,6 +19,7 @@ public class PtCourse {
     private int totalSessionCount;
 
     private PtCourseStatus status;
+    private LocalDateTime deletedAt;
 
     private PtCourse(Long id,
                     Long organizationId,
@@ -95,9 +99,10 @@ public class PtCourse {
             String description,
             int price,
             int totalSessionCount,
-            PtCourseStatus status
+            PtCourseStatus status,
+            LocalDateTime deletedAt
     ) {
-        return new PtCourse(
+        PtCourse ptCourse = new PtCourse(
                 id,
                 organizationId,
                 trainerProfileId,
@@ -110,12 +115,50 @@ public class PtCourse {
                 totalSessionCount,
                 status
         );
+        ptCourse.deletedAt = deletedAt;
+        return ptCourse;
     }
 
+    // 트레이너가 강습 공개 여부 전환 (VISIBLE/HIDDEN)
+    public void changeStatus(PtCourseStatus newStatus) {
+        if (newStatus != PtCourseStatus.VISIBLE && newStatus != PtCourseStatus.HIDDEN) {
+            throw new PtCourseStatusInvalidException();
+        }
+        this.status = newStatus;
+    }
+
+    // 트레이너가 강습 수정
+    public void update(Long categoryId, Long tagId, Long thumbnailFileId,
+                       String title, String description, int price, int totalSessionCount) {
+        if (title == null || title.isBlank()) throw new PtCourseInvalidException();
+        if (description == null || description.isBlank()) throw new PtCourseInvalidException();
+        if (price < 0) throw new PtCourseInvalidException();
+        if (totalSessionCount < 1) throw new PtCourseInvalidException();
+
+        this.categoryId = categoryId;
+        this.tagId = tagId;
+        this.thumbnailFileId = thumbnailFileId;
+        this.title = title;
+        this.description = description;
+        this.price = price;
+        this.totalSessionCount = totalSessionCount;
+    }
+
+    // 트레이너가 강습 삭제 — BLOCKED(관리자 제재 중)이면 거부, deletedAt을 도메인에서 직접 결정
+    public void delete() {
+        if (this.status == PtCourseStatus.BLOCKED) {
+            throw new PtCourseCannotDeleteException();
+        }
+        this.status = PtCourseStatus.DELETED;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    // 관리자가 강습을 BLOCKED 상태로 전환
     public void blind() {
         this.status = PtCourseStatus.BLOCKED;
     }
 
+    // 관리자가 강습을 VISIBLE 상태로 복원
     public void unblind() {
         this.status = PtCourseStatus.VISIBLE;
     }
@@ -132,8 +175,6 @@ public class PtCourse {
     public int getPrice() { return price; }
     public int getTotalSessionCount() { return totalSessionCount; }
     public PtCourseStatus getStatus() { return status; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
 
-    public void delete() {
-        this.status = PtCourseStatus.DELETED;
-    }
 }

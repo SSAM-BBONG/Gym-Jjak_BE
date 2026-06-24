@@ -3,7 +3,9 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
+import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -103,53 +105,76 @@ where u.id = :userId
             @Param("updatedAt") LocalDateTime updatedAt
     );
 
-    @Query("""
-select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
-    u.id,
-    u.username,
-    u.name,
-    u.nickname,
-    u.status
-)
-from UserJpaEntity u
-where (:name is null
-       or trim(:name) = ''
-       or lower(u.name) like lower(concat('%', trim(:name), '%')))
-  and (:cursor is null or u.id < :cursor)
-order by u.id desc
-""")
-    List<FindUserResult> findUsersByCursor(
-            @Param("name") String name,
-            @Param("cursor") Long cursor,
+    @Query(
+            value = """
+        select new com.ssambbong.gymjjak.user.application.result.FindUserResult(
+            u.id,
+            u.username,
+            u.name,
+            u.nickname,
+            u.status
+        )
+        from UserJpaEntity u
+        where (:keyword is null
+               or trim(:keyword) = ''
+               or lower(u.name) like lower(concat('%', trim(:keyword), '%')))
+        """,
+            countQuery = """
+        select count(u)
+        from UserJpaEntity u
+        where (:keyword is null
+               or trim(:keyword) = ''
+               or lower(u.name) like lower(concat('%', trim(:keyword), '%')))
+        """
+    )
+    Page<FindUserResult> findUsers(
+            @Param("keyword") String keyword,
             Pageable pageable
     );
 
-    @Query("""
-select new com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult(
-    u.id,
-    u.username,
-    u.name,
-    u.nickname,
-    u.status,
-    b.type,
-    b.reason
-)
-from UserJpaEntity u
-join BlacklistsJpaEntity b on b.userId = u.id
-where u.status in :userStatuses
-  and b.status = :blacklistStatus
-  and b.deletedAt is null
-  and (:name is null
-       or trim(:name) = ''
-       or lower(u.name) like lower(concat('%', trim(:name), '%')))
-  and (:cursor is null or u.id < :cursor)
-order by u.id desc
-""")
-    List<FindBlacklistUserResult> findBlacklistUsersByCursor(
+    @Query(
+            value = """
+        select new com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult(
+            u.id,
+            u.username,
+            u.name,
+            u.nickname,
+            u.status,
+            b.type,
+            b.reason
+        )
+        from UserJpaEntity u
+        join BlacklistsJpaEntity b on b.userId = u.id
+        where u.status in :userStatuses
+          and b.status = :blacklistStatus
+          and b.deletedAt is null
+          and (:keyword is null
+               or trim(:keyword) = ''
+               or lower(u.name) like lower(concat('%', trim(:keyword), '%')))
+        """,
+            countQuery = """
+        select count(u)
+        from UserJpaEntity u
+        join BlacklistsJpaEntity b on b.userId = u.id
+        where u.status in :userStatuses
+          and b.status = :blacklistStatus
+          and b.deletedAt is null
+          and (:keyword is null
+               or trim(:keyword) = ''
+               or lower(u.name) like lower(concat('%', trim(:keyword), '%')))
+        """
+    )
+    Page<FindBlacklistUserResult> findBlacklistUsers(
             @Param("userStatuses") List<UserStatus> userStatuses,
             @Param("blacklistStatus") BlacklistStatus blacklistStatus,
-            @Param("name") String name,
-            @Param("cursor") Long cursor,
+            @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    Optional<UserJpaEntity> findBySocialProviderAndSocialId(
+            SocialProvider socialProvider,
+            String socialId
+    );
+
+
 }

@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.user.application.port.out.MailPort;
 import com.ssambbong.gymjjak.user.domain.exception.MailErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.MailSendException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -21,6 +22,9 @@ public class MailAdapter implements MailPort {
 
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String from;
 
     private static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final String LOWER = "abcdefghijklmnopqrstuvwxyz";

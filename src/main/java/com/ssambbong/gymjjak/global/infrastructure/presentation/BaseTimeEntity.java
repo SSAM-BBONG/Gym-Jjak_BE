@@ -29,4 +29,9 @@ public abstract class BaseTimeEntity {
     protected void delete() {
         this.deletedAt = LocalDateTime.now();
     }
+
+    // 도메인에서 결정한 deletedAt을 JPA 엔티티에 반영할 때 사용
+    protected void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 }

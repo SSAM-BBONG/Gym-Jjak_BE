@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -25,6 +26,13 @@ public class FileRepositoryAdapter implements FileRepository {
     public Optional<File> findById(Long fileId) {
         return springDataFileRepository.findById(fileId)
                 .map(FileJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<File> findAllByIds(List<Long> fileIds) {
+        return springDataFileRepository.findAllById(fileIds).stream()
+                .map(FileJpaEntity::toDomain)
+                .toList();
     }
 
     @Override

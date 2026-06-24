@@ -42,7 +42,13 @@ public enum TrainerApplicationErrorCode implements ErrorCode {
     TRAINER_APPLICATION_STATUS_CONFLICT(
             HttpStatus.CONFLICT,
         "TRAINER_APPLICATION_409_2",
-                "PENDING 상태의 트레이너 신청서만 수정할 수 있습니다."
+                "PENDING 상태의 트레이너 신청서만 처리할 수 있습니다."
+    ),
+
+    TRAINER_APPLICATION_CANCEL_ACCESS_DENIED(
+            HttpStatus.FORBIDDEN,
+            "TRAINER_APPLICATION_403_2",
+            "본인의 트레이너 신청서만 취소할 수 있습니다."
     );
 
     private final HttpStatus httpStatus;

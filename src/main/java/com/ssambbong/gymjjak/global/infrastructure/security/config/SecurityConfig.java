@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.global.infrastructure.security.config;
 
+import com.ssambbong.gymjjak.global.infrastructure.security.oauth.OAuth2SuccessHandler;
 import com.ssambbong.gymjjak.global.presentation.security.JwtAuthenticationFilter;
 import com.ssambbong.gymjjak.global.presentation.security.handler.CustomAccessDeniedHandler;
 import com.ssambbong.gymjjak.global.presentation.security.handler.CustomAuthenticationEntryPoint;
@@ -35,6 +36,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -62,13 +64,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/logout").authenticated()
 
                         // 회원가입, 로그인, 토큰 재발급 등 인증 없이 접근 가능
-                        .requestMatchers("/api/auth/**").permitAll()
-
                         // Swagger 사용 시 허용
                         .requestMatchers(
+                                "/api/auth/**",
+                                "/oauth2/**",
+                                "/login/oauth2/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/ws/**"
                         ).permitAll()
 
                         .requestMatchers("/api/token/reissue").permitAll()
@@ -109,7 +112,7 @@ public class SecurityConfig {
 
                         // 내 트레이너 신청서 상세 조회 - 사용자
                         .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
-                        .hasAuthority("USER")
+                        .hasAnyAuthority("USER", "TRAINER")
 
                          // 트레이너 신청서 관리자 상세 조회 - 관리자
                         .requestMatchers(HttpMethod.GET, "/api/trainer-applications/*")
@@ -118,6 +121,22 @@ public class SecurityConfig {
                         // 트레이너 신청 생성 - 사용자
                         .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
                         .hasAuthority("USER")
+
+                        // 트레이너 신청 승인 - 관리자
+                        .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
+                        .hasAuthority("ADMIN")
+
+                        // 트레이너 검색 - 조직 및 관리자
+                        .requestMatchers(HttpMethod.GET, "/api/trainers/search")
+                        .hasAnyAuthority("ORGANIZATION", "ADMIN")
+
+                        // 본인 프로필 조회는 TRAINER만 허용
+                        .requestMatchers(HttpMethod.GET, "/api/trainers/me")
+                        .hasAuthority("TRAINER")
+
+                        // 프로필 ID로 트레이너 프로필 상세 조회
+                        .requestMatchers(HttpMethod.GET, "/api/trainers/*")
+                        .permitAll()
 
                         // 트레이너 신청 수정 - 사용자
                         .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*")
@@ -128,6 +147,7 @@ public class SecurityConfig {
                         .hasAnyAuthority("TRAINER", "ADMIN")
 
                         // 조직 API
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/*/detail").permitAll()
                         .requestMatchers("/api/organizations/**")
                         .hasAnyAuthority("ORGANIZATION", "ADMIN")
 
@@ -139,8 +159,16 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").hasAuthority("ADMIN")
 //                        .requestMatchers("/actuator/**").permitAll()
 
+                        // Calendar API
+                        .requestMatchers("/api/calendar/**")
+                        .authenticated()
+
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
+                )
+
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2SuccessHandler)
                 )
 
                 // JWT 필터를 UsernamePasswordAuthenticationFilter 앞에 등록
@@ -216,10 +244,5 @@ public class SecurityConfig {
             AuthenticationConfiguration configuration
     ) throws Exception {
         return configuration.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

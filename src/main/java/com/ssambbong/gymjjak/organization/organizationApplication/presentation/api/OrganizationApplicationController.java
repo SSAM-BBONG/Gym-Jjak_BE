@@ -1,8 +1,8 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.presentation.api;
 
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
-import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
@@ -40,6 +40,7 @@ public class OrganizationApplicationController {
     private final OrganizationApplicationCommandUsecase organizationApplicationCommandUsecase;
     private final OrganizationApplicationQueryUsecase organizationApplicationQueryUsecase;
     private final OrganizationApplicationMapper organizationApplicationMapper;
+    private final FileUrlUseCase fileUrlUseCase;
 
     @Operation(summary = "조직 신청", description = "사용자가 조직(헬스장) 등록을 신청합니다.")
     @ApiResponses({
@@ -54,25 +55,7 @@ public class OrganizationApplicationController {
             @RequestBody @Valid OrganizationApplicationCreateRequest request) {
 
         Long organizationApplicationId = organizationApplicationCommandUsecase.createOrganizationApplication(
-                new OrganizationApplicationCreateCommand(
-                        authUser.userId(),
-                        request.fileId(),
-                        request.requestedLoginId(),
-                        request.businessRegistrationNumber(),
-                        request.businessName(),
-                        request.representativeName(),
-                        request.representativePhone(),
-                        request.openingDate(),
-                        request.roadAddress(),
-                        request.jibunAddress(),
-                        request.detailAddress(),
-                        request.latitude(),
-                        request.longitude(),
-                        request.websiteUrl(),
-                        request.instagramUrl(),
-                        request.blogUrl(),
-                        request.facilityPhone()
-                ));
+                organizationApplicationMapper.toCommand(request, authUser.userId()));
 
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
@@ -102,6 +85,7 @@ public class OrganizationApplicationController {
                         domain.getBusinessName(),
                         domain.getRequestedLoginId(),
                         domain.getStatus(),
+                        
                         domain.getBusinessRegistrationNumber(),
                         domain.getRepresentativeName(),
                         domain.getCreatedAt()
@@ -124,7 +108,7 @@ public class OrganizationApplicationController {
     })
     @GetMapping
     public ResponseEntity<GlobalApiResponse<FindAllOrganizationApplicationsListResponse>> findAllOrganizationApplications(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
         ApplicationListQuery query = new ApplicationListQuery(page, size);
@@ -157,6 +141,9 @@ public class OrganizationApplicationController {
         OrganizationApplication organizationApplicationDetails =
                 organizationApplicationQueryUsecase.findOrganizationApplicationDetails(applicationId, requestUserId, isAdmin);
 
+        String businessLicenseFileUrl = fileUrlUseCase.getUrl(
+                organizationApplicationDetails.getBusinessLicenseFileId(), requestUserId, isAdmin).url();
+
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         OrganizationApplicationResponseCode.ORGANIZATION_APPLICATION_DETAILS_FOUND,
@@ -177,7 +164,7 @@ public class OrganizationApplicationController {
                                 organizationApplicationDetails.getInstagramUrl(),
                                 organizationApplicationDetails.getBlogUrl(),
                                 organizationApplicationDetails.getFacilityPhone(),
-                                organizationApplicationDetails.getBusinessLicenseFileId()
+                                businessLicenseFileUrl
                         )
                 )
         );

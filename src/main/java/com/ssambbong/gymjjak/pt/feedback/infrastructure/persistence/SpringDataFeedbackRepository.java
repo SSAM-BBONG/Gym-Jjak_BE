@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,5 +13,25 @@ public interface SpringDataFeedbackRepository extends JpaRepository<FeedbackJpaE
     // 예약 ID로 삭제되지 않은 피드백 전체 조회
     List<FeedbackJpaEntity> findAllByPtReservationIdAndDeletedAtIsNull(Long ptReservationId);
 
+    // 피드백 단건 조회
     Optional<FeedbackJpaEntity> findByIdAndDeletedAtIsNull(Long id);
+
+    // 동일 예약 + 커리큘럼에 피드백 중복 여부 확인
+    boolean existsByPtReservationIdAndPtCurriculumIdAndDeletedAtIsNull(Long ptReservationId, Long ptCurriculumId);
+
+    // 타입 안전 프로젝션 — Object[] 캐스팅 없이 reservationId·lastCreatedAt 바인딩
+    interface LastFeedbackRow {
+        Long getPtReservationId();
+        LocalDateTime getLastCreatedAt();
+    }
+
+    // 예약 ID 목록별 가장 최근 피드백 생성일 배치 조회 (N+1 방지)
+    @Query("""
+            SELECT f.ptReservationId AS ptReservationId, MAX(f.createdAt) AS lastCreatedAt
+            FROM FeedbackJpaEntity f
+            WHERE f.ptReservationId IN :reservationIds
+              AND f.deletedAt IS NULL
+            GROUP BY f.ptReservationId
+            """)
+    List<LastFeedbackRow> findLastCreatedAtGroupByReservationId(@Param("reservationIds") List<Long> reservationIds);
 }

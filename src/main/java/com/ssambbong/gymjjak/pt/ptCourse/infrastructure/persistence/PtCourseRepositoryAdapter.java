@@ -15,34 +15,28 @@ import java.util.Optional;
 public class PtCourseRepositoryAdapter implements PtCourseRepository {
 
     private final SpringDataPtCourseRepository repository;
+    private final PtCoursePersistenceMapper mapper;
 
     @Override
     public PtCourse save(PtCourse ptCourse) {
-        PtCourseJpaEntity entity = new PtCourseJpaEntity(
-                ptCourse.getOrganizationId(),
-                ptCourse.getTrainerProfileId(),
-                ptCourse.getCategoryId(),
-                ptCourse.getTagId(),
-                ptCourse.getThumbnailFileId(),
-                ptCourse.getTitle(),
-                ptCourse.getDescription(),
-                ptCourse.getPrice(),
-                ptCourse.getTotalSessionCount(),
-                ptCourse.getStatus()
-        );
-        return toDomain(repository.save(entity));
+        return mapper.toDomain(repository.save(mapper.toEntity(ptCourse)));
     }
 
     @Override
     public Optional<PtCourse> findById(Long id) {
-        return repository.findById(id).map(this::toDomain);
+        return repository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<PtCourse> findByIdForUpdate(Long id) {
+        return repository.findByIdForUpdate(id).map(mapper::toDomain);
     }
 
     @Override
     public List<PtCourse> findAllVisible() {
         return repository.findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(PtCourseStatus.VISIBLE)
                 .stream()
-                .map(this::toDomain)
+                .map(mapper::toDomain)
                 .toList();
     }
 
@@ -51,27 +45,37 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         PtCourseJpaEntity entity = repository.findById(ptCourse.getId())
                 .orElseThrow(PtCourseNotFoundException::new);
 
+        // 강습 필드 수정 (제목·설명·카테고리·태그·가격·썸네일·총 회차)
+        entity.updateFields(
+                ptCourse.getCategoryId(),
+                ptCourse.getTagId(),
+                ptCourse.getThumbnailFileId(),
+                ptCourse.getTitle(),
+                ptCourse.getDescription(),
+                ptCourse.getPrice(),
+                ptCourse.getTotalSessionCount()
+        );
+
         if (ptCourse.getStatus() == PtCourseStatus.DELETED) {
-            entity.softDelete(); // status=DELETED + deletedAt=now()
+            // 도메인에서 결정한 deletedAt을 그대로 반영
+            entity.softDelete(ptCourse.getDeletedAt());
         } else {
-            entity.updateStatus(ptCourse.getStatus()); // BLOCKED/VISIBLE 상태만 변경
+            entity.updateStatus(ptCourse.getStatus()); // VISIBLE/HIDDEN/BLOCKED 상태 변경
         }
         // save() 없이 @Transactional 더티체킹으로 자동 UPDATE
     }
 
-    private PtCourse toDomain(PtCourseJpaEntity entity) {
-        return PtCourse.restore(
-                entity.getId(),
-                entity.getOrganizationId(),
-                entity.getTrainerProfileId(),
-                entity.getCategoryId(),
-                entity.getTagId(),
-                entity.getThumbnailFileId(),
-                entity.getTitle(),
-                entity.getDescription(),
-                entity.getPrice(),
-                entity.getTotalSessionCount(),
-                entity.getStatus()
-        );
+    @Override
+    public List<PtCourse> findAllByTrainerProfileId(Long trainerProfileId, PtCourseStatus status) {
+        List<PtCourseJpaEntity> entities = (status == null)
+                // status 미지정 → VISIBLE + HIDDEN만 (BLOCKED, DELETED 제외, soft delete 안전)
+                ? repository.findAllByTrainerProfileIdAndStatusInAndDeletedAtIsNullOrderByCreatedAtDesc(
+                trainerProfileId, List.of(PtCourseStatus.VISIBLE, PtCourseStatus.HIDDEN))
+                : repository.findAllByTrainerProfileIdAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
+                trainerProfileId, status);
+
+        return entities.stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

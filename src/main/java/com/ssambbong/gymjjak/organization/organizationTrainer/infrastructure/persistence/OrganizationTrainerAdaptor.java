@@ -1,19 +1,22 @@
 package com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerDetailView;
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
-import jakarta.persistence.EntityManager;
+import com.ssambbong.gymjjak.organization.organizationTrainer.exception.OrganizationTrainerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository {
 
     private final SpringDataOrganizationTrainerRepository springDataOrganizationTrainerRepository;
-    private final EntityManager em;
 
     @Override
     public List<OrganizationTrainer> findActiveByOrganizationId(Long organizationId) {
@@ -31,36 +34,70 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
     }
 
     @Override
-    public List<TrainerSummary> findTrainersByOrganizationId(Long organizationId) {
-        List<?> results = em.createNativeQuery("""
-                SELECT ot.organization_trainer_id,
-                       ot.trainer_profile_id,
-                       u.username,
-                       tp.trainer_name,
-                       ot.registered_at
-                FROM organization_trainers ot
-                JOIN trainer_profiles tp ON ot.trainer_profile_id = tp.trainer_profile_id
-                JOIN users u ON tp.user_id = u.user_id
-                WHERE ot.organization_id = :organizationId
-                  AND ot.removed_at IS NULL
-                  AND tp.deleted_at IS NULL
-                  AND u.deleted_at IS NULL
-                ORDER BY ot.registered_at ASC
-                """)
-                .setParameter("organizationId", organizationId)
-                .getResultList();
+    public Optional<OrganizationTrainer> findActiveByIdAndOrganizationId(Long organizationTrainerId, Long organizationId) {
+        return springDataOrganizationTrainerRepository
+                .findByOrganizationTrainerIdAndOrganizationIdAndRemovedAtIsNull(organizationTrainerId, organizationId)
+                .map(OrganizationTrainerJpaEntity::toDomain);
+    }
 
-        return results.stream()
-                .map(row -> {
-                    Object[] r = (Object[]) row;
-                    return new TrainerSummary(
-                            ((Number) r[0]).longValue(),
-                            ((Number) r[1]).longValue(),
-                            (String) r[2],
-                            (String) r[3],
-                            r[4] != null ? ((java.sql.Timestamp) r[4]).toLocalDateTime() : null
-                    );
-                })
+    @Override
+    public Long save(OrganizationTrainer organizationTrainer) {
+        OrganizationTrainerJpaEntity entity = OrganizationTrainerJpaEntity.from(organizationTrainer);
+        return springDataOrganizationTrainerRepository.save(entity).getOrganizationTrainerId();
+    }
+
+    @Override
+    public boolean existsActiveByOrganizationIdAndTrainerProfileId(Long organizationId, Long trainerProfileId) {
+        return springDataOrganizationTrainerRepository
+                .existsByOrganizationIdAndTrainerProfileIdAndRemovedAtIsNull(organizationId, trainerProfileId);
+    }
+
+    @Override
+    public void remove(Long organizationTrainerId) {
+        int affected = springDataOrganizationTrainerRepository.markRemoved(organizationTrainerId, LocalDateTime.now());
+        if (affected == 0) throw new OrganizationTrainerNotFoundException();
+    }
+
+    @Override
+    public long countAllActive() {
+        return springDataOrganizationTrainerRepository.countByRemovedAtIsNull();
+    }
+
+    @Override
+    public long countActiveOrganizations() {
+        return springDataOrganizationTrainerRepository.countDistinctOrganizationsWithActiveTrainers();
+    }
+
+    @Override
+    public List<TrainerDetailView> findTrainerDetailsByOrganizationId(Long organizationId) {
+        return springDataOrganizationTrainerRepository
+                .findTrainerDetailViewsByOrganizationId(organizationId)
+                .stream()
+                .map(r -> new TrainerDetailView(
+                        (String) r[0],
+                        ((Number) r[1]).doubleValue(),
+                        ((Number) r[2]).intValue()
+                ))
+                .toList();
+    }
+
+    @Override
+    public long countAccumulatedMembersByOrganizationId(Long organizationId) {
+        return springDataOrganizationTrainerRepository.countAccumulatedMembersByOrganizationId(organizationId);
+    }
+
+    @Override
+    public List<TrainerSummary> findTrainersByOrganizationId(Long organizationId) {
+        return springDataOrganizationTrainerRepository
+                .findTrainerSummariesByOrganizationId(organizationId)
+                .stream()
+                .map(r -> new TrainerSummary(
+                        ((Number) r[0]).longValue(),
+                        ((Number) r[1]).longValue(),
+                        (String) r[2],
+                        (String) r[3],
+                        r[4] != null ? ((java.sql.Timestamp) r[4]).toLocalDateTime() : null
+                ))
                 .toList();
     }
 }

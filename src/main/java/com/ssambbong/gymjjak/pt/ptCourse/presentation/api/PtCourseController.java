@@ -2,15 +2,20 @@ package com.ssambbong.gymjjak.pt.ptCourse.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.ChangePtCourseStatusCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.DeletePtCourseCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
+import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.ChangePtCourseStatusRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.CreatePtCourseRequest;
-import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.CreatePtCourseResponse;
-import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.PtCourseDetailResponse;
-import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.PtCourseViewResponse;
-import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.PtCourseResponseCode;
+import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.UpdatePtCourseRequest;
+import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.UploadedFileMetadataRequest;
+import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -59,7 +64,7 @@ public class PtCourseController {
                 request.title(),
                 request.description(),
                 request.price(),
-                request.thumbnailFileId(),
+                toMetadataCommand(request.thumbnailFile()),
                 request.curriculums().stream()
                         .map(c -> new CreatePtCourseCommand.CurriculumData(c.sessionNo(), c.title(), c.content()))
                         .toList(),
@@ -107,5 +112,169 @@ public class PtCourseController {
                 GlobalApiResponse.ok(
                         PtCourseResponseCode.PT_COURSE_DETAIL,
                         response));
+    }
+
+    // PT 강습 수정 (트레이너 전용)
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "PT 강습 수정", description = "트레이너가 본인 PT 강습 정보를 수정한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공",
+                    content = @Content(schema = @Schema(implementation = UpdatePtCourseResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 또는 수강생이 있어 커리큘럼 수정 불가",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/{ptCourseId}")
+    public ResponseEntity<GlobalApiResponse<UpdatePtCourseResponse>> updatePtCourse(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId,
+            @RequestBody @Valid UpdatePtCourseRequest request
+    ) {
+        Long updatedId = ptCourseCommandUseCase.updatePtCourse(request.toCommand(authUser.userId(), ptCourseId));
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtCourseResponseCode.PT_COURSE_UPDATED, new UpdatePtCourseResponse(updatedId)));
+    }
+
+    // PT 강습 상태 변경
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "PT 강습 상태 변경", description = "트레이너가 본인 PT 강습을 VISIBLE/HIDDEN으로 전환한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "상태 변경 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "400", description = "허용되지 않는 상태값 (VISIBLE/HIDDEN만 가능)",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/{ptCourseId}/status")
+    public ResponseEntity<GlobalApiResponse<Void>> changePtCourseStatus(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId,
+            @RequestBody @Valid ChangePtCourseStatusRequest request
+    ) {
+        ptCourseCommandUseCase.changePtCourseStatus(
+                new ChangePtCourseStatusCommand(authUser.userId(), ptCourseId, request.status())
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_STATUS_UPDATED, null));
+    }
+
+    // 내 PT 강습 목록 조회
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "내 PT 강습 목록 조회", description = "트레이너가 본인이 등록한 PT 강습 목록을 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = MyPtCourseListResponse.class))),
+            @ApiResponse(responseCode = "400", description = "허용되지 않는 status 값 (VISIBLE/HIDDEN만 가능)",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "트레이너 권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "트레이너 프로필 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/me")
+    public ResponseEntity<GlobalApiResponse<List<MyPtCourseListResponse>>> findMyPtCourses(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(
+                    description = "강습 상태 필터 (미입력 시 전체)",
+                    schema = @Schema(type = "string", allowableValues = {"VISIBLE", "HIDDEN"})
+            )
+            @RequestParam(required = false) PtCourseStatus status
+    ) {
+        List<MyPtCourseListResponse> response = ptCourseQueryUseCase
+                .findMyPtCourses(authUser.userId(), status)
+                .stream()
+                .map(MyPtCourseListResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtCourseResponseCode.MY_PT_COURSES_FETCHED, response));
+    }
+
+    // 강습별 수강생 목록 조회 (트레이너 전용)
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "강습별 수강생 목록 조회", description = "트레이너가 본인 강습의 수강생 목록을 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = PtCourseReservationListResponse.class))),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/{ptCourseId}/reservations")
+    public ResponseEntity<GlobalApiResponse<PtCourseReservationListResponse>> findCourseReservations(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId
+    ) {
+        PtCourseReservationListResponse response = PtCourseReservationListResponse.from(
+                ptCourseQueryUseCase.findCourseReservations(authUser.userId(), ptCourseId)
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtCourseResponseCode.COURSE_RESERVATIONS_FETCHED, response));
+    }
+
+    // 수강생 상세 조회 (트레이너 전용)
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "수강생 상세 조회", description = "트레이너가 본인 강습의 특정 수강생 상세 정보를 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = PtCourseReservationDetailResponse.class))),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습 또는 예약을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/reservations/{reservationId}")
+    public ResponseEntity<GlobalApiResponse<PtCourseReservationDetailResponse>> findReservationDetail(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable("reservationId") Long ptReservationId
+    ) {
+        PtCourseReservationDetailResponse response = PtCourseReservationDetailResponse.from(
+                ptCourseQueryUseCase.findReservationDetail(authUser.userId(), ptReservationId)
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtCourseResponseCode.STUDENT_DETAIL_FETCHED, response));
+    }
+
+    // PT 강습 삭제 (트레이너 전용)
+    @PreAuthorize("hasAuthority('TRAINER')")
+    @Operation(summary = "PT 강습 삭제", description = "트레이너가 본인 PT 강습을 삭제한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "삭제 성공",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "본인 강습 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "PT 강습을 찾을 수 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "BLOCKED 상태이거나 활성 예약 존재",
+                    content = @Content(schema = @Schema()))
+    })
+    @DeleteMapping("/{ptCourseId}")
+    public ResponseEntity<GlobalApiResponse<Void>> deletePtCourse(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId
+    ) {
+        ptCourseCommandUseCase.deletePtCourse(new DeletePtCourseCommand(authUser.userId(), ptCourseId));
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                PtCourseResponseCode.PT_COURSE_DELETED,
+                null));
+    }
+
+
+    // UploadedFileMetadataRequest → UploadedFileMetadataCommand 변환 (null 허용)
+    private UploadedFileMetadataCommand toMetadataCommand(UploadedFileMetadataRequest request) {
+        if (request == null) return null;
+        return new UploadedFileMetadataCommand(
+                request.fileKey(),
+                request.originalName(),
+                request.contentType(),
+                request.fileSize()
+        );
     }
 }

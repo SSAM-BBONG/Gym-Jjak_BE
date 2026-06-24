@@ -29,7 +29,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
     @Override
     public List<MyPtReservationView> findMyReservations(Long userId, PtReservationStatus status) {
-        log.debug("[MyPtReservations] userId={}, status={}", userId, status);
+        log.debug("event=pt_reservation_list userId={}, status={}", userId, status);
 
         List<PtReservation> reservations = ptReservationRepository.findAllByUserId(userId, status);
 
@@ -37,24 +37,22 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 .map(this::toView)
                 .toList();
 
-        log.info("[MyPtReservations] userId={}, 조회된 예약 수={}", userId, result.size());
+        log.info("event=pt_reservation_list_succeeded userId={}, count={}", userId, result.size());
         return result;
     }
 
     @Override
     public PtReservationDetailView findMyReservationDetail(Long userId, Long ptReservationId) {
-        log.debug("[PtReservationDetail] userId={}, ptReservationId={}", userId, ptReservationId);
+        log.debug("event=pt_reservation_detail userId={}, ptReservationId={}", userId, ptReservationId);
 
-        // 예약 조회
         PtReservation reservation = ptReservationRepository.findById(ptReservationId)
                 .orElseThrow(() -> {
-                    log.warn("[PtReservationDetail] 존재하지 않는 예약 - ptReservationId={}", ptReservationId);
+                    log.warn("event=pt_reservation_detail_failed reason=not_found, ptReservationId={}", ptReservationId);
                     return new PtReservationNotFoundException();
                 });
 
-        // 본인 예약인지 확인
         if (!reservation.getUserId().equals(userId)) {
-            log.warn("[PtReservationDetail] 권한 없는 접근 - userId={}, reservationOwnerId={}",
+            log.warn("event=pt_reservation_detail_failed reason=forbidden, userId={}, ownerId={}",
                     userId, reservation.getUserId());
             throw new PtReservationForbiddenException();
         }
@@ -76,7 +74,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 .map(c -> new CurriculumView(c.id(), c.sessionNo(), c.title(), feedbackIdMap.get(c.id())))
                 .toList();
 
-        log.info("[PtReservationDetail] 조회 성공 - ptReservationId={}", ptReservationId);
+        log.info("event=pt_reservation_detail_succeeded ptReservationId={}", ptReservationId);
         return new PtReservationDetailView(
                 courseInfo.thumbnailFileId(),
                 courseInfo.title(),

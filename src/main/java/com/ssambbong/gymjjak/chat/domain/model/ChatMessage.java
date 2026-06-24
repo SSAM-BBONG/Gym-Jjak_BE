@@ -20,6 +20,10 @@ public class ChatMessage {
         this.createdAt = createdAt;
     }
 
+    public static ChatMessage create(Long chatRoomId, Long senderId, String content) {
+        return new ChatMessage(null, chatRoomId, senderId, content, false, LocalDateTime.now());
+    }
+
     public static ChatMessage restore(Long id, Long chatRoomId, Long senderId, String content, boolean read, LocalDateTime createdAt) {
         return new ChatMessage(id, chatRoomId, senderId, content, read, createdAt);
     }

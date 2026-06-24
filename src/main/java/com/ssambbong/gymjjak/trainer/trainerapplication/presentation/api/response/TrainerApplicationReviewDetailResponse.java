@@ -16,9 +16,14 @@ public record TrainerApplicationReviewDetailResponse(
         @Schema(description = "신청한 유저 ID", example = "2")
         Long userId,
 
-        @Schema(description = "프로필 이미지 파일 ID. 프론트에서 File API로 url 조회 후 표시합니다.", example = "15")
-        Long profileImageFileId,
+        @Schema(description = "프로필 이미지 URL. 프로필 이미지가 없으면 null입니다.")
+        String profileImageUrl,
 
+        @Schema(
+                description = "프로필 이미지 원본 파일명. 파일이 없으면 null입니다.",
+                example = "profile-image.png"
+        )
+        String profileImageOriginalName,
 
         @Schema(description = "신청자 이름", example = "김정수")
         String name,
@@ -35,8 +40,14 @@ public record TrainerApplicationReviewDetailResponse(
         @Schema(description = "신청자가 입력한 자격증 목록")
         List<String> qualifications,
 
-        @Schema(description = "필수 자격증 파일 ID. 프론트에서 File API로 URL 조회 후 표시합니다.", example = "26")
-        Long certificateFileId,
+        @Schema(description = "필수 자격증 조회용 Presigned URL. URL은 1시간 동안 유효합니다.")
+        String certificateUrl,
+
+        @Schema(
+                description = "필수 자격증 원본 파일명. 파일 조회에 실패하면 null입니다.",
+                example = "생활스포츠지도사_자격증.pdf"
+        )
+        String certificateOriginalName,
 
         @Schema(description = "신청자가 입력한 수상/대회경력 목록")
         List<String> awardHistories,
@@ -45,17 +56,25 @@ public record TrainerApplicationReviewDetailResponse(
         TrainerApplicationStatus status
 ) {
 
-    public static TrainerApplicationReviewDetailResponse from(TrainerApplicationReviewDetailResult result) {
+    public static TrainerApplicationReviewDetailResponse from(
+            TrainerApplicationReviewDetailResult result,
+            String profileImageUrl,
+            String profileImageOriginalName,
+            String certificateUrl,
+            String certificateOriginalName
+            ) {
         return TrainerApplicationReviewDetailResponse.builder()
                 .trainerApplicationId(result.trainerApplicationId())
                 .userId(result.userId())
-                .profileImageFileId(result.profileImageFileId())
+                .profileImageUrl(profileImageUrl)
+                .profileImageOriginalName(profileImageOriginalName)
                 .name(result.name())
                 .username(result.username())
                 .nickname(result.nickname())
                 .introduction(result.introduction())
                 .qualifications(result.qualifications())
-                .certificateFileId(result.certificateFileId())
+                .certificateUrl(certificateUrl)
+                .certificateOriginalName(certificateOriginalName)
                 .awardHistories(result.awardHistories())
                 .status(result.status())
                 .build();

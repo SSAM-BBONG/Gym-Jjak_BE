@@ -51,7 +51,6 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
 
     @Override
     public List<OrganizationApplication> findAllByApplicantUserId(Long applicantUserId) {
-
         List<OrganizationApplicationJpaEntity> myOrganizationApplication =
                 springDataOrganizationApplicationRepository.findAllByApplicantUserId(applicantUserId);
 
@@ -73,7 +72,7 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
     public ApplicationListResult findAllByStatus(OrganizationApplicationStatus status, ApplicationListQuery query) {
 
         PageRequest pageRequest = PageRequest.of(
-                query.page() - 1,
+                query.page(),
                 query.size(),
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("organizationApplicationId"))
         );

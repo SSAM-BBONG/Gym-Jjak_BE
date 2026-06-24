@@ -2,9 +2,11 @@ package com.ssambbong.gymjjak.user.adapter.in.web;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.CompleteSocialSignupRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.IssueTemporaryPasswordRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.LoginRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.LoginResponse;
+import com.ssambbong.gymjjak.user.application.command.CompleteSocialSignupCommand;
 import com.ssambbong.gymjjak.user.application.command.LoginCommand;
 import com.ssambbong.gymjjak.user.application.command.LogoutCommand;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
@@ -13,8 +15,11 @@ import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.SignupRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.UserResponseCode;
 import com.ssambbong.gymjjak.user.application.result.LoginResult;
+import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
+import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -22,10 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
@@ -90,9 +92,24 @@ public class UserAuthController {
 
     @PostMapping("/logout")
     @Operation( summary = "로그아웃", description = "로그아웃을 하는 요청이다.")
-    public ResponseEntity<GlobalApiResponse<Void>> logout( @AuthenticationPrincipal AuthUser authUser) {
+    public ResponseEntity<GlobalApiResponse<Void>> logout( @AuthenticationPrincipal AuthUser authUser,
+                                                           HttpServletResponse response) {
+
+        if (authUser == null) {
+            throw new UserException(UserErrorCode.AUTHORIZATION_FAILED);
+        }
 
         userCommandUseCase.logout(new LogoutCommand(authUser.userId()));
+
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(false) // 로컬 개발 환경
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(GlobalApiResponse.ok(
@@ -109,6 +126,31 @@ public class UserAuthController {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(UserResponseCode.TEMPORARY_PASSWORD_SENT)
         );
+    }
+
+    @PatchMapping("/social/complete")
+    @Operation(summary = "소셜 회원 추가 정보 입력", description = "소셜 로그인 회원의 닉네임과 전화번호를 입력한다.")
+    public ResponseEntity<GlobalApiResponse<Void>> completeSocialSignup(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody CompleteSocialSignupRequest request
+    ) {
+
+        if (authUser == null) {
+            throw new UserException(UserErrorCode.AUTHORIZATION_FAILED);
+        }
+
+        userCommandUseCase.completeSocialSignup(
+                new CompleteSocialSignupCommand(
+                        authUser.userId(),
+                        request.nickname(),
+                        request.phone()
+                )
+        );
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(GlobalApiResponse.ok(
+                        UserResponseCode.SOCIAL_SIGNUP_COMPLETED
+                ));
     }
 
 }

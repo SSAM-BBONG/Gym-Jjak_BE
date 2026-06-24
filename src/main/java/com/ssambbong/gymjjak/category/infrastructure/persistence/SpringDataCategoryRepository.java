@@ -4,6 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 // domain/application은 이 인터페이스를 알지 못함
 public interface SpringDataCategoryRepository extends JpaRepository<CategoryJpaEntity, Long> {
 
@@ -14,4 +16,8 @@ public interface SpringDataCategoryRepository extends JpaRepository<CategoryJpaE
     @Query(value = "SELECT COUNT(*) FROM pt_courses WHERE category_id = :categoryId AND deleted_at IS NULL",
             nativeQuery = true)
     long countPtCoursesByCategoryId(@Param("categoryId") Long categoryId);
+
+    Optional<CategoryJpaEntity> findByNameAndDeletedAtIsNull(String name);
+
+    Optional<CategoryJpaEntity> findByName(String name);
 }

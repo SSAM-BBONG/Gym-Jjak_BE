@@ -1,5 +1,9 @@
 package com.ssambbong.gymjjak.category.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
+import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
+import com.ssambbong.gymjjak.category.domain.exception.CategoryErrorCode;
+import com.ssambbong.gymjjak.category.domain.exception.CategoryNotFoundException;
 import com.ssambbong.gymjjak.category.domain.model.Category;
 import com.ssambbong.gymjjak.category.domain.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -67,4 +71,6 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
     public long countPtCoursesByCategoryId(Long categoryId) {
         return repository.countPtCoursesByCategoryId(categoryId);
     }
+
+
 }

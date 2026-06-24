@@ -1,27 +1,21 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.global.infrastructure.config.MapStructConfig;
 import com.ssambbong.gymjjak.user.domain.model.User;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
-@Component
-public class UserPersistenceMapper {
+@Mapper(config = MapStructConfig.class)
+public interface UserPersistenceMapper {
 
-    public UserJpaEntity toEntity(User user) {
-        return new UserJpaEntity(
-                user.getId(),
-                user.getUsername(),
-                user.getPassword(),
-                user.getName(),
-                user.getNickname(),
-                user.getPhone(),
-                user.getRole(),
-                user.getStatus(),
-                user.isOnboardingCompleted(),
-                user.getLastLoginAt()
-        );
-    }
+    UserJpaEntity toEntity(User user);
 
-    public User toDomain(UserJpaEntity entity) {
+    default User toDomain(UserJpaEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
         return User.reconstruct(
                 entity.getId(),
                 entity.getUsername(),
@@ -32,11 +26,12 @@ public class UserPersistenceMapper {
                 entity.getRole(),
                 entity.getStatus(),
                 entity.isOnboardingCompleted(),
+                entity.getSocialProvider(),
+                entity.getSocialId(),
                 entity.getLastLoginAt(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getDeletedAt()
-
         );
     }
 }

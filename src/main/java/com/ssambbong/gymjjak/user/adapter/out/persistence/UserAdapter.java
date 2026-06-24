@@ -4,15 +4,19 @@ import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider
 import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
 import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
+import com.ssambbong.gymjjak.user.application.result.PageResult;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
+import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
@@ -106,6 +110,18 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
         }
     }
 
+    @Override
+    public Optional<User> findBySocialProviderAndSocialId(
+            SocialProvider socialProvider,
+            String socialId
+    ) {
+        return springDataUserRepository.findBySocialProviderAndSocialId(
+                        socialProvider,
+                        socialId
+                )
+                .map(userPersistenceMapper::toDomain);
+    }
+
     private RuntimeException mapToUserException(DataIntegrityViolationException e) {
         String message = e.getMostSpecificCause().getMessage();
 
@@ -157,26 +173,57 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     }
 
     @Override
-    public List<FindUserResult> findUsers(String name, Long cursor, int size) {
-        return springDataUserRepository.findUsersByCursor(
-                name,
-                cursor,
-                PageRequest.of(0, size + 1)
+    public PageResult<FindUserResult> findUsers(String keyword, int page, int size) {
+        Page<FindUserResult> result = springDataUserRepository.findUsers(
+                keyword,
+                PageRequest.of(
+                        page,
+                        size,
+                        Sort.by(Sort.Direction.DESC, "id")
+                )
+        );
+
+        return new PageResult<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isFirst(),
+                result.isLast(),
+                result.hasNext(),
+                result.hasPrevious()
         );
     }
 
     @Override
-    public List<FindBlacklistUserResult> findBlacklistUsers(
-            String name,
-            Long cursor,
+    public PageResult<FindBlacklistUserResult> findBlacklistUsers(
+            String keyword,
+            int page,
             int size
     ) {
-        return springDataUserRepository.findBlacklistUsersByCursor(
-                List.of(UserStatus.DAY_7, UserStatus.ETERNAL),
-                BlacklistStatus.ACTIVE,
-                name,
-                cursor,
-                PageRequest.of(0, size + 1)
+        Page<FindBlacklistUserResult> result =
+                springDataUserRepository.findBlacklistUsers(
+                        List.of(UserStatus.DAY_7, UserStatus.ETERNAL),
+                        BlacklistStatus.ACTIVE,
+                        keyword,
+                        PageRequest.of(
+                                page,
+                                size,
+                                Sort.by(Sort.Direction.DESC, "id")
+                        )
+                );
+
+        return new PageResult<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isFirst(),
+                result.isLast(),
+                result.hasNext(),
+                result.hasPrevious()
         );
     }
 

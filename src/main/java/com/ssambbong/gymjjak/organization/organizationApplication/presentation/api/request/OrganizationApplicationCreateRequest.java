@@ -1,19 +1,20 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.presentation.api.request;
 
+import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record OrganizationApplicationCreateRequest(
-        @NotNull(message = "파일 ID는 필수입니다.")
-        @Positive(message = "파일 ID는 1 이상이어야 합니다.")
-        Long fileId,
+        @NotNull(message = "사업자등록증 파일은 필수입니다.")
+        @Valid
+        UploadedFileMetadataRequest businessLicenseFile,
 
         @NotBlank(message = "요청 로그인 ID는 필수입니다.")
         String requestedLoginId,

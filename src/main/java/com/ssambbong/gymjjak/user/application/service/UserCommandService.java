@@ -85,6 +85,16 @@ public class UserCommandService implements UserCommandUseCase {
 
         user.releaseSuspensionIfExpired(now);
 
+        if (user.getPassword() == null) {
+            log.warn("event=user_login_failed reason=social_login_required userId={}, username={}, provider={}",
+                    user.getId(),
+                    user.getUsername(),
+                    user.getSocialProvider()
+            );
+
+            throw new UserException(UserErrorCode.SOCIAL_LOGIN_REQUIRED);
+        }
+
         if (!userPort.matchesPassword(command.password(), user.getPassword())) {
             throw new UserException(UserErrorCode.LOGIN_FAILED);
         }
@@ -263,48 +273,50 @@ public class UserCommandService implements UserCommandUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public CursorResult<FindUserResult> findUsers(String name, Long cursor, int size) {
-        log.debug("event=users_find_start, name={}, cursor={}, size={}", name, cursor, size);
+    public PageResult<FindUserResult> findUsers(String keyword, int page, int size) {
+        log.debug("event=users_find_start, keyword={}, page={}, size={}", keyword, page, size);
 
-        List<FindUserResult> results = userPort.findUsers(name, cursor, size);
+        PageResult<FindUserResult> result = userPort.findUsers(keyword, page, size);
 
-        boolean hasNext = results.size() > size;
+        log.info(
+                "event=users_find_succeed, keyword={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
+                keyword,
+                page,
+                size,
+                result.content().size(),
+                result.totalElements(),
+                result.totalPages(),
+                result.hasNext()
+        );
 
-        List<FindUserResult> content = hasNext
-                ? results.subList(0, size)
-                : results;
-
-        Long nextCursor = content.isEmpty()
-                ? null
-                : content.get(content.size() - 1).userId();
-
-        log.info("event=users_find_succeed, name={}, cursor={}, size={}, resultCount={}, hasNext={}",
-                name, cursor, size, content.size(), hasNext);
-
-        return new CursorResult<>(content, nextCursor, hasNext);
+        return result;
     }
 
     @Override
-    public CursorResult<FindBlacklistUserResult> findBlacklistUsers(String name, Long cursor, int size) {
-        log.debug("users_findBlacklistUsers_start, cursor={}, size={}", cursor, size);
+    @Transactional(readOnly = true)
+    public PageResult<FindBlacklistUserResult> findBlacklistUsers(String keyword, int page, int size) {
+        log.debug(
+                "event=users_findBlacklistUsers_start, keyword={}, page={}, size={}",
+                keyword,
+                page,
+                size
+        );
 
-        List<FindBlacklistUserResult> results =
-                userPort.findBlacklistUsers(name, cursor, size);
+        PageResult<FindBlacklistUserResult> result =
+                userPort.findBlacklistUsers(keyword, page, size);
 
-        boolean hasNext = results.size() > size;
+        log.info(
+                "event=users_findBlacklistUsers_succeed, keyword={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
+                keyword,
+                page,
+                size,
+                result.content().size(),
+                result.totalElements(),
+                result.totalPages(),
+                result.hasNext()
+        );
 
-        List<FindBlacklistUserResult> content = hasNext
-                ? results.subList(0, size)
-                : results;
-
-        Long nextCursor = content.isEmpty()
-                ? null
-                : content.get(content.size() - 1).userId();
-
-        log.info("event=users_findBlacklistUsers_succeed, cursor={}, size={}, resultCount={}, hasNext={}",
-                cursor, size, content.size(), hasNext);
-
-        return new CursorResult<>(content, nextCursor, hasNext);
+        return result;
     }
 
     private String maskPhone(String phone) {
@@ -379,5 +391,37 @@ public class UserCommandService implements UserCommandUseCase {
         }
 
         return null;
+    }
+
+    @Override
+    public void completeSocialSignup(CompleteSocialSignupCommand command) {
+
+        String nickname = normalize(command.nickname());
+        String phone = normalize(command.phone());
+        if (nickname == null || nickname.isBlank()) {
+            throw new UserException(UserErrorCode.NICKNAME_REQUIRED);
+        }
+        if (phone == null || phone.isBlank()) {
+            throw new UserException(UserErrorCode.PHONE_REQUIRED);
+        }
+
+        User user = userPort.findById(command.userId())
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+
+        if (userPort.existsByNickname(nickname)) {
+            throw new UserException(UserErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        if (userPort.existsByPhone(phone)) {
+            throw new UserException(UserErrorCode.DUPLICATE_PHONE);
+        }
+
+        user.completeSocialSignup(
+                nickname,
+                phone,
+                LocalDateTime.now()
+        );
+
+        userPort.save(user);
     }
 }

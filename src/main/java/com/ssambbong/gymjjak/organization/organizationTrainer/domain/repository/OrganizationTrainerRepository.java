@@ -1,9 +1,11 @@
 package com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository;
 
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerDetailView;
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrganizationTrainerRepository {
 
@@ -13,11 +15,19 @@ public interface OrganizationTrainerRepository {
 
     List<TrainerSummary> findTrainersByOrganizationId(Long organizationId);
 
-    record TrainerSummary(
-            Long organizationTrainerId,
-            Long trainerProfileId,
-            String username,
-            String trainerName,
-            LocalDateTime registeredAt
-    ) {}
+    Optional<OrganizationTrainer> findActiveByIdAndOrganizationId(Long organizationTrainerId, Long organizationId);
+
+    Long save(OrganizationTrainer organizationTrainer);
+
+    boolean existsActiveByOrganizationIdAndTrainerProfileId(Long organizationId, Long trainerProfileId);
+
+    void remove(Long organizationTrainerId);
+
+    long countAllActive();
+
+    long countActiveOrganizations();
+
+    List<TrainerDetailView> findTrainerDetailsByOrganizationId(Long organizationId);
+
+    long countAccumulatedMembersByOrganizationId(Long organizationId);
 }

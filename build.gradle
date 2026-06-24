@@ -25,6 +25,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     // section 02: AOP 기반 로깅 구현을 위한 AspectJ 의존성
     implementation 'org.springframework.boot:spring-boot-starter-aop'
+    // 실시간 채팅 웹소켓 의존성 추가
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     compileOnly 'org.projectlombok:lombok'
     // 추후 DB 연결 후 주석 해제 예정
      runtimeOnly 'com.mysql:mysql-connector-j'
@@ -68,6 +70,8 @@ dependencies {
     runtimeOnly 'org.flywaydb:flyway-mysql'
     // email 의존성 추가
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    // 소셜 로그인
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 }
 
 tasks.named('test') {
