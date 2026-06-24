@@ -293,7 +293,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 trainer.awards(),
                 curriculums,
                 schedules,
-                // 미구현
+                // TODO: 강사평 구현 후 reviewQueryPort.findRecentByTrainerProfileId(ptCourse.getTrainerProfileId(), 3) 로 교체
                 List.of()
         );
     }

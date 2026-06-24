@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.command;
 
 import java.util.List;
+import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 
 public record UpdatePtCourseCommand(
         Long userId,
@@ -10,7 +11,7 @@ public record UpdatePtCourseCommand(
         Long categoryId,
         Long tagId,
         int price,
-        Long thumbnailFileId,
+        UploadedFileMetadataCommand thumbnailFile,
         List<CurriculumData> curriculums,
         List<ScheduleData> schedules
 ) {

@@ -7,4 +7,5 @@ import java.util.List;
 public interface SpringDataFeedbackMediaRepository extends JpaRepository<FeedbackMediaJpaEntity, Long> {
 
     List<FeedbackMediaJpaEntity> findAllByFeedbackIdOrderByIdAsc(Long feedbackId);
+    void deleteAllByFeedbackId(Long feedbackId);
 }
