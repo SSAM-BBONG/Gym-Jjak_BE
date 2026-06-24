@@ -28,6 +28,17 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
     }
 
     @Override
+    public boolean existsByIdAndUserId(
+            Long workoutDiaryId,
+            Long userId
+    ) {
+        return workoutDiaryJpaRepository.existsByIdAndUserId(
+                workoutDiaryId,
+                userId
+        );
+    }
+
+    @Override
     public void saveWorkoutDiary(WorkoutDiary workoutDiary) {
         WorkoutDiaryJpaEntity entity = new WorkoutDiaryJpaEntity(
                 workoutDiary.getUserId(),
@@ -39,5 +50,40 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
 
         workoutDiaryJpaRepository.save(entity);
 
+    }
+
+    @Override
+    public void updateWorkoutDiary(
+            Long userId,
+            Long workoutDiaryId,
+            Long categoryId,
+            String title,
+            String content
+    ) {
+        WorkoutDiaryJpaEntity workoutDiary = workoutDiaryJpaRepository.findByIdAndUserId(
+                        workoutDiaryId,
+                        userId
+                )
+                .orElseThrow(() -> new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND));
+
+        workoutDiary.update(
+                categoryId,
+                title,
+                content
+        );
+    }
+
+    @Override
+    public void deleteWorkoutDiary(
+            Long userId,
+            Long workoutDiaryId
+    ) {
+        WorkoutDiaryJpaEntity workoutDiary = workoutDiaryJpaRepository.findByIdAndUserId(
+                        workoutDiaryId,
+                        userId
+                )
+                .orElseThrow(() -> new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND));
+
+        workoutDiaryJpaRepository.delete(workoutDiary);
     }
 }

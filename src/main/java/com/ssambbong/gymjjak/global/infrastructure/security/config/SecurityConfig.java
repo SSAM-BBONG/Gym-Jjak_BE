@@ -126,6 +126,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
                         .hasAuthority("ADMIN")
 
+                        // 트레이너 검색 - 조직 및 관리자
+                        .requestMatchers(HttpMethod.GET, "/api/trainers/search")
+                        .hasAnyAuthority("ORGANIZATION", "ADMIN")
+
                         // 본인 프로필 조회는 TRAINER만 허용
                         .requestMatchers(HttpMethod.GET, "/api/trainers/me")
                         .hasAuthority("TRAINER")
@@ -143,6 +147,7 @@ public class SecurityConfig {
                         .hasAnyAuthority("TRAINER", "ADMIN")
 
                         // 조직 API
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/*/detail").permitAll()
                         .requestMatchers("/api/organizations/**")
                         .hasAnyAuthority("ORGANIZATION", "ADMIN")
 
@@ -153,6 +158,10 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").hasAuthority("ADMIN")
 //                        .requestMatchers("/actuator/**").permitAll()
+
+                        // Calendar API
+                        .requestMatchers("/api/calendar/**")
+                        .authenticated()
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()

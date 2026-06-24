@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence;
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -77,10 +78,10 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
         this.status = status;
     }
 
-    // 수동 제재 soft delete — status=DELETED + deletedAt 설정 — 스케줄러 hard delete 대상
-    public void softDelete() {
+    // soft delete — status=DELETED + 도메인에서 결정한 deletedAt 반영 — 스케줄러 hard delete 대상
+    public void softDelete(LocalDateTime deletedAt) {
         this.status = PtCourseStatus.DELETED;
-        super.delete(); // BaseTimeEntity.delete() → deletedAt = now()
+        super.setDeletedAt(deletedAt);
     }
 
     // 강습 정보 수정 (제목·설명·카테고리·태그·가격·썸네일·총 회차) — 더티체킹으로 UPDATE

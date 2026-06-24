@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.feedback.presentation.api.request;
 
+import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.pt.feedback.application.command.CreateFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;

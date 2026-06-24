@@ -13,7 +13,7 @@ public class CategoryRepositoryAdapterFromCalendar implements WorkoutDiaryPortTo
 
     @Override
     public Long findCategoryIdByName(String categoryName) {
-        return repository.findByName(categoryName)
+        return repository.findByNameAndDeletedAtIsNull(categoryName)
                 .map(CategoryJpaEntity::getId)
                 .orElseThrow(() -> new CategoryNotFoundException());
     }

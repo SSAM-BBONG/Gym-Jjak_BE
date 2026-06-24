@@ -17,5 +17,7 @@ public interface SpringDataCategoryRepository extends JpaRepository<CategoryJpaE
             nativeQuery = true)
     long countPtCoursesByCategoryId(@Param("categoryId") Long categoryId);
 
+    Optional<CategoryJpaEntity> findByNameAndDeletedAtIsNull(String name);
+
     Optional<CategoryJpaEntity> findByName(String name);
 }

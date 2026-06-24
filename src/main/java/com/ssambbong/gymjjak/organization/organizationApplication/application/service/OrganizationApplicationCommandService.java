@@ -1,11 +1,16 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.application.service;
 
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
+import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.OrgApplicationMetricsPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
+import com.ssambbong.gymjjak.organization.organizationApplication.exception.BusinessLicenseFileRegistrationFailedException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateBusinessRegistrationNumberException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateRequestedLoginIdException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.OrganizationApplicationNotFoundException;
@@ -17,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -24,6 +31,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
 
     private final OrganizationApplicationRepository organizationApplicationRepository;
     private final OrganizationRepository organizationRepository;
+    private final FileUseCase fileUseCase;
     private final UserCreationPort userCreationPort;
     private final OrgApplicationMetricsPort orgApplicationMetricsPort;
     private final OrganizationMetricsPort organizationMetricsPort;
@@ -31,6 +39,10 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     @Override
     @Transactional
     public Long createOrganizationApplication(OrganizationApplicationCreateCommand command) {
+
+        if (command.businessLicenseFile() == null) {
+            throw new BusinessLicenseFileRegistrationFailedException();
+        }
 
         boolean alreadyExist = organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber());
         if (alreadyExist) {
@@ -42,10 +54,32 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
             throw new DuplicateRequestedLoginIdException();
         }
 
+        List<FileRegistrationResult> fileResults;
+        try {
+            fileResults = fileUseCase.registerFiles(List.of(
+                    new CreateFileCommand(
+                            command.applicantUserId(),
+                            command.businessLicenseFile().fileKey(),
+                            command.businessLicenseFile().originalName(),
+                            command.businessLicenseFile().contentType(),
+                            command.businessLicenseFile().fileSize(),
+                            FileType.BUSINESS_LICENSE)
+            ));
+        } catch (RuntimeException e) {
+            log.error("event=org_application_file_registration_failed", e);
+            throw new BusinessLicenseFileRegistrationFailedException();
+        }
+
+        if (fileResults.isEmpty() || fileResults.get(0).fileId() == null) {
+            throw new BusinessLicenseFileRegistrationFailedException();
+        }
+
+        Long fileId = fileResults.get(0).fileId();
+
         OrganizationApplication organizationApplication = OrganizationApplication.create(
                 command.applicantUserId(),
                 command.requestedLoginId(),
-                command.fileId(),
+                fileId,
                 command.businessRegistrationNumber(),
                 command.businessName(),
                 command.representativeName(),

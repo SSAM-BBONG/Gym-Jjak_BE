@@ -34,7 +34,7 @@ public class OrganizationTrainerController {
     private final OrganizationTrainerMapper organizationTrainerMapper;
 
     @PreAuthorize("hasAuthority('ORGANIZATION')")
-    @Operation(summary = "내 조직 소속 트레이너 목록 조회", description = "조직 계정이 본인 조직에 소속된 트레이너 목록을 조회합니다.")
+    @Operation(summary = "내 조직 소속 트레이너 목록 조회", description = "조직 계정이 본인 조직 소속 트레이너 목록을 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = FindOrganizationTrainersResponse.class))),
@@ -46,7 +46,7 @@ public class OrganizationTrainerController {
                     content = @Content(schema = @Schema()))
     })
     @GetMapping
-    public ResponseEntity<GlobalApiResponse<FindOrganizationTrainersResponse>> getMyOrganizationTrainers(
+    public ResponseEntity<GlobalApiResponse<FindOrganizationTrainersResponse>> getOrganizationTrainers(
             @AuthenticationPrincipal AuthUser authUser
     ) {
         FindOrganizationTrainersResponse response = new FindOrganizationTrainersResponse(

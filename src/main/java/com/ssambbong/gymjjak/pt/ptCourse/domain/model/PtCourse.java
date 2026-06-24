@@ -1,7 +1,9 @@
 package com.ssambbong.gymjjak.pt.ptCourse.domain.model;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseCannotDeleteException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseStatusInvalidException;
+import java.time.LocalDateTime;
 
 public class PtCourse {
 
@@ -17,6 +19,7 @@ public class PtCourse {
     private int totalSessionCount;
 
     private PtCourseStatus status;
+    private LocalDateTime deletedAt;
 
     private PtCourse(Long id,
                     Long organizationId,
@@ -96,9 +99,10 @@ public class PtCourse {
             String description,
             int price,
             int totalSessionCount,
-            PtCourseStatus status
+            PtCourseStatus status,
+            LocalDateTime deletedAt
     ) {
-        return new PtCourse(
+        PtCourse ptCourse = new PtCourse(
                 id,
                 organizationId,
                 trainerProfileId,
@@ -111,6 +115,8 @@ public class PtCourse {
                 totalSessionCount,
                 status
         );
+        ptCourse.deletedAt = deletedAt;
+        return ptCourse;
     }
 
     // 트레이너가 강습 공개 여부 전환 (VISIBLE/HIDDEN)
@@ -138,6 +144,15 @@ public class PtCourse {
         this.totalSessionCount = totalSessionCount;
     }
 
+    // 트레이너가 강습 삭제 — BLOCKED(관리자 제재 중)이면 거부, deletedAt을 도메인에서 직접 결정
+    public void delete() {
+        if (this.status == PtCourseStatus.BLOCKED) {
+            throw new PtCourseCannotDeleteException();
+        }
+        this.status = PtCourseStatus.DELETED;
+        this.deletedAt = LocalDateTime.now();
+    }
+
     // 관리자가 강습을 BLOCKED 상태로 전환
     public void blind() {
         this.status = PtCourseStatus.BLOCKED;
@@ -160,8 +175,6 @@ public class PtCourse {
     public int getPrice() { return price; }
     public int getTotalSessionCount() { return totalSessionCount; }
     public PtCourseStatus getStatus() { return status; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
 
-    public void delete() {
-        this.status = PtCourseStatus.DELETED;
-    }
 }

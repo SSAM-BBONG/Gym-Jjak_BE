@@ -274,12 +274,12 @@ public class UserCommandService implements UserCommandUseCase {
     @Override
     @Transactional(readOnly = true)
     public PageResult<FindUserResult> findUsers(String keyword, int page, int size) {
-        log.debug("event=users_find_start, name={}, page={}, size={}", keyword, page, size);
+        log.debug("event=users_find_start, keyword={}, page={}, size={}", keyword, page, size);
 
         PageResult<FindUserResult> result = userPort.findUsers(keyword, page, size);
 
         log.info(
-                "event=users_find_succeed, name={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
+                "event=users_find_succeed, keyword={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
                 keyword,
                 page,
                 size,
@@ -296,7 +296,7 @@ public class UserCommandService implements UserCommandUseCase {
     @Transactional(readOnly = true)
     public PageResult<FindBlacklistUserResult> findBlacklistUsers(String keyword, int page, int size) {
         log.debug(
-                "event=users_findBlacklistUsers_start, name={}, page={}, size={}",
+                "event=users_findBlacklistUsers_start, keyword={}, page={}, size={}",
                 keyword,
                 page,
                 size
@@ -306,7 +306,7 @@ public class UserCommandService implements UserCommandUseCase {
                 userPort.findBlacklistUsers(keyword, page, size);
 
         log.info(
-                "event=users_findBlacklistUsers_succeed, name={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
+                "event=users_findBlacklistUsers_succeed, keyword={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
                 keyword,
                 page,
                 size,

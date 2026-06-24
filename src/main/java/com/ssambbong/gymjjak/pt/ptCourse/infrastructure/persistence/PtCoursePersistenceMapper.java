@@ -34,7 +34,8 @@ public class PtCoursePersistenceMapper {
                 entity.getDescription(),
                 entity.getPrice(),
                 entity.getTotalSessionCount(),
-                entity.getStatus()
+                entity.getStatus(),
+                entity.getDeletedAt()
         );
     }
 }

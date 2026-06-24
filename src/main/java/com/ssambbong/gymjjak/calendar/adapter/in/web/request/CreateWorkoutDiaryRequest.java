@@ -15,12 +15,12 @@ public record CreateWorkoutDiaryRequest(
         LocalDate diaryDate,
 
         @Schema(description = "카테고리", example = "다이어트")
-        @NotNull(message = "카테고리는 필수입니다.")
+        @NotBlank(message = "카테고리는 필수입니다.")
         String categoryName,
 
         @Schema(description = "제목", example = "오늘의 마라톤")
         @NotBlank(message = "일지 제목은 필수입니다.")
-        @Size(max = 500, message = "일지 제목은 500자 이하로 입력해야 합니다.")
+        @Size(max = 100, message = "일지 제목은 100자 이하로 입력해야 합니다.")
         String title,
 
         @Schema(description = "내용", example = "씨이빠 ㅈㄴ 힘드노 헥헥")
