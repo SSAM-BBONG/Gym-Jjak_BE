@@ -37,6 +37,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     private final OrganizationMetricsPort organizationMetricsPort;
 
     @Override
+    @Transactional
     public Long createOrganizationApplication(OrganizationApplicationCreateCommand command) {
 
         if (command.businessLicenseFile() == null) {
@@ -53,37 +54,32 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
             throw new DuplicateRequestedLoginIdException();
         }
 
-        List<FileRegistrationResult> fileResults = fileUseCase.registerFiles(List.of(
-                new CreateFileCommand(
-                        command.applicantUserId(),
-                        command.businessLicenseFile().fileKey(),
-                        command.businessLicenseFile().originalName(),
-                        command.businessLicenseFile().contentType(),
-                        command.businessLicenseFile().fileSize(),
-                        FileType.BUSINESS_LICENSE)
-        ));
+        List<FileRegistrationResult> fileResults;
+        try {
+            fileResults = fileUseCase.registerFiles(List.of(
+                    new CreateFileCommand(
+                            command.applicantUserId(),
+                            command.businessLicenseFile().fileKey(),
+                            command.businessLicenseFile().originalName(),
+                            command.businessLicenseFile().contentType(),
+                            command.businessLicenseFile().fileSize(),
+                            FileType.BUSINESS_LICENSE)
+            ));
+        } catch (RuntimeException e) {
+            log.error("event=org_application_file_registration_failed", e);
+            throw new BusinessLicenseFileRegistrationFailedException();
+        }
 
         if (fileResults.isEmpty() || fileResults.get(0).fileId() == null) {
             throw new BusinessLicenseFileRegistrationFailedException();
         }
 
-        FileRegistrationResult fileResult = fileResults.get(0);
-
-        try {
-            return saveOrganizationApplication(command, fileResult.fileId());
-        } catch (RuntimeException e) {
-            deleteFileSafely(fileResult.fileId(), e);
-            throw e;
-        }
-    }
-
-    @Transactional
-    private Long saveOrganizationApplication(OrganizationApplicationCreateCommand command, Long businessLicenseFileId) {
+        Long fileId = fileResults.get(0).fileId();
 
         OrganizationApplication organizationApplication = OrganizationApplication.create(
                 command.applicantUserId(),
                 command.requestedLoginId(),
-                businessLicenseFileId,
+                fileId,
                 command.businessRegistrationNumber(),
                 command.businessName(),
                 command.representativeName(),
@@ -103,15 +99,6 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         Long applicationId = organizationApplicationRepository.save(organizationApplication);
         recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationCreated, "recordOrgApplicationCreated");
         return applicationId;
-    }
-
-    private void deleteFileSafely(Long fileId, RuntimeException originalException) {
-        try {
-            fileUseCase.deleteFile(fileId);
-        } catch (RuntimeException cleanupException) {
-            originalException.addSuppressed(cleanupException);
-            log.error("event=org_application_file_cleanup_failed, fileId={}", fileId, cleanupException);
-        }
     }
 
     @Override
