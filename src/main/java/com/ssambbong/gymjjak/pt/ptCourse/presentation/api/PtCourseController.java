@@ -12,7 +12,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.ChangePtCourseStatusRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.CreatePtCourseRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.UpdatePtCourseRequest;
-import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.UploadedFileMetadataRequest;
+import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
