@@ -26,8 +26,12 @@ public class TagCommandService implements TagCommandUseCase {
         if (tagRepository.existsByName(command.name())) {
             throw new TagAlreadyExistsException();
         }
-        Tag saved = tagRepository.save(Tag.create(command.name()));
-        return saved.getId();
+        try {
+            Tag saved = tagRepository.save(Tag.create(command.name()));
+            return saved.getId();
+        } catch (DataIntegrityViolationException e) {
+            throw new TagAlreadyExistsException();
+        }
     }
 
     @Override
@@ -38,19 +42,19 @@ public class TagCommandService implements TagCommandUseCase {
             throw new TagAlreadyExistsException();
         }
         tag.changeName(command.name());
-        tagRepository.save(tag);
+        try {
+            tagRepository.save(tag);
+        } catch (DataIntegrityViolationException e) {
+            throw new TagAlreadyExistsException();
+        }
     }
 
     @Override
     public void handle(DeleteTagCommand command) {
         tagRepository.findById(command.id())
                 .orElseThrow(TagNotFoundException::new);
-        if (tagRepository.countPtCoursesByTagId(command.id()) > 0) {
-            throw new TagInUseException();
-        }
-        try {
-            tagRepository.deleteById(command.id());
-        } catch (DataIntegrityViolationException e) {
+        int affected = tagRepository.softDeleteIfNotInUse(command.id());
+        if (affected == 0) {
             throw new TagInUseException();
         }
     }
