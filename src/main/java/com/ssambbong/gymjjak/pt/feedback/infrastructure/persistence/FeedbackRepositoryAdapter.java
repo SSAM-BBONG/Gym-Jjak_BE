@@ -59,6 +59,12 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
     }
 
     @Override
+    public void deleteById(Long feedbackId) {
+        repository.findByIdAndDeletedAtIsNull(feedbackId)
+                .ifPresent(FeedbackJpaEntity::delete);
+    }
+
+    @Override
     public boolean existsByPtReservationIdAndPtCurriculumId(Long ptReservationId, Long ptCurriculumId) {
         return repository.existsByPtReservationIdAndPtCurriculumIdAndDeletedAtIsNull(ptReservationId, ptCurriculumId);
     }

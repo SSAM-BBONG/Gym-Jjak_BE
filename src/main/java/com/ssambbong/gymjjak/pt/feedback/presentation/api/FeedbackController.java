@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.feedback.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.pt.feedback.application.command.DeleteFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.usecase.FeedbackCommandUseCase;
 import com.ssambbong.gymjjak.pt.feedback.application.usecase.FeedbackQueryUseCase;
 import com.ssambbong.gymjjak.pt.feedback.presentation.api.request.CreateFeedbackRequest;
@@ -104,6 +105,20 @@ public class FeedbackController {
                 GlobalApiResponse.ok(FeedbackResponseCode.FEEDBACK_UPDATED,
                         UpdateFeedbackResponse.from(updatedId))
         );
+    }
+
+    // 피드백 삭제
+    @DeleteMapping("/{feedbackId}")
+    @PreAuthorize("hasAnyAuthority('TRAINER')")
+    @Operation(summary = "피드백 삭제", description = "트레이너가 본인이 작성한 피드백을 삭제한다. 예약이 COMPLETED 상태이면 삭제 불가.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteFeedback(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptReservationId,
+            @PathVariable Long feedbackId
+    ) {
+        feedbackCommandUseCase.deleteFeedback(
+                new DeleteFeedbackCommand(authUser.userId(), ptReservationId, feedbackId));
+        return ResponseEntity.ok(GlobalApiResponse.ok(FeedbackResponseCode.FEEDBACK_DELETED, null));
     }
 
 }

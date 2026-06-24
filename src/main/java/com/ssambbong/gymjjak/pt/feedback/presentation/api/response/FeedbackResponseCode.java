@@ -11,7 +11,8 @@ public enum FeedbackResponseCode implements ResponseCode {
     RESERVATION_FEEDBACKS_FETCHED("RESERVATION_FEEDBACKS_200", "피드백 목록 조회 성공"),
     FEEDBACK_DETAIL_FETCHED("FEEDBACK_DETAIL_200", "피드백 상세 조회 성공"),
     FEEDBACK_CREATED("FEEDBACK_201", "피드백 등록 성공"),
-    FEEDBACK_UPDATED("FEEDBACK_UPDATED", "피드백이 수정되었습니다");
+    FEEDBACK_UPDATED("FEEDBACK_UPDATED", "피드백이 수정되었습니다"),
+    FEEDBACK_DELETED("FEEDBACK_DELETED", "피드백이 삭제되었습니다");
 
     private final String code;
     private final String message;

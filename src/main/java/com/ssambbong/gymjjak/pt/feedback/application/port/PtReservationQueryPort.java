@@ -7,8 +7,9 @@ public interface PtReservationQueryPort {
     ReservationInfo findById(Long ptReservationId);
 
     record ReservationInfo(
-            Long ptCourseId, // 커리큘럼 목록 조회
-            Long trainerProfileId, // 트레이너 소유권 검증
-            Long userId // 수강생 소유권 검증
+            Long ptCourseId,
+            Long trainerProfileId,
+            Long userId,
+            String status
     ) {}
 }
