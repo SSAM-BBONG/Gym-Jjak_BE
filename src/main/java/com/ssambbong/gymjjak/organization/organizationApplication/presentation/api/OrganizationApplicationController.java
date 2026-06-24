@@ -3,7 +3,6 @@ package com.ssambbong.gymjjak.organization.organizationApplication.presentation.
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
-import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
@@ -56,25 +55,7 @@ public class OrganizationApplicationController {
             @RequestBody @Valid OrganizationApplicationCreateRequest request) {
 
         Long organizationApplicationId = organizationApplicationCommandUsecase.createOrganizationApplication(
-                new OrganizationApplicationCreateCommand(
-                        authUser.userId(),
-                        request.fileId(),
-                        request.requestedLoginId(),
-                        request.businessRegistrationNumber(),
-                        request.businessName(),
-                        request.representativeName(),
-                        request.representativePhone(),
-                        request.openingDate(),
-                        request.roadAddress(),
-                        request.jibunAddress(),
-                        request.detailAddress(),
-                        request.latitude(),
-                        request.longitude(),
-                        request.websiteUrl(),
-                        request.instagramUrl(),
-                        request.blogUrl(),
-                        request.facilityPhone()
-                ));
+                organizationApplicationMapper.toCommand(request, authUser.userId()));
 
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
@@ -104,6 +85,7 @@ public class OrganizationApplicationController {
                         domain.getBusinessName(),
                         domain.getRequestedLoginId(),
                         domain.getStatus(),
+                        
                         domain.getBusinessRegistrationNumber(),
                         domain.getRepresentativeName(),
                         domain.getCreatedAt()

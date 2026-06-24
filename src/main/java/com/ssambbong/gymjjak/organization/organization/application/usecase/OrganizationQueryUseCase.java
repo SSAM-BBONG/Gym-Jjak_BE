@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organization.application.usecase;
 
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
@@ -14,4 +15,7 @@ public interface OrganizationQueryUseCase {
 
     // 조직 상세 조회 - ADMIN용 (status 무관)
     Organization findOrganizationById(Long organizationId);
+
+    // 조직 상세 조회 - 사용자용
+    OrganizationDetailResult findOrganizationDetail(Long organizationId);
 }

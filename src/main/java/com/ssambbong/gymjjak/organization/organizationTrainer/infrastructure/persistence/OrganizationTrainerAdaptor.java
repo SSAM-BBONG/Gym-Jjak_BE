@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerDetailView;
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
 import com.ssambbong.gymjjak.organization.organizationTrainer.exception.OrganizationTrainerNotFoundException;
@@ -54,6 +56,47 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
     @Override
     public long countActiveOrganizations() {
         return springDataOrganizationTrainerRepository.countDistinctOrganizationsWithActiveTrainers();
+    }
+
+    @Override
+    public List<TrainerDetailView> findTrainerDetailsByOrganizationId(Long organizationId) {
+        List<?> results = em.createNativeQuery("""
+                SELECT tp.trainer_name,
+                       tp.average_rating,
+                       tp.review_count
+                FROM organization_trainers ot
+                JOIN trainer_profiles tp ON ot.trainer_profile_id = tp.trainer_profile_id
+                WHERE ot.organization_id = :organizationId
+                  AND ot.removed_at IS NULL
+                  AND tp.deleted_at IS NULL
+                ORDER BY ot.registered_at ASC
+                """)
+                .setParameter("organizationId", organizationId)
+                .getResultList();
+
+        return results.stream()
+                .map(row -> {
+                    Object[] r = (Object[]) row;
+                    return new TrainerDetailView(
+                            (String) r[0],
+                            ((Number) r[1]).doubleValue(),
+                            ((Number) r[2]).intValue()
+                    );
+                })
+                .toList();
+    }
+
+    @Override
+    public long countAccumulatedMembersByOrganizationId(Long organizationId) {
+        Object result = em.createNativeQuery("""
+                SELECT COUNT(DISTINCT pr.user_id)
+                FROM pt_reservations pr
+                WHERE pr.organization_id = :organizationId
+                  AND pr.cancelled_at IS NULL
+                """)
+                .setParameter("organizationId", organizationId)
+                .getSingleResult();
+        return ((Number) result).longValue();
     }
 
     @Override
