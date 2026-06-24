@@ -33,6 +33,7 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
             SELECT ot.organization_trainer_id,
                    ot.trainer_profile_id,
                    u.username,
+                   u.email,
                    tp.trainer_name,
                    ot.registered_at
             FROM organization_trainers ot
@@ -65,4 +66,5 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
               AND pr.cancelled_at IS NULL
             """, nativeQuery = true)
     long countAccumulatedMembersByOrganizationId(@Param("organizationId") Long organizationId);
+
 }

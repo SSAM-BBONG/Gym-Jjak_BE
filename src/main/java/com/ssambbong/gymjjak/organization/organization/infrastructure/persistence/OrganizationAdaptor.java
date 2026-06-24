@@ -69,4 +69,9 @@ public class OrganizationAdaptor implements OrganizationRepository {
         return springDataOrganizationRepository.countByStatus(status);
     }
 
+    @Override
+    public Optional<String> findRequestedLoginIdById(Long organizationId) {
+        return springDataOrganizationRepository.findRequestedLoginIdById(organizationId);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.AdminTrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerDetailView;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
@@ -96,6 +97,21 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
                         r.getTrainerProfileId(),
                         r.getUsername(),
                         r.getTrainerName(),
+                        r.getRegisteredAt()
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<AdminTrainerSummary> findAdminTrainersByOrganizationId(Long organizationId) {
+        return springDataOrganizationTrainerRepository
+                .findTrainerSummariesByOrganizationId(organizationId)
+                .stream()
+                .map(r -> new AdminTrainerSummary(
+                        r.getOrganizationTrainerId(),
+                        r.getTrainerProfileId(),
+                        r.getTrainerName(),
+                        r.getEmail(),
                         r.getRegisteredAt()
                 ))
                 .toList();
