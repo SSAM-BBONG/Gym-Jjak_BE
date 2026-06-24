@@ -42,7 +42,10 @@ public class OrganizationTrainerCommandService implements OrganizationTrainerCom
         try {
             organizationTrainerId = organizationTrainerRepository.save(organizationTrainer);
         } catch (DataIntegrityViolationException e) {
-            throw new OrganizationTrainerAlreadyExistsException();
+            if (isActiveOrganizationTrainerConstraint(e)) {
+                throw new OrganizationTrainerAlreadyExistsException(e);
+            }
+            throw e;
         }
 
         try {
@@ -52,6 +55,11 @@ public class OrganizationTrainerCommandService implements OrganizationTrainerCom
         }
 
         return organizationTrainerId;
+    }
+
+    private boolean isActiveOrganizationTrainerConstraint(DataIntegrityViolationException e) {
+        String message = e.getMostSpecificCause().getMessage();
+        return message != null && message.contains("uk_active_organization_trainer");
     }
 
     @Override
