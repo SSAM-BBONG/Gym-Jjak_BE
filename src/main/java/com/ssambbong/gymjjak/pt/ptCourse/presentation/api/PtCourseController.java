@@ -267,7 +267,7 @@ public class PtCourseController {
     }
 
     // 누구나 인기 강습 조회 가능 (PT 메인 페이지용)
-    @Operation(summary = "인기 강습 조회", description = "예약 수 기준 상위 8개 VISIBLE 강습을 조회한다.")
+    @Operation(summary = "인기 강습 조회", description = "예약 수 기준 상위 4개 VISIBLE 강습을 조회한다.")
     @GetMapping("/popular")
     public ResponseEntity<GlobalApiResponse<List<PopularPtCourseResponse>>> findPopularPtCourses() {
         List<PopularPtCourseResponse> response = ptCourseQueryUseCase.findPopular().stream()

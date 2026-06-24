@@ -31,8 +31,7 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
     // pt_reservations 수로 GROUP BY 정렬, VISIBLE + soft delete 제외
     @Query(value = """
     SELECT pc.* FROM pt_courses pc
-    LEFT JOIN pt_reservations pr
-        ON pr.pt_course_id = pc.pt_course_id AND pr.deleted_at IS NULL
+    LEFT JOIN pt_reservations pr ON pr.pt_course_id = pc.pt_course_id
     WHERE pc.deleted_at IS NULL AND pc.status = 'VISIBLE'
     GROUP BY pc.pt_course_id
     ORDER BY COUNT(pr.pt_reservation_id) DESC

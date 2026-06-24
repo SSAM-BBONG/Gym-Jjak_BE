@@ -16,6 +16,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepositor
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
+import com.ssambbong.gymjjak.tag.application.usecase.TagQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,8 +50,9 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         log.debug("event=pt_courses_find_all");
 
         Map<Long, String> categoryMap = buildCategoryMap();
+        Map<Long, String> tagMap = buildTagMap();
         List<PtCourseListView> result = ptCourseRepository.findAllVisible().stream()
-                .map(ptCourse -> toListView(ptCourse, categoryMap))
+                .map(ptCourse -> toListView(ptCourse, categoryMap, tagMap))
                 .toList();
 
         log.info("event=pt_courses_find_all_succeeded count={}", result.size());
@@ -238,7 +240,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         Map<Long, String> categoryMap = buildCategoryMap();
 
-        List<PopularCourseView> result = ptCourseRepository.findPopular(8).stream()
+        List<PopularCourseView> result = ptCourseRepository.findPopular(4).stream()
                 .map(ptCourse -> {
                     OrganizationQueryPort.OrganizationInfo org =
                             organizationQueryPort.findById(ptCourse.getOrganizationId());
@@ -273,8 +275,17 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ));
     }
 
+    // tagId -> tagName 매핑
+    private Map<Long, String> buildTagMap() {
+        return tagQueryUseCase.handle().stream()
+                .collect(Collectors.toMap(
+                        TagQueryUseCase.TagView::tagId,
+                        TagQueryUseCase.TagView::name
+                ));
+    }
+
     // ptCourse + enrich(조직/트레이너) -> 목록 응답용 View 변환
-    private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap) {
+    private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap, Map<Long, String> tagMap) {
         OrganizationQueryPort.OrganizationInfo org =
                 organizationQueryPort.findById(ptCourse.getOrganizationId());
         TrainerProfileQueryPort.TrainerDisplayInfo trainer =
@@ -286,7 +297,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourse.getThumbnailFileId(),
                 ptCourse.getPrice(),
                 ptCourse.getTagId(),
-                null, // TODO: TagQueryUseCase 연동 후 tagName 채우기
+                tagMap.getOrDefault(ptCourse.getTagId(), null),
                 ptCourse.getCategoryId(),
                 categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                 trainer.trainerName(),
