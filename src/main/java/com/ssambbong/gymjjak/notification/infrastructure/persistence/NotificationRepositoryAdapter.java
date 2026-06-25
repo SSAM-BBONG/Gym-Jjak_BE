@@ -12,6 +12,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -35,9 +36,28 @@ public class NotificationRepositoryAdapter implements NotificationRepository, No
     }
 
     @Override
+    public List<Notification> saveAll(List<Notification> notifications) {
+        List<NotificationJpaEntity> entities =
+                notifications.stream()
+                        .map(mapper::toEntity)
+                        .toList();
+
+        return repository.saveAll(entities).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public Optional<Notification> findById(Long notificationId) {
         return repository.findById(notificationId)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Notification> findAllById(List<Long> notificationIds) {
+        return repository.findAllById(notificationIds).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override

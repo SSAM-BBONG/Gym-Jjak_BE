@@ -15,7 +15,7 @@ public record MarkNotificationReadRequest(
         @Size( max = 100, message = "알림은 한 번에 최대 100개까지 읽음 처리할 수 있습니다.")
         List<
                 @NotNull(message = "알림 ID는 필수입니다.")
-                @Positive(message = "알림ID는 1이상 이여야합니다.")
+                @Positive(message = "알림ID는 1 이상이여야 합니다.")
                 Long> notificationIds
 ) {
 }

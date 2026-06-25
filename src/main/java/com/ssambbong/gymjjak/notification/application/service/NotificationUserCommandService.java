@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -41,16 +44,26 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
                 command.notificationIds()
         );
 
+        // 배치 저장
+        Map<Long, Notification> notificationMap =
+                notificationRepository.findAllById(notificationIds).stream()
+                        .collect(Collectors.toMap(
+                                Notification::getNotificationId,
+                                Function.identity()
+                        ));
+
         LocalDateTime now = LocalDateTime.now();
 
         List<Long> readNotificationIds = new ArrayList<>();
+        List<Notification> readNotifications = new ArrayList<>();
 
         for (Long notificationId : notificationIds) {
-            Notification notification =
-                    notificationRepository.findById(notificationId)
-                            .orElseThrow(() ->
-                                    new NotificationNotFoundException(notificationId)
-                            );
+            // 하나씩 추출
+            Notification notification = notificationMap.get(notificationId);
+
+            if (notification == null) {
+                throw new NotificationNotFoundException(notificationId);
+            }
 
             // 본인 알림 검증
             validateReadableNotification(
@@ -60,19 +73,21 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
             );
 
             // 읽기 처리
-            Notification readNotification = notification.markAsRead();
-
-            // 알림 저장
             if (!notification.isRead()) {
-                notificationRepository.save(readNotification);
+                readNotifications.add(notification.markAsRead());
             }
 
             // list에 저장
             readNotificationIds.add(notificationId);
         }
 
+        // 한 번에 저장하기
+        if (!readNotifications.isEmpty()) {
+            notificationRepository.saveAll(readNotifications);
+        }
+
         log.info(
-                "event=notification_read_succeeded, requesterId={}, requestedCount={}, readCount={}",
+                "event=notification_read_succeeded, requesterId={}, requestedCount={}, processedCount={}",
                 command.requesterId(),
                 command.notificationIds().size(),
                 readNotificationIds.size()
