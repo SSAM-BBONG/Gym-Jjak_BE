@@ -16,6 +16,16 @@ public class OrganizationQueryAdapter implements OrganizationQueryPort {
 
     private final EntityManager em;
 
+    // 활성화 된 조직 수
+    @Override
+    public long countActive() {
+        Number result = (Number) em.createNativeQuery("""
+                SELECT COUNT(*) FROM organizations WHERE status = 'ACTIVE'
+                """)
+                .getSingleResult();
+        return result.longValue();
+    }
+
     @Override
     public OrganizationInfo findById(Long organizationId) {
         List<?> results = em.createNativeQuery("""

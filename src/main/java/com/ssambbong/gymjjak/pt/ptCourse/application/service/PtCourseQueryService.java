@@ -15,6 +15,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepos
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import com.ssambbong.gymjjak.tag.application.usecase.TagQueryUseCase;
 import lombok.RequiredArgsConstructor;
@@ -224,6 +225,22 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 reservation.getTotalSessionCount(),
                 ptCourse.getTitle()
         );
+    }
+
+    // PT 통계 조회
+    @Override
+    public PtStatsView findStats() {
+        log.debug("event=pt_stats_find");
+
+        long organizationCount = organizationQueryPort.countActive();
+        long activeTrainerCount = trainerProfileQueryPort.countActive();
+        long inProgressPtCount = ptReservationRepository.countByStatus(PtReservationStatus.IN_PROGRESS);
+        Double averageSatisfaction = trainerProfileQueryPort.averageRating();
+
+        log.info("event=pt_stats_find_succeeded organizationCount={}, activeTrainerCount={}, inProgressPtCount={}, averageSatisfaction={}",
+                organizationCount, activeTrainerCount, inProgressPtCount, averageSatisfaction);
+
+        return new PtStatsView(organizationCount, activeTrainerCount, inProgressPtCount, averageSatisfaction);
     }
 
     // 인기 강습 조회

@@ -11,13 +11,15 @@ public class TrainerReview {
     private final Long ptReservationId;
     private final int rating;
     private final String content;
-    private TrainerReviewStatus status;
+    private final TrainerReviewStatus status;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
+    private final LocalDateTime deletedAt;
 
     private TrainerReview(Long id, Long userId, Long trainerProfileId, Long ptCourseId,
                           Long ptReservationId, int rating, String content,
-                          TrainerReviewStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                          TrainerReviewStatus status, LocalDateTime createdAt, LocalDateTime updatedAt,
+                          LocalDateTime deletedAt) {
         this.id = id;
         this.userId = userId;
         this.trainerProfileId = trainerProfileId;
@@ -28,19 +30,32 @@ public class TrainerReview {
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deletedAt = deletedAt;
     }
 
     public static TrainerReview create(Long userId, Long trainerProfileId, Long ptCourseId,
                                        Long ptReservationId, int rating, String content) {
         return new TrainerReview(null, userId, trainerProfileId, ptCourseId,
-                ptReservationId, rating, content, TrainerReviewStatus.ACTIVE, null, null);
+                ptReservationId, rating, content, TrainerReviewStatus.ACTIVE, null, null, null);
     }
 
     public static TrainerReview restore(Long id, Long userId, Long trainerProfileId, Long ptCourseId,
                                         Long ptReservationId, int rating, String content,
-                                        TrainerReviewStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                        TrainerReviewStatus status, LocalDateTime createdAt,
+                                        LocalDateTime updatedAt, LocalDateTime deletedAt) {
         return new TrainerReview(id, userId, trainerProfileId, ptCourseId,
-                ptReservationId, rating, content, status, createdAt, updatedAt);
+                ptReservationId, rating, content, status, createdAt, updatedAt, deletedAt);
+    }
+
+    public TrainerReview update(int rating, String content) {
+        return new TrainerReview(id, userId, trainerProfileId, ptCourseId,
+                ptReservationId, rating, content, status, createdAt, updatedAt, deletedAt);
+    }
+
+    public TrainerReview delete() {
+        return new TrainerReview(id, userId, trainerProfileId, ptCourseId,
+                ptReservationId, rating, content, TrainerReviewStatus.DELETED, createdAt, updatedAt,
+                LocalDateTime.now());
     }
 
     public Long getId() { return id; }
@@ -53,4 +68,5 @@ public class TrainerReview {
     public TrainerReviewStatus getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
 }

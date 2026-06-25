@@ -8,7 +8,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum TrainerReviewResponseCode implements ResponseCode {
 
-    TRAINER_REVIEW_CREATED("REVIEW_201", "강사평이 등록되었습니다.");
+    TRAINER_REVIEW_CREATED("REVIEW_201", "강사평이 등록되었습니다."),
+    TRAINER_REVIEW_UPDATED("REVIEW_UPDATED", "강사평 수정 성공"),
+    TRAINER_REVIEW_DELETED("REVIEW_DELETED", "강사평 삭제 성공");
 
     private final String code;
     private final String message;

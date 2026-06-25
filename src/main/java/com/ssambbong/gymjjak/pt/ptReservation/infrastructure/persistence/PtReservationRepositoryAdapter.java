@@ -70,6 +70,12 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 .toList();
     }
 
+    // 진행 중인 PT 수
+    @Override
+    public long countByStatus(PtReservationStatus status) {
+        return repository.countByStatus(status);
+    }
+
     @Override
     @Transactional
     public void updateStatus(PtReservation ptReservation) {

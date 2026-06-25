@@ -55,6 +55,9 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     // 강습별 수강생 목록 조회 (최신 예약일순)
     List<PtReservationJpaEntity> findAllByPtCourseIdOrderByReservedStartAtDesc(Long ptCourseId);
 
+    // 진행 중인 PT 수
+    long countByStatus(PtReservationStatus status);
+
     @Query("""
     select new com.ssambbong.gymjjak.pt.ptReservation.application.result.PtReservationCalendarResult(
         r.reservedStartAt,
