@@ -101,15 +101,15 @@ public class UserAuthController {
 
         userCommandUseCase.logout(new LogoutCommand(authUser.userId()));
 
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false) // 로컬 개발 환경
+                .secure(false)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(0)
                 .build();
 
-        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(GlobalApiResponse.ok(

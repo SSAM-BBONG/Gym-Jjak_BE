@@ -1,5 +1,10 @@
 package com.ssambbong.gymjjak.trainerReview.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewItem;
+import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewListQuery;
+import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewListResult;
+import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSortType;
+import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSummary;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewAlreadyExistsException;
 import com.ssambbong.gymjjak.trainerReview.domain.model.TrainerReview;
 import com.ssambbong.gymjjak.trainerReview.domain.repository.TrainerReviewRepository;
@@ -8,6 +13,9 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -38,6 +46,46 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
     public Optional<TrainerReview> findActiveById(Long trainerReviewId) {
         return repository.findByIdAndDeletedAtIsNull(trainerReviewId)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public TrainerReviewSummary findSummary(Long trainerProfileId) {
+        TrainerReviewSummaryProjection summary = repository.findSummary(trainerProfileId);
+        Map<Integer, Long> distribution = new HashMap<>();
+        distribution.put(5, summary.getRating5Count());
+        distribution.put(4, summary.getRating4Count());
+        distribution.put(3, summary.getRating3Count());
+        distribution.put(2, summary.getRating2Count());
+        distribution.put(1, summary.getRating1Count());
+        return new TrainerReviewSummary(
+                summary.getTrainerName(), summary.getIntroduction(),
+                summary.getAverageRating(), summary.getReviewCount(), distribution);
+    }
+
+    @Override
+    public TrainerReviewListResult findList(TrainerReviewListQuery query) {
+        List<TrainerReviewProjection> rows = query.sort() == TrainerReviewSortType.HIGH_RATING
+                ? repository.findHighRatingReviews(query.trainerProfileId(), query.cursor(), query.cursorRating(), query.size() + 1)
+                : repository.findLatestReviews(query.trainerProfileId(), query.cursor(), query.size() + 1);
+
+        boolean hasNext = rows.size() > query.size();
+        List<TrainerReviewItem> reviews = rows.stream()
+                .limit(query.size())
+                .map(p -> new TrainerReviewItem(
+                        p.getTrainerReviewId(),
+                        p.getNickname(),
+                        p.getPtCourseTitle(),
+                        p.getRating(),
+                        p.getContent(),
+                        p.getCreatedAt()
+                ))
+                .toList();
+
+        Long nextCursor = hasNext ? reviews.get(reviews.size() - 1).trainerReviewId() : null;
+        Integer nextCursorRating = (hasNext && query.sort() == TrainerReviewSortType.HIGH_RATING)
+                ? reviews.get(reviews.size() - 1).rating() : null;
+
+        return new TrainerReviewListResult(reviews, nextCursor, nextCursorRating, hasNext);
     }
 
     private boolean isReservationUniqueConstraint(DataIntegrityViolationException e) {
