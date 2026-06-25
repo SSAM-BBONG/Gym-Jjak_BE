@@ -17,6 +17,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenExcep
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMedia;
@@ -210,7 +211,7 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
         // 예약이 COMPLETED이면 삭제 불가
         PtReservationQueryPort.ReservationInfo reservation =
                 ptReservationQueryPort.findById(command.ptReservationId());
-        if ("COMPLETED".equals(reservation.status())) {
+        if (reservation.status() == PtReservationStatus.COMPLETED) {
             log.warn("event=feedback_delete_failed reason=reservation_completed feedbackId={}", command.feedbackId());
             throw new FeedbackReservationCompletedException();
         }

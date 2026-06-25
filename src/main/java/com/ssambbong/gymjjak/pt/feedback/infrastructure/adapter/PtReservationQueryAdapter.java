@@ -19,7 +19,7 @@ public class PtReservationQueryAdapter implements PtReservationQueryPort {
                         r.getPtCourseId(),
                         r.getTrainerProfileId(),
                         r.getUserId(),
-                        r.getStatus().name()
+                        r.getStatus()
                 ))
                 .orElseThrow(FeedbackNotFoundException::new);
     }
