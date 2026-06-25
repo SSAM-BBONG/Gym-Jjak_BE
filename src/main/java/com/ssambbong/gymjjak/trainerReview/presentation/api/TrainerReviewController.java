@@ -27,16 +27,17 @@ public class TrainerReviewController {
     private final TrainerReviewCommandUseCase trainerReviewCommandUseCase;
     private final TrainerReviewMapper trainerReviewMapper;
 
-    @PostMapping("/api/pt-courses/{ptCourseId}/reviews")
+    @PostMapping("/api/pt-courses/{ptCourseId}/reservations/{ptReservationId}/reviews")
     @PreAuthorize("hasAuthority('USER')")
     @Operation(summary = "강사평 작성", description = "완료된 PT 예약에 대해 강사평을 작성한다.")
     public ResponseEntity<GlobalApiResponse<CreateTrainerReviewResponse>> createReview(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long ptCourseId,
+            @PathVariable Long ptReservationId,
             @RequestBody @Valid CreateTrainerReviewRequest request
     ) {
         Long reviewId = trainerReviewCommandUseCase.createReview(
-                trainerReviewMapper.toCommand(request, authUser.userId(), ptCourseId));
+                trainerReviewMapper.toCommand(request, authUser.userId(), ptCourseId, ptReservationId));
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 GlobalApiResponse.created(TrainerReviewResponseCode.TRAINER_REVIEW_CREATED,
                         CreateTrainerReviewResponse.from(reviewId))

@@ -10,7 +10,7 @@ import org.mapstruct.Mapper;
 @Mapper(config = MapStructConfig.class)
 public interface TrainerReviewMapper {
 
-    CreateTrainerReviewCommand toCommand(CreateTrainerReviewRequest request, Long userId, Long ptCourseId);
+    CreateTrainerReviewCommand toCommand(CreateTrainerReviewRequest request, Long userId, Long ptCourseId, Long ptReservationId);
 
     UpdateTrainerReviewCommand toCommand(UpdateTrainerReviewRequest request, Long userId, Long reviewId);
 }
