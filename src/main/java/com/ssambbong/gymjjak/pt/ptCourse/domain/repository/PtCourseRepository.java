@@ -28,4 +28,10 @@ public interface PtCourseRepository {
 
     // 예약 수 기준 인기 강습 조회 (VISIBLE, soft delete 제외)
     List<PtCourse> findPopular(int limit);
+
+    // 소프트딜리트 > threshold PT ID 배치 조회
+    List<Long> findHardDeleteCandidateIds(java.time.LocalDateTime threshold, int batchSize);
+
+    // 하드딜리트
+    int hardDeleteByIds(List<Long> ids);
 }

@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -85,5 +86,17 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         return repository.findPopular(limit).stream()
                 .map(mapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<Long> findHardDeleteCandidateIds(java.time.LocalDateTime threshold, int batchSize) {
+        return repository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    @Transactional
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0; // 빈 IN절 쿼리 방지
+        return repository.hardDeleteByIds(ids);
     }
 }
