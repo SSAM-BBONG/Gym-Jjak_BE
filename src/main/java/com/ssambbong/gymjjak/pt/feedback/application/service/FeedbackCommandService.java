@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.feedback.application.command.CreateFeedbackCommand;
+import com.ssambbong.gymjjak.pt.feedback.application.command.DeleteFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.command.UpdateFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtCurriculumQueryPort;
@@ -15,6 +16,8 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackAlreadyExistsE
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMedia;
@@ -177,6 +180,44 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
 
         log.info("event=feedback_update_complete feedbackId={}", feedback.getId());
         return feedback.getId();
+    }
+
+    @Override
+    public void deleteFeedback(DeleteFeedbackCommand command) {
+        log.debug("event=feedback_delete userId={} feedbackId={}", command.userId(), command.feedbackId());
+
+        // 피드백 조회
+        Feedback feedback = feedbackRepository.findById(command.feedbackId())
+                .orElseThrow(() -> {
+                    log.warn("event=feedback_delete_failed reason=not_found feedbackId={}", command.feedbackId());
+                    return new FeedbackNotFoundException();
+                });
+
+        // path parameter의 예약 ID와 피드백의 예약 ID 일치 확인
+        if (!feedback.getPtReservationId().equals(command.ptReservationId())) {
+            throw new FeedbackNotFoundException();
+        }
+
+        // 트레이너 본인 피드백인지 확인
+        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(command.userId())
+                .orElseThrow(FeedbackForbiddenException::new);
+
+        if (!feedback.getTrainerProfileId().equals(trainerProfileId)) {
+            log.warn("event=feedback_delete_failed reason=forbidden userId={} feedbackId={}",
+                    command.userId(), command.feedbackId());
+            throw new FeedbackForbiddenException();
+        }
+
+        // 예약이 COMPLETED이면 삭제 불가
+        PtReservationQueryPort.ReservationInfo reservation =
+                ptReservationQueryPort.findById(command.ptReservationId());
+        if (reservation.status() == PtReservationStatus.COMPLETED) {
+            log.warn("event=feedback_delete_failed reason=reservation_completed feedbackId={}", command.feedbackId());
+            throw new FeedbackReservationCompletedException();
+        }
+
+        feedbackRepository.deleteById(command.feedbackId());
+        log.info("event=feedback_delete_complete feedbackId={}", command.feedbackId());
     }
 
     // create/update 공통 미디어 파일 등록 — UploadedFileMetadataCommand 리스트를 직접 받음

@@ -21,7 +21,10 @@ public enum FeedbackErrorCode implements ErrorCode {
     FEEDBACK_ALREADY_EXISTS(HttpStatus.CONFLICT, "FEEDBACK_004", "해당 회차에 이미 피드백이 존재합니다."),
 
     // 미디어 타입 중복 또는 개수 초과
-    FEEDBACK_MEDIA_INVALID(HttpStatus.BAD_REQUEST, "FEEDBACK_005", "미디어는 BEFORE/AFTER 각 1개씩만 등록할 수 있습니다.");
+    FEEDBACK_MEDIA_INVALID(HttpStatus.BAD_REQUEST, "FEEDBACK_005", "미디어는 BEFORE/AFTER 각 1개씩만 등록할 수 있습니다."),
+
+    // 예약이 완료 상태이므로 피드백 삭제 불가
+    FEEDBACK_RESERVATION_COMPLETED(HttpStatus.CONFLICT, "FEEDBACK_006", "완료된 예약의 피드백은 삭제할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

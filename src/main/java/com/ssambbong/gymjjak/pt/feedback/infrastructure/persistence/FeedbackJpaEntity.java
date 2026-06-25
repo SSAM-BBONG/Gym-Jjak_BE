@@ -52,4 +52,9 @@ public class FeedbackJpaEntity extends BaseTimeEntity {
     public void update(String content) {
         this.content = content;
     }
+
+    // 피드백 삭제
+    public void delete() {
+        super.delete();
+    }
 }
