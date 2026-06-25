@@ -12,12 +12,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class TrainerApplicationNotificationEventListener {
 
-    private final NotificationCommandUseCase notificationCommandUseCase;
+    private final NotificationEventProcessor processor;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleTrainerApplicationApproved(
@@ -31,13 +35,11 @@ public class TrainerApplicationNotificationEventListener {
                 event.trainerProfileId()
         );
 
-        notificationCommandUseCase.createNotification(
-                new CreateNotificationCommand(
-                        event.receiverId(),
-                        NotificationType.TRAINER_APPLICATION_APPROVED,
-                        event.trainerApplicationId(),
-                        null
-                )
+        processor.createSafely(
+                event.receiverId(),
+                NotificationType.TRAINER_APPLICATION_APPROVED,
+                event.trainerApplicationId(),
+                event.occurredAt()
         );
     }
 
@@ -52,13 +54,11 @@ public class TrainerApplicationNotificationEventListener {
                 event.trainerApplicationId()
         );
 
-        notificationCommandUseCase.createNotification(
-                new CreateNotificationCommand(
-                        event.receiverId(),
-                        NotificationType.TRAINER_APPLICATION_REJECTED,
-                        event.trainerApplicationId(),
-                        null
-                )
+        processor.createSafely(
+                event.receiverId(),
+                NotificationType.TRAINER_APPLICATION_REJECTED,
+                event.trainerApplicationId(),
+                event.occurredAt()
         );
     }
 }
