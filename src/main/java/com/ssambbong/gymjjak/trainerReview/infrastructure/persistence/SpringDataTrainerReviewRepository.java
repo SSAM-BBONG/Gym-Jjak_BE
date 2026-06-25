@@ -51,6 +51,7 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
               AND tr.deleted_at IS NULL
               AND (
                 :cursor IS NULL
+                OR :cursorRating IS NULL
                 OR tr.rating < :cursorRating
                 OR (tr.rating = :cursorRating AND tr.trainer_review_id < :cursor)
               )

@@ -51,6 +51,9 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
     @Override
     public TrainerReviewSummary findSummary(Long trainerProfileId) {
         TrainerReviewSummaryProjection summary = repository.findSummary(trainerProfileId);
+        if (summary == null) {
+            throw new com.ssambbong.gymjjak.trainer.trainerprofile.domain.exception.TrainerProfileNotFoundException("trainerProfileId", trainerProfileId);
+        }
         Map<Integer, Long> distribution = new HashMap<>();
         distribution.put(5, summary.getRating5Count());
         distribution.put(4, summary.getRating4Count());
