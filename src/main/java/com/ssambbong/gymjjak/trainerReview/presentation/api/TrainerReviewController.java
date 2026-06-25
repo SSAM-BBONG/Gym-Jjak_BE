@@ -5,7 +5,6 @@ import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainerReview.application.command.DeleteTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewListQuery;
 import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSortType;
-import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSummary;
 import com.ssambbong.gymjjak.trainerReview.application.usecase.TrainerReviewCommandUseCase;
 import com.ssambbong.gymjjak.trainerReview.application.usecase.TrainerReviewQueryUseCase;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.mapper.TrainerReviewMapper;
@@ -14,10 +13,14 @@ import com.ssambbong.gymjjak.trainerReview.presentation.api.request.UpdateTraine
 import com.ssambbong.gymjjak.trainerReview.presentation.api.response.CreateTrainerReviewResponse;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.response.TrainerReviewListResponse;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.response.TrainerReviewResponseCode;
+import com.ssambbong.gymjjak.trainerReview.presentation.api.response.TrainerReviewSummaryResponse;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.response.UpdateTrainerReviewResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -80,22 +83,22 @@ public class TrainerReviewController {
 
     @GetMapping("/api/trainer-profiles/{trainerProfileId}/reviews/summary")
     @Operation(summary = "강사평 요약 조회", description = "트레이너 정보 + 평균 별점 + 별점 분포를 조회한다.")
-    public ResponseEntity<GlobalApiResponse<TrainerReviewSummary>> getReviewSummary(
+    public ResponseEntity<GlobalApiResponse<TrainerReviewSummaryResponse>> getReviewSummary(
             @PathVariable Long trainerProfileId
     ) {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(TrainerReviewResponseCode.TRAINER_REVIEW_FETCHED,
-                        trainerReviewQueryUseCase.getSummary(trainerProfileId)));
+                        TrainerReviewSummaryResponse.from(trainerReviewQueryUseCase.getSummary(trainerProfileId))));
     }
 
     @GetMapping("/api/trainer-profiles/{trainerProfileId}/reviews")
     @Operation(summary = "강사평 목록 조회", description = "트레이너의 강사평 목록을 커서 기반으로 조회한다.")
     public ResponseEntity<GlobalApiResponse<TrainerReviewListResponse>> getReviews(
             @PathVariable Long trainerProfileId,
-            @RequestParam(required = false) Long cursor,
-            @RequestParam(required = false) Integer cursorRating,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "LATEST") TrainerReviewSortType sort
+            @Parameter(description = "커서 ID (이전 응답의 nextCursor, 첫 페이지는 미입력)") @RequestParam(required = false) Long cursor,
+            @Parameter(description = "커서 별점 (HIGH_RATING 정렬 시 이전 응답의 nextCursorRating, 첫 페이지는 미입력)") @RequestParam(required = false) Integer cursorRating,
+            @Parameter(description = "페이지 크기 (기본값: 10, 최대: 50)") @Max(50) @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "정렬 기준", schema = @Schema(type = "string", allowableValues = {"LATEST", "HIGH_RATING"})) @RequestParam(defaultValue = "LATEST") TrainerReviewSortType sort
     ) {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(TrainerReviewResponseCode.TRAINER_REVIEW_FETCHED,

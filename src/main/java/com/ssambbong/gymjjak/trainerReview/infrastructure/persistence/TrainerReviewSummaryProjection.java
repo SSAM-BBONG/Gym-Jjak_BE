@@ -4,10 +4,10 @@ public interface TrainerReviewSummaryProjection {
     String getTrainerName();
     String getIntroduction();
     double getAverageRating();
-    long getReviewCount();
-    long getRating5Count();
-    long getRating4Count();
-    long getRating3Count();
-    long getRating2Count();
-    long getRating1Count();
+    Long getReviewCount();
+    Long getRating5Count();
+    Long getRating4Count();
+    Long getRating3Count();
+    Long getRating2Count();
+    Long getRating1Count();
 }
