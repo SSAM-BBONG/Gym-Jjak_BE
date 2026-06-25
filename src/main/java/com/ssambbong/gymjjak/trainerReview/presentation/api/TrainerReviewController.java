@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.trainerReview.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.trainerReview.application.command.DeleteTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.usecase.TrainerReviewCommandUseCase;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.mapper.TrainerReviewMapper;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.request.CreateTrainerReviewRequest;
@@ -56,5 +57,17 @@ public class TrainerReviewController {
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(TrainerReviewResponseCode.TRAINER_REVIEW_UPDATED,
                         UpdateTrainerReviewResponse.from(updatedId)));
+    }
+
+    @DeleteMapping("/api/reviews/{reviewId}")
+    @PreAuthorize("hasAuthority('USER')")
+    @Operation(summary = "강사평 삭제", description = "사용자가 본인 강사평을 삭제한다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteReview(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long reviewId
+    ) {
+        trainerReviewCommandUseCase.deleteReview(new DeleteTrainerReviewCommand(authUser.userId(), reviewId));
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(TrainerReviewResponseCode.TRAINER_REVIEW_DELETED, null));
     }
 }
