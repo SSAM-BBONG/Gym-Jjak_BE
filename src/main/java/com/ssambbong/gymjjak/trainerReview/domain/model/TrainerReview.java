@@ -43,6 +43,11 @@ public class TrainerReview {
                 ptReservationId, rating, content, status, createdAt, updatedAt);
     }
 
+    public TrainerReview update(int rating, String content) {
+        return new TrainerReview(id, userId, trainerProfileId, ptCourseId,
+                ptReservationId, rating, content, status, createdAt, updatedAt);
+    }
+
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
     public Long getTrainerProfileId() { return trainerProfileId; }

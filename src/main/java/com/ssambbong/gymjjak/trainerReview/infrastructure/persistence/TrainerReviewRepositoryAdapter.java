@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewAlready
 import com.ssambbong.gymjjak.trainerReview.domain.model.TrainerReview;
 import com.ssambbong.gymjjak.trainerReview.domain.repository.TrainerReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
@@ -40,7 +41,14 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
     }
 
     private boolean isReservationUniqueConstraint(DataIntegrityViolationException e) {
-        String message = e.getMostSpecificCause().getMessage();
-        return message != null && message.contains("uk_trainer_reviews_reservation");
+        Throwable t = e;
+        while (t != null) {
+            if (t instanceof ConstraintViolationException cve) {
+                String name = cve.getConstraintName();
+                return name != null && name.contains("uk_trainer_reviews_reservation");
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 }
