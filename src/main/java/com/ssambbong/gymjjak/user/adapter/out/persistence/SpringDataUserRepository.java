@@ -181,12 +181,15 @@ where u.id = :userId
     @Query(
             value = """
         select new com.ssambbong.gymjjak.user.application.result.FindTrainerUserResult(
+            tp.trainerProfileId,
+            u.id,
             u.username,
             u.name,
             u.nickname,
             u.status
         )
         from UserJpaEntity u
+        join TrainerProfileJpaEntity tp on tp.userId = u.id
         where u.role = :role
           and u.deletedAt is null
           and (
@@ -199,6 +202,7 @@ where u.id = :userId
             countQuery = """
         select count(u)
         from UserJpaEntity u
+        join TrainerProfileJpaEntity tp on tp.userId = u.id
         where u.role = :role
           and u.deletedAt is null
           and (
