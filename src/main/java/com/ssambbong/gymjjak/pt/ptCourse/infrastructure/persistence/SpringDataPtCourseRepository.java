@@ -48,6 +48,6 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
 
     // 하드딜리트 (deleted_at IS NOT NULL 재검증으로 race condition 방지)
     @Modifying
-    @Query(value = "DELETE FROM pt_courses WHERE pt_course_id IN :ids AND deleted_at IS NOT NULL", nativeQuery = true)
+    @Query(value = "DELETE FROM pt_courses WHERE pt_course_id IN (:ids) AND deleted_at IS NOT NULL", nativeQuery = true)
     int hardDeleteByIds(@Param("ids") List<Long> ids);
 }

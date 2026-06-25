@@ -20,6 +20,6 @@ public interface SpringDataPtCurriculumRepository extends JpaRepository<PtCurric
 
     // PT 강습 ID 목록에 속한 커리큘럼 하드딜리트 (부모 삭제 전 자식 먼저 제거)
     @Modifying
-    @Query(value = "DELETE FROM pt_curriculums WHERE pt_course_id IN :ptCourseIds", nativeQuery = true)
+    @Query(value = "DELETE FROM pt_curriculums WHERE pt_course_id IN (:ptCourseIds)", nativeQuery = true)
     int hardDeleteByPtCourseIds(@Param("ptCourseIds") List<Long> ptCourseIds);
 }

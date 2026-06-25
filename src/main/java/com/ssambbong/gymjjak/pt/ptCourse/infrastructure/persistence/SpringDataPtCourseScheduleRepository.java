@@ -19,6 +19,6 @@ public interface SpringDataPtCourseScheduleRepository extends JpaRepository<PtCo
 
     // PT 강습 ID 목록에 속한 스케줄 하드딜리트 (부모 삭제 전 자식 먼저 제거)
     @Modifying
-    @Query(value = "DELETE FROM pt_course_schedules WHERE pt_course_id IN :ptCourseIds", nativeQuery = true)
+    @Query(value = "DELETE FROM pt_course_schedules WHERE pt_course_id IN (:ptCourseIds)", nativeQuery = true)
     int hardDeleteByPtCourseIds(@Param("ptCourseIds") List<Long> ptCourseIds);
 }
