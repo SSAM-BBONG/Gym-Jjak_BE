@@ -18,7 +18,7 @@ public class TrainerReviewPersistenceMapper {
                 .rating(domain.getRating())
                 .content(domain.getContent())
                 .status(domain.getStatus().name())
-                .deletedAt(null)
+                .deletedAt(domain.getDeletedAt())
                 .build();
     }
 
@@ -33,7 +33,8 @@ public class TrainerReviewPersistenceMapper {
                 entity.getContent(),
                 TrainerReviewStatus.valueOf(entity.getStatus()),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getDeletedAt()
         );
     }
 }

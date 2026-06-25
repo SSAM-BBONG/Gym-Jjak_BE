@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.trainerReview.application.service;
 
 import com.ssambbong.gymjjak.trainerReview.application.command.CreateTrainerReviewCommand;
+import com.ssambbong.gymjjak.trainerReview.application.command.DeleteTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.command.UpdateTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.trainerReview.application.port.ReservationResult;
@@ -59,5 +60,18 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
         }
 
         return trainerReviewRepository.save(review.update(command.rating(), command.content()));
+    }
+
+    @Override
+    @Transactional
+    public void deleteReview(DeleteTrainerReviewCommand command) {
+        TrainerReview review = trainerReviewRepository.findActiveById(command.reviewId())
+                .orElseThrow(TrainerReviewNotFoundException::new);
+
+        if (!review.getUserId().equals(command.userId())) {
+            throw new TrainerReviewForbiddenException();
+        }
+
+        trainerReviewRepository.save(review.delete());
     }
 }
