@@ -115,6 +115,10 @@ app:
       period-days: ${APP_RETENTION_CATEGORY_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_CATEGORY_BATCH_SIZE}
 
+    tag:
+      period-days: ${APP_RETENTION_TAG_PERIOD_DAYS}
+      batch-size: ${APP_RETENTION_TAG_BATCH_SIZE}
+
 clova:
   ocr:
     invoke-url: "${CLOVA_OCR_INVOKE_URL}"

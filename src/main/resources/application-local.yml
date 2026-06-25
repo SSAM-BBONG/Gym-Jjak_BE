@@ -3,3 +3,7 @@ spring:
     url: ${LOCAL_MYSQL_URL}
     username: ${LOCAL_MYSQL_USERNAME}
     password: ${LOCAL_MYSQL_PASSWORD}
+app:
+  scheduler:
+    retention:
+      cron: "0 * * * * *"   # 매 분 실행
