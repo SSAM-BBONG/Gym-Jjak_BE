@@ -3,11 +3,16 @@ package com.ssambbong.gymjjak.trainerReview.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.trainerReview.application.command.DeleteTrainerReviewCommand;
+import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewListQuery;
+import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSortType;
+import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSummary;
 import com.ssambbong.gymjjak.trainerReview.application.usecase.TrainerReviewCommandUseCase;
+import com.ssambbong.gymjjak.trainerReview.application.usecase.TrainerReviewQueryUseCase;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.mapper.TrainerReviewMapper;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.request.CreateTrainerReviewRequest;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.request.UpdateTrainerReviewRequest;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.response.CreateTrainerReviewResponse;
+import com.ssambbong.gymjjak.trainerReview.presentation.api.response.TrainerReviewListResponse;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.response.TrainerReviewResponseCode;
 import com.ssambbong.gymjjak.trainerReview.presentation.api.response.UpdateTrainerReviewResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 public class TrainerReviewController {
 
     private final TrainerReviewCommandUseCase trainerReviewCommandUseCase;
+    private final TrainerReviewQueryUseCase trainerReviewQueryUseCase;
     private final TrainerReviewMapper trainerReviewMapper;
 
     @PostMapping("/api/pt-courses/{ptCourseId}/reservations/{ptReservationId}/reviews")
@@ -70,5 +76,31 @@ public class TrainerReviewController {
         trainerReviewCommandUseCase.deleteReview(new DeleteTrainerReviewCommand(authUser.userId(), reviewId));
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(TrainerReviewResponseCode.TRAINER_REVIEW_DELETED, null));
+    }
+
+    @GetMapping("/api/trainer-profiles/{trainerProfileId}/reviews/summary")
+    @Operation(summary = "강사평 요약 조회", description = "트레이너 정보 + 평균 별점 + 별점 분포를 조회한다.")
+    public ResponseEntity<GlobalApiResponse<TrainerReviewSummary>> getReviewSummary(
+            @PathVariable Long trainerProfileId
+    ) {
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(TrainerReviewResponseCode.TRAINER_REVIEW_FETCHED,
+                        trainerReviewQueryUseCase.getSummary(trainerProfileId)));
+    }
+
+    @GetMapping("/api/trainer-profiles/{trainerProfileId}/reviews")
+    @Operation(summary = "강사평 목록 조회", description = "트레이너의 강사평 목록을 커서 기반으로 조회한다.")
+    public ResponseEntity<GlobalApiResponse<TrainerReviewListResponse>> getReviews(
+            @PathVariable Long trainerProfileId,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(required = false) Integer cursorRating,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "LATEST") TrainerReviewSortType sort
+    ) {
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(TrainerReviewResponseCode.TRAINER_REVIEW_FETCHED,
+                        TrainerReviewListResponse.from(
+                                trainerReviewQueryUseCase.getReviews(
+                                        new TrainerReviewListQuery(trainerProfileId, cursor, cursorRating, size, sort)))));
     }
 }
