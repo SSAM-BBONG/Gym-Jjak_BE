@@ -91,6 +91,16 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
         return new TrainerReviewListResult(reviews, nextCursor, nextCursorRating, hasNext);
     }
 
+    @Override
+    public long countActive() {
+        return repository.countActive();
+    }
+
+    @Override
+    public double findAverageRating() {
+        return repository.findAverageRating();
+    }
+
     private boolean isReservationUniqueConstraint(DataIntegrityViolationException e) {
         Throwable t = e;
         while (t != null) {

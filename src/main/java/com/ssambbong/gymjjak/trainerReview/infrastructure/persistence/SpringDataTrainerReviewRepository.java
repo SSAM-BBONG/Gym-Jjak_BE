@@ -11,6 +11,12 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
 
     boolean existsByPtReservationIdAndDeletedAtIsNull(Long ptReservationId);
 
+    @Query(value = "SELECT COUNT(*) FROM trainer_reviews WHERE deleted_at IS NULL", nativeQuery = true)
+    long countActive();
+
+    @Query(value = "SELECT COALESCE(AVG(rating), 0) FROM trainer_reviews WHERE deleted_at IS NULL", nativeQuery = true)
+    double findAverageRating();
+
     Optional<TrainerReviewJpaEntity> findByIdAndDeletedAtIsNull(Long id);
 
     @Query(value = """

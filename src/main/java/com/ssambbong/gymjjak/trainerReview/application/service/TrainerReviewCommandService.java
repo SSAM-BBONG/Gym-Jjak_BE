@@ -3,9 +3,13 @@ package com.ssambbong.gymjjak.trainerReview.application.service;
 import com.ssambbong.gymjjak.trainerReview.application.command.CreateTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.command.DeleteTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.command.UpdateTrainerReviewCommand;
+import com.ssambbong.gymjjak.trainerReview.application.event.TrainerReviewCreatedEvent;
+import com.ssambbong.gymjjak.trainerReview.application.event.TrainerReviewDeletedEvent;
+import com.ssambbong.gymjjak.trainerReview.application.event.TrainerReviewUpdatedEvent;
 import com.ssambbong.gymjjak.trainerReview.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.trainerReview.application.port.ReservationResult;
 import com.ssambbong.gymjjak.trainerReview.application.usecase.TrainerReviewCommandUseCase;
+import org.springframework.context.ApplicationEventPublisher;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.PtReservationNotCompletedException;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewAlreadyExistsException;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewForbiddenException;
@@ -22,6 +26,7 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
 
     private final TrainerReviewRepository trainerReviewRepository;
     private final PtReservationQueryPort ptReservationQueryPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -46,7 +51,9 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
                 command.content()
         );
 
-        return trainerReviewRepository.save(trainerReview);
+        Long reviewId = trainerReviewRepository.save(trainerReview);
+        eventPublisher.publishEvent(new TrainerReviewCreatedEvent(command.rating()));
+        return reviewId;
     }
 
     @Override
@@ -59,7 +66,9 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
             throw new TrainerReviewForbiddenException();
         }
 
-        return trainerReviewRepository.save(review.update(command.rating(), command.content()));
+        Long reviewId = trainerReviewRepository.save(review.update(command.rating(), command.content()));
+        eventPublisher.publishEvent(new TrainerReviewUpdatedEvent());
+        return reviewId;
     }
 
     @Override
@@ -73,5 +82,6 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
         }
 
         trainerReviewRepository.save(review.delete());
+        eventPublisher.publishEvent(new TrainerReviewDeletedEvent());
     }
 }

@@ -18,4 +18,8 @@ public interface TrainerReviewRepository {
     TrainerReviewSummary findSummary(Long trainerProfileId);
 
     TrainerReviewListResult findList(TrainerReviewListQuery query);
+
+    long countActive();
+
+    double findAverageRating();
 }
