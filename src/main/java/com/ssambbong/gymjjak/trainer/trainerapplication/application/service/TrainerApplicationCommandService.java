@@ -9,6 +9,8 @@ import com.ssambbong.gymjjak.ocr.application.command.ExtractOcrCommand;
 import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
 import com.ssambbong.gymjjak.ocr.domain.OcrResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.*;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.event.TrainerApplicationApprovedEvent;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.event.TrainerApplicationRejectedEvent;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.result.RegisteredTrainerApplicationFiles;
@@ -20,6 +22,7 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.Traine
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.command.ProfileImageUpdateAction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -46,6 +49,8 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     private final TransactionTemplate transactionTemplate;
     private final TrainerApplicationUserPort trainerApplicationUserPort;
     private final ApprovedTrainerProfilePort approvedTrainerProfilePort;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Long createTrainerApplication(CreateTrainerApplicationCommand command) {
@@ -401,6 +406,15 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         // 승인된 user 값 update
         trainerApplicationRepository.save(approvedTrainerApplication);
 
+        // 트레이너 신청 승인 이벤트 발행
+        eventPublisher.publishEvent(
+                new TrainerApplicationApprovedEvent(
+                        approvedTrainerApplication.getUserId(),
+                        approvedTrainerApplication.getTrainerApplicationId(),
+                        trainerProfileId
+                )
+        );
+
         log.info(
                 "event=trainer_application_approve_succeeded, trainerApplicationId={}, userId={}, trainerProfileId={}, adminId={}",
                 approvedTrainerApplication.getTrainerApplicationId(),
@@ -446,6 +460,15 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                 );
 
         trainerApplicationRepository.save(rejectTrainerApplication);
+
+        // 트레이너 신청 반려 이벤트
+        eventPublisher.publishEvent(
+                new TrainerApplicationRejectedEvent(
+                        rejectTrainerApplication.getUserId(),
+                        rejectTrainerApplication.getTrainerApplicationId(),
+                        command.rejectReason()
+                )
+        );
 
         log.info(
                 "event=trainer_application_reject_succeeded, " +
