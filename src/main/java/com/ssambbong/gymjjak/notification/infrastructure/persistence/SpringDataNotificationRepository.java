@@ -17,7 +17,7 @@ public interface SpringDataNotificationRepository extends JpaRepository<Notifica
         where n.receiverId = :receiverId
           and n.deletedAt is null
           and n.expiresAt > :now
-        order by n.createdAt desc
+        order by n.createdAt desc, n.notificationId desc
         """)
     Slice<NotificationJpaEntity> findNotifications(
             @Param("receiverId") Long receiverId,

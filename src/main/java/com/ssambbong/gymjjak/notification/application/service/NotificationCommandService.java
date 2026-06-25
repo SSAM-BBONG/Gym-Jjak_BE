@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.notification.application.service;
 
 import com.ssambbong.gymjjak.notification.application.command.CreateNotificationCommand;
-import com.ssambbong.gymjjak.notification.application.port.out.NotificationRealtimeSender;
+import com.ssambbong.gymjjak.notification.application.event.NotificationCreatedEvent;
 import com.ssambbong.gymjjak.notification.application.result.NotificationResult;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationCommandUseCase;
 import com.ssambbong.gymjjak.notification.domain.exception.InvalidNotificationException;
@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.notification.domain.model.Notification;
 import com.ssambbong.gymjjak.notification.domain.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationCommandService implements NotificationCommandUseCase {
 
     private final NotificationRepository repository;
-    private final NotificationRealtimeSender notificationRealtimeSender;
+    private final ApplicationEventPublisher publisher;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -46,8 +47,13 @@ public class NotificationCommandService implements NotificationCommandUseCase {
         NotificationResult result =
                 NotificationResult.from(savedNotification);
 
-        // DB 저장 후, 알림 Websocket 전송
-        sendRealtimeNotificationSafely(result);
+        // DB 저장 후, 이벤트 발행
+        publisher.publishEvent(
+                new NotificationCreatedEvent(
+                        result.receiverId(),
+                        result
+                )
+        );
 
         log.info(
                 "event=notification_create_succeeded, notificationId={}, receiverId={}, type={}",
@@ -57,24 +63,6 @@ public class NotificationCommandService implements NotificationCommandUseCase {
         );
 
         return result;
-    }
-
-    private void sendRealtimeNotificationSafely(NotificationResult notification) {
-        try {
-            notificationRealtimeSender.sendToUser(
-                    notification.receiverId(),
-                    notification
-            );
-        } catch (RuntimeException exception) {
-            log.warn(
-                    "event=notification_realtime_send_failed, " +
-                            "notificationId={}, receiverId={}, type={}",
-                    notification.notificationId(),
-                    notification.receiverId(),
-                    notification.type(),
-                    exception
-            );
-        }
     }
 
     private void validateCreateCommand(CreateNotificationCommand command) {
