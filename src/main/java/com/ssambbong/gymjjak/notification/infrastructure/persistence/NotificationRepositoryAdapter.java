@@ -9,7 +9,6 @@ import com.ssambbong.gymjjak.notification.domain.repository.NotificationReposito
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
