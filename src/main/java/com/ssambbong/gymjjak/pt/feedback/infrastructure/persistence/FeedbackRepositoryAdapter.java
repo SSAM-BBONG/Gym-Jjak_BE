@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackAlreadyExistsException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,11 +44,25 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
         }
     }
 
+    @Override
+    public void update(Feedback feedback) {
+        FeedbackJpaEntity entity = repository.findByIdAndDeletedAtIsNull(feedback.getId())
+                .orElseThrow(FeedbackNotFoundException::new);
+        entity.update(feedback.getContent());
+    }
+
     private boolean isDuplicateFeedbackViolation(DataIntegrityViolationException e) {
         return Optional.ofNullable(e.getMostSpecificCause())
                 .map(Throwable::getMessage)
                 .map(msg -> msg.contains("uk_feedbacks_reservation_curriculum"))
                 .orElse(false);
+    }
+
+    @Override
+    public void deleteById(Long feedbackId) {
+        FeedbackJpaEntity entity = repository.findByIdAndDeletedAtIsNull(feedbackId)
+                .orElseThrow(FeedbackNotFoundException::new);
+        entity.delete();
     }
 
     @Override

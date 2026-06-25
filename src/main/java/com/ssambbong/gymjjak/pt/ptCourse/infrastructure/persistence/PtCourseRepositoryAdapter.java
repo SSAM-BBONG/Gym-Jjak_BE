@@ -78,4 +78,12 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
                 .map(mapper::toDomain)
                 .toList();
     }
+
+    // 인기 강습 조회
+    @Override
+    public List<PtCourse> findPopular(int limit) {
+        return repository.findPopular(limit).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }

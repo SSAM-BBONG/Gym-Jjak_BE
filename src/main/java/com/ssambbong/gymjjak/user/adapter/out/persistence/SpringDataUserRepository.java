@@ -1,9 +1,11 @@
 package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
+import com.ssambbong.gymjjak.user.application.result.FindTrainerUserResult;
 import com.ssambbong.gymjjak.user.application.result.FindUserResult;
 import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
 import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
+import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -174,6 +176,42 @@ where u.id = :userId
     Optional<UserJpaEntity> findBySocialProviderAndSocialId(
             SocialProvider socialProvider,
             String socialId
+    );
+
+    @Query(
+            value = """
+        select new com.ssambbong.gymjjak.user.application.result.FindTrainerUserResult(
+            u.username,
+            u.name,
+            u.nickname,
+            u.status
+        )
+        from UserJpaEntity u
+        where u.role = :role
+          and u.deletedAt is null
+          and (
+              :keyword is null
+              or trim(:keyword) = ''
+              or lower(u.name) like lower(concat('%', trim(:keyword), '%'))
+          )
+        order by u.id desc
+        """,
+            countQuery = """
+        select count(u)
+        from UserJpaEntity u
+        where u.role = :role
+          and u.deletedAt is null
+          and (
+              :keyword is null
+              or trim(:keyword) = ''
+              or lower(u.name) like lower(concat('%', trim(:keyword), '%'))
+          )
+        """
+    )
+    Page<FindTrainerUserResult> findTrainerUsers(
+            @Param("role") UserRole role,
+            @Param("keyword") String keyword,
+            Pageable pageable
     );
 
 

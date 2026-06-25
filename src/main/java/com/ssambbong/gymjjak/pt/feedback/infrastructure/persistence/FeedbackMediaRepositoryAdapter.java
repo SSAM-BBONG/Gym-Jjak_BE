@@ -29,4 +29,9 @@ public class FeedbackMediaRepositoryAdapter implements FeedbackMediaRepository {
                 .toList();
         repository.saveAll(entities);
     }
+
+    @Override
+    public void deleteAllByFeedbackId(Long feedbackId) {
+        repository.deleteAllByFeedbackId(feedbackId);
+    }
 }

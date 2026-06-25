@@ -5,6 +5,9 @@ import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.feedback.application.command.CreateFeedbackCommand;
+import com.ssambbong.gymjjak.pt.feedback.application.command.DeleteFeedbackCommand;
+import com.ssambbong.gymjjak.pt.feedback.application.command.UpdateFeedbackCommand;
+import com.ssambbong.gymjjak.pt.feedback.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtCurriculumQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
@@ -12,6 +15,9 @@ import com.ssambbong.gymjjak.pt.feedback.application.usecase.FeedbackCommandUseC
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackAlreadyExistsException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMedia;
@@ -85,7 +91,8 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
         }
 
         // 미디어 파일 일괄 등록
-        List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(), command.media());
+        List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(),
+                command.media().stream().map(CreateFeedbackCommand.MediaCommand::file).toList());
 
         // 피드백 저장
         Feedback saved = feedbackRepository.save(
@@ -108,24 +115,130 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
         return saved.getId();
     }
 
+    @Override
+    public Long updateFeedback(UpdateFeedbackCommand command) {
+        log.debug("event=feedback_update userId={} feedbackId={}", command.userId(), command.feedbackId());
+
+        // 미디어 타입 중복 검증 (BEFORE/AFTER 각 1개)
+        Set<FeedbackMediaType> mediaTypes = command.media().stream()
+                .map(UpdateFeedbackCommand.MediaCommand::mediaType)
+                .collect(Collectors.toSet());
+        if (mediaTypes.size() != command.media().size()) {
+            throw new FeedbackMediaInvalidException();
+        }
+
+        // 피드백 조회
+        Feedback feedback = feedbackRepository.findById(command.feedbackId())
+                .orElseThrow(() -> {
+                    log.warn("event=feedback_update_failed reason=not_found feedbackId={}", command.feedbackId());
+                    return new FeedbackNotFoundException();
+                });
+
+        // path parameter의 예약 ID와 피드백의 예약 ID 일치 확인
+        if (!feedback.getPtReservationId().equals(command.ptReservationId())) {
+            throw new FeedbackNotFoundException();
+        }
+
+        // 트레이너 본인 피드백인지 확인
+        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(command.userId())
+                .orElseThrow(FeedbackForbiddenException::new);
+
+        if (!feedback.getTrainerProfileId().equals(trainerProfileId)) {
+            log.warn("event=feedback_update_failed reason=forbidden userId={} feedbackId={}",
+                    command.userId(), command.feedbackId());
+            throw new FeedbackForbiddenException();
+        }
+
+        // 미디어 파일 필수값 검증
+        for (UpdateFeedbackCommand.MediaCommand m : command.media()) {
+            if (m.file() == null || m.file().fileKey() == null || m.file().fileKey().isBlank()
+                    || m.file().originalName() == null || m.file().originalName().isBlank()
+                    || m.file().contentType() == null || m.file().contentType().isBlank()
+                    || m.file().fileSize() == null || m.file().fileSize() <= 0) {
+                throw new FeedbackMediaInvalidException();
+            }
+        }
+
+        // 미디어 파일 일괄 등록
+        List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(),
+                command.media().stream().map(UpdateFeedbackCommand.MediaCommand::file).toList());
+
+        // 피드백 내용 수정
+        feedback.update(command.content());
+        feedbackRepository.update(feedback);
+
+        // 기존 미디어 전체 삭제 후 신규 등록 (교체)
+        feedbackMediaRepository.deleteAllByFeedbackId(feedback.getId());
+        List<FeedbackMedia> newMedia = IntStream.range(0, command.media().size())
+                .mapToObj(i -> FeedbackMedia.create(
+                        feedback.getId(),
+                        command.media().get(i).mediaType(),
+                        fileResults.get(i).fileId()
+                ))
+                .toList();
+        feedbackMediaRepository.saveAll(newMedia);
+
+        log.info("event=feedback_update_complete feedbackId={}", feedback.getId());
+        return feedback.getId();
+    }
+
+    @Override
+    public void deleteFeedback(DeleteFeedbackCommand command) {
+        log.debug("event=feedback_delete userId={} feedbackId={}", command.userId(), command.feedbackId());
+
+        // 피드백 조회
+        Feedback feedback = feedbackRepository.findById(command.feedbackId())
+                .orElseThrow(() -> {
+                    log.warn("event=feedback_delete_failed reason=not_found feedbackId={}", command.feedbackId());
+                    return new FeedbackNotFoundException();
+                });
+
+        // path parameter의 예약 ID와 피드백의 예약 ID 일치 확인
+        if (!feedback.getPtReservationId().equals(command.ptReservationId())) {
+            throw new FeedbackNotFoundException();
+        }
+
+        // 트레이너 본인 피드백인지 확인
+        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(command.userId())
+                .orElseThrow(FeedbackForbiddenException::new);
+
+        if (!feedback.getTrainerProfileId().equals(trainerProfileId)) {
+            log.warn("event=feedback_delete_failed reason=forbidden userId={} feedbackId={}",
+                    command.userId(), command.feedbackId());
+            throw new FeedbackForbiddenException();
+        }
+
+        // 예약이 COMPLETED이면 삭제 불가
+        PtReservationQueryPort.ReservationInfo reservation =
+                ptReservationQueryPort.findById(command.ptReservationId());
+        if (reservation.status() == PtReservationStatus.COMPLETED) {
+            log.warn("event=feedback_delete_failed reason=reservation_completed feedbackId={}", command.feedbackId());
+            throw new FeedbackReservationCompletedException();
+        }
+
+        feedbackRepository.deleteById(command.feedbackId());
+        log.info("event=feedback_delete_complete feedbackId={}", command.feedbackId());
+    }
+
+    // create/update 공통 미디어 파일 등록 — UploadedFileMetadataCommand 리스트를 직접 받음
     private List<FileRegistrationResult> registerMediaFiles(Long userId,
-                                                             List<CreateFeedbackCommand.MediaCommand> media) {
-        List<CreateFileCommand> fileCommands = media.stream()
-                .map(m -> new CreateFileCommand(
+                                                             List<UploadedFileMetadataCommand> files) {
+        List<CreateFileCommand> fileCommands = files.stream()
+                .map(f -> new CreateFileCommand(
                         userId,
-                        m.file().fileKey(),
-                        m.file().originalName(),
-                        m.file().contentType(),
-                        m.file().fileSize(),
+                        f.fileKey(),
+                        f.originalName(),
+                        f.contentType(),
+                        f.fileSize(),
                         FileType.FEEDBACK_VIDEO
                 ))
                 .toList();
 
         List<FileRegistrationResult> results = fileUseCase.registerFiles(fileCommands);
 
-        if (results.size() != media.size()) {
+        if (results.size() != files.size()) {
             log.error("event=feedback_media_register_failed reason=unexpected_result userId={} expected={} actual={}",
-                    userId, media.size(), results.size());
+                    userId, files.size(), results.size());
             throw new IllegalStateException("미디어 파일 등록 결과가 올바르지 않습니다.");
         }
 

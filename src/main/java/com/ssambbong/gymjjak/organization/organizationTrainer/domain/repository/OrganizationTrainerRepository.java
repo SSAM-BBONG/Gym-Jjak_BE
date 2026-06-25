@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository;
 
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.AdminTrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerDetailView;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
@@ -17,6 +18,10 @@ public interface OrganizationTrainerRepository {
 
     Optional<OrganizationTrainer> findActiveByIdAndOrganizationId(Long organizationTrainerId, Long organizationId);
 
+    Long save(OrganizationTrainer organizationTrainer);
+
+    boolean existsActiveByOrganizationIdAndTrainerProfileId(Long organizationId, Long trainerProfileId);
+
     void remove(Long organizationTrainerId);
 
     long countAllActive();
@@ -24,6 +29,8 @@ public interface OrganizationTrainerRepository {
     long countActiveOrganizations();
 
     List<TrainerDetailView> findTrainerDetailsByOrganizationId(Long organizationId);
+
+    List<AdminTrainerSummary> findAdminTrainersByOrganizationId(Long organizationId);
 
     long countAccumulatedMembersByOrganizationId(Long organizationId);
 }

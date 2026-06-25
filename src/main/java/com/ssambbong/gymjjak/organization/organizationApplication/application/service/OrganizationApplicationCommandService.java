@@ -11,6 +11,7 @@ import com.ssambbong.gymjjak.organization.organizationApplication.application.us
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.BusinessLicenseFileRegistrationFailedException;
+import com.ssambbong.gymjjak.organization.organizationApplication.exception.BusinessLicenseFileRequiredException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateBusinessRegistrationNumberException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateRequestedLoginIdException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.OrganizationApplicationNotFoundException;
@@ -41,7 +42,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     public Long createOrganizationApplication(OrganizationApplicationCreateCommand command) {
 
         if (command.businessLicenseFile() == null) {
-            throw new BusinessLicenseFileRegistrationFailedException();
+            throw new BusinessLicenseFileRequiredException();
         }
 
         boolean alreadyExist = organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber());

@@ -17,6 +17,27 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
 
     private final EntityManager em;
 
+    // 활성화 된 트레이너 수
+    @Override
+    public long countActive() {
+        Number result = (Number) em.createNativeQuery("""
+                SELECT COUNT(*) FROM trainer_profiles
+                WHERE status = 'ACTIVE' AND deleted_at IS NULL
+                """)
+                .getSingleResult();
+        return result.longValue();
+    }
+
+    // 평균 만족도
+    @Override
+    public Double averageRating() {
+        Object result = em.createNativeQuery("""
+                SELECT AVG(average_rating) FROM trainer_profiles
+                WHERE status = 'ACTIVE' AND deleted_at IS NULL
+                """)
+                .getSingleResult();
+        return result != null ? ((Number) result).doubleValue() : null;
+    }
 
     @Override
     public TrainerInfo findByUserId(Long userId) {

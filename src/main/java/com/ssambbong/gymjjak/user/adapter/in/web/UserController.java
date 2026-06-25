@@ -11,10 +11,7 @@ import com.ssambbong.gymjjak.user.application.command.UpdatePasswordCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateUserStatusCommand;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
-import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
-import com.ssambbong.gymjjak.user.application.result.FindUserResult;
-import com.ssambbong.gymjjak.user.application.result.PageResult;
-import com.ssambbong.gymjjak.user.application.result.UserProfileResult;
+import com.ssambbong.gymjjak.user.application.result.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -173,6 +170,39 @@ public class UserController {
 
         List<FindBlacklistUserResponse> content = result.content().stream()
                 .map(FindBlacklistUserResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        UserResponseCode.USER_FOUND,
+                        new PageResponse<>(
+                                content,
+                                result.page(),
+                                result.size(),
+                                result.totalElements(),
+                                result.totalPages(),
+                                result.first(),
+                                result.last(),
+                                result.hasNext(),
+                                result.hasPrevious()
+                        )
+                )
+        );
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/trainer")
+    @Operation(summary = "관리자 트레이너 회원 목록 조회", description = "트레이너 회원을 페이지 기반으로 조회한다.")
+    public ResponseEntity<GlobalApiResponse<PageResponse<FindTrainerUserResponse>>> findTrainerUsers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResult<FindTrainerUserResult> result =
+                userCommandUseCase.findTrainerUsers(keyword, page, size);
+
+        List<FindTrainerUserResponse> content = result.content().stream()
+                .map(FindTrainerUserResponse::from)
                 .toList();
 
         return ResponseEntity.ok(

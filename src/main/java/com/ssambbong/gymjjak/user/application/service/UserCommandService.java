@@ -319,6 +319,32 @@ public class UserCommandService implements UserCommandUseCase {
         return result;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<FindTrainerUserResult> findTrainerUsers(String keyword, int page, int size) {
+        log.debug(
+                "event=users_findTrainerUsers_start, keyword={}, page={}, size={}",
+                keyword,
+                page,
+                size
+        );
+
+        PageResult<FindTrainerUserResult> result = userPort.findTrainerUsers(keyword, page, size);
+
+        log.info(
+                "event=users_findTrainerUsers_succeed, keyword={}, page={}, size={}, resultCount={}, totalElements={}, totalPages={}, hasNext={}",
+                keyword,
+                page,
+                size,
+                result.content().size(),
+                result.totalElements(),
+                result.totalPages(),
+                result.hasNext()
+        );
+
+        return result;
+    }
+
     private String maskPhone(String phone) {
         if (phone == null || phone.length() < 8) {
             return "****";

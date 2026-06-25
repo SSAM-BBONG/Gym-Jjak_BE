@@ -169,11 +169,16 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             }
         }
 
+        // 썸네일 파일 등록 (null이면 기존 유지)
+        Long thumbnailFileId = command.thumbnailFile() != null
+                ? registerThumbnailFile(command.userId(), command.thumbnailFile())
+                : null;
+
         // 강습 필드 수정
         ptCourse.update(
                 command.categoryId(),
                 command.tagId(),
-                command.thumbnailFileId(),
+                thumbnailFileId,
                 command.title(),
                 command.description(),
                 command.price(),

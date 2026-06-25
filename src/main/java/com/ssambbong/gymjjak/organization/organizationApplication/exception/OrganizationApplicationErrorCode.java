@@ -16,6 +16,7 @@ public enum OrganizationApplicationErrorCode implements ErrorCode {
     ORGANIZATION_APPLICATION_ALREADY_ACCEPTED(HttpStatus.CONFLICT, "ORG_409_1", "이미 승인 처리된 신청입니다."),
     ORGANIZATION_APPLICATION_ALREADY_REJECTED(HttpStatus.CONFLICT, "ORG_409_2", "이미 반려 처리된 신청입니다."),
     ORGANIZATION_APPLICATION_ALREADY_CANCELLED(HttpStatus.CONFLICT, "ORG_409_3", "이미 취소 처리된 신청입니다."),
+    BUSINESS_LICENSE_FILE_REQUIRED(HttpStatus.BAD_REQUEST, "ORG_400", "사업자등록증 파일은 필수입니다."),
     BUSINESS_LICENSE_FILE_REGISTRATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ORG_500", "사업자등록증 파일 등록에 실패했습니다.");
 
     private final HttpStatus httpStatus;

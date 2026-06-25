@@ -15,7 +15,9 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepos
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
+import com.ssambbong.gymjjak.tag.application.usecase.TagQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,14 +44,16 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final PtReservationRepository ptReservationRepository;
     private final UserNicknameQueryPort userNicknameQueryPort;
     private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
+    private final TagQueryUseCase tagQueryUseCase;
 
     @Override
     public List<PtCourseListView> findAllPtCourses() {
         log.debug("event=pt_courses_find_all");
 
         Map<Long, String> categoryMap = buildCategoryMap();
+        Map<Long, String> tagMap = buildTagMap();
         List<PtCourseListView> result = ptCourseRepository.findAllVisible().stream()
-                .map(ptCourse -> toListView(ptCourse, categoryMap))
+                .map(ptCourse -> toListView(ptCourse, categoryMap, tagMap))
                 .toList();
 
         log.info("event=pt_courses_find_all_succeeded count={}", result.size());
@@ -223,6 +227,62 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         );
     }
 
+    // PT 통계 조회
+    @Override
+    public PtStatsView findStats() {
+        log.debug("event=pt_stats_find");
+
+        long organizationCount = organizationQueryPort.countActive();
+        long activeTrainerCount = trainerProfileQueryPort.countActive();
+        long inProgressPtCount = ptReservationRepository.countByStatus(PtReservationStatus.IN_PROGRESS);
+        Double averageSatisfaction = trainerProfileQueryPort.averageRating();
+
+        log.info("event=pt_stats_find_succeeded organizationCount={}, activeTrainerCount={}, inProgressPtCount={}, averageSatisfaction={}",
+                organizationCount, activeTrainerCount, inProgressPtCount, averageSatisfaction);
+
+        return new PtStatsView(organizationCount, activeTrainerCount, inProgressPtCount, averageSatisfaction);
+    }
+
+    // 인기 강습 조회
+    @Override
+    public List<PopularCourseView> findPopular() {
+        log.debug("event=pt_courses_popular_find");
+
+        // 태그 ID → 이름 매핑 (N+1 방지)
+        Map<Long, String> tagMap = tagQueryUseCase.handle().stream()
+                .collect(Collectors.toMap(
+                        TagQueryUseCase.TagView::tagId,
+                        TagQueryUseCase.TagView::name
+                ));
+
+        Map<Long, String> categoryMap = buildCategoryMap();
+
+        List<PopularCourseView> result = ptCourseRepository.findPopular(4).stream()
+                .map(ptCourse -> {
+                    OrganizationQueryPort.OrganizationInfo org =
+                            organizationQueryPort.findById(ptCourse.getOrganizationId());
+                    TrainerProfileQueryPort.TrainerDisplayInfo trainer =
+                            trainerProfileQueryPort.findById(ptCourse.getTrainerProfileId());
+
+                    return new PopularCourseView(
+                            ptCourse.getId(),
+                            ptCourse.getTitle(),
+                            ptCourse.getPrice(),
+                            ptCourse.getThumbnailFileId(),
+                            ptCourse.getCategoryId(),
+                            categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
+                            ptCourse.getTagId(),
+                            tagMap.getOrDefault(ptCourse.getTagId(), null),
+                            trainer.trainerName(),
+                            org.roadAddress()
+                    );
+                })
+                .toList();
+
+        log.info("event=pt_courses_popular_find_succeeded count={}", result.size());
+        return result;
+    }
+
     // categoryId -> categoryName 매핑
     private Map<Long, String> buildCategoryMap() {
         return categoryQueryUseCase.handle().stream()
@@ -232,8 +292,17 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ));
     }
 
+    // tagId -> tagName 매핑
+    private Map<Long, String> buildTagMap() {
+        return tagQueryUseCase.handle().stream()
+                .collect(Collectors.toMap(
+                        TagQueryUseCase.TagView::tagId,
+                        TagQueryUseCase.TagView::name
+                ));
+    }
+
     // ptCourse + enrich(조직/트레이너) -> 목록 응답용 View 변환
-    private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap) {
+    private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap, Map<Long, String> tagMap) {
         OrganizationQueryPort.OrganizationInfo org =
                 organizationQueryPort.findById(ptCourse.getOrganizationId());
         TrainerProfileQueryPort.TrainerDisplayInfo trainer =
@@ -245,7 +314,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourse.getThumbnailFileId(),
                 ptCourse.getPrice(),
                 ptCourse.getTagId(),
-                null, // TODO: TagQueryUseCase 연동 후 tagName 채우기
+                tagMap.getOrDefault(ptCourse.getTagId(), null),
                 ptCourse.getCategoryId(),
                 categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                 trainer.trainerName(),
@@ -293,7 +362,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 trainer.awards(),
                 curriculums,
                 schedules,
-                // 미구현
+                // TODO: 강사평 구현 후 reviewQueryPort.findRecentByTrainerProfileId(ptCourse.getTrainerProfileId(), 3) 로 교체
                 List.of()
         );
     }

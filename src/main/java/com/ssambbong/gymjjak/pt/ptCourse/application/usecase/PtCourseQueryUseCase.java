@@ -25,6 +25,12 @@ public interface PtCourseQueryUseCase {
     // 수강생 상세 조회 (트레이너 전용)
     ReservationDetailView findReservationDetail(Long userId, Long ptReservationId);
 
+    // 인기 강습 조회
+    List<PopularCourseView> findPopular();
+
+    // PT 통계 조회
+    PtStatsView findStats();
+
     // ──── 목록 뷰 ────
     record PtCourseListView(
             Long ptCourseId,
@@ -70,7 +76,7 @@ public interface PtCourseQueryUseCase {
             List<String> awards,
             List<CurriculumView> curriculums,
             List<ScheduleView> schedules,
-            // 미구현 (빈 배열 반환)
+            // TODO: 강사평 구현 후 List<ReviewQueryPort.ReviewSummary> 로 교체
             List<Object> recentReviews
     ) {}
 
@@ -126,5 +132,27 @@ public interface PtCourseQueryUseCase {
             int progressCount,
             int totalSessionCount,
             String title
+    ) {}
+
+    // ──── PT 통계 뷰 ────
+    record PtStatsView(
+            long organizationCount,
+            long activeTrainerCount,
+            long inProgressPtCount,
+            Double averageSatisfaction
+    ) {}
+
+    // ──── 인기 강습 뷰 ────
+    record PopularCourseView(
+            Long ptCourseId,
+            String title,
+            int price,
+            Long thumbnailFileId,
+            Long categoryId,
+            String categoryName,
+            Long tagId,
+            String tagName,
+            String trainerName,
+            String roadAddress
     ) {}
 }
