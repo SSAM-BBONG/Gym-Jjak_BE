@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.tag.domain.model.Tag;
 import com.ssambbong.gymjjak.tag.domain.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -70,5 +71,17 @@ public class TagRepositoryAdapter implements TagRepository {
     @Override
     public int softDeleteIfNotInUse(Long id) {
         return repository.softDeleteIfNotInUse(id);
+    }
+
+    @Override
+    public List<Long> findHardDeleteCandidateIds(java.time.LocalDateTime threshold, int batchSize) {
+        return repository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    @Transactional
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0; // 빈 IN절 쿼리 방지
+        return repository.hardDeleteByIds(ids);
     }
 }
