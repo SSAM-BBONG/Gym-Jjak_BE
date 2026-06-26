@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.tag.application.retention;
+package com.ssambbong.gymjjak.trainerReview.application.retention;
 
 import com.ssambbong.gymjjak.global.application.scheduler.RetentionJob;
 import com.ssambbong.gymjjak.global.application.scheduler.RetentionJobResult;
@@ -10,17 +10,17 @@ import java.time.LocalDateTime;
 // @Component로 Bean 등록 → GlobalRetentionScheduler의 List<RetentionJob>에 자동 주입
 @Component
 @RequiredArgsConstructor
-public class TagRetentionJob implements RetentionJob {
+public class TrainerReviewRetentionJob implements RetentionJob {
 
-    private final TagRetentionService tagRetentionService;
+    private final TrainerReviewRetentionService trainerReviewRetentionService;
 
     @Override
     public String name() {
-        return TagRetentionService.JOB_NAME;
+        return TrainerReviewRetentionService.JOB_NAME; // Service 상수 참조
     }
 
     @Override
     public RetentionJobResult run(LocalDateTime now) {
-        return tagRetentionService.hardDeleteExpiredTags(now);
+        return trainerReviewRetentionService.hardDeleteExpiredTrainerReviews(now);
     }
 }

@@ -45,6 +45,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final UserNicknameQueryPort userNicknameQueryPort;
     private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
     private final TagQueryUseCase tagQueryUseCase;
+    private final ReviewQueryPort reviewQueryPort;
 
     @Override
     public List<PtCourseListView> findAllPtCourses() {
@@ -362,8 +363,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 trainer.awards(),
                 curriculums,
                 schedules,
-                // TODO: 강사평 구현 후 reviewQueryPort.findRecentByTrainerProfileId(ptCourse.getTrainerProfileId(), 3) 로 교체
-                List.of()
+                reviewQueryPort.findRecentByTrainerProfileId(ptCourse.getTrainerProfileId(), 3)
         );
     }
 }

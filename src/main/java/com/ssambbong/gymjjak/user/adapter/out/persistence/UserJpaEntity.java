@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
+import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import jakarta.persistence.*;
@@ -17,7 +18,6 @@ import java.time.LocalDateTime;
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
                 @UniqueConstraint(name = "uk_users_nickname", columnNames = "nickname"),
-                @UniqueConstraint(name = "uk_users_phone", columnNames = "phone"),
                 @UniqueConstraint(
                                 name = "uk_users_social_provider_social_id",
                                 columnNames = {"social_provider", "social_id"})
@@ -36,16 +36,16 @@ public class UserJpaEntity extends BaseTimeEntity {
     @Column(name = "username", nullable = false, length = 100)
     private String username;
 
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", length = 255)
     private String password;
 
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @Column(name = "nickname", nullable = false, length = 50)
+    @Column(name = "nickname", length = 50)
     private String nickname;
 
-    @Column(name = "phone", nullable = false, length = 20)
+    @Column(name = "phone", length = 20)
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -75,5 +75,21 @@ public class UserJpaEntity extends BaseTimeEntity {
 
     public void completeOnboarding() {
         this.onboardingCompleted = true;
+    }
+
+    public static UserJpaEntity from(User user) {
+        return UserJpaEntity.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .name(user.getName())
+                .nickname(user.getNickname())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .onboardingCompleted(user.isOnboardingCompleted())
+                .socialProvider(user.getSocialProvider())
+                .socialId(user.getSocialId())
+                .lastLoginAt(user.getLastLoginAt())
+                .build();
     }
 }

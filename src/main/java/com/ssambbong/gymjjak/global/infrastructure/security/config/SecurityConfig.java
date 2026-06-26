@@ -102,6 +102,7 @@ public class SecurityConfig {
                         // PT API
                         .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations").hasAnyAuthority("USER", "TRAINER")
+                        .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations/*/reviews").hasAnyAuthority("USER", "TRAINER")
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/**")
                         .hasAnyAuthority("TRAINER")
 
@@ -163,8 +164,8 @@ public class SecurityConfig {
 
                         // Metric 관련 API
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
-//                        .requestMatchers("/actuator/**").permitAll()
+//                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
+                        .requestMatchers("/actuator/**").permitAll()
 
                         // Calendar API
                         .requestMatchers("/api/calendar/**")

@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.tag.infrastructure.persistence;
 
-import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedUpdatedEntity;
 import com.ssambbong.gymjjak.tag.domain.model.Tag;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "tags")
-public class TagJpaEntity extends BaseTimeEntity {
+public class TagJpaEntity extends BaseCreatedUpdatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,9 +31,5 @@ public class TagJpaEntity extends BaseTimeEntity {
 
     public void changeName(String name) {
         this.name = name;
-    }
-
-    public void softDelete() {
-        super.delete();
     }
 }

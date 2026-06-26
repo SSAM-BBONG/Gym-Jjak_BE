@@ -8,11 +8,14 @@ import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSummar
 import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewAlreadyExistsException;
 import com.ssambbong.gymjjak.trainerReview.domain.model.TrainerReview;
 import com.ssambbong.gymjjak.trainerReview.domain.repository.TrainerReviewRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.ReviewQueryPort;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -20,7 +23,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
+public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository, ReviewQueryPort {
 
     private final SpringDataTrainerReviewRepository repository;
     private final TrainerReviewPersistenceMapper mapper;
@@ -89,6 +92,40 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
                 ? reviews.get(reviews.size() - 1).rating() : null;
 
         return new TrainerReviewListResult(reviews, nextCursor, nextCursorRating, hasNext);
+    }
+
+    @Override
+    public long countActive() {
+        return repository.countActive();
+    }
+
+    @Override
+    public double findAverageRating() {
+        return repository.findAverageRating();
+    }
+
+    @Override
+    public List<ReviewQueryPort.ReviewSummary> findRecentByTrainerProfileId(Long trainerProfileId, int limit) {
+        return repository.findRecentByTrainerProfileId(trainerProfileId, limit).stream()
+                .map(p -> new ReviewQueryPort.ReviewSummary(
+                        p.getTrainerReviewId(),
+                        p.getRating(),
+                        p.getContent(),
+                        p.getCreatedAt()
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
+        return repository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    @Transactional
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0; // 빈 IN절 쿼리 방지
+        return repository.hardDeleteByIds(ids);
     }
 
     private boolean isReservationUniqueConstraint(DataIntegrityViolationException e) {
