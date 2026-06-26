@@ -14,6 +14,10 @@ public interface SpringDataFeedbackRepository extends JpaRepository<FeedbackJpaE
     // 예약 ID로 삭제되지 않은 피드백 전체 조회
     List<FeedbackJpaEntity> findAllByPtReservationIdAndDeletedAtIsNull(Long ptReservationId);
 
+    // 예약 ID의 가장 최근 피드백 생성일 단건 조회
+    @Query("SELECT MAX(f.createdAt) FROM FeedbackJpaEntity f WHERE f.ptReservationId = :ptReservationId AND f.deletedAt IS NULL")
+    Optional<LocalDateTime> findMaxCreatedAtByPtReservationId(@Param("ptReservationId") Long ptReservationId);
+
     // 피드백 단건 조회
     Optional<FeedbackJpaEntity> findByIdAndDeletedAtIsNull(Long id);
 
