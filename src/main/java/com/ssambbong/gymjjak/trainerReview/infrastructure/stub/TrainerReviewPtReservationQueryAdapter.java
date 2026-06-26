@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.trainerReview.infrastructure.adapter;
+package com.ssambbong.gymjjak.trainerReview.infrastructure.stub;
 
 import com.ssambbong.gymjjak.trainerReview.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.trainerReview.application.port.ReservationResult;
