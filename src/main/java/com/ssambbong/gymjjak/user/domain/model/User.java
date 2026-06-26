@@ -251,6 +251,35 @@ public class User {
 
     }
 
+    public static User createOrganizationAccount(
+            String username,
+            String encodedPassword,
+            String name,
+            String nickname,
+            String phone,
+            LocalDateTime now
+    ) {
+        LocalDateTime createdTime = Objects.requireNonNull(now, "now는 필수입니다.");
+
+        return new User(
+                null,
+                normalizeRequiredText(username, UserErrorCode.USERNAME_REQUIRED),
+                normalizeRequiredText(encodedPassword, UserErrorCode.PASSWORD_REQUIRED),
+                normalizeRequiredText(name, UserErrorCode.NAME_REQUIRED),
+                normalizeRequiredText(nickname, UserErrorCode.NICKNAME_REQUIRED),
+                normalizeRequiredText(phone, UserErrorCode.PHONE_REQUIRED),
+                UserRole.ORGANIZATION,
+                UserStatus.ACTIVE,
+                true,
+                null,
+                null,
+                null,
+                createdTime,
+                createdTime,
+                null
+        );
+    }
+
     public boolean isOnboardingCompleted() {
         return onboardingCompleted;
     }
