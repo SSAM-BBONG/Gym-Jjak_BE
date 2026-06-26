@@ -21,6 +21,10 @@ public interface TrainerReviewRepository {
 
     TrainerReviewListResult findList(TrainerReviewListQuery query);
 
+    long countActive();
+
+    double findAverageRating();
+
     // 소프트딜리트 후 threshold 이전에 삭제된 강사평 ID 배치 조회
     List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
 
