@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.tag.domain.exception.TagNotFoundException;
 import com.ssambbong.gymjjak.tag.domain.model.Tag;
 import com.ssambbong.gymjjak.tag.domain.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,8 +45,12 @@ public class TagCommandService implements TagCommandUseCase {
     public void handle(DeleteTagCommand command) {
         tagRepository.findById(command.id())
                 .orElseThrow(TagNotFoundException::new);
-        int affected = tagRepository.softDeleteIfNotInUse(command.id());
-        if (affected == 0) {
+        if (tagRepository.countPtCoursesByTagId(command.id()) > 0) {
+            throw new TagInUseException();
+        }
+        try {
+            tagRepository.deleteById(command.id());
+        } catch (DataIntegrityViolationException e) {
             throw new TagInUseException();
         }
     }

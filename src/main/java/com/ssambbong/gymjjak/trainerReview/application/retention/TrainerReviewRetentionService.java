@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TrainerReviewRetentionService {
 
-    public static final String JOB_NAME = "trainer-review-retention";
+    public static final String JOB_NAME = "trainer-review-retention"; // Job 클래스에서 참조하는 이름 상수
 
     private final TrainerReviewRetentionProperties properties;
     private final TrainerReviewRepository trainerReviewRepository;
@@ -24,6 +24,7 @@ public class TrainerReviewRetentionService {
     public RetentionJobResult hardDeleteExpiredTrainerReviews(LocalDateTime now) {
         LocalDateTime threshold = properties.threshold(now);
 
+        // 소프트딜리트된 지 periodDays 초과한 강사평 ID 배치 조회
         List<Long> candidateIds = trainerReviewRepository.findHardDeleteCandidateIds(threshold, properties.batchSize());
 
         if (candidateIds.isEmpty()) {

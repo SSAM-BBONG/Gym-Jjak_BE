@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+// @Component로 Bean 등록 → GlobalRetentionScheduler의 List<RetentionJob>에 자동 주입
 @Component
 @RequiredArgsConstructor
 public class TrainerReviewRetentionJob implements RetentionJob {
@@ -15,7 +16,7 @@ public class TrainerReviewRetentionJob implements RetentionJob {
 
     @Override
     public String name() {
-        return TrainerReviewRetentionService.JOB_NAME;
+        return TrainerReviewRetentionService.JOB_NAME; // Service 상수 참조
     }
 
     @Override
