@@ -61,6 +61,20 @@ public class NotificationRepositoryAdapter implements NotificationRepository, No
     }
 
     @Override
+    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
+        return repository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        return repository.hardDeleteByIds(ids);
+    }
+
+    @Override
     public NotificationListResult findNotifications(FindNotificationsQuery query) {
         PageRequest pageRequest =
                 PageRequest.of(

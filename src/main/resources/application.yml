@@ -131,6 +131,10 @@ app:
       period-days: ${APP_RETENTION_TRAINER_REVIEW_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_TRAINER_REVIEW_BATCH_SIZE}
 
+    notification:
+      period-days: ${APP_RETENTION_NOTIFICATION_PERIOD_DAYS}
+      batch-size: ${APP_RETENTION_NOTIFICATION_BATCH_SIZE}
+
 clova:
   ocr:
     invoke-url: "${CLOVA_OCR_INVOKE_URL}"
