@@ -5,7 +5,6 @@ import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,8 +33,4 @@ public interface OrganizationTrainerRepository {
     List<AdminTrainerSummary> findAdminTrainersByOrganizationId(Long organizationId);
 
     long countAccumulatedMembersByOrganizationId(Long organizationId);
-
-    List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
-
-    int hardDeleteByIds(List<Long> ids);
 }
