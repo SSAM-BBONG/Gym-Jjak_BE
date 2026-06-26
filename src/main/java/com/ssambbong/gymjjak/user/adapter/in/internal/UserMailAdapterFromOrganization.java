@@ -3,25 +3,24 @@ package com.ssambbong.gymjjak.user.adapter.in.internal;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
 import com.ssambbong.gymjjak.user.adapter.out.persistence.SpringDataUserRepository;
 import com.ssambbong.gymjjak.user.adapter.out.persistence.UserJpaEntity;
-import com.ssambbong.gymjjak.user.application.port.out.MailPort;
+import com.ssambbong.gymjjak.user.application.event.OrganizationAccountCreatedMailEvent;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
-@Transactional
 public class UserMailAdapterFromOrganization implements UserCreationPort {
 
     private final SpringDataUserRepository springDataUserRepository;
-    private final MailPort mailPort;
+    private final ApplicationEventPublisher eventPublisher;
     private final UserPort userPort;
 
     @Override
@@ -31,7 +30,6 @@ public class UserMailAdapterFromOrganization implements UserCreationPort {
             String businessName,
             String representativePhone
     ) {
-        validateDuplicate(loginId, businessName, representativePhone);
 
         String temporaryPassword = generateTemporaryPassword();
         String encodedPassword = userPort.encode(temporaryPassword);
@@ -45,11 +43,15 @@ public class UserMailAdapterFromOrganization implements UserCreationPort {
                 LocalDateTime.now()
         );
 
+        validateDuplicate(loginId, businessName, representativePhone);
+
         UserJpaEntity savedUser = springDataUserRepository.save(UserJpaEntity.from(user));
 
-        mailPort.sendTemporaryPassword(
-                loginId,
-                temporaryPassword
+        eventPublisher.publishEvent(
+                new OrganizationAccountCreatedMailEvent(
+                        loginId,
+                        temporaryPassword
+                )
         );
 
         return savedUser.getId();
