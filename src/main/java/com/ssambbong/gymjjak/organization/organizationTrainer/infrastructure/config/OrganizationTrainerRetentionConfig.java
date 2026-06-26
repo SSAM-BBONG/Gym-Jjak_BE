@@ -1,0 +1,10 @@
+package com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.config;
+
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.retention.OrganizationTrainerRetentionProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@EnableConfigurationProperties(OrganizationTrainerRetentionProperties.class)
+public class OrganizationTrainerRetentionConfig {
+}

@@ -5,6 +5,8 @@ import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewListRe
 import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSummary;
 import com.ssambbong.gymjjak.trainerReview.domain.model.TrainerReview;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface TrainerReviewRepository {
@@ -22,4 +24,8 @@ public interface TrainerReviewRepository {
     long countActive();
 
     double findAverageRating();
+
+    List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
+
+    int hardDeleteByIds(List<Long> ids);
 }

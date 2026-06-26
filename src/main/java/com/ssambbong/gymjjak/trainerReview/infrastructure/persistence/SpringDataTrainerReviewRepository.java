@@ -1,9 +1,11 @@
 package com.ssambbong.gymjjak.trainerReview.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +29,13 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
             @Param("trainerProfileId") Long trainerProfileId,
             @Param("limit") int limit
     );
+
+    @Query(value = "SELECT trainer_review_id FROM trainer_reviews WHERE deleted_at IS NOT NULL AND deleted_at < :threshold LIMIT :batchSize", nativeQuery = true)
+    List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
+
+    @Modifying
+    @Query(value = "DELETE FROM trainer_reviews WHERE trainer_review_id IN :ids", nativeQuery = true)
+    int hardDeleteByIds(@Param("ids") List<Long> ids);
 
     @Query(value = "SELECT COUNT(*) FROM trainer_reviews WHERE deleted_at IS NULL", nativeQuery = true)
     long countActive();

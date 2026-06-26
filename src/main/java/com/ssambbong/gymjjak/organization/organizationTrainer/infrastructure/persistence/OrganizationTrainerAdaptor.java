@@ -116,4 +116,15 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
                 ))
                 .toList();
     }
+
+    @Override
+    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
+        return springDataOrganizationTrainerRepository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0;
+        return springDataOrganizationTrainerRepository.hardDeleteByIds(ids);
+    }
 }
