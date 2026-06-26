@@ -3,11 +3,13 @@ package com.ssambbong.gymjjak.calendar.adapter.in.web;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.request.CreateWorkoutDiaryRequest;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.request.UpdateWorkoutDiaryRequest;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarDayResponse;
+import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarMonthResponse;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarResponseCode;
 import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.CalendarUsecase;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayResult;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthResult;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -103,6 +105,27 @@ public class CalendarController {
                 GlobalApiResponse.ok(
                         CalendarResponseCode.CALENDAR_DAY_FETCHED,
                         CalendarDayResponse.from(result)
+                )
+        );
+    }
+
+    @GetMapping("/api/calendar/month")
+    @Operation(summary = "캘린더 월별 조회", description = "캘린더를 월별로 조회한다.")
+    public ResponseEntity<GlobalApiResponse<CalendarMonthResponse>> findCalendarMonth(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam Integer year,
+            @RequestParam Integer month
+    ) {
+        CalendarMonthResult result = calendarUsecase.findCalendarMonth(
+                authUser.userId(),
+                year,
+                month
+        );
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        CalendarResponseCode.CALENDAR_FETCHED,
+                        CalendarMonthResponse.from(result)
                 )
         );
     }
