@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.feedback.domain.repository;
 
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,4 +25,10 @@ public interface FeedbackRepository {
 
     // 피드백 삭제
     void deleteById(Long feedbackId);
+
+    // 소프트딜리트된 지 threshold 초과한 피드백 ID 배치 조회
+    List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
+
+    // 하드딜리트
+    int hardDeleteByIds(List<Long> ids);
 }

@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -34,4 +35,14 @@ public interface SpringDataFeedbackRepository extends JpaRepository<FeedbackJpaE
             GROUP BY f.ptReservationId
             """)
     List<LastFeedbackRow> findLastCreatedAtGroupByReservationId(@Param("reservationIds") List<Long> reservationIds);
+
+    // 소프트딜리트된 지 threshold 초과한 피드백 ID 배치 조회
+    @Query(value = "SELECT feedback_id FROM feedbacks WHERE deleted_at IS NOT NULL AND deleted_at < :threshold LIMIT :batchSize",
+            nativeQuery = true)
+    List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
+
+    // 하드딜리트 (deleted_at IS NOT NULL 재검증으로 race condition 방지)
+    @Modifying
+    @Query(value = "DELETE FROM feedbacks WHERE feedback_id IN (:ids) AND deleted_at IS NOT NULL", nativeQuery = true)
+    int hardDeleteByIds(@Param("ids") List<Long> ids);
 }

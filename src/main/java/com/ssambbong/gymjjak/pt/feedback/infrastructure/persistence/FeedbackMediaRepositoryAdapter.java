@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMedia;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackMediaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,5 +34,12 @@ public class FeedbackMediaRepositoryAdapter implements FeedbackMediaRepository {
     @Override
     public void deleteAllByFeedbackId(Long feedbackId) {
         repository.deleteAllByFeedbackId(feedbackId);
+    }
+
+    @Override
+    @Transactional
+    public int hardDeleteByFeedbackIds(List<Long> feedbackIds) {
+        if (feedbackIds.isEmpty()) return 0; // 빈 IN절 쿼리 방지
+        return repository.hardDeleteByFeedbackIds(feedbackIds);
     }
 }
