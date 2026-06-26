@@ -2,15 +2,19 @@ package com.ssambbong.gymjjak.notification.presentation.api;
 
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import com.ssambbong.gymjjak.notification.application.command.DeleteNotificationsCommand;
 import com.ssambbong.gymjjak.notification.application.command.MarkNotificationReadCommand;
 import com.ssambbong.gymjjak.notification.application.query.FindNotificationsQuery;
+import com.ssambbong.gymjjak.notification.application.result.DeleteNotificationsResult;
 import com.ssambbong.gymjjak.notification.application.result.MarkNotificationReadResult;
 import com.ssambbong.gymjjak.notification.application.result.NotificationListResult;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationCommandUseCase;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationQueryUseCase;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationUserCommandUseCase;
+import com.ssambbong.gymjjak.notification.presentation.api.request.DeleteNotificationsRequest;
 import com.ssambbong.gymjjak.notification.presentation.api.request.FindNotificationsRequest;
 import com.ssambbong.gymjjak.notification.presentation.api.request.MarkNotificationReadRequest;
+import com.ssambbong.gymjjak.notification.presentation.api.response.DeleteNotificationsResponse;
 import com.ssambbong.gymjjak.notification.presentation.api.response.MarkNotificationReadResponse;
 import com.ssambbong.gymjjak.notification.presentation.api.response.NotificationListResponse;
 import com.ssambbong.gymjjak.notification.presentation.api.response.NotificationResponseCode;
@@ -108,6 +112,39 @@ public class NotificationController {
                 GlobalApiResponse.ok(
                         NotificationResponseCode.NOTIFICATION_READ,
                         MarkNotificationReadResponse.from(result)
+                )
+        );
+    }
+
+    @Operation(
+            summary = "알림 삭제",
+            description = "사용자가 알림을 삭제합니다. " +
+                    "알림 ID를 1개 -> 단일 삭제, 여러 개 -> 다중 삭제"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "알림 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "요청값이 유효하지 않음"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "다른 사용자의 알림에 접근"),
+            @ApiResponse(responseCode = "404", description = "알림을 찾을 수 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @DeleteMapping
+    public ResponseEntity<GlobalApiResponse<DeleteNotificationsResponse>> deleteNotifications(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody @Valid DeleteNotificationsRequest request
+    ) {
+        DeleteNotificationsResult result = userCommandUseCase.deleteNotifications(
+                new DeleteNotificationsCommand(
+                        authUser.userId(),
+                        request.notificationIds()
+                )
+        );
+
+        return ResponseEntity.status(200).body(
+                GlobalApiResponse.ok(
+                        NotificationResponseCode.NOTIFICATION_DELETED,
+                        DeleteNotificationsResponse.from(result)
                 )
         );
     }

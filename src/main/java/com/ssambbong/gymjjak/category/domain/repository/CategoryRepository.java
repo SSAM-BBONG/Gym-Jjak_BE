@@ -21,10 +21,4 @@ public interface CategoryRepository {
 
     // 카테고리별 PT 강습 사용 개수
     long countPtCoursesByCategoryId(Long categoryId);
-
-    // 소프트딜리트 > threshold 카테고리 ID 조회
-    List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
-
-    // Hard delete
-    int hardDeleteByIds(List<Long> ids);
 }

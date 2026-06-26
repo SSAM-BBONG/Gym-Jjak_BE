@@ -19,4 +19,6 @@ public interface FileRepository {
     long countByFileType(FileType fileType);
 
     long count();
+
+    long countActive();
 }
