@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.notification.application.service;
 
+import com.ssambbong.gymjjak.notification.application.command.DeleteNotificationsCommand;
 import com.ssambbong.gymjjak.notification.application.command.MarkNotificationReadCommand;
+import com.ssambbong.gymjjak.notification.application.result.DeleteNotificationsResult;
 import com.ssambbong.gymjjak.notification.application.result.MarkNotificationReadResult;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationUserCommandUseCase;
 import com.ssambbong.gymjjak.notification.domain.exception.ForbiddenNotificationAccessException;
@@ -46,11 +48,7 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
 
         // 배치 저장
         Map<Long, Notification> notificationMap =
-                notificationRepository.findAllById(notificationIds).stream()
-                        .collect(Collectors.toMap(
-                                Notification::getNotificationId,
-                                Function.identity()
-                        ));
+                findNotificationsByIds(notificationIds);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -59,14 +57,13 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
 
         for (Long notificationId : notificationIds) {
             // 하나씩 추출
-            Notification notification = notificationMap.get(notificationId);
-
-            if (notification == null) {
-                throw new NotificationNotFoundException(notificationId);
-            }
+            Notification notification = getNotificationOrThrow(
+                    notificationMap,
+                    notificationId
+            );
 
             // 본인 알림 검증
-            validateReadableNotification(
+            validateAccessibleNotification(
                     notification,
                     command.requesterId(),
                     now
@@ -98,12 +95,95 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
                 .build();
     }
 
-    private void validateReadableNotification(
+    @Override
+    public DeleteNotificationsResult deleteNotifications(DeleteNotificationsCommand command) {
+
+        validateDeleteCommand(command);
+
+        log.info(
+                "event=notification_delete_started, requesterId={}, requestedCount={}",
+                command.requesterId(),
+                command.notificationIds().size()
+        );
+
+        // 중복 제거
+        List<Long> notificationIds = removeDuplicateIds(
+                command.notificationIds()
+        );
+
+        Map<Long, Notification> notificationMap =
+                findNotificationsByIds(notificationIds);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Long> deletedNotificationIds = new ArrayList<>();
+        List<Notification> deletedNotifications = new ArrayList<>();
+
+        for (Long notificationId : notificationIds) {
+            Notification notification = getNotificationOrThrow(
+                    notificationMap,
+                    notificationId
+            );
+
+            validateAccessibleNotification(
+                    notification,
+                    command.requesterId(),
+                    now
+            );
+
+            // 삭제된 알림을 List에 추가
+            deletedNotifications.add(notification.delete());
+            // 해당 Id값 List에 추가
+            deletedNotificationIds.add(notificationId);
+        }
+        // 모두 DB 저장
+        if (!deletedNotifications.isEmpty()) {
+            notificationRepository.saveAll(deletedNotifications);
+        }
+
+        log.info(
+                "event=notification_delete_succeeded, requesterId={}, requestedCount={}, processedCount={}",
+                command.requesterId(),
+                command.notificationIds().size(),
+                deletedNotificationIds.size()
+        );
+
+        return DeleteNotificationsResult.builder()
+                .deletedNotificationIds(deletedNotificationIds)
+                .build();
+
+    }
+
+    // ========== 공통 내부 메서드 =============
+    private Map<Long, Notification> findNotificationsByIds(
+            List<Long> notificationIds
+    ) {
+        return notificationRepository.findAllById(notificationIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Notification::getNotificationId,
+                        Function.identity()
+                ));
+    }
+
+    private Notification getNotificationOrThrow(
+            Map<Long, Notification> notificationMap,
+            Long notificationId
+    ) {
+        Notification notification = notificationMap.get(notificationId);
+
+        if (notification == null) {
+            throw new NotificationNotFoundException(notificationId);
+        }
+
+        return notification;
+    }
+
+    private void validateAccessibleNotification(
             Notification notification,
             Long requesterId,
             LocalDateTime now
     ) {
-        // 본인 알림 검증
         if (!notification.isOwnedBy(requesterId)) {
             throw new ForbiddenNotificationAccessException(
                     requesterId,
@@ -111,7 +191,6 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
             );
         }
 
-        // 삭제되거나, 만료된 알림 검증
         if (notification.isDeleted() || notification.isExpired(now)) {
             throw new NotificationNotFoundException(
                     notification.getNotificationId()
@@ -119,6 +198,43 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
         }
     }
 
+    // ======= 알림 삭제 내부 메서드 ======
+    private void validateDeleteCommand(DeleteNotificationsCommand command) {
+        if (command == null) {
+            throw new InvalidNotificationException(
+                    "알림 삭제 command는 필수입니다."
+            );
+        }
+
+        if (command.requesterId() == null || command.requesterId() <= 0) {
+            throw new InvalidNotificationException(
+                    "requesterId는 1 이상이어야 합니다."
+            );
+        }
+
+        if (command.notificationIds() == null || command.notificationIds().isEmpty()) {
+            throw new InvalidNotificationException(
+                    "삭제할 알림 ID는 필수입니다."
+            );
+        }
+
+        if (command.notificationIds().stream()
+                .anyMatch(notificationId ->
+                        notificationId == null || notificationId <= 0
+                )) {
+            throw new InvalidNotificationException(
+                    "알림 ID는 1 이상이어야 합니다."
+            );
+        }
+
+        if (command.notificationIds().size() > 100) {
+            throw new InvalidNotificationException(
+                    "알림은 한 번에 최대 100개까지 삭제할 수 있습니다."
+            );
+        }
+    }
+
+    // ======== 알림 읽기 내부 메서드 =============
     private List<Long> removeDuplicateIds(List<Long> notificationIds) {
         // 중복 제거 후 list로
         return notificationIds.stream()

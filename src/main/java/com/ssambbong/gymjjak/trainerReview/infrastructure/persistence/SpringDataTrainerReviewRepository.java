@@ -1,9 +1,11 @@
 package com.ssambbong.gymjjak.trainerReview.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -89,4 +91,26 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
             GROUP BY tp.trainer_profile_id, tp.trainer_name, tp.introduction
             """, nativeQuery = true)
     TrainerReviewSummaryProjection findSummary(@Param("trainerProfileId") Long trainerProfileId);
+
+    // 소프트딜리트된 지 threshold 이전인 강사평 ID를 batchSize 개 조회
+    @Query(value = """
+            SELECT trainer_review_id
+            FROM trainer_reviews
+            WHERE deleted_at IS NOT NULL
+              AND deleted_at < :threshold
+            LIMIT :batchSize
+            """, nativeQuery = true)
+    List<Long> findHardDeleteCandidateIds(
+            @Param("threshold") LocalDateTime threshold,
+            @Param("batchSize") int batchSize
+    );
+
+    // 지정한 ID 목록의 강사평 물리 삭제 (deleted_at IS NOT NULL 재확인)
+    @Modifying
+    @Query(value = """
+            DELETE FROM trainer_reviews
+            WHERE trainer_review_id IN (:ids)
+              AND deleted_at IS NOT NULL
+            """, nativeQuery = true)
+    int hardDeleteByIds(@Param("ids") List<Long> ids);
 }

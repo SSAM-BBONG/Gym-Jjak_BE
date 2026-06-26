@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -92,13 +94,15 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
     }
 
     @Override
-    public long countActive() {
-        return repository.countActive();
+    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
+        return repository.findHardDeleteCandidateIds(threshold, batchSize);
     }
 
     @Override
-    public double findAverageRating() {
-        return repository.findAverageRating();
+    @Transactional
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0; // 빈 IN절 쿼리 방지
+        return repository.hardDeleteByIds(ids);
     }
 
     private boolean isReservationUniqueConstraint(DataIntegrityViolationException e) {
