@@ -90,7 +90,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info
+        include: health, info, prometheus, metrics
 
 app:
   oauth2:
@@ -110,6 +110,18 @@ app:
       enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED:false}
       period-days: ${APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
+
+    category:
+      period-days: ${APP_RETENTION_CATEGORY_PERIOD_DAYS}
+      batch-size: ${APP_RETENTION_CATEGORY_BATCH_SIZE}
+
+    tag:
+      period-days: ${APP_RETENTION_TAG_PERIOD_DAYS}
+      batch-size: ${APP_RETENTION_TAG_BATCH_SIZE}
+
+    pt-course:
+      period-days: ${APP_RETENTION_PT_COURSE_PERIOD_DAYS:30}
+      batch-size: ${APP_RETENTION_PT_COURSE_BATCH_SIZE:100}
 
 clova:
   ocr:

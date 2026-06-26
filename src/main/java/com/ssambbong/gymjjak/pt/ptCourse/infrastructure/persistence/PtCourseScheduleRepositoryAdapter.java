@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -47,5 +48,12 @@ public class PtCourseScheduleRepositoryAdapter implements PtCourseScheduleReposi
     public void deleteAllByIdIn(List<Long> ids) {
         if (ids.isEmpty()) return;
         repository.deleteAllByIdIn(ids);
+    }
+
+    @Override
+    @Transactional
+    public int hardDeleteByPtCourseIds(List<Long> ptCourseIds) {
+        if (ptCourseIds.isEmpty()) return 0; // 빈 IN절 쿼리 방지
+        return repository.hardDeleteByPtCourseIds(ptCourseIds);
     }
 }

@@ -229,3 +229,4 @@ $RECYCLE.BIN/
 !.env.example
 
 logs/
+loki-data/

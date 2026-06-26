@@ -72,5 +72,17 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
         return repository.countPtCoursesByCategoryId(categoryId);
     }
 
+    // hard delete 될 카테고리ID 조회
+    @Override
+    public List<Long> findHardDeleteCandidateIds(java.time.LocalDateTime threshold, int batchSize) {
+        return repository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
 
+    // hard delelte
+    @Override
+    @Transactional
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0;
+        return repository.hardDeleteByIds(ids);
+    }
 }

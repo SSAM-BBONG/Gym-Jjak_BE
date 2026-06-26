@@ -14,6 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 알림 생성 이벤트 서비스
+ */
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
