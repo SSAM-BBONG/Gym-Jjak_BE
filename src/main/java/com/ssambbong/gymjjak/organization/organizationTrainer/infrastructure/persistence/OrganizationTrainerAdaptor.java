@@ -111,7 +111,7 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
                         r.getOrganizationTrainerId(),
                         r.getTrainerProfileId(),
                         r.getTrainerName(),
-                        r.getEmail(),
+                        r.getUsername(),
                         r.getRegisteredAt()
                 ))
                 .toList();
