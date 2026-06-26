@@ -109,7 +109,7 @@ public class CalendarController {
         );
     }
 
-    @GetMapping("/api/calendar/month")
+    @GetMapping("/month")
     @Operation(summary = "캘린더 월별 조회", description = "캘린더를 월별로 조회한다.")
     public ResponseEntity<GlobalApiResponse<CalendarMonthResponse>> findCalendarMonth(
             @AuthenticationPrincipal AuthUser authUser,
