@@ -25,7 +25,7 @@ public class FileMetrics implements FileMetricsPort {
                 .description("파일 삭제 횟수")
                 .register(meterRegistry);
 
-        Gauge.builder("gymjjak.file.active.total", fileRepository, FileRepository::count)
+        Gauge.builder("gymjjak.file.active.total", fileRepository, FileRepository::countActive)
                 .description("현재 등록된 파일 수")
                 .register(meterRegistry);
     }

@@ -49,4 +49,9 @@ public class FileRepositoryAdapter implements FileRepository {
     public long count() {
         return springDataFileRepository.count();
     }
+
+    @Override
+    public long countActive() {
+        return springDataFileRepository.countByDeletedAtIsNull();
+    }
 }

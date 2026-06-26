@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SpringDataFileRepository extends JpaRepository<FileJpaEntity, Long> {
 
     long countByFileType(FileType fileType);
+
+    long countByDeletedAtIsNull();
 }
