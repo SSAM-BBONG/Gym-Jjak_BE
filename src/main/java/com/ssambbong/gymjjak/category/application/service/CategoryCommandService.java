@@ -51,7 +51,7 @@ public class CategoryCommandService implements CategoryCommandUseCase {
         categoryRepository.save(category);
     }
 
-    // 카테고리 삭제
+    // 카테고리 삭제 '
     @Override
     public void handle(DeleteCategoryCommand command) {
         // 카테고리 존재 확인
