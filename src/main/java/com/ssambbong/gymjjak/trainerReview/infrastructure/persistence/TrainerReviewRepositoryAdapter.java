@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.trainerReview.application.query.TrainerReviewSummar
 import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewAlreadyExistsException;
 import com.ssambbong.gymjjak.trainerReview.domain.model.TrainerReview;
 import com.ssambbong.gymjjak.trainerReview.domain.repository.TrainerReviewRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.ReviewQueryPort;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,7 +21,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
+public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository, ReviewQueryPort {
 
     private final SpringDataTrainerReviewRepository repository;
     private final TrainerReviewPersistenceMapper mapper;
@@ -99,6 +100,18 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository {
     @Override
     public double findAverageRating() {
         return repository.findAverageRating();
+    }
+
+    @Override
+    public List<ReviewQueryPort.ReviewSummary> findRecentByTrainerProfileId(Long trainerProfileId, int limit) {
+        return repository.findRecentByTrainerProfileId(trainerProfileId, limit).stream()
+                .map(p -> new ReviewQueryPort.ReviewSummary(
+                        p.getTrainerReviewId(),
+                        p.getRating(),
+                        p.getContent(),
+                        p.getCreatedAt()
+                ))
+                .toList();
     }
 
     private boolean isReservationUniqueConstraint(DataIntegrityViolationException e) {
