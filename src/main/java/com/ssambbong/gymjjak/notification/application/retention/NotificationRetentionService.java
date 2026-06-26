@@ -44,7 +44,7 @@ public class NotificationRetentionService {
         }
 
         int deletedNotifications =
-                repository.hardDeleteByIds(candidateIds);
+                repository.hardDeleteByIds(candidateIds, threshold);
 
         log.info(
                 "event=notification_retention_completed threshold={}, candidateCount={}, deletedNotifications={}",

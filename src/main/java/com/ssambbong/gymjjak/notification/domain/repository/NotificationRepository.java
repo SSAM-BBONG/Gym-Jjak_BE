@@ -20,7 +20,7 @@ public interface NotificationRepository {
     List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
 
     // 실제 hardDelete 하는 메서드
-    int hardDeleteByIds(List<Long> ids);
+    int hardDeleteByIds(List<Long> ids, LocalDateTime threshold);
 
 
 }

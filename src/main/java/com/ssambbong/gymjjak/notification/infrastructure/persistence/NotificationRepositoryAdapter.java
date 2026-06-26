@@ -66,12 +66,12 @@ public class NotificationRepositoryAdapter implements NotificationRepository, No
     }
 
     @Override
-    public int hardDeleteByIds(List<Long> ids) {
+    public int hardDeleteByIds(List<Long> ids, LocalDateTime threshold) {
         if (ids == null || ids.isEmpty()) {
             return 0;
         }
 
-        return repository.hardDeleteByIds(ids);
+        return repository.hardDeleteByIds(ids, threshold);
     }
 
     @Override

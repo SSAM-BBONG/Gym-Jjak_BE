@@ -43,9 +43,12 @@ public interface SpringDataNotificationRepository extends JpaRepository<Notifica
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
             value = "delete from notifications " +
-                    "where notification_id in :ids",
+                    "where notification_id in :ids " +
+                    "and deleted_at is not null " +
+                    "and deleted_at < :threshold",
             nativeQuery = true
     )
     int hardDeleteByIds(
-            @Param("ids") List<Long> Ids);
+            @Param("ids") List<Long> Ids,
+            @Param("threshold") LocalDateTime threshold);
 }
