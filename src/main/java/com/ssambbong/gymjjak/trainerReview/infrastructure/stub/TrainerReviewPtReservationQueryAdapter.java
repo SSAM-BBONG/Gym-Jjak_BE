@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.trainerReview.infrastructure.adapter;
+package com.ssambbong.gymjjak.trainerReview.infrastructure.stub;
 
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;

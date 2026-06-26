@@ -74,4 +74,5 @@ public class OrganizationAdaptor implements OrganizationRepository {
         return springDataOrganizationRepository.findRequestedLoginIdById(organizationId);
     }
 
+
 }

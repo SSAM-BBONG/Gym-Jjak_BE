@@ -230,3 +230,6 @@ $RECYCLE.BIN/
 
 logs/
 loki-data/
+
+# 더미 데이터
+src/main/resources/db/dummy-data.sql
