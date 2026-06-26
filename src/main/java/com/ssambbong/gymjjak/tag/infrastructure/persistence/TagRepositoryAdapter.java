@@ -5,7 +5,6 @@ import com.ssambbong.gymjjak.tag.domain.model.Tag;
 import com.ssambbong.gymjjak.tag.domain.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -22,19 +21,19 @@ public class TagRepositoryAdapter implements TagRepository {
     public Tag save(Tag tag) {
         TagJpaEntity entity = tag.getId() == null
                 ? new TagJpaEntity(tag.getName())
-                : repository.findByIdAndDeletedAtIsNull(tag.getId()).orElseThrow(TagNotFoundException::new);
+                : repository.findById(tag.getId()).orElseThrow(TagNotFoundException::new);
         entity.changeName(tag.getName());
         return repository.save(entity).toDomain();
     }
 
     @Override
     public Optional<Tag> findById(Long id) {
-        return repository.findByIdAndDeletedAtIsNull(id).map(TagJpaEntity::toDomain);
+        return repository.findById(id).map(TagJpaEntity::toDomain);
     }
 
     @Override
     public List<Tag> findAll() {
-        return repository.findAllByDeletedAtIsNull()
+        return repository.findAll()
                 .stream()
                 .map(TagJpaEntity::toDomain)
                 .toList();
@@ -42,15 +41,12 @@ public class TagRepositoryAdapter implements TagRepository {
 
     @Override
     public void deleteById(Long id) {
-        repository.findByIdAndDeletedAtIsNull(id).ifPresent(entity -> {
-            entity.softDelete();
-            repository.save(entity);
-        });
+        repository.deleteById(id);
     }
 
     @Override
     public boolean existsByName(String name) {
-        return repository.existsByNameAndDeletedAtIsNull(name);
+        return repository.existsByName(name);
     }
 
     @Override
@@ -66,22 +62,5 @@ public class TagRepositoryAdapter implements TagRepository {
                         row -> ((Number) row[0]).longValue(),
                         row -> ((Number) row[1]).longValue()
                 ));
-    }
-
-    @Override
-    public int softDeleteIfNotInUse(Long id) {
-        return repository.softDeleteIfNotInUse(id);
-    }
-
-    @Override
-    public List<Long> findHardDeleteCandidateIds(java.time.LocalDateTime threshold, int batchSize) {
-        return repository.findHardDeleteCandidateIds(threshold, batchSize);
-    }
-
-    @Override
-    @Transactional
-    public int hardDeleteByIds(List<Long> ids) {
-        if (ids.isEmpty()) return 0; // 빈 IN절 쿼리 방지
-        return repository.hardDeleteByIds(ids);
     }
 }

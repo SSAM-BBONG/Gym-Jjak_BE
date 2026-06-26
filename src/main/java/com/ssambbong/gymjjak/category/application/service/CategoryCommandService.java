@@ -9,20 +9,17 @@ import com.ssambbong.gymjjak.category.domain.exception.CategoryInUseException;
 import com.ssambbong.gymjjak.category.domain.exception.CategoryNotFoundException;
 import com.ssambbong.gymjjak.category.domain.model.Category;
 import com.ssambbong.gymjjak.category.domain.repository.CategoryRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class CategoryCommandService implements CategoryCommandUseCase {
 
     private final CategoryRepository categoryRepository;
-
-    // 생성자 매개변수
-    public CategoryCommandService(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
-    }
 
     // 카테고리 (이름) 등록
     @Override

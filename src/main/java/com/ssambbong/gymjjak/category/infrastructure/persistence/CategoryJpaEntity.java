@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.category.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.category.domain.model.Category;
-import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedUpdatedEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "categories")
-public class CategoryJpaEntity extends BaseTimeEntity {
+public class CategoryJpaEntity extends BaseCreatedUpdatedEntity {
 
     @Id // PK 컬럼 지정
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,10 +34,5 @@ public class CategoryJpaEntity extends BaseTimeEntity {
     // 카테고리 이름 수정. 도메인 행위가 아니라 DB 저장 상태 변경용
     public void changeName(String name) {
         this.name = name;
-    }
-
-    // 소프트 딜리트
-    public void softDelete() {
-        super.delete(); // BaseTimeEntity.delete() → deletedAt = now()
     }
 }
