@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.OrgApplicationMetricsPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserLoginIdValidationPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationCommandUsecase;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
@@ -34,6 +35,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     private final OrganizationRepository organizationRepository;
     private final FileUseCase fileUseCase;
     private final UserCreationPort userCreationPort;
+    private final UserLoginIdValidationPort userLoginIdValidationPort;
     private final OrgApplicationMetricsPort orgApplicationMetricsPort;
     private final OrganizationMetricsPort organizationMetricsPort;
 
@@ -44,6 +46,8 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         if (command.businessLicenseFile() == null) {
             throw new BusinessLicenseFileRequiredException();
         }
+
+        userLoginIdValidationPort.validate(command.requestedLoginId());
 
         boolean alreadyExist = organizationApplicationRepository.existsByBusinessRegistrationNumberAndStatus(command.businessRegistrationNumber());
         if (alreadyExist) {
