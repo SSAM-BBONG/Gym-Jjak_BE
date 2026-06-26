@@ -1,7 +1,8 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.adapter;
 
+import com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence.FeedbackJpaEntity;
+import com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence.SpringDataFeedbackRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.FeedbackQueryPort;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,31 +15,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FeedbackQueryAdapter implements FeedbackQueryPort {
 
-    private final EntityManager em;
+    private final SpringDataFeedbackRepository feedbackRepository;
 
     @Override
     public LocalDate findLastFeedbackDate(Long ptReservationId) {
-        // TODO: feedback 도메인 구현 후 MAX(feedbacks.created_at) 조회로 교체 (현재는 항상 null)
-        return null;
+        return feedbackRepository.findMaxCreatedAtByPtReservationId(ptReservationId)
+                .map(dt -> dt.toLocalDate())
+                .orElse(null);
     }
 
-    // TODO: feedback 도메인 구현 후 FeedbackRepository(또는 동등한 포트)의
-    //       findAllByPtReservationId() 등으로 교체하고, 이 native query/EntityManager 의존성 제거
     @Override
     public Map<Long, Long> findFeedbackIdMapByReservationId(Long ptReservationId) {
-        List<Object[]> rows = em.createNativeQuery("""
-            SELECT pt_curriculum_id, feedback_id
-            FROM feedbacks
-            WHERE pt_reservation_id = ?1
-              AND deleted_at IS NULL
-        """)
-                .setParameter(1, ptReservationId)
-                .getResultList();
+        List<FeedbackJpaEntity> feedbacks =
+                feedbackRepository.findAllByPtReservationIdAndDeletedAtIsNull(ptReservationId);
 
-        return rows.stream().collect(Collectors.toMap(
-                r -> ((Number) r[0]).longValue(),
-                r -> ((Number) r[1]).longValue()
-        ));
+        return feedbacks.stream()
+                .collect(Collectors.toMap(
+                        FeedbackJpaEntity::getPtCurriculumId,
+                        FeedbackJpaEntity::getId
+                ));
     }
-
 }

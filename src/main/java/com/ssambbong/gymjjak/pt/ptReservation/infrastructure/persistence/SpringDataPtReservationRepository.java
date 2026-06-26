@@ -58,6 +58,15 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     // 진행 중인 PT 수
     long countByStatus(PtReservationStatus status);
 
+    // ── 메트릭용 집계 쿼리 ──
+
+    // 취소된 예약 수 (cancelledAt IS NOT NULL)
+    long countByCancelledAtIsNotNull();
+
+    // progress_count 평균
+    @Query("SELECT AVG(r.progressCount) FROM PtReservationJpaEntity r")
+    Double findAverageProgressCount();
+
     @Query("""
     select new com.ssambbong.gymjjak.pt.ptReservation.application.result.PtReservationCalendarResult(
         r.reservedStartAt,

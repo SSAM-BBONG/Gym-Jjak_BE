@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.ReviewQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -47,8 +48,8 @@ public record PtCourseDetailResponse(
         @Schema(description = "수업 시간 목록")
         List<ScheduleInfo> schedules,
 
-        @Schema(description = "최근 리뷰 목록 (미구현, 빈 배열 반환)")
-        List<Object> recentReviews
+        @Schema(description = "최근 강사평 목록 (최대 3개)")
+        List<ReviewQueryPort.ReviewSummary> recentReviews
 
 ) {
     public record TrainerInfo(

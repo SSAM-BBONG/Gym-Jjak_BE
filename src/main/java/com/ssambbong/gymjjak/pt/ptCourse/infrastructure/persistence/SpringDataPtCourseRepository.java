@@ -50,4 +50,48 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
     @Modifying
     @Query(value = "DELETE FROM pt_courses WHERE pt_course_id IN (:ids) AND deleted_at IS NOT NULL", nativeQuery = true)
     int hardDeleteByIds(@Param("ids") List<Long> ids);
+
+    // ── 메트릭용 집계 쿼리 ──
+
+    // 상태별 PT 코스 수
+    long countByStatus(PtCourseStatus status);
+
+    // 카테고리별 PT 코스 수 (이름 포함, 소프트딜리트 제외)
+    @Query(value = """
+            SELECT c.name, COUNT(pc.pt_course_id)
+            FROM pt_courses pc
+            JOIN categories c ON c.category_id = pc.category_id
+            WHERE pc.deleted_at IS NULL AND pc.status != 'DELETED'
+            GROUP BY c.category_id, c.name
+            ORDER BY COUNT(pc.pt_course_id) DESC
+            """, nativeQuery = true)
+    List<Object[]> countGroupByCategoryName();
+
+    // 태그별 PT 코스 수 (이름 포함, 소프트딜리트 제외)
+    @Query(value = """
+            SELECT t.name, COUNT(pc.pt_course_id)
+            FROM pt_courses pc
+            JOIN tags t ON t.tag_id = pc.tag_id
+            WHERE pc.deleted_at IS NULL AND pc.status != 'DELETED'
+            GROUP BY t.tag_id, t.name
+            ORDER BY COUNT(pc.pt_course_id) DESC
+            """, nativeQuery = true)
+    List<Object[]> countGroupByTagName();
+
+    // 가격대별 분포 (소프트딜리트 제외)
+    @Query(value = """
+            SELECT
+                CASE
+                    WHEN price < 30000 THEN 'under_30k'
+                    WHEN price < 50000 THEN '30k_to_50k'
+                    WHEN price < 100000 THEN '50k_to_100k'
+                    ELSE 'over_100k'
+                END AS price_range,
+                COUNT(*) AS cnt
+            FROM pt_courses
+            WHERE deleted_at IS NULL AND status != 'DELETED'
+            GROUP BY price_range
+            ORDER BY MIN(price)
+            """, nativeQuery = true)
+    List<Object[]> countGroupByPriceRange();
 }
