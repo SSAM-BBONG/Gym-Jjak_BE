@@ -229,3 +229,7 @@ $RECYCLE.BIN/
 !.env.example
 
 logs/
+loki-data/
+
+# 더미 데이터
+src/main/resources/db/dummy-data.sql

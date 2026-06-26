@@ -91,6 +91,10 @@ management:
     web:
       exposure:
         include: health, info, prometheus, metrics
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 app:
   oauth2:
@@ -122,6 +126,10 @@ app:
     trainer-review:
       period-days: ${APP_RETENTION_TRAINER_REVIEW_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_TRAINER_REVIEW_BATCH_SIZE}
+
+    notification:
+      period-days: ${APP_RETENTION_NOTIFICATION_PERIOD_DAYS}
+      batch-size: ${APP_RETENTION_NOTIFICATION_BATCH_SIZE}
 
 clova:
   ocr:

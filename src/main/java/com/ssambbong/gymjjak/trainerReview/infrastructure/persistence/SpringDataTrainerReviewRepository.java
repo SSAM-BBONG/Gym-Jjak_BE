@@ -14,21 +14,14 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
     boolean existsByPtReservationIdAndDeletedAtIsNull(Long ptReservationId);
 
     @Query(value = """
-            SELECT
-                tr.trainer_review_id AS trainerReviewId,
-                tr.rating            AS rating,
-                tr.content           AS content,
-                tr.created_at        AS createdAt
+            SELECT tr.trainer_review_id AS trainerReviewId, tr.rating AS rating,
+                   tr.content AS content, tr.created_at AS createdAt
             FROM trainer_reviews tr
-            WHERE tr.trainer_profile_id = :trainerProfileId
-              AND tr.deleted_at IS NULL
-            ORDER BY tr.created_at DESC
-            LIMIT :limit
+            WHERE tr.trainer_profile_id = :trainerProfileId AND tr.deleted_at IS NULL
+            ORDER BY tr.created_at DESC LIMIT :limit
             """, nativeQuery = true)
     List<TrainerReviewProjection> findRecentByTrainerProfileId(
-            @Param("trainerProfileId") Long trainerProfileId,
-            @Param("limit") int limit
-    );
+            @Param("trainerProfileId") Long trainerProfileId, @Param("limit") int limit);
 
     @Query(value = "SELECT COUNT(*) FROM trainer_reviews WHERE deleted_at IS NULL", nativeQuery = true)
     long countActive();

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.usecase;
 
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.ReviewQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
@@ -76,8 +77,7 @@ public interface PtCourseQueryUseCase {
             List<String> awards,
             List<CurriculumView> curriculums,
             List<ScheduleView> schedules,
-            // TODO: 강사평 구현 후 List<ReviewQueryPort.ReviewSummary> 로 교체
-            List<Object> recentReviews
+            List<ReviewQueryPort.ReviewSummary> recentReviews
     ) {}
 
     // ──── 커리큘럼 뷰 ────

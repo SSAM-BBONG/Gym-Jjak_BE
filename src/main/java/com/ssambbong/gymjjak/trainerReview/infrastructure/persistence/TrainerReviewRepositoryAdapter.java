@@ -105,18 +105,6 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository, 
     }
 
     @Override
-    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
-        return repository.findHardDeleteCandidateIds(threshold, batchSize);
-    }
-
-    @Override
-    @Transactional
-    public int hardDeleteByIds(List<Long> ids) {
-        if (ids.isEmpty()) return 0;
-        return repository.hardDeleteByIds(ids);
-    }
-
-    @Override
     public List<ReviewQueryPort.ReviewSummary> findRecentByTrainerProfileId(Long trainerProfileId, int limit) {
         return repository.findRecentByTrainerProfileId(trainerProfileId, limit).stream()
                 .map(p -> new ReviewQueryPort.ReviewSummary(
@@ -126,6 +114,18 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository, 
                         p.getCreatedAt()
                 ))
                 .toList();
+    }
+
+    @Override
+    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
+        return repository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    @Transactional
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0; // 빈 IN절 쿼리 방지
+        return repository.hardDeleteByIds(ids);
     }
 
     private boolean isReservationUniqueConstraint(DataIntegrityViolationException e) {
