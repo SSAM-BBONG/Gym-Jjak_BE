@@ -163,8 +163,8 @@ public class SecurityConfig {
 
                         // Metric 관련 API
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
-//                        .requestMatchers("/actuator/**").permitAll()
+//                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
+                        .requestMatchers("/actuator/**").permitAll()
 
                         // Calendar API
                         .requestMatchers("/api/calendar/**")
