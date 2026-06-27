@@ -1,0 +1,26 @@
+spring:
+  config:
+    activate:
+      on-profile: deploy
+
+  datasource:
+    url: ${DEPLOY_MYSQL_URL}
+    username: ${DEPLOY_MYSQL_USERNAME}
+    password: ${DEPLOY_MYSQL_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+logging:
+  level:
+    root: info
+    org.hibernate.SQL: warn
+
+management:
+  endpoint:
+    health:
+      show-details: never

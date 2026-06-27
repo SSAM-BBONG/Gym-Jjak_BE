@@ -1,0 +1,86 @@
+name: Deploy to Elastic Beanstalk
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Check required files
+        run: |
+          test -f src/main/resources/application.yml
+          test -f src/main/resources/application-deploy.yml
+          test -f Dockerfile
+          test -f docker-compose.deploy.yml
+          test -f monitoring/loki/loki-config.yml
+          test -f monitoring/promtail/promtail-config.yml
+          test -f monitoring/prometheus/prometheus.yml
+          test -f monitoring/grafana/provisioning/datasources/datasource.yml
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Spring Boot jar
+        run: ./gradlew clean bootJar -x test
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: gymjjak
+          IMAGE_TAG: latest
+        run: |
+          docker buildx build --platform=linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --push .
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate Elastic Beanstalk deployment package
+        run: |
+          mkdir -p deploy
+          cp docker-compose.deploy.yml deploy/docker-compose.yml
+          cp -r monitoring deploy/monitoring
+          sed -i "s|\${BACKEND_IMAGE}|${{ steps.build-image.outputs.image }}|g" deploy/docker-compose.yml
+          cd deploy && zip -r deploy.zip .
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ secrets.EB_APP_NAME }}
+          environment_name: ${{ secrets.EB_ENV_NAME }}
+          version_label: gymjjak-${{ github.sha }}
+          region: ${{ secrets.AWS_REGION }}
+          deployment_package: deploy/deploy.zip
+          wait_for_environment_recovery: 200
