@@ -90,7 +90,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/categories/**")
-                        .hasAnyAuthority("ADMIN", "TRAINER")
+                        .hasAnyAuthority("ADMIN", "TRAINER", "USER")
 
                         // 태그 API
                         .requestMatchers(HttpMethod.POST, "/api/tags/**").hasAuthority("ADMIN")
