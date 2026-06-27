@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
@@ -48,6 +49,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final ReviewQueryPort reviewQueryPort;
 
     @Override
+    @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_all")
     public List<PtCourseListView> findAllPtCourses() {
         log.debug("event=pt_courses_find_all");
 
@@ -245,6 +247,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     // 인기 강습 조회
+    @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_popular")
     @Override
     public List<PopularCourseView> findPopular() {
         log.debug("event=pt_courses_popular_find");
