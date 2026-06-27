@@ -165,11 +165,12 @@ public class SecurityConfig {
                         .hasAnyAuthority("USER", "TRAINER", "ADMIN")
 
                         // Metric 관련 API
-                        .requestMatchers("/actuator/health",
+                        .requestMatchers(
+                                "/actuator/health",
                                 "/actuator/info",
-                                "/actuator/prometheus").permitAll()
-//                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
-                        .requestMatchers("/actuator/**").permitAll()
+                                "/actuator/prometheus"
+                        ).permitAll()
+                        .requestMatchers("/actuator/**").hasAuthority("ADMIN")
 
                         // Calendar API
                         .requestMatchers("/api/calendar/**")
