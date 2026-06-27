@@ -3,13 +3,10 @@ package com.ssambbong.gymjjak.trainerReview.application.service;
 import com.ssambbong.gymjjak.trainerReview.application.command.CreateTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.command.DeleteTrainerReviewCommand;
 import com.ssambbong.gymjjak.trainerReview.application.command.UpdateTrainerReviewCommand;
-import com.ssambbong.gymjjak.trainerReview.application.event.TrainerReviewCreatedEvent;
-import com.ssambbong.gymjjak.trainerReview.application.event.TrainerReviewDeletedEvent;
-import com.ssambbong.gymjjak.trainerReview.application.event.TrainerReviewUpdatedEvent;
 import com.ssambbong.gymjjak.trainerReview.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.trainerReview.application.port.ReservationResult;
+import com.ssambbong.gymjjak.trainerReview.application.port.TrainerReviewMetricsPort;
 import com.ssambbong.gymjjak.trainerReview.application.usecase.TrainerReviewCommandUseCase;
-import org.springframework.context.ApplicationEventPublisher;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.PtReservationNotCompletedException;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewAlreadyExistsException;
 import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewForbiddenException;
@@ -17,16 +14,18 @@ import com.ssambbong.gymjjak.trainerReview.domain.exception.TrainerReviewNotFoun
 import com.ssambbong.gymjjak.trainerReview.domain.model.TrainerReview;
 import com.ssambbong.gymjjak.trainerReview.domain.repository.TrainerReviewRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TrainerReviewCommandService implements TrainerReviewCommandUseCase {
 
     private final TrainerReviewRepository trainerReviewRepository;
     private final PtReservationQueryPort ptReservationQueryPort;
-    private final ApplicationEventPublisher eventPublisher;
+    private final TrainerReviewMetricsPort trainerReviewMetricsPort;
 
     @Override
     @Transactional
@@ -52,7 +51,7 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
         );
 
         Long reviewId = trainerReviewRepository.save(trainerReview);
-        eventPublisher.publishEvent(new TrainerReviewCreatedEvent(command.rating()));
+        recordMetricSafely(() -> trainerReviewMetricsPort.recordCreated(command.rating()), "recordCreated");
         return reviewId;
     }
 
@@ -67,7 +66,7 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
         }
 
         Long reviewId = trainerReviewRepository.save(review.update(command.rating(), command.content()));
-        eventPublisher.publishEvent(new TrainerReviewUpdatedEvent());
+        recordMetricSafely(trainerReviewMetricsPort::recordUpdated, "recordUpdated");
         return reviewId;
     }
 
@@ -82,6 +81,14 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
         }
 
         trainerReviewRepository.save(review.delete());
-        eventPublisher.publishEvent(new TrainerReviewDeletedEvent());
+        recordMetricSafely(trainerReviewMetricsPort::recordDeleted, "recordDeleted");
+    }
+
+    private void recordMetricSafely(Runnable metricCall, String metricName) {
+        try {
+            metricCall.run();
+        } catch (Exception e) {
+            log.warn("메트릭 기록 실패 - metric: {}", metricName, e);
+        }
     }
 }
