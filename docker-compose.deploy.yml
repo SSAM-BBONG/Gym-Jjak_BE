@@ -22,6 +22,46 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: gymjjak-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-docker.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+  loki:
+    image: grafana/loki:latest
+    container_name: gymjjak-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config-docker.yml:/etc/loki/local-config.yml
+      - loki-data:/loki
+    command:
+      - "-config.file=/etc/loki/local-config.yml"
+  promtail:
+    image: grafana/promtail:latest
+    container_name: gymjjak-promtail
+    volumes:
+      - ./promtail-config-docker.yml:/etc/promtail/config.yml
+      - ./logs:/logs:ro
+    command:
+      - "-config.file=/etc/promtail/config.yml"
+    depends_on:
+      - loki
+      - backend
+  grafana:
+    image: grafana/grafana:latest
+    container_name: gymjjak-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
 
   backend:
     image: xxv211/gymjjak-backend:latest
@@ -31,6 +71,8 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      LOGGING_FILE_NAME: /app/logs/gymjjak.log
+
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DEV_MYSQL_URL: ${DEV_MYSQL_URL}
       DEV_MYSQL_USERNAME: ${DEV_MYSQL_USERNAME}
@@ -76,6 +118,10 @@ services:
       CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
     ports:
       - "${DEV_BACKEND_PORT}:8080"
+    volumes:
+      - ./logs:/app/logs
 # Docker 영구 저장소 설정
 volumes:
   gymjjak-mysql-data:
+  loki-data:
+  grafana-data:
