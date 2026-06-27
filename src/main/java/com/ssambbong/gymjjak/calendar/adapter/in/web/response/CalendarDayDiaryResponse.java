@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
 import java.time.LocalDate;
 
 public record CalendarDayDiaryResponse(
+        Long workoutDiaryId,
         String title,
         String content,
         LocalDate date,
@@ -12,6 +13,7 @@ public record CalendarDayDiaryResponse(
 ) {
     public static CalendarDayDiaryResponse from(CalendarDayDiaryResult result) {
         return new CalendarDayDiaryResponse(
+                result.workoutDiaryId(),
                 result.title(),
                 result.content(),
                 result.date(),
