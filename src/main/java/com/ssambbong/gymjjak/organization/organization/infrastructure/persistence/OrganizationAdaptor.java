@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.organization.organization.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView;
+import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
@@ -74,5 +75,26 @@ public class OrganizationAdaptor implements OrganizationRepository {
         return springDataOrganizationRepository.findRequestedLoginIdById(organizationId);
     }
 
-
+    @Override
+    public Optional<MyOrganizationResult> findMyOrganizationByAccountId(Long organizationAccountId) {
+        return springDataOrganizationRepository.findByOrganizationAccountIdWithApplication(organizationAccountId)
+                .map(e -> new MyOrganizationResult(
+                        e.getBusinessLicenseFileId(),
+                        e.getApplication().getRequestedLoginId(),
+                        e.getBusinessRegistrationNumber(),
+                        e.getBusinessName(),
+                        e.getRepresentativeName(),
+                        e.getRepresentativePhone(),
+                        e.getOpeningDate(),
+                        e.getRoadAddress(),
+                        e.getJibunAddress(),
+                        e.getDetailAddress(),
+                        e.getLatitude(),
+                        e.getLongitude(),
+                        e.getFacilityPhone(),
+                        e.getInstagramUrl(),
+                        e.getBlogUrl(),
+                        e.getWebsiteUrl()
+                ));
+    }
 }

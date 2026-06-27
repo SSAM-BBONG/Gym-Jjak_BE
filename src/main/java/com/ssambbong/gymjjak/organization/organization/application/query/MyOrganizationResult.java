@@ -1,11 +1,10 @@
-package com.ssambbong.gymjjak.organization.organization.presentation.api.response;
+package com.ssambbong.gymjjak.organization.organization.application.query;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record FindMyOrganizationResponse(
-
-        // 기본 정보 (수정 불가)
+public record MyOrganizationResult(
+        Long businessLicenseFileId,
         String requestedLoginId,
         String businessRegistrationNumber,
         String businessName,
@@ -17,10 +16,6 @@ public record FindMyOrganizationResponse(
         String detailAddress,
         BigDecimal latitude,
         BigDecimal longitude,
-        String businessLicenseFileUrl,
-        String businessLicenseOriginalName,
-
-        // 추가 정보 (수정 가능)
         String facilityPhone,
         String instagramUrl,
         String blogUrl,

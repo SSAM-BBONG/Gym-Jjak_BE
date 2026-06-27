@@ -8,10 +8,10 @@ import com.ssambbong.gymjjak.organization.organization.application.command.Organ
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationCommandUseCase;
 import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationQueryUseCase;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.mapper.OrganizationMapper;
-import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.request.OrganizationUpdateRequest;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -128,18 +128,18 @@ public class OrganizationController {
     public ResponseEntity<GlobalApiResponse<FindMyOrganizationResponse>> getMyOrganization(
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        Organization organization = organizationQueryUseCase.findMyOrganization(authUser.userId());
+        MyOrganizationResult result = organizationQueryUseCase.findMyOrganization(authUser.userId());
 
         // 조직 계정은 파일 업로더(신청자)와 다른 계정이므로 소유권 체크 우회 허용
         // findMyOrganization()으로 본인 조직만 조회되고 fileId도 DB에서 가져오므로 우회 불가
         boolean isOrganization = authUser.role().equals("ORGANIZATION");
-        String businessLicenseFileUrl = fileUrlUseCase.getUrl(
-                organization.getBusinessLicenseFileId(), authUser.userId(), isOrganization).url();
+        FileUrlResult fileUrlResult = fileUrlUseCase.getUrl(
+                result.businessLicenseFileId(), authUser.userId(), isOrganization);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         OrganizationResponseCode.ORGANIZATION_FOUND,
-                        organizationMapper.toMyOrganizationResponse(organization, businessLicenseFileUrl)
+                        organizationMapper.toMyOrganizationResponse(result, fileUrlResult.url(), fileUrlResult.originalName())
                 )
         );
     }

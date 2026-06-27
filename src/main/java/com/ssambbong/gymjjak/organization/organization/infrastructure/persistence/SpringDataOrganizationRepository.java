@@ -47,4 +47,7 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
 
     @Query("SELECT a.requestedLoginId FROM OrganizationJpaEntity o JOIN o.application a WHERE o.organizationId = :organizationId")
     Optional<String> findRequestedLoginIdById(@Param("organizationId") Long organizationId);
+
+    @Query("SELECT o FROM OrganizationJpaEntity o JOIN FETCH o.application WHERE o.organizationAccountId = :accountId")
+    Optional<OrganizationJpaEntity> findByOrganizationAccountIdWithApplication(@Param("accountId") Long accountId);
 }
