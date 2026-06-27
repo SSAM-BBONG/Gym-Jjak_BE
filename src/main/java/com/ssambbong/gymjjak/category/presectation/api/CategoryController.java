@@ -29,7 +29,7 @@ public class CategoryController {
     private final CategoryCommandUseCase categoryCommandUseCase;
 
     // 카테고리 목록 조회
-    @Operation(summary = "카테고리 목록 조회", description = "관리자/트레이너가 카테고리 목록을 조회한다.")
+    @Operation(summary = "카테고리 목록 조회", description = "카테고리 목록을 조회한다.")
     @GetMapping
     public ResponseEntity<GlobalApiResponse<?>> getCategories() {
         return ResponseEntity.ok(

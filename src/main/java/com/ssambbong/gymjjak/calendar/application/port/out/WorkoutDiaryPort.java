@@ -15,7 +15,7 @@ public interface WorkoutDiaryPort {
             LocalDate diaryDate
     );
 
-    void saveWorkoutDiary(WorkoutDiary workoutDiary);
+    Long saveWorkoutDiary(WorkoutDiary workoutDiary);
 
     void updateWorkoutDiary(
             Long userId,

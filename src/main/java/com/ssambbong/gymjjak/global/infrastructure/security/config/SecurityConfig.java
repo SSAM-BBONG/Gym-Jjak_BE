@@ -89,6 +89,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/categories")
+                        .hasAnyAuthority("ADMIN", "TRAINER", "USER")
                         .requestMatchers(HttpMethod.GET, "/api/categories/**")
                         .hasAnyAuthority("ADMIN", "TRAINER")
 

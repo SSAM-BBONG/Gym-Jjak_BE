@@ -24,10 +24,11 @@ public interface WorkoutDiaryJpaRepository extends JpaRepository<WorkoutDiaryJpa
 
     @Query("""
         select new com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult(
-            d.title,
-            d.content,
-            d.diaryDate,
-            c.name
+             d.id,
+             d.title,
+             d.content,
+             d.diaryDate,
+             c.name
         )
         from WorkoutDiaryJpaEntity d
         join CategoryJpaEntity c on c.id = d.categoryId
