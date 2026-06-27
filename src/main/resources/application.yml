@@ -76,8 +76,8 @@ cloud:
   aws:
     region: ${AWS_REGION}
     credentials:
-      access-key: ${AWS_ACCESS_KEY_ID}
-      secret-key: ${AWS_SECRET_ACCESS_KEY}
+      access-key: ${AWS_S3_ACCESS_KEY_ID}
+      secret-key: ${AWS_S3_SECRET_ACCESS_KEY}
     s3:
       bucket: ${AWS_S3_BUCKET_NAME}
 
@@ -111,7 +111,7 @@ app:
       batch-size: ${APP_RETENTION_REPORT_GROUP_BATCH_SIZE}
 
     withdrawn-user:
-      enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED:false}
+      enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED}
       period-days: ${APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
 

@@ -20,16 +20,17 @@ server:
 # Promtail은 읽은 파일의 마지막 위치를 저장하여 재시작 시 중복 수집 방지
 positions:
   # 읽은 로그 위치 정보를 저장할 파일 경로
-  # Windows exe를 직접 실행하므로 프로젝트 내부 경로를 사용한다.
   # 이 파일은 Promtail 재시작 시 이미 읽은 로그 위치를 기억하기 위해 필요하다.
   # 형식: YAML 파일로 각 로그 파일의 읽은 위치(바이트 offset)를 기록
-  filename: C:/project_module03/gymjjak_clone/promtail-data/positions.yml
+  # 컨테이너 내부 임시 경로에 offset 정보를 저장합니다.
+  filename: /tmp/promtail-positions.yml
 
 # Loki 서버 연결 설정 섹션
 # 수집한 로그를 어디로 전송할지 정의
 clients:
   # 첫 번째 Loki 서버 연결 설정
-  - url: http://127.0.0.1:3100/loki/api/v1/push
+  # Docker Compose 내부에서는 loki 서비스명으로 접근합니다.
+  - url: http://loki:3100/loki/api/v1/push
     # 설명:
     # - 127.0.0.1: Windows에서 loki-windows-amd64.exe를 직접 실행하는 로컬 루프백 주소
     # - 일부 Windows/DNS 환경에서는 Promtail이 localhost를 외부 DNS로 조회해 실패할 수 있으므로 IP를 직접 사용한다.
@@ -55,52 +56,60 @@ scrape_configs:
   # Targets : 수집할 대상 서버(보통 Promtail 자신인 localhost를 사용하게 된다.)
   # Labels : Loki에 저장될 때 검색의 기준이 되는 "인덱스" 라벨 설정 (예 : job="spring-logs")
   # __path__ : 실제 로그 파일이 있는 Windows 로컬 경로 설정
+  # Docker 컨테이너 로그 수집 job입니다.
+  - job_name: docker
 
-  - job_name: gymjjak-logs # 작업의 이름 (작업 구분용)
-
-    # static_configs는 고정된 타겟 설정
-    # 주로 파일 경로, 호스트명 등을 지정
-    # 즉, 변하지 않는 로그 소스를 정의
-    static_configs:
-      # 수집할 대상
-      - targets:
-          - localhost # 수집 대상 호스트 (보통 Promtail 자신의 경로를 지정)
-        # 수집된 로그의 라벨 설정
-        labels:
-          job: "gymjjak" # Grafana Explore에서 {job="popular-shop"}로 조회하기 위한 라벨
-          app: "gymjjak-backend" # 애플리케이션 이름 라벨
-          env: "local" # 환경 구분용 라벨
-          # Windows 로컬 Spring Boot 로그 파일 경로.
-          # logback-spring.xml이 ./logs/popular-shop.log에 로그를 남기므로 logs/*.log를 수집한다.
-          __path__: C:/project_module03/gymjjak_clone/logs/*.log
-    # 라벨 예시 : {job="popular-shop", app="module01-actuator", env="local"}
+    # Docker socket을 통해 실행 중인 컨테이너를 자동 발견합니다.
+    docker_sd_configs:
+      # docker-compose.monitoring.yml에서 mount한 Docker socket입니다.
+      - host: unix:///var/run/docker.sock
+        # 5초마다 컨테이너 목록을 갱신합니다.
+        refresh_interval: 5s
 
     # relabels_configs는 "라벨을 재가공하는 경우" 추가한다.
     # 이는 기존 라벨을 변경하거나 새로운 라벨을 추가하는 데 사용되며
     # 로그 본문을 읽기 전에 적용되며 Loki에 전송되는 라벨에 영향을 미친다.
     relabel_configs:
-      - source_labels: ['__path__'] # 재가공할 라벨 지정 (__path__=로그 파일 경로) <- 다음 경로는 static_configs의 __path__ 값임
-        regex: '.*test.*' # 읽어온 __path__ 라벨의 값이 'test' 문자열을 포함하는지 매칭
-        action: drop # 해당 조건에 매칭되면 이 로그 파일은 수집하지 않음
-    # 설명: __path__ 라벨에 'test' 문자열이 포함된 로그 파일은 수집하지 않음
+      # Docker Compose service 이름을 읽는다.
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
+        # Loki에서 service 라벨로 저장합니다.
+        target_label: "service"
 
-    # pipeline_stages: 로그 본문의 내용을 "가공하는 경우" 추가한다.
-    # 이는 log의 level, timestamp 등을 추출하거나 변환하는 데 사용된다.
+      # Docker container 이름을 읽습니다.
+      - source_labels: ["__meta_docker_container_name"]
+        # Docker container 이름 앞의 / 문자를 제거합니다.
+        regex: "/(.*)"
+        # Loki에서 container 라벨로 저장합니다.
+        target_label: "container"
+
+      # stdout/stderr stream 정보를 읽습니다.
+      - source_labels: ["__meta_docker_container_log_stream"]
+        # Loki에서 stream 라벨로 저장합니다.
+        target_label: "stream"
+
+      # 현재 수집 환경을 dev로 표시합니다.
+      - target_label: "env"
+        # Loki에서 env="dev" 라벨로 검색할 수 있게 합니다.
+        replacement: "dev"
+
+      # Docker container id를 읽습니다.
+      - source_labels: ["__meta_docker_container_id"]
+        # Promtail이 실제로 읽을 Docker JSON log 파일 경로로 변환합니다.
+        target_label: "__path__"
+        # Docker 기본 JSON log 파일 위치입니다.
+        replacement: "/var/lib/docker/containers/$1/$1-json.log"
+
+    # Docker JSON log를 Spring Boot 로그 라인으로 파싱합니다.
     pipeline_stages:
+      # Docker JSON log의 log, stream, timestamp 필드를 처리합니다.
+      - docker: {}
       # 로그의 본문을 정규표현식으로 분석하기 위한 설정.
       - regex:
-          # 대괄호 [ ]로 둘러싸인 문자열을 찾고, 그 안의 내용을 level이라는 이름의 그룹으로 캡처
-          expression: '\[(?P<level>(INFO|WARN|ERROR|DEBUG|TRACE))\]'
+          # INFO/WARN/ERROR/DEBUG/TRACE 중 하나를 level로 캡처합니다.
+          expression: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} \[[^\]]+\]\s+(?P<level>INFO|WARN|ERROR|DEBUG|TRACE)\s+'
         # labels: 위에서 추출한 값을 Loki 라벨로 추가
       - labels:
           # 추출한 level 값을 Loki 라벨로 추가
           level:
       # 라벨 예시 : {job="popular-shop", app="module01-actuator", env="local", level="INFO"}
 
-      - regex:
-          # 대괄호 [ ]로 둘러싸인 문자열을 찾고, 그 안의 내용을 service_name이라는 이름의 그룹으로 캡처
-          expression: '\]\[(?P<service_name>[a-zA-Z0-9\-_]+)\]'
-      - labels:
-          service_name:
-
-# 최종 라벨 예시 : {job="popular-shop", app="module01-actuator", env="local", level="INFO", service_name="module01-actuator"}
