@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 public interface WorkoutDiaryUsecase {
 
-    void createWorkoutDiary(
+    Long createWorkoutDiary(
             Long userId,
             CreateWorkoutDiaryCommand command
     );

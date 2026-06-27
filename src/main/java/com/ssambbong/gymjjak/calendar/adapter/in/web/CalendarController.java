@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.calendar.adapter.in.web.request.UpdateWorkoutDiaryR
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarDayResponse;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarMonthResponse;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarResponseCode;
+import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CreateWorkoutDiaryResponse;
 import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.CalendarUsecase;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
@@ -33,11 +34,11 @@ public class CalendarController {
 
     @PostMapping("/diaries")
     @Operation(summary = "운동 일지 작성", description = "운동 일지를 캘린더에 작성한다.")
-    public ResponseEntity<GlobalApiResponse<Void>> createWorkoutDiary(
+    public ResponseEntity<GlobalApiResponse<CreateWorkoutDiaryResponse>> createWorkoutDiary(
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody CreateWorkoutDiaryRequest request
     ) {
-        workoutDiaryUsecase.createWorkoutDiary(
+        Long workoutDiaryId = workoutDiaryUsecase.createWorkoutDiary(
                 authUser.userId(),
                 new CreateWorkoutDiaryCommand(
                         request.diaryDate(),
@@ -49,7 +50,8 @@ public class CalendarController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(GlobalApiResponse.created(
-                        CalendarResponseCode.DIARY_CREATED
+                        CalendarResponseCode.DIARY_CREATED,
+                        CreateWorkoutDiaryResponse.from(workoutDiaryId)
                 ));
     }
 
