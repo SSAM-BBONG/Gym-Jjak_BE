@@ -43,7 +43,7 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
     }
 
     @Override
-    public void saveWorkoutDiary(WorkoutDiary workoutDiary) {
+    public Long saveWorkoutDiary(WorkoutDiary workoutDiary) {
         WorkoutDiaryJpaEntity entity = new WorkoutDiaryJpaEntity(
                 workoutDiary.getUserId(),
                 workoutDiary.getCategoryId(),
@@ -52,8 +52,9 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
                 workoutDiary.getDiaryDate()
         );
 
-        workoutDiaryJpaRepository.save(entity);
+        WorkoutDiaryJpaEntity savedEntity = workoutDiaryJpaRepository.save(entity);
 
+        return savedEntity.getId();
     }
 
     @Override

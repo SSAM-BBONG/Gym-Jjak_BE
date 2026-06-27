@@ -24,12 +24,20 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
     private final WorkoutDiaryPortToCategory workoutDiaryPortToCategory;
 
     @Override
-    public void createWorkoutDiary(
+    public Long createWorkoutDiary(
             Long userId,
             CreateWorkoutDiaryCommand command
     ) {
 
         log.debug("event=workoutDiary_create_start userId={}", userId);
+
+        if (userId == null) {
+            throw new CalendarException(CalendarErrorCode.USER_ID_REQUIRED);
+        }
+
+        if (command.diaryDate() == null) {
+            throw new CalendarException(CalendarErrorCode.DIARY_DATE_REQUIRED);
+        }
 
         if (workoutDiaryPort.existsByUserIdAndDiaryDate(userId, command.diaryDate())) {
             throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
@@ -48,12 +56,18 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
         );
 
         try {
-            workoutDiaryPort.saveWorkoutDiary(workoutDiary);
+            Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
+
+            log.debug(
+                    "event=workoutDiary_create_succeed userId={} workoutDiaryId={}",
+                    userId,
+                    workoutDiaryId
+            );
+
+            return workoutDiaryId;
         } catch (DataIntegrityViolationException ex) {
             throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
         }
-
-        log.debug("event=workoutDiary_create_succeed userId={}", userId);
     }
 
     @Override
