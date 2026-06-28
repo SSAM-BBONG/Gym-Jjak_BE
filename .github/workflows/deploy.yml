@@ -33,10 +33,7 @@ jobs:
           test -f src/main/resources/application-deploy.yml
           test -f Dockerfile
           test -f docker-compose.deploy.yml
-          test -f monitoring/loki/loki-config.yml
-          test -f monitoring/promtail/promtail-config.yml
-          test -f monitoring/prometheus/prometheus.yml
-          test -f monitoring/grafana/provisioning/datasources/datasource.yml
+          test -f monitoring/promtail/promtail-config.deploy.yml
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -67,9 +64,9 @@ jobs:
 
       - name: Generate Elastic Beanstalk deployment package
         run: |
-          mkdir -p deploy
+          mkdir -p deploy/monitoring/promtail
           cp docker-compose.deploy.yml deploy/docker-compose.yml
-          cp -r monitoring deploy/monitoring
+          cp monitoring/promtail/promtail-config.deploy.yml deploy/monitoring/promtail/promtail-config.deploy.yml
           sed -i "s|\${BACKEND_IMAGE}|${{ steps.build-image.outputs.image }}|g" deploy/docker-compose.yml
           cd deploy && zip -r deploy.zip .
 
