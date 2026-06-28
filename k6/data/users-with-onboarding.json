@@ -1,0 +1,352 @@
+[
+  {
+    "username": "load_user_001@test.com",
+    "password": "Password123!",
+    "name": "부하유저001",
+    "nickname": "loaduser001",
+    "phone": "01091000001"
+  },
+  {
+    "username": "load_user_002@test.com",
+    "password": "Password123!",
+    "name": "부하유저002",
+    "nickname": "loaduser002",
+    "phone": "01091000002"
+  },
+  {
+    "username": "load_user_003@test.com",
+    "password": "Password123!",
+    "name": "부하유저003",
+    "nickname": "loaduser003",
+    "phone": "01091000003"
+  },
+  {
+    "username": "load_user_004@test.com",
+    "password": "Password123!",
+    "name": "부하유저004",
+    "nickname": "loaduser004",
+    "phone": "01091000004"
+  },
+  {
+    "username": "load_user_005@test.com",
+    "password": "Password123!",
+    "name": "부하유저005",
+    "nickname": "loaduser005",
+    "phone": "01091000005"
+  },
+  {
+    "username": "load_user_006@test.com",
+    "password": "Password123!",
+    "name": "부하유저006",
+    "nickname": "loaduser006",
+    "phone": "01091000006"
+  },
+  {
+    "username": "load_user_007@test.com",
+    "password": "Password123!",
+    "name": "부하유저007",
+    "nickname": "loaduser007",
+    "phone": "01091000007"
+  },
+  {
+    "username": "load_user_008@test.com",
+    "password": "Password123!",
+    "name": "부하유저008",
+    "nickname": "loaduser008",
+    "phone": "01091000008"
+  },
+  {
+    "username": "load_user_009@test.com",
+    "password": "Password123!",
+    "name": "부하유저009",
+    "nickname": "loaduser009",
+    "phone": "01091000009"
+  },
+  {
+    "username": "load_user_010@test.com",
+    "password": "Password123!",
+    "name": "부하유저010",
+    "nickname": "loaduser010",
+    "phone": "01091000010"
+  },
+  {
+    "username": "load_user_011@test.com",
+    "password": "Password123!",
+    "name": "부하유저011",
+    "nickname": "loaduser011",
+    "phone": "01091000011"
+  },
+  {
+    "username": "load_user_012@test.com",
+    "password": "Password123!",
+    "name": "부하유저012",
+    "nickname": "loaduser012",
+    "phone": "01091000012"
+  },
+  {
+    "username": "load_user_013@test.com",
+    "password": "Password123!",
+    "name": "부하유저013",
+    "nickname": "loaduser013",
+    "phone": "01091000013"
+  },
+  {
+    "username": "load_user_014@test.com",
+    "password": "Password123!",
+    "name": "부하유저014",
+    "nickname": "loaduser014",
+    "phone": "01091000014"
+  },
+  {
+    "username": "load_user_015@test.com",
+    "password": "Password123!",
+    "name": "부하유저015",
+    "nickname": "loaduser015",
+    "phone": "01091000015"
+  },
+  {
+    "username": "load_user_016@test.com",
+    "password": "Password123!",
+    "name": "부하유저016",
+    "nickname": "loaduser016",
+    "phone": "01091000016"
+  },
+  {
+    "username": "load_user_017@test.com",
+    "password": "Password123!",
+    "name": "부하유저017",
+    "nickname": "loaduser017",
+    "phone": "01091000017"
+  },
+  {
+    "username": "load_user_018@test.com",
+    "password": "Password123!",
+    "name": "부하유저018",
+    "nickname": "loaduser018",
+    "phone": "01091000018"
+  },
+  {
+    "username": "load_user_019@test.com",
+    "password": "Password123!",
+    "name": "부하유저019",
+    "nickname": "loaduser019",
+    "phone": "01091000019"
+  },
+  {
+    "username": "load_user_020@test.com",
+    "password": "Password123!",
+    "name": "부하유저020",
+    "nickname": "loaduser020",
+    "phone": "01091000020"
+  },
+  {
+    "username": "load_user_021@test.com",
+    "password": "Password123!",
+    "name": "부하유저021",
+    "nickname": "loaduser021",
+    "phone": "01091000021"
+  },
+  {
+    "username": "load_user_022@test.com",
+    "password": "Password123!",
+    "name": "부하유저022",
+    "nickname": "loaduser022",
+    "phone": "01091000022"
+  },
+  {
+    "username": "load_user_023@test.com",
+    "password": "Password123!",
+    "name": "부하유저023",
+    "nickname": "loaduser023",
+    "phone": "01091000023"
+  },
+  {
+    "username": "load_user_024@test.com",
+    "password": "Password123!",
+    "name": "부하유저024",
+    "nickname": "loaduser024",
+    "phone": "01091000024"
+  },
+  {
+    "username": "load_user_025@test.com",
+    "password": "Password123!",
+    "name": "부하유저025",
+    "nickname": "loaduser025",
+    "phone": "01091000025"
+  },
+  {
+    "username": "load_user_026@test.com",
+    "password": "Password123!",
+    "name": "부하유저026",
+    "nickname": "loaduser026",
+    "phone": "01091000026"
+  },
+  {
+    "username": "load_user_027@test.com",
+    "password": "Password123!",
+    "name": "부하유저027",
+    "nickname": "loaduser027",
+    "phone": "01091000027"
+  },
+  {
+    "username": "load_user_028@test.com",
+    "password": "Password123!",
+    "name": "부하유저028",
+    "nickname": "loaduser028",
+    "phone": "01091000028"
+  },
+  {
+    "username": "load_user_029@test.com",
+    "password": "Password123!",
+    "name": "부하유저029",
+    "nickname": "loaduser029",
+    "phone": "01091000029"
+  },
+  {
+    "username": "load_user_030@test.com",
+    "password": "Password123!",
+    "name": "부하유저030",
+    "nickname": "loaduser030",
+    "phone": "01091000030"
+  },
+  {
+    "username": "load_user_031@test.com",
+    "password": "Password123!",
+    "name": "부하유저031",
+    "nickname": "loaduser031",
+    "phone": "01091000031"
+  },
+  {
+    "username": "load_user_032@test.com",
+    "password": "Password123!",
+    "name": "부하유저032",
+    "nickname": "loaduser032",
+    "phone": "01091000032"
+  },
+  {
+    "username": "load_user_033@test.com",
+    "password": "Password123!",
+    "name": "부하유저033",
+    "nickname": "loaduser033",
+    "phone": "01091000033"
+  },
+  {
+    "username": "load_user_034@test.com",
+    "password": "Password123!",
+    "name": "부하유저034",
+    "nickname": "loaduser034",
+    "phone": "01091000034"
+  },
+  {
+    "username": "load_user_035@test.com",
+    "password": "Password123!",
+    "name": "부하유저035",
+    "nickname": "loaduser035",
+    "phone": "01091000035"
+  },
+  {
+    "username": "load_user_036@test.com",
+    "password": "Password123!",
+    "name": "부하유저036",
+    "nickname": "loaduser036",
+    "phone": "01091000036"
+  },
+  {
+    "username": "load_user_037@test.com",
+    "password": "Password123!",
+    "name": "부하유저037",
+    "nickname": "loaduser037",
+    "phone": "01091000037"
+  },
+  {
+    "username": "load_user_038@test.com",
+    "password": "Password123!",
+    "name": "부하유저038",
+    "nickname": "loaduser038",
+    "phone": "01091000038"
+  },
+  {
+    "username": "load_user_039@test.com",
+    "password": "Password123!",
+    "name": "부하유저039",
+    "nickname": "loaduser039",
+    "phone": "01091000039"
+  },
+  {
+    "username": "load_user_040@test.com",
+    "password": "Password123!",
+    "name": "부하유저040",
+    "nickname": "loaduser040",
+    "phone": "01091000040"
+  },
+  {
+    "username": "load_user_041@test.com",
+    "password": "Password123!",
+    "name": "부하유저041",
+    "nickname": "loaduser041",
+    "phone": "01091000041"
+  },
+  {
+    "username": "load_user_042@test.com",
+    "password": "Password123!",
+    "name": "부하유저042",
+    "nickname": "loaduser042",
+    "phone": "01091000042"
+  },
+  {
+    "username": "load_user_043@test.com",
+    "password": "Password123!",
+    "name": "부하유저043",
+    "nickname": "loaduser043",
+    "phone": "01091000043"
+  },
+  {
+    "username": "load_user_044@test.com",
+    "password": "Password123!",
+    "name": "부하유저044",
+    "nickname": "loaduser044",
+    "phone": "01091000044"
+  },
+  {
+    "username": "load_user_045@test.com",
+    "password": "Password123!",
+    "name": "부하유저045",
+    "nickname": "loaduser045",
+    "phone": "01091000045"
+  },
+  {
+    "username": "load_user_046@test.com",
+    "password": "Password123!",
+    "name": "부하유저046",
+    "nickname": "loaduser046",
+    "phone": "01091000046"
+  },
+  {
+    "username": "load_user_047@test.com",
+    "password": "Password123!",
+    "name": "부하유저047",
+    "nickname": "loaduser047",
+    "phone": "01091000047"
+  },
+  {
+    "username": "load_user_048@test.com",
+    "password": "Password123!",
+    "name": "부하유저048",
+    "nickname": "loaduser048",
+    "phone": "01091000048"
+  },
+  {
+    "username": "load_user_049@test.com",
+    "password": "Password123!",
+    "name": "부하유저049",
+    "nickname": "loaduser049",
+    "phone": "01091000049"
+  },
+  {
+    "username": "load_user_050@test.com",
+    "password": "Password123!",
+    "name": "부하유저050",
+    "nickname": "loaduser050",
+    "phone": "01091000050"
+  }
+]

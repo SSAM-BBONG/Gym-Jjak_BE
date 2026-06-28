@@ -46,5 +46,10 @@ public interface WorkoutDiaryPort {
             LocalDate endDate
     );
 
+    LocalDate findDiaryDateByUserIdAndWorkoutDiaryId(
+            Long userId,
+            Long workoutDiaryId
+    );
+
 
 }

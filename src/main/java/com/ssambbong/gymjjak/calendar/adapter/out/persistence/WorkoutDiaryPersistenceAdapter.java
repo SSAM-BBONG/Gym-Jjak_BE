@@ -115,4 +115,15 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
                 endDate
         );
     }
+
+    @Override
+    public LocalDate findDiaryDateByUserIdAndWorkoutDiaryId(
+            Long userId,
+            Long workoutDiaryId
+    ) {
+        return workoutDiaryJpaRepository.findDiaryDateByUserIdAndWorkoutDiaryId(
+                userId,
+                workoutDiaryId
+        ).orElseThrow(() -> new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND));
+    }
 }
