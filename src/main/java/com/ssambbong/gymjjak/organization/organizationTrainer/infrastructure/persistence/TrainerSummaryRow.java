@@ -6,7 +6,7 @@ public interface TrainerSummaryRow {
     Long getOrganizationTrainerId();
     Long getTrainerProfileId();
     String getUsername();
-    String getEmail();
+    String getNickname();
     String getTrainerName();
     LocalDateTime getRegisteredAt();
 }

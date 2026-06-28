@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPortToPtReservation;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayPtResult;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthPtResult;
 import com.ssambbong.gymjjak.pt.ptReservation.application.result.PtCalendarDayResult;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.SpringDataPtReservationRepository;
@@ -14,7 +15,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class CalendarPtReservationDayAdapter implements CalendarPortToPtReservation {
+public class CalendarPtReservationAdapter implements CalendarPortToPtReservation {
 
     private final SpringDataPtReservationRepository springDataPtReservationRepository;
 
@@ -34,6 +35,25 @@ public class CalendarPtReservationDayAdapter implements CalendarPortToPtReservat
                 )
                 .stream()
                 .map(this::toCalendarDayPtResult)
+                .toList();
+    }
+
+    @Override
+    public List<CalendarMonthPtResult> findPtDatesByUserIdAndPeriod(
+            Long userId,
+            LocalDateTime startAt,
+            LocalDateTime endAt
+    ) {
+        return springDataPtReservationRepository.findReservedStartAtsByUserIdAndPeriod(
+                        userId,
+                        startAt,
+                        endAt,
+                        PtReservationStatus.CANCELLED
+                )
+                .stream()
+                .map(LocalDateTime::toLocalDate)
+                .distinct()
+                .map(CalendarMonthPtResult::new)
                 .toList();
     }
 

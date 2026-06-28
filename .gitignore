@@ -233,3 +233,6 @@ loki-data/
 
 # 더미 데이터
 src/main/resources/db/dummy-data.sql
+
+# k6 load test files
+/k6/

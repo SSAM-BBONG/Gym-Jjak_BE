@@ -89,6 +89,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/categories")
+                        .hasAnyAuthority("ADMIN", "TRAINER", "USER")
                         .requestMatchers(HttpMethod.GET, "/api/categories/**")
                         .hasAnyAuthority("ADMIN", "TRAINER")
 
@@ -163,9 +165,12 @@ public class SecurityConfig {
                         .hasAnyAuthority("USER", "TRAINER", "ADMIN")
 
                         // Metric 관련 API
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/actuator/prometheus"
+                        ).permitAll()
                         .requestMatchers("/actuator/**").hasAuthority("ADMIN")
-//                        .requestMatchers("/actuator/**").permitAll()
 
                         // Calendar API
                         .requestMatchers("/api/calendar/**")

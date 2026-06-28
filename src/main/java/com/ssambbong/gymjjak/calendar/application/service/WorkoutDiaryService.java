@@ -10,9 +10,13 @@ import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 @Slf4j
 @Service
@@ -22,14 +26,23 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
     private final WorkoutDiaryPort workoutDiaryPort;
     private final WorkoutDiaryPortToCategory workoutDiaryPortToCategory;
+    private final CacheManager cacheManager;
 
     @Override
-    public void createWorkoutDiary(
+    public Long createWorkoutDiary(
             Long userId,
             CreateWorkoutDiaryCommand command
     ) {
 
         log.debug("event=workoutDiary_create_start userId={}", userId);
+
+        if (userId == null) {
+            throw new CalendarException(CalendarErrorCode.USER_ID_REQUIRED);
+        }
+
+        if (command.diaryDate() == null) {
+            throw new CalendarException(CalendarErrorCode.DIARY_DATE_REQUIRED);
+        }
 
         if (workoutDiaryPort.existsByUserIdAndDiaryDate(userId, command.diaryDate())) {
             throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
@@ -48,12 +61,20 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
         );
 
         try {
-            workoutDiaryPort.saveWorkoutDiary(workoutDiary);
+            Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
+
+            evictCalendarMonthCache(userId, command.diaryDate());
+
+            log.debug(
+                    "event=workoutDiary_create_succeed userId={} workoutDiaryId={}",
+                    userId,
+                    workoutDiaryId
+            );
+
+            return workoutDiaryId;
         } catch (DataIntegrityViolationException ex) {
             throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
         }
-
-        log.debug("event=workoutDiary_create_succeed userId={}", userId);
     }
 
     @Override
@@ -65,6 +86,11 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
         log.debug("event=workoutDiary_update_start userId={}", userId);
 
+        LocalDate diaryDate = workoutDiaryPort.findDiaryDateByUserIdAndWorkoutDiaryId(
+                userId,
+                workoutDiaryId
+        );
+
         Long categoryId = workoutDiaryPortToCategory.findCategoryIdByName(command.categoryName());
 
         workoutDiaryPort.updateWorkoutDiary(
@@ -75,6 +101,8 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 command.content()
         );
 
+        evictCalendarMonthCache(userId, diaryDate);
+
         log.debug("event=workoutDiary_update_succeed userId={}", userId);
     }
 
@@ -83,6 +111,10 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
             Long userId,
             Long workoutDiaryId
     ) {
+        LocalDate diaryDate = workoutDiaryPort.findDiaryDateByUserIdAndWorkoutDiaryId(
+                userId,
+                workoutDiaryId
+        );
 
         log.debug("event=workoutDiary_delete_start userId={}", userId);
 
@@ -98,6 +130,22 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 workoutDiaryId
         );
 
+        evictCalendarMonthCache(userId, diaryDate);
+
         log.debug("event=workoutDiary_delete_succeed userId={}", userId);
+    }
+
+    private void evictCalendarMonthCache(Long userId, LocalDate diaryDate) {
+        String key = "user:%d:year:%d:month:%d".formatted(
+                userId,
+                diaryDate.getYear(),
+                diaryDate.getMonthValue()
+        );
+
+        Cache cache = cacheManager.getCache("calendarMonth");
+
+        if (cache != null) {
+            cache.evict(key);
+        }
     }
 }

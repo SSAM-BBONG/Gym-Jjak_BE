@@ -1,0 +1,15 @@
+global:
+  # Metric 수집 주기입니다.
+  scrape_interval: 15s
+
+  # Alert rule 평가 주기입니다. 현재 alert rule이 없어도 기본값으로 유지합니다.
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Spring Boot Actuator Prometheus endpoint를 수집합니다.
+  - job_name: "gymjjak-backend"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      # Docker Compose 내부 네트워크에서는 service 이름으로 접근합니다.
+      - targets:
+          - "backend:8080"

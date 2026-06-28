@@ -1,9 +1,11 @@
 package com.ssambbong.gymjjak.calendar.application.port.out;
 
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthDiaryResult;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface WorkoutDiaryPort {
@@ -13,7 +15,7 @@ public interface WorkoutDiaryPort {
             LocalDate diaryDate
     );
 
-    void saveWorkoutDiary(WorkoutDiary workoutDiary);
+    Long saveWorkoutDiary(WorkoutDiary workoutDiary);
 
     void updateWorkoutDiary(
             Long userId,
@@ -36,6 +38,17 @@ public interface WorkoutDiaryPort {
     Optional<CalendarDayDiaryResult> findDiaryByUserIdAndDate(
             Long userId,
             LocalDate date
+    );
+
+    List<CalendarMonthDiaryResult> findDiaryTitlesByUserIdAndPeriod(
+            Long userId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
+    LocalDate findDiaryDateByUserIdAndWorkoutDiaryId(
+            Long userId,
+            Long workoutDiaryId
     );
 
 

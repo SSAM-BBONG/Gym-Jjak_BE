@@ -33,7 +33,7 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
             SELECT ot.organization_trainer_id,
                    ot.trainer_profile_id,
                    u.username,
-                   u.email,
+                   u.nickname,
                    tp.trainer_name,
                    ot.registered_at
             FROM organization_trainers ot

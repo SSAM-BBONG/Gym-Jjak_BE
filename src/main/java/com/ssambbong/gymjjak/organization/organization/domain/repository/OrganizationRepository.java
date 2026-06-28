@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organization.domain.repository;
 
+import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
@@ -14,6 +15,8 @@ public interface OrganizationRepository {
     Optional<Organization> findById(Long organizationId);
 
     Optional<Organization> findByOrganizationAccountId(Long organizationAccountId);
+
+    Optional<MyOrganizationResult> findMyOrganizationByAccountId(Long organizationAccountId);
 
     OrganizationListResult findAllForAdmin(OrganizationListQuery query);
 

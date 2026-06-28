@@ -4,6 +4,7 @@ auth_enabled: false
 # Loki 서버의 네트워크 포트 설정 섹션
 server:
   # HTTP 클라이언트(Grafana, curl 등)가 접근할 포트 번호. 기본값은 3100
+  # Grafana와 Promtail이 접근하는 Loki HTTP API 포트입니다.
   http_listen_port: 3100
   # gRPC 클라이언트(Promtail, 다른 Loki 인스턴스 등)가 사용할 포트 번호. 기본값은 9095
   grpc_listen_port: 9095
@@ -50,20 +51,22 @@ common:
   # [교수자용 - Stage 3 Loki 로컬 exe 실행]
   # Windows exe를 직접 실행하므로 프로젝트 내부 경로를 사용한다.
   # Loki 실행 위치가 달라져도 데이터 저장 위치가 명확하도록 절대 경로를 지정한다.
-  path_prefix: ./loki-data
+  # Docker volume이 /loki에 mount되므로 Loki 데이터 기준 경로를 /loki로 둔다.
+  path_prefix: /loki-data
 
-  # 임시 데이터 저장소 위치 설정 섹션
+  # Loki 로그 chunk와 rule 저장소 설정입니다.
   storage:
     # 파일시스템 기반 저장소 사용
+    # local/dev에서는 S3가 아니라 컨테이너 volume 기반 filesystem을 사용합니다.
     filesystem:
       # Loki가 로그 청크(chunks)를 저장할 디렉토리
       # 청크란 일정 시간 동안 수집된 로그 데이터를 압축하여 저장한 단위
       # path_prefix를 기준으로 상대/절대 경로 가능. 현재는 loki-data/chunks 경로에 저장
-      chunks_directory: ./loki-data/chunks
+      chunks_directory: /loki-data/chunks
       # Loki 경고(Alert) 규칙을 저장할 디렉토리
       # Grafana에서 정의한 알림 규칙이 이 디렉토리에 YAML 형식으로 저장됨
       # 현재는 loki-data/rules 경로에 저장
-      rules_directory: ./loki-data/rules
+      rules_directory: /loki-data/rules
 
   # 데이터 복제 계수. 즉, 똑같은 데이터를 몇 군데 저장할지 설정
   # 값이 1이면 복제 없이 단일 인스턴스에만 저장 (단일 인스턴스 환경에서 필수값)
@@ -79,6 +82,7 @@ common:
 
 
 # 실제 로그 데이터와 인덱스를 저장하는 저장소 설정 섹션
+# Loki TSDB index 저장소 설정
 
 # 로키는 기본적으로 여러 서버를 운영하는 멀티테넌시(Multi-tenancy) 환경을 지원
 # 이를 통해 각 서버에서 독립적으로 로그를 수집, 저장, 쿼리를 실행할 수 있음
@@ -88,15 +92,18 @@ storage_config:
   # 로그를 시계열 데이터로 저장하고, 쿼리 성능 최적화
   tsdb_shipper:
 
+    # 활성 index 파일 저장 경로입니다.
     # 임시 관리 인덱스 디렉토리
-    active_index_directory: ./loki-data/index
+    active_index_directory: /loki-data/index
 
+    # index cache 저장 경로입니다.
     # 인덱스 데이터를 캐싱하기 위한 디렉토리 설정
     # 단일 로컬 실습에서도 반복 조회 시 인덱스 접근 비용을 줄이는 데 사용된다.
-    cache_location: ./loki-data/index-cache
+    cache_location: /loki-data/index-cache
 
 
 # 로그 데이터를 어떤 방식과 형식으로 저장할지 정의하는 섹션
+# Loki 로그 저장 schema 설정입니다.
 schema_config:
   # 여러 스키마 설정을 리스트로 관리. 시간에 따라 다른 스키마 적용 가능
   # 스키마란? 로그 데이터를 저장하는 구조와 형식을 정의
@@ -138,3 +145,14 @@ limits_config:
   # 168h = 7일. 즉, 현재 시간으로부터 7일 이상 된 로그는 거부
   # 이 설정으로 미래 또는 매우 오래된 로그 유입을 방지하여 저장 공간 효율화
   reject_old_samples_max_age: 168h
+  # 저장된 로그를 7일 동안 보관합니다.
+  retention_period: 168h
+
+# retention 삭제를 수행하는 compactor 설정입니다.
+compactor:
+  # compactor 작업 디렉터리입니다.
+  working_directory: /loki-data/compactor
+  # retention 기간이 지난 데이터 삭제를 활성화합니다.
+  retention_enabled: true
+  # 삭제 요청 메타데이터를 filesystem에 저장합니다.
+  delete_request_store: filesystem

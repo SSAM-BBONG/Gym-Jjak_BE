@@ -43,7 +43,7 @@ public class UserMailAdapterFromOrganization implements UserCreationPort {
                 LocalDateTime.now()
         );
 
-        validateDuplicate(loginId, businessName, representativePhone);
+        validateDuplicate(loginId, businessName);
 
         UserJpaEntity savedUser = springDataUserRepository.save(UserJpaEntity.from(user));
 
@@ -59,8 +59,7 @@ public class UserMailAdapterFromOrganization implements UserCreationPort {
 
     private void validateDuplicate(
             String loginId,
-            String businessName,
-            String representativePhone
+            String businessName
     ) {
         if (springDataUserRepository.existsByUsername(loginId)) {
             throw new UserException(UserErrorCode.DUPLICATE_USERNAME);
@@ -70,9 +69,6 @@ public class UserMailAdapterFromOrganization implements UserCreationPort {
             throw new UserException(UserErrorCode.DUPLICATE_NICKNAME);
         }
 
-        if (springDataUserRepository.existsByPhone(representativePhone)) {
-            throw new UserException(UserErrorCode.DUPLICATE_PHONE);
-        }
     }
 
     private String generateTemporaryPassword() {

@@ -19,6 +19,18 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Spring Boot jar
+        run: ./gradlew clean bootJar -x test
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

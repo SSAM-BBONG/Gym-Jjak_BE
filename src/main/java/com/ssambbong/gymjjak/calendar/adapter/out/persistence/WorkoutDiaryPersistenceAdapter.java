@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.calendar.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthDiaryResult;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -41,7 +43,7 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
     }
 
     @Override
-    public void saveWorkoutDiary(WorkoutDiary workoutDiary) {
+    public Long saveWorkoutDiary(WorkoutDiary workoutDiary) {
         WorkoutDiaryJpaEntity entity = new WorkoutDiaryJpaEntity(
                 workoutDiary.getUserId(),
                 workoutDiary.getCategoryId(),
@@ -50,8 +52,9 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
                 workoutDiary.getDiaryDate()
         );
 
-        workoutDiaryJpaRepository.save(entity);
+        WorkoutDiaryJpaEntity savedEntity = workoutDiaryJpaRepository.save(entity);
 
+        return savedEntity.getId();
     }
 
     @Override
@@ -98,5 +101,29 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
                 userId,
                 date
         );
+    }
+
+    @Override
+    public List<CalendarMonthDiaryResult> findDiaryTitlesByUserIdAndPeriod(
+            Long userId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        return workoutDiaryJpaRepository.findDiaryTitlesByUserIdAndPeriod(
+                userId,
+                startDate,
+                endDate
+        );
+    }
+
+    @Override
+    public LocalDate findDiaryDateByUserIdAndWorkoutDiaryId(
+            Long userId,
+            Long workoutDiaryId
+    ) {
+        return workoutDiaryJpaRepository.findDiaryDateByUserIdAndWorkoutDiaryId(
+                userId,
+                workoutDiaryId
+        ).orElseThrow(() -> new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND));
     }
 }

@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.pt.ptReservation.application.result.PtCalendarDayResult;
-import com.ssambbong.gymjjak.pt.ptReservation.application.result.PtReservationCalendarResult;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -68,27 +67,6 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     Double findAverageProgressCount();
 
     @Query("""
-    select new com.ssambbong.gymjjak.pt.ptReservation.application.result.PtReservationCalendarResult(
-        r.reservedStartAt,
-        c.title
-    )
-    from PtReservationJpaEntity r
-    join PtCourseJpaEntity c on c.id = r.ptCourseId
-    where r.userId = :userId
-      and r.reservedStartAt >= :startAt
-      and r.reservedStartAt < :endAt
-      and r.status <> :cancelledStatus
-      and r.cancelledAt is null
-    order by r.reservedStartAt asc
-""")
-    List<PtReservationCalendarResult> findCalendarByUserIdAndMonth(
-            @Param("userId") Long userId,
-            @Param("startAt") LocalDateTime startAt,
-            @Param("endAt") LocalDateTime endAt,
-            @Param("cancelledStatus") PtReservationStatus cancelledStatus
-    );
-
-    @Query("""
     select new com.ssambbong.gymjjak.pt.ptReservation.application.result.PtCalendarDayResult(
         r.ptCourseId,
         c.title,
@@ -104,6 +82,23 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     order by r.reservedStartAt asc
 """)
     List<PtCalendarDayResult> findCalendarDayPtsByUserIdAndDate(
+            @Param("userId") Long userId,
+            @Param("startAt") LocalDateTime startAt,
+            @Param("endAt") LocalDateTime endAt,
+            @Param("cancelledStatus") PtReservationStatus cancelledStatus
+    );
+
+    @Query("""
+    select r.reservedStartAt
+    from PtReservationJpaEntity r
+    where r.userId = :userId
+      and r.reservedStartAt >= :startAt
+      and r.reservedStartAt < :endAt
+      and r.status <> :cancelledStatus
+      and r.cancelledAt is null
+    order by r.reservedStartAt asc
+""")
+    List<LocalDateTime> findReservedStartAtsByUserIdAndPeriod(
             @Param("userId") Long userId,
             @Param("startAt") LocalDateTime startAt,
             @Param("endAt") LocalDateTime endAt,

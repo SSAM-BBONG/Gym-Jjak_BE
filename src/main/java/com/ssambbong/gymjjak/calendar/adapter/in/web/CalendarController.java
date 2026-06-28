@@ -3,11 +3,14 @@ package com.ssambbong.gymjjak.calendar.adapter.in.web;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.request.CreateWorkoutDiaryRequest;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.request.UpdateWorkoutDiaryRequest;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarDayResponse;
+import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarMonthResponse;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarResponseCode;
+import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CreateWorkoutDiaryResponse;
 import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.CalendarUsecase;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayResult;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthResult;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,11 +34,11 @@ public class CalendarController {
 
     @PostMapping("/diaries")
     @Operation(summary = "운동 일지 작성", description = "운동 일지를 캘린더에 작성한다.")
-    public ResponseEntity<GlobalApiResponse<Void>> createWorkoutDiary(
+    public ResponseEntity<GlobalApiResponse<CreateWorkoutDiaryResponse>> createWorkoutDiary(
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody CreateWorkoutDiaryRequest request
     ) {
-        workoutDiaryUsecase.createWorkoutDiary(
+        Long workoutDiaryId = workoutDiaryUsecase.createWorkoutDiary(
                 authUser.userId(),
                 new CreateWorkoutDiaryCommand(
                         request.diaryDate(),
@@ -47,7 +50,8 @@ public class CalendarController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(GlobalApiResponse.created(
-                        CalendarResponseCode.DIARY_CREATED
+                        CalendarResponseCode.DIARY_CREATED,
+                        CreateWorkoutDiaryResponse.from(workoutDiaryId)
                 ));
     }
 
@@ -103,6 +107,27 @@ public class CalendarController {
                 GlobalApiResponse.ok(
                         CalendarResponseCode.CALENDAR_DAY_FETCHED,
                         CalendarDayResponse.from(result)
+                )
+        );
+    }
+
+    @GetMapping("/month")
+    @Operation(summary = "캘린더 월별 조회", description = "캘린더를 월별로 조회한다.")
+    public ResponseEntity<GlobalApiResponse<CalendarMonthResponse>> findCalendarMonth(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam Integer year,
+            @RequestParam Integer month
+    ) {
+        CalendarMonthResult result = calendarUsecase.findCalendarMonth(
+                authUser.userId(),
+                year,
+                month
+        );
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        CalendarResponseCode.CALENDAR_FETCHED,
+                        CalendarMonthResponse.from(result)
                 )
         );
     }

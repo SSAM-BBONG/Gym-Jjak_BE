@@ -18,6 +18,7 @@ public record FindMyOrganizationResponse(
         BigDecimal latitude,
         BigDecimal longitude,
         String businessLicenseFileUrl,
+        String businessLicenseOriginalName,
 
         // 추가 정보 (수정 가능)
         String facilityPhone,
