@@ -5,9 +5,11 @@ import com.ssambbong.gymjjak.organization.organization.domain.model.Organization
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,4 +52,14 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
 
     @Query("SELECT o FROM OrganizationJpaEntity o JOIN FETCH o.application WHERE o.organizationAccountId = :accountId")
     Optional<OrganizationJpaEntity> findByOrganizationAccountIdWithApplication(@Param("accountId") Long accountId);
+
+    @Query(value = "SELECT organization_id FROM organizations WHERE deleted_at IS NOT NULL AND deleted_at < :threshold LIMIT :batchSize", nativeQuery = true)
+    List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
+
+    @Query(value = "SELECT application_id FROM organizations WHERE organization_id IN :ids", nativeQuery = true)
+    List<Long> findApplicationIdsByOrganizationIds(@Param("ids") List<Long> ids);
+
+    @Modifying
+    @Query(value = "DELETE FROM organizations WHERE organization_id IN :ids", nativeQuery = true)
+    int hardDeleteByIds(@Param("ids") List<Long> ids);
 }

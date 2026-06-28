@@ -6,6 +6,8 @@ import com.ssambbong.gymjjak.organization.organization.application.query.Organiz
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface OrganizationRepository {
@@ -25,4 +27,10 @@ public interface OrganizationRepository {
     long countByStatus(OrganizationStatus status);
 
     Optional<String> findRequestedLoginIdById(Long organizationId);
+
+    List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
+
+    List<Long> findApplicationIdsByOrganizationIds(List<Long> organizationIds);
+
+    int hardDeleteByIds(List<Long> ids);
 }
