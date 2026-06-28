@@ -56,6 +56,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 result.socialSignupCompleted()
         );
 
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", result.accessToken())
+                .httpOnly(true)
+                .secure(false) // 로컬 개발 환경
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ofMinutes(15))
+                .build();
+
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", result.refreshToken())
                 .httpOnly(true)
                 .secure(false) // 로컬 개발 환경
@@ -64,11 +72,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .maxAge(Duration.ofDays(15))
                 .build();
 
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(successRedirectUrl)
-                .queryParam("accessToken", result.accessToken())
                 .queryParam("onboardingCompleted", result.onboardingCompleted())
                 .queryParam("socialSignupCompleted", result.socialSignupCompleted())
                 .build()
