@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: gymjjak-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - gymjjak-loki-data:/loki-data
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: gymjjak-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9091}:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.deploy.yml:/etc/prometheus/prometheus.yml:ro
+      - gymjjak-prometheus-data:/prometheus
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: gymjjak-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_TIMEZONE: Asia/Seoul
+    volumes:
+      - gymjjak-grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - loki
+      - prometheus
+
+volumes:
+  gymjjak-loki-data:
+  gymjjak-prometheus-data:
+  gymjjak-grafana-data:
