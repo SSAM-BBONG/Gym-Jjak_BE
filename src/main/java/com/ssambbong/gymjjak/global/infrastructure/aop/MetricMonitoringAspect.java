@@ -38,6 +38,7 @@ public class MetricMonitoringAspect {
                     .tag("action", normalize(monitored.action()))
                     .tag("outcome", outcome)
                     .tag("exception", exceptionName)
+                    .publishPercentiles(0.5, 0.90, 0.95, 0.99)
                     .register(meterRegistry));
         }
     }
