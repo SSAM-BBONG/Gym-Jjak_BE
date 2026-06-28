@@ -33,7 +33,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DEV_MYSQL_URL: ${DEV_MYSQL_URL}
-      DEV_MYSQL_USERNAME: ${DEV_MYSQL_USERNAME}
+      DEV_MYSQL_USERNAME: ${DEV_MYSQL_USER}
       DEV_MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
 
       MAIL_USERNAME: ${MAIL_USERNAME}
@@ -75,7 +75,7 @@ services:
       CLOVA_OCR_INVOKE_URL: ${CLOVA_OCR_INVOKE_URL}
       CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
     ports:
-      - "${DEV_BACKEND_PORT}:8080"
+      - "8081:8080"
 # Docker 영구 저장소 설정
 volumes:
   gymjjak-mysql-data:
