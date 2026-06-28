@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organization.application.service;
 
+import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
@@ -26,8 +27,8 @@ public class OrganizationQueryService implements OrganizationQueryUseCase {
     private final OrganizationTrainerRepository organizationTrainerRepository;
 
     @Override
-    public Organization findMyOrganization(Long organizationAccountId) {
-        return organizationRepository.findByOrganizationAccountId(organizationAccountId)
+    public MyOrganizationResult findMyOrganization(Long organizationAccountId) {
+        return organizationRepository.findMyOrganizationByAccountId(organizationAccountId)
                 .orElseThrow(OrganizationNotFoundException::new);
     }
 
