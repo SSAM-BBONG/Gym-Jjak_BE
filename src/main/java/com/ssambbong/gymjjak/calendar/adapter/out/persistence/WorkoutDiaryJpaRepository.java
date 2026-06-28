@@ -57,4 +57,15 @@ public interface WorkoutDiaryJpaRepository extends JpaRepository<WorkoutDiaryJpa
             @Param("endDate") LocalDate endDate
     );
 
+    @Query("""
+    select wd.diaryDate
+    from WorkoutDiaryJpaEntity wd
+    where wd.id = :workoutDiaryId
+      and wd.userId = :userId
+""")
+    Optional<LocalDate> findDiaryDateByUserIdAndWorkoutDiaryId(
+            @Param("userId") Long userId,
+            @Param("workoutDiaryId") Long workoutDiaryId
+    );
+
 }

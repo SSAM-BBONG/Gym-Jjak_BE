@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +63,10 @@ public class CalendarService implements CalendarUsecase {
         );
     }
 
+    @Cacheable(
+            cacheNames = "calendarMonth",
+            key = "'user:' + #userId + ':year:' + #year + ':month:' + #month"
+    )
     @Override
     public CalendarMonthResult findCalendarMonth(
             Long userId,
