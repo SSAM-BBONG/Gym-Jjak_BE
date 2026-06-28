@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.organization;
 
 import com.ssambbong.gymjjak.global.application.scheduler.RetentionJobResult;
+import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
+import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
 import com.ssambbong.gymjjak.organization.scheduler.application.retention.OrganizationRetentionProperties;
 import com.ssambbong.gymjjak.organization.scheduler.application.retention.OrganizationRetentionService;
@@ -15,27 +17,32 @@ import static org.mockito.Mockito.*;
 
 public class OrganizationRetentionServiceTest {
 
-    private final OrganizationTrainerRepository organizationTrainerRepository = mock(OrganizationTrainerRepository.class);
-
     private final OrganizationRetentionProperties properties =
             new OrganizationRetentionProperties(90, 500);
 
+    private final OrganizationTrainerRepository trainerRepository =
+            mock(OrganizationTrainerRepository.class);
+
+    private final OrganizationApplicationRepository applicationRepository =
+            mock(OrganizationApplicationRepository.class);
+
+    private final OrganizationRepository organizationRepository =
+            mock(OrganizationRepository.class);
+
     private final OrganizationRetentionService service =
-            new OrganizationRetentionService(properties, organizationTrainerRepository);
+            new OrganizationRetentionService(properties, trainerRepository, applicationRepository, organizationRepository);
 
     @Test
     @DisplayName("보관 기간이 지난 소속 트레이너를 hard delete 한다")
-    void hardDeleteExpired_success() {
+    void hardDeleteExpired_trainer_success() {
         // given
         LocalDateTime now = LocalDateTime.of(2026, 6, 28, 3, 0);
-        LocalDateTime expectedThreshold = now.minusDays(90);
+        LocalDateTime threshold = now.minusDays(90);
 
-        List<Long> candidateIds = List.of(1L, 2L);
-
-        when(organizationTrainerRepository.findHardDeleteCandidateIds(expectedThreshold, 500))
-                .thenReturn(candidateIds);
-        when(organizationTrainerRepository.hardDeleteByIds(candidateIds))
-                .thenReturn(2);
+        when(trainerRepository.findHardDeleteCandidateIds(threshold, 500)).thenReturn(List.of(1L, 2L));
+        when(trainerRepository.hardDeleteByIds(List.of(1L, 2L))).thenReturn(2);
+        when(applicationRepository.findHardDeleteCandidateIds(threshold, 500)).thenReturn(List.of());
+        when(organizationRepository.findHardDeleteCandidateIds(threshold, 500)).thenReturn(List.of());
 
         // when
         RetentionJobResult result = service.hardDeleteExpired(now);
@@ -45,18 +52,21 @@ public class OrganizationRetentionServiceTest {
         assertThat(result.candidateCount()).isEqualTo(2);
         assertThat(result.deletedParentCount()).isEqualTo(2);
 
-        verify(organizationTrainerRepository).hardDeleteByIds(candidateIds);
+        verify(trainerRepository).hardDeleteByIds(List.of(1L, 2L));
+        verify(applicationRepository, never()).hardDeleteByIds(anyList());
+        verify(organizationRepository, never()).hardDeleteByIds(anyList());
     }
 
     @Test
-    @DisplayName("보관 기간이 지나지 않은 소속 트레이너는 삭제하지 않는다")
+    @DisplayName("보관 기간이 지나지 않은 데이터는 삭제하지 않는다")
     void hardDeleteExpired_empty() {
         // given
         LocalDateTime now = LocalDateTime.of(2026, 6, 28, 3, 0);
-        LocalDateTime expectedThreshold = now.minusDays(90);
+        LocalDateTime threshold = now.minusDays(90);
 
-        when(organizationTrainerRepository.findHardDeleteCandidateIds(expectedThreshold, 500))
-                .thenReturn(List.of());
+        when(trainerRepository.findHardDeleteCandidateIds(threshold, 500)).thenReturn(List.of());
+        when(applicationRepository.findHardDeleteCandidateIds(threshold, 500)).thenReturn(List.of());
+        when(organizationRepository.findHardDeleteCandidateIds(threshold, 500)).thenReturn(List.of());
 
         // when
         RetentionJobResult result = service.hardDeleteExpired(now);
@@ -66,6 +76,8 @@ public class OrganizationRetentionServiceTest {
         assertThat(result.candidateCount()).isZero();
         assertThat(result.deletedParentCount()).isZero();
 
-        verify(organizationTrainerRepository, never()).hardDeleteByIds(anyList());
+        verify(trainerRepository, never()).hardDeleteByIds(anyList());
+        verify(applicationRepository, never()).hardDeleteByIds(anyList());
+        verify(organizationRepository, never()).hardDeleteByIds(anyList());
     }
 }
