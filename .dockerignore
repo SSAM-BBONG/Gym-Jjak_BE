@@ -11,3 +11,9 @@ application-prod.yml
 application-local.yml
 
 README.md
+
+# Monitoring runtime data
+monitoring/loki/data/
+monitoring/promtail/promtail-positions.yml
+monitoring/prometheus/data/
+data/

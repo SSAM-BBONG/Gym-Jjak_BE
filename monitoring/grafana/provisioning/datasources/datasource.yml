@@ -1,3 +1,7 @@
+# Grafana datasource provisioning 설정
+# 역할: Docker/배포 환경에서 Grafana 실행 시 Prometheus, Loki datasource를 자동 등록한다.
+# 로컬 Windows Grafana 실행 시에는 UI에서 직접 datasource를 등록한다.
+
 # Grafana provisioning 설정 버전
 apiVersion: 1
 

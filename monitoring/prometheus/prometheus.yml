@@ -10,6 +10,5 @@ scrape_configs:
   - job_name: "gymjjak-backend"
     metrics_path: "/actuator/prometheus"
     static_configs:
-      # Docker Compose 내부 네트워크에서는 service 이름으로 접근합니다.
       - targets:
-          - "backend:8080"
+          - "localhost:8080"
