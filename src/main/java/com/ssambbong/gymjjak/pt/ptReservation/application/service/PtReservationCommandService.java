@@ -36,7 +36,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 command.userId(), command.ptCourseId(),
                 command.reservedStartAt(), command.reservedEndAt());
 
-        PtCourse ptCourse = ptCourseRepository.findById(command.ptCourseId())
+        PtCourse ptCourse = ptCourseRepository.findByIdForUpdate(command.ptCourseId())
                 .orElseThrow(() -> {
                     log.warn("event=pt_reservation_create_failed reason=pt_course_not_found, ptCourseId={}",
                             command.ptCourseId());
