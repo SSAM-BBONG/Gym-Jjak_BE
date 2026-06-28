@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.organization.organization.presentation.api.mapper;
 
 import com.ssambbong.gymjjak.global.infrastructure.config.MapStructConfig;
 import com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView;
+import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
@@ -27,8 +28,7 @@ public interface OrganizationMapper {
     @Mapping(source = "items", target = "organizations")
     FindOrganizationsListResponse toListResponse(OrganizationListResult result);
 
-    @Mapping(target = "requestedLoginId", ignore = true)
-    FindMyOrganizationResponse toMyOrganizationResponse(Organization organization, String businessLicenseFileUrl);
+    FindMyOrganizationResponse toMyOrganizationResponse(MyOrganizationResult result, String businessLicenseFileUrl, String businessLicenseOriginalName);
 
     FindOrganizationDetailResponse toDetailResponse(OrganizationDetailResult result);
 

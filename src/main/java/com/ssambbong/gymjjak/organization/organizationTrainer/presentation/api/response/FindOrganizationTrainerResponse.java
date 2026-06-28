@@ -6,6 +6,7 @@ public record FindOrganizationTrainerResponse(
         Long organizationTrainerId,
         Long trainerProfileId,
         String username,
+        String nickname,
         String trainerName,
         LocalDateTime registeredAt
 ) {}

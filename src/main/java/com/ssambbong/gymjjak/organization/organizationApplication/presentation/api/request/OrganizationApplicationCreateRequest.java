@@ -17,6 +17,7 @@ public record OrganizationApplicationCreateRequest(
         UploadedFileMetadataRequest businessLicenseFile,
 
         @NotBlank(message = "요청 로그인 ID는 필수입니다.")
+        @Pattern(regexp = "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$", message = "로그인 ID는 이메일 형식이어야 합니다.")
         String requestedLoginId,
 
         @NotBlank(message = "사업자등록번호는 필수입니다.")
