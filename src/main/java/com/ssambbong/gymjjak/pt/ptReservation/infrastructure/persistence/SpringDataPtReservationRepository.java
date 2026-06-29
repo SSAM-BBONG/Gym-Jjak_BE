@@ -105,4 +105,17 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("cancelledStatus") PtReservationStatus cancelledStatus
     );
 
+    // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
+    @Query("""
+        SELECT r.userId, r.id
+        FROM PtReservationJpaEntity r
+        WHERE r.reservedStartAt >= :from
+          AND r.reservedStartAt < :to
+          AND r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED
+        """)
+    List<Object[]> findReservationsStartingBetween(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
 }
