@@ -14,6 +14,8 @@ import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerProfile;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.repository.TrainerAwardRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.repository.TrainerCertificationRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.repository.TrainerProfileRepository;
+import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.metrics.TrainerProfileMetric;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,8 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
     private final TrainerAwardRepository trainerAwardRepository;
     private final FileUrlUseCase fileUrlUseCase;
     private final TrainerProfileSearchQueryPort trainerProfileSearchQueryPort;
+
+    private final TrainerProfileMetric trainerProfileMetric;
 
     @Override
     public MyTrainerProfileResult getMyTrainerProfile(Long requesterId) {
@@ -164,28 +168,50 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
 
     @Override
     public SearchTrainerListResult searchTrainers(SearchTrainerCondition condition) {
+
+        boolean keywordPresent = condition.keyword() != null
+                && !condition.keyword().isBlank();
+
         log.info(
                 "event=trainer_profile_search_started, " +
                         "keywordPresent={}, page={}, size={}",
-                condition.keyword() != null,
+                keywordPresent,
                 condition.page(),
                 condition.size()
         );
 
-        // 검색 목록 조회
-        SearchTrainerListResult result =
-                trainerProfileSearchQueryPort.searchTrainers(condition);
+        Timer.Sample searchTimer =
+                trainerProfileMetric.startTimer();
 
-        log.info(
-                "event=trainer_profile_search_succeeded, " +
-                        "page={}, size={}, totalElements={}, returnedCount={}",
-                result.page(),
-                result.size(),
-                result.totalElements(),
-                result.content().size()
-        );
+        String outcome = trainerProfileMetric.success();
 
-        return result;
+        try {
+            // 검색 목록 조회
+            SearchTrainerListResult result =
+                    trainerProfileSearchQueryPort.searchTrainers(condition);
+
+            log.info(
+                    "event=trainer_profile_search_succeeded, " +
+                            "page={}, size={}, totalElements={}, returnedCount={}",
+                    result.page(),
+                    result.size(),
+                    result.totalElements(),
+                    result.content().size()
+            );
+
+            return result;
+        } catch (RuntimeException exception) {
+            outcome = trainerProfileMetric.failure();
+            throw exception;
+        } finally {
+            trainerProfileMetric.recordQueryDuration(
+                    searchTimer,
+                    "search",
+                    keywordPresent,
+                    outcome
+            );
+        }
+
     }
 
     private String resolvePublicProfileImageUrl(Long profileFileId) {
