@@ -19,8 +19,11 @@ import com.ssambbong.gymjjak.organization.organizationApplication.exception.Orga
 import com.ssambbong.gymjjak.organization.organization.application.port.OrganizationMetricsPort;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.event.OrgApplicationApprovedEvent;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.event.OrgApplicationRejectedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -40,6 +43,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     private final UserLoginIdValidationPort userLoginIdValidationPort;
     private final OrgApplicationMetricsPort orgApplicationMetricsPort;
     private final OrganizationMetricsPort organizationMetricsPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -128,6 +132,10 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
 
         Organization organization = Organization.create(organizationAccountId, approved);
         organizationRepository.save(organization);
+        eventPublisher.publishEvent(new OrgApplicationApprovedEvent(
+                approved.getApplicantUserId(),
+                approved.getOrganizationApplicationId()
+        ));
         recordMetricSafely(organizationMetricsPort::recordOrganizationCreated, "recordOrganizationCreated");
         recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationApproved, "recordOrgApplicationApproved");
     }
@@ -143,6 +151,10 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication rejected = organizationApplication.reject(reviewedBy, rejectReason);
 
         organizationApplicationRepository.reject(rejected);
+        eventPublisher.publishEvent(new OrgApplicationRejectedEvent(
+                rejected.getApplicantUserId(),
+                rejected.getOrganizationApplicationId()
+        ));
         recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationRejected, "recordOrgApplicationRejected");
     }
 
