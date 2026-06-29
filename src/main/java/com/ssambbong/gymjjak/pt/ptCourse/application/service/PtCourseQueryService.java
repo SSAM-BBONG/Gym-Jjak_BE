@@ -1,6 +1,9 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
@@ -47,6 +50,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
     private final TagQueryUseCase tagQueryUseCase;
     private final ReviewQueryPort reviewQueryPort;
+    private final FileUrlUseCase fileUrlUseCase;
 
     @Override
     @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_all")
@@ -72,7 +76,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                     return new PtCourseListView(
                             c.getId(),
                             c.getTitle(),
-                            c.getThumbnailFileId(),
+                            resolveThumbnailUrl(c.getThumbnailFileId()),
                             c.getPrice(),
                             c.getTagId(),
                             tagMap.getOrDefault(c.getTagId(), null),
@@ -143,7 +147,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<MyPtCourseListView> result = courses.stream()
                 .map(course -> new MyPtCourseListView(
                         course.getId(),
-                        course.getThumbnailFileId(),
+                        resolveThumbnailUrl(course.getThumbnailFileId()),
                         course.getTitle(),
                         trainerName,
                         course.getStatus(),
@@ -302,7 +306,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             ptCourse.getId(),
                             ptCourse.getTitle(),
                             ptCourse.getPrice(),
-                            ptCourse.getThumbnailFileId(),
+                            resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
                             ptCourse.getCategoryId(),
                             categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                             ptCourse.getTagId(),
@@ -335,6 +339,21 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ));
     }
 
+    // PT_THUMBNAIL은 public 파일 → requesterId 없이 URL 반환, 없으면 null
+    private String resolveThumbnailUrl(Long fileId) {
+        if (fileId == null) return null;
+        try {
+            FileUrlResult file = fileUrlUseCase.getUrl(fileId, null, false);
+            return file.url();
+        } catch (FileNotFoundException e) {
+            log.warn("event=pt_course_thumbnail_not_found fileId={}", fileId);
+            return null;
+        } catch (RuntimeException e) {
+            log.error("event=pt_course_thumbnail_url_resolve_failed fileId={}", fileId, e);
+            return null;
+        }
+    }
+
     // ptCourse + enrich(조직/트레이너) -> 목록 응답용 View 변환
     private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap, Map<Long, String> tagMap) {
         OrganizationQueryPort.OrganizationInfo org =
@@ -345,7 +364,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         return new PtCourseListView(
                 ptCourse.getId(),
                 ptCourse.getTitle(),
-                ptCourse.getThumbnailFileId(),
+                resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
                 ptCourse.getPrice(),
                 ptCourse.getTagId(),
                 tagMap.getOrDefault(ptCourse.getTagId(), null),
@@ -380,7 +399,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         return new PtCourseDetailView(
                 ptCourse.getId(),
-                ptCourse.getThumbnailFileId(),
+                resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
                 ptCourse.getTitle(),
                 ptCourse.getDescription(),
                 ptCourse.getPrice(),

@@ -15,7 +15,7 @@ public record FeedbackDetailResponse(
 ) {
     public static FeedbackDetailResponse from(FeedbackQueryUseCase.FeedbackDetailView view) {
         List<MediaSummary> mediaList = view.mediaList().stream()
-                .map(m -> new MediaSummary(m.feedbackMediaId(), m.mediaType(), m.fileId()))
+                .map(m -> new MediaSummary(m.feedbackMediaId(), m.mediaType(), m.fileUrl()))
                 .toList();
         return new FeedbackDetailResponse(
                 view.sessionNo(),
@@ -26,5 +26,5 @@ public record FeedbackDetailResponse(
         );
     }
 
-    public record MediaSummary(Long feedbackMediaId, FeedbackMediaType mediaType, Long fileId) {}
+    public record MediaSummary(Long feedbackMediaId, FeedbackMediaType mediaType, String fileUrl) {}
 }

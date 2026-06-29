@@ -12,8 +12,8 @@ public record PtCourseViewResponse(
         @Schema(description = "제목", example = "크로스핏 초급 클래스")
         String title,
 
-        @Schema(description = "썸네일 파일 ID", example = "1")
-        Long thumbnailFileId,
+        @Schema(description = "썸네일 이미지 URL")
+        String thumbnailUrl,
 
         @Schema(description = "가격", example = "45000")
         int price,
@@ -56,7 +56,7 @@ public record PtCourseViewResponse(
         return new PtCourseViewResponse(
                 view.ptCourseId(),
                 view.title(),
-                view.thumbnailFileId(),
+                view.thumbnailUrl(),
                 view.price(),
                 view.tagId(),
                 view.tagName(),

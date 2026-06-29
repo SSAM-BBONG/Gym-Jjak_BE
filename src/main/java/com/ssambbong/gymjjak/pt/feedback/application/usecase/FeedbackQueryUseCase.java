@@ -39,6 +39,6 @@ public interface FeedbackQueryUseCase {
     record MediaView(
             Long feedbackMediaId,
             FeedbackMediaType mediaType,
-            Long fileId
+            String fileUrl
     ) {}
 }
