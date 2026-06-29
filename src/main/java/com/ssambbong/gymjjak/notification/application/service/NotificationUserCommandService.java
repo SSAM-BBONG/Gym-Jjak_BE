@@ -10,6 +10,8 @@ import com.ssambbong.gymjjak.notification.domain.exception.InvalidNotificationEx
 import com.ssambbong.gymjjak.notification.domain.exception.NotificationNotFoundException;
 import com.ssambbong.gymjjak.notification.domain.model.Notification;
 import com.ssambbong.gymjjak.notification.domain.repository.NotificationRepository;
+import com.ssambbong.gymjjak.notification.infrastructure.metrics.NotificationMetric;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
 
     private final NotificationRepository notificationRepository;
 
+    private final NotificationMetric notificationMetric;
+
     @Override
     public MarkNotificationReadResult readNotifications(MarkNotificationReadCommand command) {
         // command 검증
@@ -41,58 +45,85 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
                 command.notificationIds().size()
         );
 
-        // 중복 제거 후 정렬
-        List<Long> notificationIds = removeDuplicateIds(
-                command.notificationIds()
-        );
+        Timer.Sample readTimer =
+                notificationMetric.startTimer();
 
-        // 배치 저장
-        Map<Long, Notification> notificationMap =
-                findNotificationsByIds(notificationIds);
+        String outcome = notificationMetric.success();
 
-        LocalDateTime now = LocalDateTime.now();
+        int requestedCount = command.notificationIds().size();
+        int processedCount = 0;
 
-        List<Long> readNotificationIds = new ArrayList<>();
-        List<Notification> readNotifications = new ArrayList<>();
-
-        for (Long notificationId : notificationIds) {
-            // 하나씩 추출
-            Notification notification = getNotificationOrThrow(
-                    notificationMap,
-                    notificationId
+        try {
+            // 중복 제거 후 정렬
+            List<Long> notificationIds = removeDuplicateIds(
+                    command.notificationIds()
             );
 
-            // 본인 알림 검증
-            validateAccessibleNotification(
-                    notification,
-                    command.requesterId(),
-                    now
-            );
+            // 배치 저장
+            Map<Long, Notification> notificationMap =
+                    findNotificationsByIds(notificationIds);
 
-            // 읽기 처리
-            if (!notification.isRead()) {
-                readNotifications.add(notification.markAsRead());
+            LocalDateTime now = LocalDateTime.now();
+
+            List<Long> readNotificationIds = new ArrayList<>();
+            List<Notification> readNotifications = new ArrayList<>();
+
+            for (Long notificationId : notificationIds) {
+                // 하나씩 추출
+                Notification notification = getNotificationOrThrow(
+                        notificationMap,
+                        notificationId
+                );
+
+                // 본인 알림 검증
+                validateAccessibleNotification(
+                        notification,
+                        command.requesterId(),
+                        now
+                );
+
+                // 읽기 처리
+                if (!notification.isRead()) {
+                    readNotifications.add(notification.markAsRead());
+                }
+
+                // list에 저장
+                readNotificationIds.add(notificationId);
             }
 
-            // list에 저장
-            readNotificationIds.add(notificationId);
+            // 한 번에 저장하기
+            if (!readNotifications.isEmpty()) {
+                notificationRepository.saveAll(readNotifications);
+            }
+            
+            // 처리된 개수
+            processedCount = readNotificationIds.size();
+
+            log.info(
+                    "event=notification_read_succeeded, requesterId={}, requestedCount={}, processedCount={}",
+                    command.requesterId(),
+                    command.notificationIds().size(),
+                    processedCount
+            );
+
+            return MarkNotificationReadResult.builder()
+                    .readNotificationIds(readNotificationIds)
+                    .build();
+        } catch (RuntimeException exception) {
+            outcome = notificationMetric.failure();
+            throw exception;
+        } finally {
+            notificationMetric.recordCommandDuration(
+                    readTimer,
+                    "read",
+                    outcome
+            );
+            // 요청한 알림 개수 분포
+            notificationMetric.recordReadRequestedItems(requestedCount);
+            // 처리된 알림 개수 분포
+            notificationMetric.recordReadProcessedItems(processedCount);
         }
 
-        // 한 번에 저장하기
-        if (!readNotifications.isEmpty()) {
-            notificationRepository.saveAll(readNotifications);
-        }
-
-        log.info(
-                "event=notification_read_succeeded, requesterId={}, requestedCount={}, processedCount={}",
-                command.requesterId(),
-                command.notificationIds().size(),
-                readNotificationIds.size()
-        );
-
-        return MarkNotificationReadResult.builder()
-                .readNotificationIds(readNotificationIds)
-                .build();
     }
 
     @Override
@@ -106,51 +137,80 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
                 command.notificationIds().size()
         );
 
-        // 중복 제거
-        List<Long> notificationIds = removeDuplicateIds(
-                command.notificationIds()
-        );
+        Timer.Sample deleteTimer =
+                notificationMetric.startTimer();
 
-        Map<Long, Notification> notificationMap =
-                findNotificationsByIds(notificationIds);
+        String outcome = notificationMetric.success();
 
-        LocalDateTime now = LocalDateTime.now();
+        int requestedCount = command.notificationIds().size();
+        int processedCount = 0;
 
-        List<Long> deletedNotificationIds = new ArrayList<>();
-        List<Notification> deletedNotifications = new ArrayList<>();
-
-        for (Long notificationId : notificationIds) {
-            Notification notification = getNotificationOrThrow(
-                    notificationMap,
-                    notificationId
+        try {
+            // 중복 제거
+            List<Long> notificationIds = removeDuplicateIds(
+                    command.notificationIds()
             );
 
-            validateAccessibleNotification(
-                    notification,
+            Map<Long, Notification> notificationMap =
+                    findNotificationsByIds(notificationIds);
+
+            LocalDateTime now = LocalDateTime.now();
+
+            List<Long> deletedNotificationIds = new ArrayList<>();
+            List<Notification> deletedNotifications = new ArrayList<>();
+
+            for (Long notificationId : notificationIds) {
+                Notification notification = getNotificationOrThrow(
+                        notificationMap,
+                        notificationId
+                );
+
+                validateAccessibleNotification(
+                        notification,
+                        command.requesterId(),
+                        now
+                );
+
+                // 삭제된 알림을 List에 추가
+                deletedNotifications.add(notification.delete());
+                // 해당 Id값 List에 추가
+                deletedNotificationIds.add(notificationId);
+            }
+            // 모두 DB 저장
+            if (!deletedNotifications.isEmpty()) {
+                notificationRepository.saveAll(deletedNotifications);
+            }
+
+            // 처리된 삭제 알림 개수
+            processedCount = deletedNotificationIds.size();
+
+            log.info(
+                    "event=notification_delete_succeeded, requesterId={}, requestedCount={}, processedCount={}",
                     command.requesterId(),
-                    now
+                    command.notificationIds().size(),
+                    processedCount
             );
 
-            // 삭제된 알림을 List에 추가
-            deletedNotifications.add(notification.delete());
-            // 해당 Id값 List에 추가
-            deletedNotificationIds.add(notificationId);
-        }
-        // 모두 DB 저장
-        if (!deletedNotifications.isEmpty()) {
-            notificationRepository.saveAll(deletedNotifications);
+            return DeleteNotificationsResult.builder()
+                    .deletedNotificationIds(deletedNotificationIds)
+                    .build();
+        } catch (RuntimeException exception) {
+            outcome = notificationMetric.failure();
+            throw exception;
+        } finally {
+            // 삭제 요청 처리 시간 측정
+            notificationMetric.recordCommandDuration(
+                    deleteTimer,
+                    "delete",
+                    outcome
+            );
+            // 삭제 요청 개수 분포
+            notificationMetric.recordDeleteRequestedItems(requestedCount);
+            // 삭제 처리 개수 분포
+            notificationMetric.recordDeleteProcessedItems(processedCount);
         }
 
-        log.info(
-                "event=notification_delete_succeeded, requesterId={}, requestedCount={}, processedCount={}",
-                command.requesterId(),
-                command.notificationIds().size(),
-                deletedNotificationIds.size()
-        );
 
-        return DeleteNotificationsResult.builder()
-                .deletedNotificationIds(deletedNotificationIds)
-                .build();
 
     }
 

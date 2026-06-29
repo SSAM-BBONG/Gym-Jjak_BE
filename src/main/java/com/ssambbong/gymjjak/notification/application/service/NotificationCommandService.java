@@ -7,6 +7,8 @@ import com.ssambbong.gymjjak.notification.application.usecase.NotificationComman
 import com.ssambbong.gymjjak.notification.domain.exception.InvalidNotificationException;
 import com.ssambbong.gymjjak.notification.domain.model.Notification;
 import com.ssambbong.gymjjak.notification.domain.repository.NotificationRepository;
+import com.ssambbong.gymjjak.notification.infrastructure.metrics.NotificationMetric;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,6 +27,7 @@ public class NotificationCommandService implements NotificationCommandUseCase {
 
     private final NotificationRepository repository;
     private final ApplicationEventPublisher publisher;
+    private final NotificationMetric notificationMetric;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -38,35 +41,55 @@ public class NotificationCommandService implements NotificationCommandUseCase {
                 command.targetId()
         );
 
-        // 알림 생성
-        Notification notification = Notification.create(
-                command.receiverId(),
-                command.type(),
-                command.targetId(),
-                command.eventAt()
-        );
+        // 시간 측정
+        Timer.Sample createTimer =
+                notificationMetric.startTimer();
 
-        Notification savedNotification = repository.save(notification);
+        String outcome = notificationMetric.success();
 
-        NotificationResult result =
-                NotificationResult.from(savedNotification);
+        // 알림을 서버 DB에 만드는 데 걸린 시간
+        try {
+            // 알림 생성
+            Notification notification = Notification.create(
+                    command.receiverId(),
+                    command.type(),
+                    command.targetId(),
+                    command.eventAt()
+            );
 
-        // DB 저장 후, 이벤트 발행
-        publisher.publishEvent(
-                new NotificationCreatedEvent(
-                        result.receiverId(),
-                        result
-                )
-        );
+            Notification savedNotification = repository.save(notification);
 
-        log.info(
-                "event=notification_create_succeeded, notificationId={}, receiverId={}, type={}",
-                savedNotification.getNotificationId(),
-                savedNotification.getReceiverId(),
-                savedNotification.getType()
-        );
+            NotificationResult result =
+                    NotificationResult.from(savedNotification);
 
-        return result;
+            // DB 저장 후, 이벤트 발행
+            publisher.publishEvent(
+                    new NotificationCreatedEvent(
+                            result.receiverId(),
+                            result
+                    )
+            );
+
+            log.info(
+                    "event=notification_create_succeeded, notificationId={}, receiverId={}, type={}",
+                    savedNotification.getNotificationId(),
+                    savedNotification.getReceiverId(),
+                    savedNotification.getType()
+            );
+
+            return result;
+        } catch (RuntimeException exception) {
+            outcome = notificationMetric.failure();
+            throw exception;
+        } finally {
+            notificationMetric.recordCommandDuration(
+                    createTimer,
+                    "create",
+                    outcome
+            );
+        }
+
+
     }
 
     private void validateCreateCommand(CreateNotificationCommand command) {
