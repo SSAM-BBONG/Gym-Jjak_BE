@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 // 임시 구현체 !!
 // 추후 트레이너프로필 구현되면 그때 수정할 것. 지금은 entityManager로 직접 쿼리
@@ -62,6 +64,29 @@ public class TrainerProfileQueryAdapter implements TrainerProfileQueryPort {
                 ((Number) result[0]).longValue(),
                 ((Number) result[1]).longValue()
         );
+    }
+
+    @Override
+    public Map<Long, TrainerSummaryInfo> findSummaryAllByIds(List<Long> ids) {
+        if (ids.isEmpty()) return Map.of();
+        List<?> results = em.createNativeQuery("""
+                SELECT tp.trainer_profile_id, tp.trainer_name, tp.review_count
+                FROM trainer_profiles tp
+                WHERE tp.trainer_profile_id IN (:ids)
+                  AND tp.deleted_at IS NULL
+                """)
+                .setParameter("ids", ids)
+                .getResultList();
+
+        return results.stream()
+                .map(r -> (Object[]) r)
+                .collect(Collectors.toMap(
+                        r -> ((Number) r[0]).longValue(),
+                        r -> new TrainerSummaryInfo(
+                                (String) r[1],
+                                r[2] != null ? ((Number) r[2]).intValue() : 0
+                        )
+                ));
     }
 
     // 목록 조회용: trainerName, reviewCount만 조회 (자격증/수상 쿼리 없음)

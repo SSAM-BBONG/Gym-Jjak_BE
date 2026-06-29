@@ -9,7 +9,7 @@ services:
     ports:
       - "${LOKI_PORT:-3100}:3100"
     volumes:
-      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - ./monitoring/loki/loki-config.deploy.yml:/etc/loki/loki-config.yml:ro
       - gymjjak-loki-data:/loki-data
 
   prometheus:
@@ -37,7 +37,7 @@ services:
       GF_SERVER_TIMEZONE: Asia/Seoul
     volumes:
       - gymjjak-grafana-data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/provisioning/datasources/datasource.deploy.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
     depends_on:
       - loki
       - prometheus

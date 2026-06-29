@@ -2,6 +2,8 @@ package com.ssambbong.gymjjak.notification.infrastructure.websocket;
 
 import com.ssambbong.gymjjak.notification.application.port.out.NotificationRealtimeSender;
 import com.ssambbong.gymjjak.notification.application.result.NotificationResult;
+import com.ssambbong.gymjjak.notification.infrastructure.metrics.NotificationMetric;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -20,6 +22,8 @@ public class WebSocketNotificationSender implements NotificationRealtimeSender {
 
     private final SimpMessagingTemplate messagingTemplate;
 
+    private final NotificationMetric notificationMetric;
+
     @Override
     public void sendToUser(Long receiverId, NotificationResult notification) {
         if (receiverId == null || notification == null) {
@@ -27,20 +31,45 @@ public class WebSocketNotificationSender implements NotificationRealtimeSender {
                     "event=notification_realtime_send_skipped, reason=invalid_argument, receiverId={}",
                     receiverId
             );
+            // 실패 카운트 추가
+            notificationMetric.countRealtimeFailedSafely("invalid_argument");
             return;
         }
 
-        messagingTemplate.convertAndSendToUser(
-                receiverId.toString(), // 알림 받을 사용자
-                NOTIFICATION_DESTINATION, // 사용자 개인 queue 경로
-                notification // 실제로 보낼 데이터
-        );
+        // 알림 websocket 전소 시간 계산
+        Timer.Sample realtimeSendTimer =
+                notificationMetric.startTimer();
 
-        log.info(
-                "event=notification_realtime_sent, receiverId={}, notificationId={}, destination={}",
-                receiverId,
-                notification.notificationId(),
-                NOTIFICATION_DESTINATION
-        );
+        String outcome = notificationMetric.success();
+
+        /* Comment
+        *    측정 : 만들어진 알림을 WebSocket으로 보내는 데 걸린 시간
+        * */
+        try {
+            messagingTemplate.convertAndSendToUser(
+                    receiverId.toString(), // 알림 받을 사용자
+                    NOTIFICATION_DESTINATION, // 사용자 개인 queue 경로
+                    notification // 실제로 보낼 데이터
+            );
+
+            // 성공 카운트 추가
+            notificationMetric.countRealtimeSentSafely();
+
+            log.info(
+                    "event=notification_realtime_sent, receiverId={}, notificationId={}, destination={}",
+                    receiverId,
+                    notification.notificationId(),
+                    NOTIFICATION_DESTINATION
+            );
+        } catch (RuntimeException exception) {
+            outcome = notificationMetric.failure();
+            notificationMetric.countRealtimeFailedSafely("send_failed");
+            throw exception;
+        } finally {
+            notificationMetric.recordRealtimeSendDurationSafely(
+                    realtimeSendTimer,
+                    outcome
+            );
+        }
     }
 }

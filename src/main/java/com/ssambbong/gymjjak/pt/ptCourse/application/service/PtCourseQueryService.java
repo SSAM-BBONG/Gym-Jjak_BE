@@ -55,8 +55,38 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         Map<Long, String> categoryMap = buildCategoryMap();
         Map<Long, String> tagMap = buildTagMap();
-        List<PtCourseListView> result = ptCourseRepository.findAllVisible().stream()
-                .map(ptCourse -> toListView(ptCourse, categoryMap, tagMap))
+
+        List<PtCourse> courses = ptCourseRepository.findAllVisible();
+        if (courses.isEmpty()) return List.of();
+
+        List<Long> orgIds     = courses.stream().map(PtCourse::getOrganizationId).distinct().toList();
+        List<Long> trainerIds = courses.stream().map(PtCourse::getTrainerProfileId).distinct().toList();
+
+        Map<Long, OrganizationQueryPort.OrganizationInfo> orgMap         = organizationQueryPort.findAllByIds(orgIds);
+        Map<Long, TrainerProfileQueryPort.TrainerSummaryInfo> trainerMap = trainerProfileQueryPort.findSummaryAllByIds(trainerIds);
+
+        List<PtCourseListView> result = courses.stream()
+                .map(c -> {
+                    OrganizationQueryPort.OrganizationInfo org             = orgMap.get(c.getOrganizationId());
+                    TrainerProfileQueryPort.TrainerSummaryInfo trainer     = trainerMap.get(c.getTrainerProfileId());
+                    return new PtCourseListView(
+                            c.getId(),
+                            c.getTitle(),
+                            c.getThumbnailFileId(),
+                            c.getPrice(),
+                            c.getTagId(),
+                            tagMap.getOrDefault(c.getTagId(), null),
+                            c.getCategoryId(),
+                            categoryMap.getOrDefault(c.getCategoryId(), null),
+                            trainer != null ? trainer.trainerName() : null,
+                            org != null ? org.organizationId() : null,
+                            org != null ? org.businessName() : null,
+                            org != null ? org.roadAddress() : null,
+                            org != null ? org.latitude() : null,
+                            org != null ? org.longitude() : null,
+                            trainer != null ? trainer.reviewCount() : 0
+                    );
+                })
                 .toList();
 
         log.info("event=pt_courses_find_all_succeeded count={}", result.size());

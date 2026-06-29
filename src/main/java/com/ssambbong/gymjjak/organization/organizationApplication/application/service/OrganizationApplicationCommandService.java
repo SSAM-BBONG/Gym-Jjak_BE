@@ -19,10 +19,15 @@ import com.ssambbong.gymjjak.organization.organizationApplication.exception.Orga
 import com.ssambbong.gymjjak.organization.organization.application.port.OrganizationMetricsPort;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.event.OrgApplicationApprovedEvent;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.event.OrgApplicationRejectedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
@@ -38,6 +43,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     private final UserLoginIdValidationPort userLoginIdValidationPort;
     private final OrgApplicationMetricsPort orgApplicationMetricsPort;
     private final OrganizationMetricsPort organizationMetricsPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -126,6 +132,10 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
 
         Organization organization = Organization.create(organizationAccountId, approved);
         organizationRepository.save(organization);
+        eventPublisher.publishEvent(new OrgApplicationApprovedEvent(
+                approved.getApplicantUserId(),
+                approved.getOrganizationApplicationId()
+        ));
         recordMetricSafely(organizationMetricsPort::recordOrganizationCreated, "recordOrganizationCreated");
         recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationApproved, "recordOrgApplicationApproved");
     }
@@ -141,6 +151,10 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         OrganizationApplication rejected = organizationApplication.reject(reviewedBy, rejectReason);
 
         organizationApplicationRepository.reject(rejected);
+        eventPublisher.publishEvent(new OrgApplicationRejectedEvent(
+                rejected.getApplicantUserId(),
+                rejected.getOrganizationApplicationId()
+        ));
         recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationRejected, "recordOrgApplicationRejected");
     }
 
@@ -159,10 +173,22 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     }
 
     private void recordMetricSafely(Runnable metricCall, String metricName) {
-        try {
-            metricCall.run();
-        } catch (Exception e) {
-            log.warn("메트릭 기록 실패 - metric: {}", metricName, e);
+        Runnable safeCall = () -> {
+            try {
+                metricCall.run();
+            } catch (Exception e) {
+                log.warn("메트릭 기록 실패 - metric: {}", metricName, e);
+            }
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    safeCall.run();
+                }
+            });
+        } else {
+            safeCall.run();
         }
     }
 }

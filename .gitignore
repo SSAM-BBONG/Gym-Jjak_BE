@@ -228,8 +228,12 @@ $RECYCLE.BIN/
 .env.*
 !.env.example
 
+# Monitoring runtime data
 logs/
 loki-data/
+monitoring/loki/data/
+monitoring/promtail/promtail-positions.yml
+data/
 
 # 더미 데이터
 src/main/resources/db/dummy-data.sql
