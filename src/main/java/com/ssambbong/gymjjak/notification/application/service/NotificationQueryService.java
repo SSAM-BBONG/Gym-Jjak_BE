@@ -4,9 +4,10 @@ package com.ssambbong.gymjjak.notification.application.service;
 import com.ssambbong.gymjjak.notification.application.port.out.NotificationQueryPort;
 import com.ssambbong.gymjjak.notification.application.query.FindNotificationsQuery;
 import com.ssambbong.gymjjak.notification.application.result.NotificationListResult;
-import com.ssambbong.gymjjak.notification.application.result.NotificationResult;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationQueryUseCase;
 import com.ssambbong.gymjjak.notification.domain.exception.InvalidNotificationException;
+import com.ssambbong.gymjjak.notification.infrastructure.metrics.NotificationMetric;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,8 @@ public class NotificationQueryService implements NotificationQueryUseCase {
 
     private final NotificationQueryPort notificationQueryPort;
 
+    private final NotificationMetric notificationMetric;
+
     @Override
     public NotificationListResult findNotifications(FindNotificationsQuery query) {
         // Query 검증
@@ -32,19 +35,39 @@ public class NotificationQueryService implements NotificationQueryUseCase {
                 query.size()
         );
 
-        NotificationListResult result
-                = notificationQueryPort.findNotifications(query);
+        // 메트릭 시간 측정 시작
+        Timer.Sample findTimer =
+                notificationMetric.startTimer();
 
-        log.info(
-                "event=notification_find_succeeded, receiverId={}, page={}, size={}, resultCount={}, hasNext={}",
-                query.receiverId(),
-                result.page(),
-                result.size(),
-                result.content().size(),
-                result.hasNext()
-        );
+        String outcome = notificationMetric.success();
 
-        return result;
+
+        // 목록 조회 메트릭 추가
+        try {
+            NotificationListResult result
+                    = notificationQueryPort.findNotifications(query);
+
+            log.info(
+                    "event=notification_find_succeeded, receiverId={}, page={}, size={}, resultCount={}, hasNext={}",
+                    query.receiverId(),
+                    result.page(),
+                    result.size(),
+                    result.content().size(),
+                    result.hasNext()
+            );
+
+            return result;
+        } catch (RuntimeException exception) {
+            outcome = notificationMetric.failure();
+            throw exception;
+        } finally {
+            notificationMetric.recordQueryDurationSafely(
+                    findTimer,
+                    "list",
+                    outcome
+            );
+        }
+
     }
 
     // 쿼리 검증

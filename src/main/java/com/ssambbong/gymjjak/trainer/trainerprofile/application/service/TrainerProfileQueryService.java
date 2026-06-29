@@ -204,7 +204,7 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
             outcome = trainerProfileMetric.failure();
             throw exception;
         } finally {
-            trainerProfileMetric.recordQueryDuration(
+            trainerProfileMetric.recordQueryDurationSafely(
                     searchTimer,
                     "search",
                     keywordPresent,
