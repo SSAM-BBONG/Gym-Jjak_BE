@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.calendar.application.service;
 import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.command.UpdateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPortToCategory;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
@@ -10,13 +11,14 @@ import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -26,7 +28,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
     private final WorkoutDiaryPort workoutDiaryPort;
     private final WorkoutDiaryPortToCategory workoutDiaryPortToCategory;
-    private final CacheManager cacheManager;
+    private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
     @Override
     public Long createWorkoutDiary(
@@ -63,7 +65,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
         try {
             Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
 
-            evictCalendarMonthCache(userId, command.diaryDate());
+            evictMonthAfterCommit(userId, command.diaryDate());
 
             log.debug(
                     "event=workoutDiary_create_succeed userId={} workoutDiaryId={}",
@@ -101,7 +103,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 command.content()
         );
 
-        evictCalendarMonthCache(userId, diaryDate);
+        evictMonthAfterCommit(userId, diaryDate);
 
         log.debug("event=workoutDiary_update_succeed userId={}", userId);
     }
@@ -130,22 +132,26 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 workoutDiaryId
         );
 
-        evictCalendarMonthCache(userId, diaryDate);
+        evictMonthAfterCommit(userId, diaryDate);
 
         log.debug("event=workoutDiary_delete_succeed userId={}", userId);
     }
 
-    private void evictCalendarMonthCache(Long userId, LocalDate diaryDate) {
-        String key = "user:%d:year:%d:month:%d".formatted(
-                userId,
-                diaryDate.getYear(),
-                diaryDate.getMonthValue()
-        );
 
-        Cache cache = cacheManager.getCache("calendarMonth");
-
-        if (cache != null) {
-            cache.evict(key);
+    private void evictMonthAfterCommit(Long userId, LocalDate date) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            calendarCacheEvictionPort.evictMonth(userId, date);
+                        }
+                    }
+            );
+            return;
         }
+
+        calendarCacheEvictionPort.evictMonth(userId, date);
     }
+
 }
