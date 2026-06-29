@@ -2,8 +2,10 @@ package com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class TrainerProfileMetric {
 
@@ -36,6 +38,24 @@ public class TrainerProfileMetric {
                         .tag("outcome", normalizeOutcome(outcome))
                         .register(meterRegistry)
         );
+    }
+
+    // safe record 메서드
+    public void recordQueryDurationSafely(
+            Timer.Sample sample,
+            String operation,
+            boolean keywordPresent,
+            String outcome
+    ) {
+        try {
+            recordQueryDuration(sample, operation, keywordPresent, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=trainer_profile_metric_record_failed, metric=query_duration, operation={}",
+                    operation,
+                    exception
+            );
+        }
     }
 
     public String success() {

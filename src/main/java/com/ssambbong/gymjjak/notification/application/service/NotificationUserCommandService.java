@@ -113,7 +113,7 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
             outcome = notificationMetric.failure();
             throw exception;
         } finally {
-            notificationMetric.recordCommandDuration(
+            notificationMetric.recordCommandDurationSafely(
                     readTimer,
                     "read",
                     outcome
@@ -199,7 +199,7 @@ public class NotificationUserCommandService implements NotificationUserCommandUs
             throw exception;
         } finally {
             // 삭제 요청 처리 시간 측정
-            notificationMetric.recordCommandDuration(
+            notificationMetric.recordCommandDurationSafely(
                     deleteTimer,
                     "delete",
                     outcome

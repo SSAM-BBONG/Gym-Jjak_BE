@@ -82,7 +82,7 @@ public class NotificationCommandService implements NotificationCommandUseCase {
             outcome = notificationMetric.failure();
             throw exception;
         } finally {
-            notificationMetric.recordCommandDuration(
+            notificationMetric.recordCommandDurationSafely(
                     createTimer,
                     "create",
                     outcome

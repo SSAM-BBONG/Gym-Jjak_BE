@@ -4,7 +4,6 @@ package com.ssambbong.gymjjak.notification.application.service;
 import com.ssambbong.gymjjak.notification.application.port.out.NotificationQueryPort;
 import com.ssambbong.gymjjak.notification.application.query.FindNotificationsQuery;
 import com.ssambbong.gymjjak.notification.application.result.NotificationListResult;
-import com.ssambbong.gymjjak.notification.application.result.NotificationResult;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationQueryUseCase;
 import com.ssambbong.gymjjak.notification.domain.exception.InvalidNotificationException;
 import com.ssambbong.gymjjak.notification.infrastructure.metrics.NotificationMetric;
@@ -62,7 +61,7 @@ public class NotificationQueryService implements NotificationQueryUseCase {
             outcome = notificationMetric.failure();
             throw exception;
         } finally {
-            notificationMetric.recordQueryDuration(
+            notificationMetric.recordQueryDurationSafely(
                     findTimer,
                     "list",
                     outcome

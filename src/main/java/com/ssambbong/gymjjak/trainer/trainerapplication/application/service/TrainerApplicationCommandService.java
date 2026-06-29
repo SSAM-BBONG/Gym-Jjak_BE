@@ -107,7 +107,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                 throw exception;
             } finally {
                 // Duration 측정 끝
-                trainerApplicationMetric.recordOcrValidationDuration(
+                trainerApplicationMetric.recordOcrValidationDurationSafely(
                         ocrValidationTimer,
                         ocrOutcome
                 );
@@ -161,7 +161,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
             outcome = trainerApplicationMetric.failure();
             throw exception;
         } finally {
-            trainerApplicationMetric.recordDbSaveDuration(
+            trainerApplicationMetric.recordDbSaveDurationSafely(
                     dbSaveTimer,
                     "create",
                     outcome
@@ -771,7 +771,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
             outcome = trainerApplicationMetric.failure();
             throw exception;
         } finally {
-            trainerApplicationMetric.recordFileRegisterDuration(
+            trainerApplicationMetric.recordFileRegisterDurationSafely(
                     fileRegisterTimer,
                     fileGroup,
                     outcome
@@ -884,7 +884,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
             outcome = trainerApplicationMetric.failure();
             throw exception;
         } finally {
-            trainerApplicationMetric.recordCertificateDownloadDuration(
+            trainerApplicationMetric.recordCertificateDownloadDurationSafely(
                     certificateDownloadTimer,
                     outcome
             );

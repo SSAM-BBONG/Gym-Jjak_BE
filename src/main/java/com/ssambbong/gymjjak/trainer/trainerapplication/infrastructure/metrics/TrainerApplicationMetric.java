@@ -2,8 +2,10 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class TrainerApplicationMetric {
 
@@ -107,6 +109,83 @@ public class TrainerApplicationMetric {
                         .tag("outcome", normalizeOutcome(outcome))
                         .register(meterRegistry)
         );
+    }
+
+    // safe record 메서드
+    public void recordApplicationDurationSafely(
+            Timer.Sample sample,
+            String operation,
+            String outcome
+    ) {
+        try {
+            recordApplicationDuration(sample, operation, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=trainer_application_metric_record_failed, metric=application_duration, operation={}",
+                    operation,
+                    exception
+            );
+        }
+    }
+
+    public void recordFileRegisterDurationSafely(
+            Timer.Sample sample,
+            String fileGroup,
+            String outcome
+    ) {
+        try {
+            recordFileRegisterDuration(sample, fileGroup, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=trainer_application_metric_record_failed, metric=file_register_duration, fileGroup={}",
+                    fileGroup,
+                    exception
+            );
+        }
+    }
+
+    public void recordCertificateDownloadDurationSafely(
+            Timer.Sample sample,
+            String outcome
+    ) {
+        try {
+            recordCertificateDownloadDuration(sample, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=trainer_application_metric_record_failed, metric=certificate_download_duration",
+                    exception
+            );
+        }
+    }
+
+    public void recordOcrValidationDurationSafely(
+            Timer.Sample sample,
+            String outcome
+    ) {
+        try {
+            recordOcrValidationDuration(sample, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=trainer_application_metric_record_failed, metric=ocr_validation_duration",
+                    exception
+            );
+        }
+    }
+
+    public void recordDbSaveDurationSafely(
+            Timer.Sample sample,
+            String operation,
+            String outcome
+    ) {
+        try {
+            recordDbSaveDuration(sample, operation, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=trainer_application_metric_record_failed, metric=db_save_duration, operation={}",
+                    operation,
+                    exception
+            );
+        }
     }
 
     public String success() {

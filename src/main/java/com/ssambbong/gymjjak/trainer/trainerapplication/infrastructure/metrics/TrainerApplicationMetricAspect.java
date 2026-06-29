@@ -18,7 +18,7 @@ public class TrainerApplicationMetricAspect {
     private final TrainerApplicationMetric trainerApplicationMetric;
 
     @Around("@annotation(trainerApplicationTimed)")
-    public Object recordApplicationDuration(
+    public Object recordApplicationDurationSafely(
             ProceedingJoinPoint joinPoint,
             TrainerApplicationTimed trainerApplicationTimed // 호출 메서드에 붙은 annotation 객체
     ) throws Throwable {
@@ -33,7 +33,7 @@ public class TrainerApplicationMetricAspect {
             throw exception;
         } finally {
             // 성공 실패 모두, duration 기록
-            trainerApplicationMetric.recordApplicationDuration(
+            trainerApplicationMetric.recordApplicationDurationSafely(
                     sample,
                     trainerApplicationTimed.operation(),
                     outcome

@@ -32,7 +32,7 @@ public class WebSocketNotificationSender implements NotificationRealtimeSender {
                     receiverId
             );
             // 실패 카운트 추가
-            notificationMetric.countRealtimeFailed("invalid_argument");
+            notificationMetric.countRealtimeFailedSafely("invalid_argument");
             return;
         }
 
@@ -53,7 +53,7 @@ public class WebSocketNotificationSender implements NotificationRealtimeSender {
             );
 
             // 성공 카운트 추가
-            notificationMetric.countRealtimeSent();
+            notificationMetric.countRealtimeSentSafely();
 
             log.info(
                     "event=notification_realtime_sent, receiverId={}, notificationId={}, destination={}",
@@ -63,10 +63,10 @@ public class WebSocketNotificationSender implements NotificationRealtimeSender {
             );
         } catch (RuntimeException exception) {
             outcome = notificationMetric.failure();
-            notificationMetric.countRealtimeFailed("send_failed");
+            notificationMetric.countRealtimeFailedSafely("send_failed");
             throw exception;
         } finally {
-            notificationMetric.recordRealtimeSendDuration(
+            notificationMetric.recordRealtimeSendDurationSafely(
                     realtimeSendTimer,
                     outcome
             );

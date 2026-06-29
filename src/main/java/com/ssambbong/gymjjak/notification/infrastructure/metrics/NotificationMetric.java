@@ -4,8 +4,10 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class NotificationMetric {
 
@@ -119,6 +121,105 @@ public class NotificationMetric {
                 .tag("reason", normalizeRealtimeFailureReason(reason))
                 .register(meterRegistry)
                 .increment();
+    }
+
+    public void recordCommandDurationSafely(
+            Timer.Sample sample,
+            String operation,
+            String outcome
+    ) {
+        try {
+            recordCommandDuration(sample, operation, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=notification_metric_record_failed, metric=command_duration, operation={}",
+                    operation,
+                    exception
+            );
+        }
+    }
+
+    public void recordQueryDurationSafely(
+            Timer.Sample sample,
+            String operation,
+            String outcome
+    ) {
+        try {
+            recordQueryDuration(sample, operation, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=notification_metric_record_failed, metric=query_duration, operation={}",
+                    operation,
+                    exception
+            );
+        }
+    }
+
+    public void recordReadItemsSafely(
+            int requestedCount,
+            int processedCount
+    ) {
+        try {
+            recordReadRequestedItems(requestedCount);
+            recordReadProcessedItems(processedCount);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=notification_metric_record_failed, metric=read_items",
+                    exception
+            );
+        }
+    }
+
+    public void recordDeleteItemsSafely(
+            int requestedCount,
+            int processedCount
+    ) {
+        try {
+            recordDeleteRequestedItems(requestedCount);
+            recordDeleteProcessedItems(processedCount);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=notification_metric_record_failed, metric=delete_items",
+                    exception
+            );
+        }
+    }
+
+    public void recordRealtimeSendDurationSafely(
+            Timer.Sample sample,
+            String outcome
+    ) {
+        try {
+            recordRealtimeSendDuration(sample, outcome);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=notification_metric_record_failed, metric=realtime_send_duration",
+                    exception
+            );
+        }
+    }
+
+    public void countRealtimeSentSafely() {
+        try {
+            countRealtimeSent();
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=notification_metric_record_failed, metric=realtime_sent",
+                    exception
+            );
+        }
+    }
+
+    public void countRealtimeFailedSafely(String reason) {
+        try {
+            countRealtimeFailed(reason);
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=notification_metric_record_failed, metric=realtime_failed, reason={}",
+                    reason,
+                    exception
+            );
+        }
     }
 
     private String normalizeRealtimeFailureReason(String reason) {
