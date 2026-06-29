@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPortToCat
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
+import com.ssambbong.gymjjak.global.infrastructure.cache.CalendarCacheEvictor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
@@ -26,7 +27,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
     private final WorkoutDiaryPort workoutDiaryPort;
     private final WorkoutDiaryPortToCategory workoutDiaryPortToCategory;
-    private final CacheManager cacheManager;
+    private final CalendarCacheEvictor calendarCacheEvictor;
 
     @Override
     public Long createWorkoutDiary(
@@ -63,7 +64,10 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
         try {
             Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
 
-            evictCalendarMonthCache(userId, command.diaryDate());
+            calendarCacheEvictor.evictMonth(
+                    userId,
+                    command.diaryDate()
+            );
 
             log.debug(
                     "event=workoutDiary_create_succeed userId={} workoutDiaryId={}",
@@ -101,7 +105,10 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 command.content()
         );
 
-        evictCalendarMonthCache(userId, diaryDate);
+        calendarCacheEvictor.evictMonth(
+                userId,
+                diaryDate
+        );
 
         log.debug("event=workoutDiary_update_succeed userId={}", userId);
     }
@@ -130,22 +137,12 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 workoutDiaryId
         );
 
-        evictCalendarMonthCache(userId, diaryDate);
+        calendarCacheEvictor.evictMonth(
+                userId,
+                diaryDate
+        );
 
         log.debug("event=workoutDiary_delete_succeed userId={}", userId);
     }
 
-    private void evictCalendarMonthCache(Long userId, LocalDate diaryDate) {
-        String key = "user:%d:year:%d:month:%d".formatted(
-                userId,
-                diaryDate.getYear(),
-                diaryDate.getMonthValue()
-        );
-
-        Cache cache = cacheManager.getCache("calendarMonth");
-
-        if (cache != null) {
-            cache.evict(key);
-        }
-    }
 }

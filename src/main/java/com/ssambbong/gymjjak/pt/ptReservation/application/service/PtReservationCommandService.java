@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 
+import com.ssambbong.gymjjak.global.infrastructure.cache.CalendarCacheEvictor;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -29,6 +30,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     private final PtReservationRepository ptReservationRepository;
     private final PtCourseRepository ptCourseRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final CalendarCacheEvictor calendarCacheEvictor;
 
     @Override
     public Long createPtReservation(CreatePtReservationCommand command) {
@@ -65,6 +67,11 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
         PtReservation saved = ptReservationRepository.save(ptReservation);
 
+        calendarCacheEvictor.evictMonth(
+                command.userId(),
+                command.reservedStartAt()
+        );
+
         log.info("event=pt_reservation_create_succeeded ptReservationId={}", saved.getId());
         return saved.getId();
     }
@@ -100,9 +107,16 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
+        Long reservationUserId = reservation.getUserId();
+
         // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
         reservation.changeStatus(command.status());
         ptReservationRepository.updateStatus(reservation);
+
+        calendarCacheEvictor.evictMonth(
+                reservationUserId,
+                reservation.getReservedStartAt()
+        );
 
         log.info("event=pt_reservation_status_change_succeeded ptReservationId={}, status={}",
                 command.ptReservationId(), command.status());
@@ -134,9 +148,16 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
+        Long reservationUserId = reservation.getUserId();
+
         // 상태 변경 — 종결 상태(COMPLETED/CANCELLED)이면 도메인에서 예외 발생, cancelledAt 자동 설정
         reservation.changeStatus(PtReservationStatus.CANCELLED);
         ptReservationRepository.updateStatus(reservation);
+
+        calendarCacheEvictor.evictMonth(
+                reservationUserId,
+                reservation.getReservedStartAt()
+        );
 
         log.info("event=pt_reservation_cancel_succeeded ptReservationId={}", command.ptReservationId());
         return reservation;
