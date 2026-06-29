@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.infrastructure.persistence;
 
-import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedUpdatedEntity;
+import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
 import jakarta.persistence.*;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "organization_applications")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
+public class OrganizationApplicationJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -153,9 +153,11 @@ public class OrganizationApplicationJpaEntity extends BaseCreatedUpdatedEntity {
         this.reviewedBy = reviewedBy;
         this.reviewedAt = reviewedAt;
         this.rejectReason = rejectReason;
+        delete();
     }
 
     public void cancel() {
         this.status = OrganizationApplicationStatus.CANCELLED;
+        delete();
     }
 }

@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+
 @Repository
 @RequiredArgsConstructor
 public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
@@ -69,6 +70,17 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     @Override
     public long countActive() {
         return repository.countByStatus(ChatRoomStatus.ACTIVE);
+    }
+
+    @Override
+    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
+        return repository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0;
+        return repository.hardDeleteByIds(ids);
     }
 
     private ChatRoom toDomain(ChatRoomJpaEntity entity) {

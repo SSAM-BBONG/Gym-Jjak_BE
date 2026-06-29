@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -138,4 +139,14 @@ public class OrganizationApplicationAdaptor implements OrganizationApplicationRe
         return springDataOrganizationApplicationRepository.countByStatus(status);
     }
 
+    @Override
+    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
+        return springDataOrganizationApplicationRepository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0;
+        return springDataOrganizationApplicationRepository.hardDeleteByIds(ids);
+    }
 }

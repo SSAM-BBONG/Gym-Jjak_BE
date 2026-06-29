@@ -67,4 +67,11 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
             """, nativeQuery = true)
     long countAccumulatedMembersByOrganizationId(@Param("organizationId") Long organizationId);
 
+    @Query(value = "SELECT organization_trainer_id FROM organization_trainers WHERE removed_at IS NOT NULL AND removed_at < :threshold ORDER BY removed_at ASC, organization_trainer_id ASC LIMIT :batchSize", nativeQuery = true)
+    List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
+
+    @Modifying
+    @Query(value = "DELETE FROM organization_trainers WHERE organization_trainer_id IN :ids", nativeQuery = true)
+    int hardDeleteByIds(@Param("ids") List<Long> ids);
+
 }

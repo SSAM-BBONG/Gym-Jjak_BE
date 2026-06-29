@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+
 public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaEntity, Long> {
 
     boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status);
@@ -27,7 +28,8 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
     @Query(value = """
             UPDATE chat_rooms
             SET status = CASE WHEN user_left = true AND trainer_left = true THEN 'DELETED' ELSE 'CLOSED' END,
-                closed_at = COALESCE(closed_at, :closedAt)
+                closed_at = COALESCE(closed_at, :closedAt),
+                deleted_at = CASE WHEN user_left = true AND trainer_left = true THEN :closedAt ELSE NULL END
             WHERE chat_room_id = :id AND status != 'DELETED'
             """, nativeQuery = true)
     void updateStatusAfterLeave(@Param("id") Long chatRoomId, @Param("closedAt") LocalDateTime closedAt);
@@ -56,4 +58,11 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
             ORDER BY cr.last_message_at IS NULL ASC, cr.last_message_at DESC
             """, nativeQuery = true)
     List<ChatRoomSummaryProjection> findChatRoomSummariesByRequesterId(@Param("requesterId") Long requesterId);
+
+    @Query(value = "SELECT chat_room_id FROM chat_rooms WHERE deleted_at IS NOT NULL AND deleted_at < :threshold ORDER BY deleted_at ASC, chat_room_id ASC LIMIT :batchSize", nativeQuery = true)
+    List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
+
+    @Modifying
+    @Query(value = "DELETE FROM chat_rooms WHERE chat_room_id IN :ids", nativeQuery = true)
+    int hardDeleteByIds(@Param("ids") List<Long> ids);
 }

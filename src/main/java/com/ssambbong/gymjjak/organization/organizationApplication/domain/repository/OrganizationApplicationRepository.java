@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.organization.organizationApplication.application.qu
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplication;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,4 +36,8 @@ public interface OrganizationApplicationRepository {
     long count();
 
     long countByStatus(OrganizationApplicationStatus status);
+
+    List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
+
+    int hardDeleteByIds(List<Long> ids);
 }
