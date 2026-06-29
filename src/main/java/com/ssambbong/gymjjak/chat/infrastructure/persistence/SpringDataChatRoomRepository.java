@@ -59,7 +59,7 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
             """, nativeQuery = true)
     List<ChatRoomSummaryProjection> findChatRoomSummariesByRequesterId(@Param("requesterId") Long requesterId);
 
-    @Query(value = "SELECT chat_room_id FROM chat_rooms WHERE deleted_at IS NOT NULL AND deleted_at < :threshold LIMIT :batchSize", nativeQuery = true)
+    @Query(value = "SELECT chat_room_id FROM chat_rooms WHERE deleted_at IS NOT NULL AND deleted_at < :threshold ORDER BY deleted_at ASC, chat_room_id ASC LIMIT :batchSize", nativeQuery = true)
     List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
 
     @Modifying

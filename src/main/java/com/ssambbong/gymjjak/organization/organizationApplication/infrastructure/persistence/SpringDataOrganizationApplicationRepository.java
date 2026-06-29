@@ -29,7 +29,7 @@ public interface SpringDataOrganizationApplicationRepository extends JpaReposito
 
     long countByStatus(OrganizationApplicationStatus status);
 
-    @Query(value = "SELECT organization_application_id FROM organization_applications WHERE deleted_at IS NOT NULL AND deleted_at < :threshold LIMIT :batchSize", nativeQuery = true)
+    @Query(value = "SELECT organization_application_id FROM organization_applications WHERE deleted_at IS NOT NULL AND deleted_at < :threshold ORDER BY deleted_at ASC, organization_application_id ASC LIMIT :batchSize", nativeQuery = true)
     List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
 
     @Modifying

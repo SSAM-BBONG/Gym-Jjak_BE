@@ -53,7 +53,7 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
     @Query("SELECT o FROM OrganizationJpaEntity o JOIN FETCH o.application WHERE o.organizationAccountId = :accountId")
     Optional<OrganizationJpaEntity> findByOrganizationAccountIdWithApplication(@Param("accountId") Long accountId);
 
-    @Query(value = "SELECT organization_id FROM organizations WHERE deleted_at IS NOT NULL AND deleted_at < :threshold LIMIT :batchSize", nativeQuery = true)
+    @Query(value = "SELECT organization_id FROM organizations WHERE deleted_at IS NOT NULL AND deleted_at < :threshold ORDER BY deleted_at ASC, organization_id ASC LIMIT :batchSize", nativeQuery = true)
     List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
 
     @Query(value = "SELECT application_id FROM organizations WHERE organization_id IN :ids", nativeQuery = true)

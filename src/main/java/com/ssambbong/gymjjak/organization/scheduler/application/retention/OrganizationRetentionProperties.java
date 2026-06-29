@@ -1,14 +1,13 @@
 package com.ssambbong.gymjjak.organization.scheduler.application.retention;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.time.LocalDateTime;
 
 @ConfigurationProperties(prefix = "app.retention.organization-trainer")
 public record OrganizationRetentionProperties(
-        @DefaultValue("90") long periodDays,
-        @DefaultValue("500") int batchSize
+        long periodDays,
+        int batchSize
 ) {
     public OrganizationRetentionProperties {
         if (periodDays <= 0) {
