@@ -102,8 +102,14 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 curriculumCount, scheduleCount
         );
 
+        //TODO : 이거 지우고 각자 받아오는 걸로
         TrainerProfileQueryPort.TrainerInfo trainerInfo =
                 trainerProfileQueryPort.findByUserId(command.userId());
+
+        // TODO: 이걸로 profile Id 받고 이걸 매개변수로 port 쏴서 조직ID 받기
+//        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+
+        // TODO : trainerProfileId 로 조직ID 받아오기 구현
 
         Long thumbnailFileId = registerThumbnailFile(command.userId(), command.thumbnailFile());
 

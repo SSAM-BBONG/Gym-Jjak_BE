@@ -72,6 +72,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<PtCourseListView> result = courses.stream()
                 .map(c -> {
                     OrganizationQueryPort.OrganizationInfo org             = orgMap.get(c.getOrganizationId());
+                    // TODO: 이걸 현지 클래스에 dto 만들어서 2개만 보내는걸로 port 클래스 참고
                     TrainerProfileQueryPort.TrainerSummaryInfo trainer     = trainerMap.get(c.getTrainerProfileId());
                     return new PtCourseListView(
                             c.getId(),
@@ -132,8 +133,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         // 같은 트레이너의 강습이므로 trainerName은 1회만 조회 후 전체 카드에 재사용
         String trainerName = trainerProfileQueryPort
-                .findSummaryById(trainerInfo.trainerProfileId())
-                .trainerName();
+                .findTrainerNameById(trainerInfo.trainerProfileId());
 
         // status=null이면 VISIBLE+HIDDEN 전체, 지정 시 해당 status만
         List<PtCourse> courses = ptCourseRepository
@@ -299,6 +299,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .map(ptCourse -> {
                     OrganizationQueryPort.OrganizationInfo org =
                             organizationQueryPort.findById(ptCourse.getOrganizationId());
+                    // TODO : trainerName만 쓸거면 findTrainerNameById 으로 변경
                     TrainerProfileQueryPort.TrainerDisplayInfo trainer =
                             trainerProfileQueryPort.findById(ptCourse.getTrainerProfileId());
 
@@ -380,6 +381,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         );
     }
 
+    // TODO: 트레이너 프로필 관련 api는 port로 쏘지 말고.
+    //  프론트에서 트레이너 프로필 조회 getTrainerProfileDetail() 매소드 비동기로 호출하는 식으로 변경
     // ptCourse + TrainerDisplayInfo + 커리큘럼/스케쥴 목록 -> 상세 응답용 View 반환
     private PtCourseDetailView toDetailView(PtCourse ptCourse) {
         TrainerProfileQueryPort.TrainerDisplayInfo trainer =
