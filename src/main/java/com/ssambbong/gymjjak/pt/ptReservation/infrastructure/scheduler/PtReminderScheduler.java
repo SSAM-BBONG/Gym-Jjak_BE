@@ -10,18 +10,21 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PtReminderScheduler {
 
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
+
     private final SpringDataPtReservationRepository ptReservationRepository;
     private final NotificationEventProcessor notificationEventProcessor;
 
-    @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
     public void sendPtReminders() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(SEOUL);
         LocalDateTime from = now.plusHours(1);
         LocalDateTime to = now.plusHours(1).plusMinutes(1);
 
