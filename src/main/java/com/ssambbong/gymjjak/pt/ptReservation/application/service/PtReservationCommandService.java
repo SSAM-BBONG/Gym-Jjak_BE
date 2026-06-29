@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -19,6 +20,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -29,6 +34,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     private final PtReservationRepository ptReservationRepository;
     private final PtCourseRepository ptCourseRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
     @Override
     public Long createPtReservation(CreatePtReservationCommand command) {
@@ -65,6 +71,11 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
         PtReservation saved = ptReservationRepository.save(ptReservation);
 
+        evictMonthAfterCommit(
+                command.userId(),
+                command.reservedStartAt()
+        );
+
         log.info("event=pt_reservation_create_succeeded ptReservationId={}", saved.getId());
         return saved.getId();
     }
@@ -100,9 +111,17 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
+        Long reservationUserId = reservation.getUserId();
+        LocalDateTime reservedStartAt = reservation.getReservedStartAt();
+
         // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
         reservation.changeStatus(command.status());
         ptReservationRepository.updateStatus(reservation);
+
+        evictMonthAfterCommit(
+                reservationUserId,
+                reservedStartAt
+        );
 
         log.info("event=pt_reservation_status_change_succeeded ptReservationId={}, status={}",
                 command.ptReservationId(), command.status());
@@ -134,11 +153,44 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
+        Long reservationUserId = reservation.getUserId();
+        LocalDateTime reservedStartAt = reservation.getReservedStartAt();
+
         // 상태 변경 — 종결 상태(COMPLETED/CANCELLED)이면 도메인에서 예외 발생, cancelledAt 자동 설정
         reservation.changeStatus(PtReservationStatus.CANCELLED);
         ptReservationRepository.updateStatus(reservation);
 
+        evictMonthAfterCommit(
+                reservationUserId,
+                reservedStartAt
+        );
+
         log.info("event=pt_reservation_cancel_succeeded ptReservationId={}", command.ptReservationId());
         return reservation;
+    }
+
+    private void evictMonthAfterCommit(
+            Long userId,
+            LocalDateTime reservedStartAt
+    ) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            calendarCacheEvictionPort.evictMonth(
+                                    userId,
+                                    reservedStartAt
+                            );
+                        }
+                    }
+            );
+            return;
+        }
+
+        calendarCacheEvictionPort.evictMonth(
+                userId,
+                reservedStartAt
+        );
     }
 }

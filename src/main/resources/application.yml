@@ -143,3 +143,9 @@ clova:
   ocr:
     invoke-url: "${CLOVA_OCR_INVOKE_URL}"
     secret-key: "${CLOVA_OCR_SECRET_KEY}"
+
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true
+  forward-headers-strategy: framework
