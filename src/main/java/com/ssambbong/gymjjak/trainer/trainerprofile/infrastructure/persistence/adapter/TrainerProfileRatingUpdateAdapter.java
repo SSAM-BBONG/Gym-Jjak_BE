@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.adapter;
 
+import com.ssambbong.gymjjak.trainer.trainerprofile.domain.exception.TrainerProfileNotFoundException;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.repository.SpringDataTrainerProfileRepository;
 import com.ssambbong.gymjjak.trainerReview.application.port.TrainerProfileRatingUpdatePort;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +19,11 @@ public class TrainerProfileRatingUpdateAdapter implements TrainerProfileRatingUp
 
     @Override
     public void updateRatingStats(Long trainerProfileId, double averageRating, long reviewCount) {
-        springDataTrainerProfileRepository.updateRatingStats(
+        int updated = springDataTrainerProfileRepository.updateRatingStats(
                 trainerProfileId,
                 BigDecimal.valueOf(averageRating),
-                (int) reviewCount
+                Math.toIntExact(reviewCount)
         );
+        if (updated != 1) throw new TrainerProfileNotFoundException();
     }
 }

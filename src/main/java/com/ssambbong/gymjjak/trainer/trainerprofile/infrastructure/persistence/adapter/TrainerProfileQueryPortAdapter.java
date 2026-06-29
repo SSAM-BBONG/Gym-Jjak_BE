@@ -59,7 +59,7 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
     @Override
     public long countActive() {
         return trainerProfileRepository
-                .countByStatus(TrainerProfileStatus.ACTIVE);
+                .countByStatusAndDeletedAtIsNull(TrainerProfileStatus.ACTIVE);
     }
 
     // 전체 평균 평점
