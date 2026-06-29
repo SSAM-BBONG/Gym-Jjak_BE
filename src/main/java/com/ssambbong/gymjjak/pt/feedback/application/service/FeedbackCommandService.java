@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.pt.feedback.application.command.CreateFeedbackComma
 import com.ssambbong.gymjjak.pt.feedback.application.command.DeleteFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.command.UpdateFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.command.UploadedFileMetadataCommand;
+import com.ssambbong.gymjjak.pt.feedback.application.event.FeedbackCreatedEvent;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtCurriculumQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
@@ -25,6 +26,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackMediaReposito
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +47,7 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
     private final PtCurriculumQueryPort ptCurriculumQueryPort;
     private final TrainerQueryPort trainerQueryPort;
     private final FileUseCase fileUseCase;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Long createFeedback(CreateFeedbackCommand command) {
@@ -110,6 +113,12 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
                 ))
                 .toList();
         feedbackMediaRepository.saveAll(mediaList);
+
+        // 피드백 등록 완료 - 예약 회원에게 알림 발행
+        eventPublisher.publishEvent(new FeedbackCreatedEvent(
+                reservation.userId(),
+                saved.getId()
+        ));
 
         log.info("event=feedback_create_complete feedbackId={}", saved.getId());
         return saved.getId();

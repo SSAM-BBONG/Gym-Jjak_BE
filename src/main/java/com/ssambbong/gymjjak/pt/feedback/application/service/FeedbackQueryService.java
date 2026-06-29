@@ -1,5 +1,8 @@
 package com.ssambbong.gymjjak.pt.feedback.application.service;
 
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtCurriculumQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
@@ -29,6 +32,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
     private final PtReservationQueryPort ptReservationQueryPort;
     private final PtCurriculumQueryPort ptCurriculumQueryPort;
     private final TrainerQueryPort trainerQueryPort;
+    private final FileUrlUseCase fileUrlUseCase;
 
     @Override
     public List<FeedbackListView> findFeedbacksByReservation(Long userId, Long ptReservationId) {
@@ -85,11 +89,11 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         PtCurriculumQueryPort.CurriculumSummary curriculum =
                 ptCurriculumQueryPort.findById(feedback.getPtCurriculumId());
 
-        // 5. 미디어 목록 조회
+        // 5. 미디어 목록 조회 (FEEDBACK_VIDEO는 public → requesterId 없이 URL 변환)
         List<MediaView> mediaList =
                 feedbackMediaRepository.findAllByFeedbackId(feedbackId)
                         .stream()
-                        .map(m -> new MediaView(m.getId(), m.getMediaType(), m.getFileId()))
+                        .map(m -> new MediaView(m.getId(), m.getMediaType(), resolveMediaUrl(m.getFileId())))
                         .toList();
 
         log.info("event=feedback_detail_query_complete feedbackId={}", feedbackId);
@@ -128,6 +132,21 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
 
         if (!trainerProfileId.equals(feedback.getTrainerProfileId())) {
             throw new FeedbackForbiddenException();
+        }
+    }
+
+    // FEEDBACK_VIDEO는 public 파일 → requesterId 없이 URL 반환, 없으면 null
+    private String resolveMediaUrl(Long fileId) {
+        if (fileId == null) return null;
+        try {
+            FileUrlResult file = fileUrlUseCase.getUrl(fileId, null, false);
+            return file.url();
+        } catch (FileNotFoundException e) {
+            log.warn("event=feedback_media_file_not_found fileId={}", fileId);
+            return null;
+        } catch (RuntimeException e) {
+            log.error("event=feedback_media_url_resolve_failed fileId={}", fileId, e);
+            return null;
         }
     }
 

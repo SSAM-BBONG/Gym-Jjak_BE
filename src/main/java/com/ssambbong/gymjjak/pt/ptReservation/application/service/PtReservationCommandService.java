@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CancelPtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
+import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationApprovedEvent;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
@@ -18,6 +19,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -34,6 +36,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     private final PtReservationRepository ptReservationRepository;
     private final PtCourseRepository ptCourseRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final ApplicationEventPublisher eventPublisher;
     private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
     @Override
@@ -70,6 +73,13 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         );
 
         PtReservation saved = ptReservationRepository.save(ptReservation);
+
+        // 예약 생성 즉시 확정 - 예약 회원에게 확정 알림 발행
+        eventPublisher.publishEvent(
+                new PtReservationApprovedEvent(
+                saved.getUserId(),
+                saved.getId()
+        ));
 
         evictMonthAfterCommit(
                 command.userId(),

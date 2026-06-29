@@ -15,7 +15,7 @@ public interface PtReservationQueryUseCase {
 
     record MyPtReservationView(
             Long ptReservationId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String trainerName,
             PtReservationStatus status,
@@ -25,7 +25,7 @@ public interface PtReservationQueryUseCase {
     ) {}
 
     record PtReservationDetailView(
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String trainerName,
             PtReservationStatus status,
