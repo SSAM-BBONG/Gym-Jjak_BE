@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.global.infrastructure.cache;
 
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -11,7 +12,7 @@ import java.time.YearMonth;
 
 @Component
 @RequiredArgsConstructor
-public class CalendarCacheEvictor {
+public class CalendarCacheEvictor implements CalendarCacheEvictionPort {
 
     private static final String CALENDAR_MONTH_CACHE = "calendarMonth";
 

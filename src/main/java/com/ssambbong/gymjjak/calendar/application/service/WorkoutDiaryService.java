@@ -3,16 +3,14 @@ package com.ssambbong.gymjjak.calendar.application.service;
 import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.command.UpdateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPortToCategory;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
-import com.ssambbong.gymjjak.global.infrastructure.cache.CalendarCacheEvictor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +25,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
     private final WorkoutDiaryPort workoutDiaryPort;
     private final WorkoutDiaryPortToCategory workoutDiaryPortToCategory;
-    private final CalendarCacheEvictor calendarCacheEvictor;
+    private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
     @Override
     public Long createWorkoutDiary(
@@ -64,7 +62,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
         try {
             Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
 
-            calendarCacheEvictor.evictMonth(
+            calendarCacheEvictionPort.evictMonth(
                     userId,
                     command.diaryDate()
             );
@@ -105,7 +103,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 command.content()
         );
 
-        calendarCacheEvictor.evictMonth(
+        calendarCacheEvictionPort.evictMonth(
                 userId,
                 diaryDate
         );
@@ -137,7 +135,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 workoutDiaryId
         );
 
-        calendarCacheEvictor.evictMonth(
+        calendarCacheEvictionPort.evictMonth(
                 userId,
                 diaryDate
         );

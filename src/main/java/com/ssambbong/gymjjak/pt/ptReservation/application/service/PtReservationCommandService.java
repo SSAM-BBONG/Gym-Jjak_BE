@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 
-import com.ssambbong.gymjjak.global.infrastructure.cache.CalendarCacheEvictor;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -30,7 +30,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     private final PtReservationRepository ptReservationRepository;
     private final PtCourseRepository ptCourseRepository;
     private final TrainerQueryPort trainerQueryPort;
-    private final CalendarCacheEvictor calendarCacheEvictor;
+    private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
     @Override
     public Long createPtReservation(CreatePtReservationCommand command) {
@@ -67,7 +67,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
         PtReservation saved = ptReservationRepository.save(ptReservation);
 
-        calendarCacheEvictor.evictMonth(
+        calendarCacheEvictionPort.evictMonth(
                 command.userId(),
                 command.reservedStartAt()
         );
@@ -113,7 +113,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         reservation.changeStatus(command.status());
         ptReservationRepository.updateStatus(reservation);
 
-        calendarCacheEvictor.evictMonth(
+        calendarCacheEvictionPort.evictMonth(
                 reservationUserId,
                 reservation.getReservedStartAt()
         );
@@ -154,7 +154,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         reservation.changeStatus(PtReservationStatus.CANCELLED);
         ptReservationRepository.updateStatus(reservation);
 
-        calendarCacheEvictor.evictMonth(
+        calendarCacheEvictionPort.evictMonth(
                 reservationUserId,
                 reservation.getReservedStartAt()
         );
