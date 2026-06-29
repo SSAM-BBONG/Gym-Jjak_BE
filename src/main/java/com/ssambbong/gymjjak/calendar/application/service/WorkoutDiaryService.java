@@ -14,8 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -62,10 +65,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
         try {
             Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
 
-            calendarCacheEvictionPort.evictMonth(
-                    userId,
-                    command.diaryDate()
-            );
+            evictMonthAfterCommit(userId, command.diaryDate());
 
             log.debug(
                     "event=workoutDiary_create_succeed userId={} workoutDiaryId={}",
@@ -103,10 +103,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 command.content()
         );
 
-        calendarCacheEvictionPort.evictMonth(
-                userId,
-                diaryDate
-        );
+        evictMonthAfterCommit(userId, diaryDate);
 
         log.debug("event=workoutDiary_update_succeed userId={}", userId);
     }
@@ -135,12 +132,26 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 workoutDiaryId
         );
 
-        calendarCacheEvictionPort.evictMonth(
-                userId,
-                diaryDate
-        );
+        evictMonthAfterCommit(userId, diaryDate);
 
         log.debug("event=workoutDiary_delete_succeed userId={}", userId);
+    }
+
+
+    private void evictMonthAfterCommit(Long userId, LocalDate date) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            calendarCacheEvictionPort.evictMonth(userId, date);
+                        }
+                    }
+            );
+            return;
+        }
+
+        calendarCacheEvictionPort.evictMonth(userId, date);
     }
 
 }

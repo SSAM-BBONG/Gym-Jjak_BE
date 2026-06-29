@@ -20,6 +20,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -67,7 +71,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
         PtReservation saved = ptReservationRepository.save(ptReservation);
 
-        calendarCacheEvictionPort.evictMonth(
+        evictMonthAfterCommit(
                 command.userId(),
                 command.reservedStartAt()
         );
@@ -108,14 +112,15 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         }
 
         Long reservationUserId = reservation.getUserId();
+        LocalDateTime reservedStartAt = reservation.getReservedStartAt();
 
         // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
         reservation.changeStatus(command.status());
         ptReservationRepository.updateStatus(reservation);
 
-        calendarCacheEvictionPort.evictMonth(
+        evictMonthAfterCommit(
                 reservationUserId,
-                reservation.getReservedStartAt()
+                reservedStartAt
         );
 
         log.info("event=pt_reservation_status_change_succeeded ptReservationId={}, status={}",
@@ -149,17 +154,43 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         }
 
         Long reservationUserId = reservation.getUserId();
+        LocalDateTime reservedStartAt = reservation.getReservedStartAt();
 
         // 상태 변경 — 종결 상태(COMPLETED/CANCELLED)이면 도메인에서 예외 발생, cancelledAt 자동 설정
         reservation.changeStatus(PtReservationStatus.CANCELLED);
         ptReservationRepository.updateStatus(reservation);
 
-        calendarCacheEvictionPort.evictMonth(
+        evictMonthAfterCommit(
                 reservationUserId,
-                reservation.getReservedStartAt()
+                reservedStartAt
         );
 
         log.info("event=pt_reservation_cancel_succeeded ptReservationId={}", command.ptReservationId());
         return reservation;
+    }
+
+    private void evictMonthAfterCommit(
+            Long userId,
+            LocalDateTime reservedStartAt
+    ) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            calendarCacheEvictionPort.evictMonth(
+                                    userId,
+                                    reservedStartAt
+                            );
+                        }
+                    }
+            );
+            return;
+        }
+
+        calendarCacheEvictionPort.evictMonth(
+                userId,
+                reservedStartAt
+        );
     }
 }
