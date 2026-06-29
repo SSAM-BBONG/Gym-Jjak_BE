@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.global.infrastructure.security;
+package com.ssambbong.gymjjak.global.infrastructure.security.webSocket;
 
 import com.ssambbong.gymjjak.global.application.auth.port.in.AuthenticateAccessTokenUseCase;
 import com.ssambbong.gymjjak.global.domain.auth.AuthException;
@@ -16,11 +16,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class JwtChannelInterceptor implements ChannelInterceptor {
 
-    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String COOKIE_NAME = "accessToken";
 
     private final AuthenticateAccessTokenUseCase authenticateAccessTokenUseCase;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
@@ -30,11 +32,11 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String authHeader = accessor.getFirstNativeHeader("Authorization");
-            if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
-                throw new MessageDeliveryException("Authorization header missing");
+            Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+            String token = sessionAttributes != null ? (String) sessionAttributes.get(COOKIE_NAME) : null;
+            if (!StringUtils.hasText(token)) {
+                throw new MessageDeliveryException("Access token cookie missing");
             }
-            String token = authHeader.substring(BEARER_PREFIX.length());
             try {
                 JwtClaims claims = authenticateAccessTokenUseCase.authenticate(token);
                 Authentication authentication = jwtAuthenticationConverter.toAuthentication(claims);

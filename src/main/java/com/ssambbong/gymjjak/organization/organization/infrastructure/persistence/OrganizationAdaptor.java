@@ -14,6 +14,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -73,6 +75,22 @@ public class OrganizationAdaptor implements OrganizationRepository {
     @Override
     public Optional<String> findRequestedLoginIdById(Long organizationId) {
         return springDataOrganizationRepository.findRequestedLoginIdById(organizationId);
+    }
+
+    @Override
+    public List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize) {
+        return springDataOrganizationRepository.findHardDeleteCandidateIds(threshold, batchSize);
+    }
+
+    @Override
+    public List<Long> findApplicationIdsByOrganizationIds(List<Long> organizationIds) {
+        return springDataOrganizationRepository.findApplicationIdsByOrganizationIds(organizationIds);
+    }
+
+    @Override
+    public int hardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0;
+        return springDataOrganizationRepository.hardDeleteByIds(ids);
     }
 
     @Override

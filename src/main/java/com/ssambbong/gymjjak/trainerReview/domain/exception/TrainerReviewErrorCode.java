@@ -1,12 +1,12 @@
 package com.ssambbong.gymjjak.trainerReview.domain.exception;
 
 import com.ssambbong.gymjjak.global.domain.common.exception.ErrorCode;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public enum TrainerReviewErrorCode implements ErrorCode {
 
     TRAINER_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_001", "강사평을 찾을 수 없습니다."),

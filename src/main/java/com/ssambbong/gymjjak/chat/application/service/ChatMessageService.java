@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -43,11 +45,7 @@ public class ChatMessageService implements ChatMessageUseCase {
 
         ChatMessage message = ChatMessage.create(command.chatRoomId(), command.senderId(), command.content());
         ChatMessage saved = chatMessageRepository.save(message);
-        try {
-            chatMetricsPort.recordMessageSent();
-        } catch (Exception e) {
-            log.warn("event=metrics_record_failed metric=message_sent", e);
-        }
+        recordMetricSafely(chatMetricsPort::recordMessageSent, "message_sent");
         return saved;
     }
 
@@ -57,6 +55,26 @@ public class ChatMessageService implements ChatMessageUseCase {
         validateParticipant(query.chatRoomId(), requesterId);
 
         return chatMessageRepository.findMessages(query, requesterId);
+    }
+
+    private void recordMetricSafely(Runnable metricCall, String metricName) {
+        Runnable safeCall = () -> {
+            try {
+                metricCall.run();
+            } catch (Exception e) {
+                log.warn("event=metrics_record_failed metric={}", metricName, e);
+            }
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    safeCall.run();
+                }
+            });
+        } else {
+            safeCall.run();
+        }
     }
 
     private void validateParticipant(Long chatRoomId, Long userId) {

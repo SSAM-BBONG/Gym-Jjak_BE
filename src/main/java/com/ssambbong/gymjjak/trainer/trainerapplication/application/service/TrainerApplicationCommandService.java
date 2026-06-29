@@ -11,6 +11,7 @@ import com.ssambbong.gymjjak.ocr.domain.OcrResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.*;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.event.TrainerApplicationApprovedEvent;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.event.TrainerApplicationRejectedEvent;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.metrics.TrainerApplicationTimed;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.result.RegisteredTrainerApplicationFiles;
@@ -19,7 +20,9 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.Trai
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.*;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
+import com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.metrics.TrainerApplicationMetric;
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.command.ProfileImageUpdateAction;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,7 +34,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.ssambbong.gymjjak.trainer.trainerprofile.application.command.ProfileImageUpdateAction.KEEP;
 
 @Slf4j
 @Service
@@ -51,7 +53,10 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     private final ApprovedTrainerProfilePort approvedTrainerProfilePort;
 
     private final ApplicationEventPublisher eventPublisher;
+    // 메트릭 추가
+    private final TrainerApplicationMetric trainerApplicationMetric;
 
+    @TrainerApplicationTimed(operation = "create")
     @Override
     public Long createTrainerApplication(CreateTrainerApplicationCommand command) {
 
@@ -78,15 +83,35 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                     command.applicantUserId()
             );
 
-            // ocr 검증
-            OcrResult ocrResult =extractCertificateOcr(certificateFile);
+            // ocr 객체 생성
+            OcrResult ocrResult;
 
-            // ocr 요구 반환값 검증
-            validateRequiredCertification(
-                    command.applicantUserId(),
-                    registeredFiles.certificateFileId(),
-                    ocrResult
-            );
+            // ocr duration 타이머 측정
+            Timer.Sample ocrValidationTimer =
+                    trainerApplicationMetric.startTimer();
+
+            String ocrOutcome = trainerApplicationMetric.success();
+
+            try {
+                // ocr 파일 검증
+                ocrResult = extractCertificateOcr(certificateFile);
+
+                // ocr 요구 반환값 검증
+                validateRequiredCertification(
+                        command.applicantUserId(),
+                        registeredFiles.certificateFileId(),
+                        ocrResult
+                );
+            } catch (RuntimeException exception) {
+                ocrOutcome = trainerApplicationMetric.failure();
+                throw exception;
+            } finally {
+                // Duration 측정 끝
+                trainerApplicationMetric.recordOcrValidationDurationSafely(
+                        ocrValidationTimer,
+                        ocrOutcome
+                );
+            }
 
             return transactionTemplate.execute(status ->
                     saveTrainerApplication(command, registeredFiles)
@@ -113,17 +138,35 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                 command.introduction()
         );
 
-        // DB에 저장
-        TrainerApplication savedTrainerApplication =
-                trainerApplicationRepository.save(trainerApplication);
+        // 메트릭 추가
+        Timer.Sample dbSaveTimer =
+                trainerApplicationMetric.startTimer();
 
-        log.info(
-                "event=trainer_application_create_succeeded, trainerApplicationId={}, applicantUserId={}",
-                savedTrainerApplication.getTrainerApplicationId(),
-                savedTrainerApplication.getUserId()
-        );
+        String outcome = trainerApplicationMetric.success();
 
-        return savedTrainerApplication.getTrainerApplicationId();
+        try {
+            // DB에 저장
+            TrainerApplication savedTrainerApplication =
+                    trainerApplicationRepository.save(trainerApplication);
+
+            log.info(
+                    "event=trainer_application_create_succeeded, trainerApplicationId={}, applicantUserId={}",
+                    savedTrainerApplication.getTrainerApplicationId(),
+                    savedTrainerApplication.getUserId()
+            );
+
+            return savedTrainerApplication.getTrainerApplicationId();
+
+        } catch (RuntimeException exception) {
+            outcome = trainerApplicationMetric.failure();
+            throw exception;
+        } finally {
+            trainerApplicationMetric.recordDbSaveDurationSafely(
+                    dbSaveTimer,
+                    "create",
+                    outcome
+            );
+        }
     }
 
     @Override
@@ -707,9 +750,33 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                         FileType.CERTIFICATION
                 )
         );
-        // 담긴 파일들 등록 메서드 거쳐서 결과로 담기
-        List<FileRegistrationResult> results =
-                fileUseCase.registerFiles(fileCommands);
+
+        String fileGroup = profileImageFile == null
+                ? "certification"
+                : "profile_image_certification";
+
+        // 메트릭 측정
+        Timer.Sample fileRegisterTimer =
+                trainerApplicationMetric.startTimer();
+
+        String outcome = trainerApplicationMetric.success();
+
+        // 파일 등록 list 생성
+        List<FileRegistrationResult> results;
+
+        try {
+            // 담긴 파일들 등록 메서드 거쳐서 결과로 담기
+            results = fileUseCase.registerFiles(fileCommands);
+        } catch (RuntimeException exception) {
+            outcome = trainerApplicationMetric.failure();
+            throw exception;
+        } finally {
+            trainerApplicationMetric.recordFileRegisterDurationSafely(
+                    fileRegisterTimer,
+                    fileGroup,
+                    outcome
+            );
+        }
 
         try {
             // 트레이너 신청에 필요한 id 값으로 변환해서 반환
@@ -789,24 +856,40 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                 certificateFileId
         );
 
-        FileContentResult certificateFile = fileUseCase.downloadFile(
-                certificateFileId,
-                applicantUserId,
-                false,
-                FileType.CERTIFICATION
-        );
+        Timer.Sample certificateDownloadTimer =
+                trainerApplicationMetric.startTimer();
 
-        log.info(
-                "event=trainer_application_certificate_download_succeeded, " +
-                        "applicantUserId={}, certificateFileId={}, " +
-                        "contentType={}, fileSize={}",
-                applicantUserId,
-                certificateFileId,
-                certificateFile.contentType(),
-                certificateFile.fileSize()
-        );
+        String outcome = trainerApplicationMetric.success();
 
-        return certificateFile;
+        try {
+            FileContentResult certificateFile = fileUseCase.downloadFile(
+                    certificateFileId,
+                    applicantUserId,
+                    false,
+                    FileType.CERTIFICATION
+            );
+
+            log.info(
+                    "event=trainer_application_certificate_download_succeeded, " +
+                            "applicantUserId={}, certificateFileId={}, " +
+                            "contentType={}, fileSize={}",
+                    applicantUserId,
+                    certificateFileId,
+                    certificateFile.contentType(),
+                    certificateFile.fileSize()
+            );
+
+            return certificateFile;
+        } catch (RuntimeException exception) {
+            outcome = trainerApplicationMetric.failure();
+            throw exception;
+        } finally {
+            trainerApplicationMetric.recordCertificateDownloadDurationSafely(
+                    certificateDownloadTimer,
+                    outcome
+            );
+        }
+
     }
 
     // ocr 변환 기능

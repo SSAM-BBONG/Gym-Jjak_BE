@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.global.infrastructure.config;
 
-import com.ssambbong.gymjjak.global.infrastructure.security.JwtChannelInterceptor;
+import com.ssambbong.gymjjak.global.infrastructure.security.webSocket.JwtChannelInterceptor;
+import com.ssambbong.gymjjak.global.infrastructure.security.webSocket.JwtHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -15,6 +16,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtChannelInterceptor jwtChannelInterceptor;
+    private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -24,6 +26,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         "http://localhost:8080",
                         "https://gymjjak.com"
                 )
+                .addInterceptors(jwtHandshakeInterceptor)
                 .withSockJS();
     }
 

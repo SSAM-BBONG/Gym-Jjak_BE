@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -32,10 +34,22 @@ public class OrganizationCommandService implements OrganizationCommandUseCase {
     }
 
     private void recordMetricSafely(Runnable metricCall, String metricName) {
-        try {
-            metricCall.run();
-        } catch (Exception e) {
-            log.warn("메트릭 기록 실패 - metric: {}", metricName, e);
+        Runnable safeCall = () -> {
+            try {
+                metricCall.run();
+            } catch (Exception e) {
+                log.warn("메트릭 기록 실패 - metric: {}", metricName, e);
+            }
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    safeCall.run();
+                }
+            });
+        } else {
+            safeCall.run();
         }
     }
 }

@@ -26,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -64,11 +66,7 @@ public class ChatRoomService implements ChatRoomUseCase {
             }
             throw e;
         }
-        try {
-            chatMetricsPort.recordChatRoomCreated();
-        } catch (Exception e) {
-            log.warn("event=metrics_record_failed metric=chat_room_created", e);
-        }
+        recordMetricSafely(chatMetricsPort::recordChatRoomCreated, "chat_room_created");
         log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerProfileId: {}",
                 saved.getId(), command.userId(), command.trainerProfileId());
         return saved.getId();
@@ -134,5 +132,25 @@ public class ChatRoomService implements ChatRoomUseCase {
 
         long totalUnreadCount = roomsWithUrl.stream().mapToLong(ChatRoomSummary::unreadCount).sum();
         return new ChatRoomListResult(rooms.size(), totalUnreadCount, roomsWithUrl);
+    }
+
+    private void recordMetricSafely(Runnable metricCall, String metricName) {
+        Runnable safeCall = () -> {
+            try {
+                metricCall.run();
+            } catch (Exception e) {
+                log.warn("event=metrics_record_failed metric={}", metricName, e);
+            }
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    safeCall.run();
+                }
+            });
+        } else {
+            safeCall.run();
+        }
     }
 }
