@@ -1,6 +1,5 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.metrics;
 
-import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.springframework.stereotype.Component;
