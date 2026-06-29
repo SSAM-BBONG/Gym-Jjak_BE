@@ -42,13 +42,12 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
             Pageable pageable
     );
 
-    // 강사평 - 트레이너 프로필 평균 평점 & 리뷰 수를 갱신 (soft delete 된 프로필 제외)
+    // 강사평 - 트레이너 프로필 평균 평점 & 리뷰 수를 갱신
     @Modifying
     @Query("""
     UPDATE TrainerProfileJpaEntity tp
     SET tp.averageRating = :averageRating, tp.reviewCount = :reviewCount
     WHERE tp.trainerProfileId = :trainerProfileId
-      AND tp.deletedAt IS NULL
     """)
     int updateRatingStats(
             @Param("trainerProfileId") Long trainerProfileId,
@@ -56,10 +55,10 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
             @Param("reviewCount") int reviewCount
             );
 
-    // soft delete 제외한 ACTIVE 상태 트레이너 수 집계
-    long countByStatusAndDeletedAtIsNull(TrainerProfileStatus status);
+    // ACTIVE 상태 트레이너 수 집계
+    long countByStatus(TrainerProfileStatus status);
 
-    // soft delete 제외한 ACTIVE 상태 트레이너 전체 평균 평점
-    @Query("SELECT AVG(tp.averageRating) FROM TrainerProfileJpaEntity tp WHERE tp.status = :status AND tp.deletedAt IS NULL")
+    // ACTIVE 상태 트레이너 전체 평균 평점
+    @Query("SELECT AVG(tp.averageRating) FROM TrainerProfileJpaEntity tp WHERE tp.status = :status")
     Double findAverageRatingByStatus(@Param("status") TrainerProfileStatus status);
 }

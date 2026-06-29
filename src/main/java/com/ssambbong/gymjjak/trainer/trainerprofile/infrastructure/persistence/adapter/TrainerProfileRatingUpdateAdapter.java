@@ -24,6 +24,6 @@ public class TrainerProfileRatingUpdateAdapter implements TrainerProfileRatingUp
                 BigDecimal.valueOf(averageRating),
                 Math.toIntExact(reviewCount)
         );
-        if (updated != 1) throw new TrainerProfileNotFoundException();
+        if (updated != 1) throw new TrainerProfileNotFoundException("trainerProfileId", trainerProfileId);
     }
 }
