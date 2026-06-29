@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.adapter;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.TrainerProfileNotFoundException;
+import com.ssambbong.gymjjak.trainer.trainerprofile.domain.exception.TrainerProfileNotFoundException;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerProfileStatus;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.entity.TrainerAwardJpaEntity;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.entity.TrainerCertificationJpaEntity;
@@ -11,6 +11,8 @@ import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.r
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.repository.SpringDataTrainerProfileRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,33 +31,38 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
     private final SpringDataTrainerAwardRepository awardRepository;
     private final EntityManager em;
 
+    // TODO : 추후 삭제 부탁드립니다.
     // userId로 트레이너 프로필 ID와 소속 조직 ID 조회
+    /**
+     * @deprecated 조직 정보까지 함께 조회하는 기존 메서드입니다.
+     * 신규 로직에서는 findActiveTrainerProfileIdByUserId(Long userId)를 사용하세요.
+     */
+    @Deprecated
     @Override
     public TrainerInfo findByUserId(Long userId) {
-        List<?> results = em.createNativeQuery("""
-                SELECT tp.trainer_profile_id, ot.organization_id
-                FROM trainer_profiles tp
-                JOIN organization_trainers ot ON tp.trainer_profile_id = ot.trainer_profile_id
-                WHERE tp.user_id = :userId
-                  AND tp.status = 'ACTIVE'
-                  AND tp.deleted_at IS NULL
-                  AND ot.removed_at IS NULL
-                LIMIT 1
-                """)
-                .setParameter("userId", userId)
-                .getResultList();
-
-        Object[] result = (Object[]) results.stream()
-                .findFirst()
-                .orElseThrow(TrainerProfileNotFoundException::new);
+        Long trainerProfileId = findActiveTrainerProfileIdByUserId(userId);
 
         return new TrainerInfo(
-                ((Number) result[0]).longValue(),
-                ((Number) result[1]).longValue()
+                trainerProfileId,
+                null
         );
     }
 
+    // userId로 활성화된 트레이너 프로필 ID 조회
+    @Override
+    public Long findActiveTrainerProfileIdByUserId(Long userId) {
+        return trainerProfileRepository
+                .findTrainerProfileIdByUserIdAndStatus(
+                        userId,
+                        TrainerProfileStatus.ACTIVE
+                )
+                .orElseThrow(() ->
+                        new TrainerProfileNotFoundException("userId", userId)
+                );
+    }
+
     // ACTIVE 상태 트레이너 수
+    // TODO: 통계 대시보드 태스트 후, trainerProfile index 추가 고려해도 될듯
     @Override
     public long countActive() {
         return trainerProfileRepository
@@ -69,30 +76,64 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
                 .findAverageRatingByStatus(TrainerProfileStatus.ACTIVE);
     }
 
-    // 목록 조회용 요약 정보 단건 조회
+    // 목록 조회용 트레이너 이름 반환
     @Override
-    public TrainerSummaryInfo findSummaryById(Long trainerProfileId) {
-        TrainerProfileJpaEntity entity = trainerProfileRepository.findById(trainerProfileId)
-                .orElseThrow(TrainerProfileNotFoundException::new);
-        return new TrainerSummaryInfo(entity.getTrainerName(), entity.getReviewCount());
+    public String findTrainerNameById(Long trainerProfileId) {
+        return trainerProfileRepository
+                .findTrainerNameByIdAndStatus(
+                        trainerProfileId,
+                        TrainerProfileStatus.ACTIVE
+                )
+                .orElseThrow(() ->
+                        new TrainerProfileNotFoundException(
+                                "trainerProfileId",
+                                trainerProfileId
+                        )
+                );
     }
 
+
+    // TODO: 이거 지우고, 아래로 연결
     // 목록 조회용 요약 정보 배치 조회 (N+1 방지)
     @Override
     public Map<Long, TrainerSummaryInfo> findSummaryAllByIds(List<Long> ids) {
         if (ids.isEmpty()) return Map.of();
+
         return trainerProfileRepository.findAllById(ids).stream()
                 .collect(Collectors.toMap(
                         TrainerProfileJpaEntity::getTrainerProfileId,
-                        e -> new TrainerSummaryInfo(e.getTrainerName(), e.getReviewCount())
+                        e -> new TrainerSummaryInfo(
+                                e.getTrainerName(),
+                                e.getReviewCount()
+                        )
                 ));
     }
 
-    // 상세 조회용 전체 정보 보회 (자격증, 수상 이력 포함)
+//    @Query("""
+//        select new com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo(
+//            tp.trainerProfileId,
+//            tp.trainerName,
+//            tp.reviewCount
+//        )
+//        from TrainerProfileJpaEntity tp
+//        where tp.trainerProfileId in :ids
+//          and tp.status = :status
+//        """)
+//    List<TrainerSummaryInfo> findSummariesByIdsAndStatus(
+//            @Param("ids") List<Long> ids,
+//            @Param("status") TrainerProfileStatus status
+//    );
+
+    // 상세 조회용 전체 정보 조회 (자격증, 수상 이력 포함)
     @Override
     public TrainerDisplayInfo findById(Long trainerProfileId) {
         TrainerProfileJpaEntity entity = trainerProfileRepository.findById(trainerProfileId)
-                .orElseThrow(TrainerProfileNotFoundException::new);
+                .orElseThrow(() ->
+                        new TrainerProfileNotFoundException(
+                                "trainerProfileId",
+                                trainerProfileId
+                        )
+                );
 
         List<String> certifications = certificationRepository
                 .findAllByTrainerProfileIdOrderByTrainerCertificationIdAsc(trainerProfileId)

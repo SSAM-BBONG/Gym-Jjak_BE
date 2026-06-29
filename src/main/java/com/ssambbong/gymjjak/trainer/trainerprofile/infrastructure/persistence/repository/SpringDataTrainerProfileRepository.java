@@ -42,6 +42,30 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
             Pageable pageable
     );
 
+    // userId, status로 트레이너 프로필Id 조회
+    @Query("""
+        select tp.trainerProfileId
+        from TrainerProfileJpaEntity tp
+        where tp.userId = :userId
+          and tp.status = :status
+        """)
+    Optional<Long> findTrainerProfileIdByUserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") TrainerProfileStatus status
+    );
+
+    // 트레이너 프로필 id, staus로 트레이너 이름 조회
+    @Query("""
+        select tp.trainerName
+        from TrainerProfileJpaEntity tp
+        where tp.trainerProfileId = :trainerProfileId
+          and tp.status = :status
+        """)
+    Optional<String> findTrainerNameByIdAndStatus(
+            @Param("trainerProfileId") Long trainerProfileId,
+            @Param("status") TrainerProfileStatus status
+    );
+
     // 강사평 - 트레이너 프로필 평균 평점 & 리뷰 수를 갱신
     @Modifying
     @Query("""
@@ -61,4 +85,6 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
     // ACTIVE 상태 트레이너 전체 평균 평점
     @Query("SELECT AVG(tp.averageRating) FROM TrainerProfileJpaEntity tp WHERE tp.status = :status")
     Double findAverageRatingByStatus(@Param("status") TrainerProfileStatus status);
+
+
 }
