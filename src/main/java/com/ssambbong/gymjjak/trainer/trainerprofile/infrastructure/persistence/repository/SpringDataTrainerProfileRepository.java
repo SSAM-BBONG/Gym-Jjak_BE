@@ -6,9 +6,11 @@ import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.e
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 
@@ -39,4 +41,24 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    // 강사평 - 트레이너 프로필 평균 평점 & 리뷰 수를 갱신
+    @Modifying
+    @Query("""
+    UPDATE TrainerProfileJpaEntity tp
+    SET tp.averageRating = :averageRating, tp.reviewCount = :reviewCount
+    WHERE tp.trainerProfileId = :trainerProfileId
+    """)
+    int updateRatingStats(
+            @Param("trainerProfileId") Long trainerProfileId,
+            @Param("averageRating") BigDecimal averageRating,
+            @Param("reviewCount") int reviewCount
+            );
+
+    // ACTIVE 상태 트레이너 수 집계
+    long countByStatus(TrainerProfileStatus status);
+
+    // ACTIVE 상태 트레이너 전체 평균 평점
+    @Query("SELECT AVG(tp.averageRating) FROM TrainerProfileJpaEntity tp WHERE tp.status = :status")
+    Double findAverageRatingByStatus(@Param("status") TrainerProfileStatus status);
 }
