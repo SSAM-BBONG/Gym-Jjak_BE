@@ -115,14 +115,14 @@ public class PtReservationController {
             @ApiResponse(responseCode = "403", description = "본인 예약 아님", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음", content = @Content(schema = @Schema()))
     })
-    @PatchMapping("/reservations/{ptReservationId}/status")
+    @PatchMapping("/reservations/{reservationId}/status")
     public ResponseEntity<GlobalApiResponse<ChangePtReservationStatusResponse>> changePtReservationStatus(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long ptReservationId,
+            @PathVariable Long reservationId,
             @RequestBody @Valid ChangePtReservationStatusRequest request
     ) {
         PtReservation reservation = ptReservationCommandUseCase.changePtReservationStatus(
-                new ChangePtReservationStatusCommand(authUser.userId(), ptReservationId, request.status()));
+                new ChangePtReservationStatusCommand(authUser.userId(), reservationId, request.status()));
         ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
                 reservation.getStatus(),
                 reservation.getProgressCount(),
