@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.organization.organization.domain.model.Organization
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
 import com.ssambbong.gymjjak.organization.organization.infrastructure.persistence.SpringDataOrganizationRepository;
+import com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.persistence.SpringDataOrganizationTrainerRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ public class OrganizationQueryPortAdapter implements OrganizationQueryPort {
 
     private final OrganizationRepository organizationRepository;
     private final SpringDataOrganizationRepository springDataOrganizationRepository;
+    private final SpringDataOrganizationTrainerRepository springDataOrganizationTrainerRepository;
 
     @Override
     public OrganizationInfo findById(Long organizationId) {
@@ -53,6 +55,13 @@ public class OrganizationQueryPortAdapter implements OrganizationQueryPort {
                                 e.getInstagramUrl()
                         )
                 ));
+    }
+
+    @Override
+    public Long findOrganizationIdByTrainerProfileId(Long trainerProfileId) {
+        return springDataOrganizationTrainerRepository.findByTrainerProfileIdAndRemovedAtIsNull(trainerProfileId)
+                .map(e -> e.getOrganizationId())
+                .orElseThrow(() -> new OrganizationNotFoundException());
     }
 
     @Override

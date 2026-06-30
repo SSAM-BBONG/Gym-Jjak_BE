@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
@@ -67,13 +68,12 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<Long> trainerIds = courses.stream().map(PtCourse::getTrainerProfileId).distinct().toList();
 
         Map<Long, OrganizationQueryPort.OrganizationInfo> orgMap         = organizationQueryPort.findAllByIds(orgIds);
-        Map<Long, TrainerProfileQueryPort.TrainerSummaryInfo> trainerMap = trainerProfileQueryPort.findSummaryAllByIds(trainerIds);
+        Map<Long, TrainerSummaryInfo> trainerMap = trainerProfileQueryPort.findSummaryAllByIds(trainerIds);
 
         List<PtCourseListView> result = courses.stream()
                 .map(c -> {
-                    OrganizationQueryPort.OrganizationInfo org             = orgMap.get(c.getOrganizationId());
-                    // TODO: 이걸 현지 클래스에 dto 만들어서 2개만 보내는걸로 port 클래스 참고
-                    TrainerProfileQueryPort.TrainerSummaryInfo trainer     = trainerMap.get(c.getTrainerProfileId());
+                    OrganizationQueryPort.OrganizationInfo org = orgMap.get(c.getOrganizationId());
+                    TrainerSummaryInfo trainer = trainerMap.get(c.getTrainerProfileId());
                     return new PtCourseListView(
                             c.getId(),
                             c.getTitle(),
@@ -124,9 +124,9 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         }
 
         // 로그인한 userId로 트레이너 프로필 ID 조회
-        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        Long trainerProfileId;
         try {
-            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+            trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(userId);
         } catch (TrainerProfileNotFoundException e) {
             log.warn("event=pt_my_courses_find_failed reason=trainer_not_found, userId={}", userId);
             throw e;
@@ -134,11 +134,11 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         // 같은 트레이너의 강습이므로 trainerName은 1회만 조회 후 전체 카드에 재사용
         String trainerName = trainerProfileQueryPort
-                .findTrainerNameById(trainerInfo.trainerProfileId());
+                .findTrainerNameById(trainerProfileId);
 
         // status=null이면 VISIBLE+HIDDEN 전체, 지정 시 해당 status만
         List<PtCourse> courses = ptCourseRepository
-                .findAllByTrainerProfileId(trainerInfo.trainerProfileId(), status);
+                .findAllByTrainerProfileId(trainerProfileId, status);
 
         // 강습 ID 목록으로 예약 수를 한 번에 집계 (N+1 방지)
         List<Long> courseIds = courses.stream().map(PtCourse::getId).toList();
@@ -173,14 +173,14 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 });
 
         // 본인 강습 여부 확인 (트레이너 프로필 ID 비교)
-        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        Long trainerProfileId;
         try {
-            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+            trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(userId);
         } catch (TrainerProfileNotFoundException e) {
             log.warn("event=pt_course_reservations_find_failed reason=trainer_not_found userId={}", userId);
             throw e;
         }
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_course_reservations_find_failed reason=forbidden userId={}, ptCourseId={}", userId, ptCourseId);
             throw new PtCourseForbiddenException();
         }
@@ -230,16 +230,16 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .orElseThrow(PtCourseNotFoundException::new);
 
         // 트레이너 프로필 조회
-        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        Long trainerProfileId;
         try {
-            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+            trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(userId);
         } catch (TrainerProfileNotFoundException e) {
             log.warn("event=pt_reservation_detail_find_failed reason=trainer_not_found userId={}", userId);
             throw e;
         }
 
         // 본인 강습 여부 확인
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_reservation_detail_find_failed reason=forbidden userId={}, ptReservationId={}", userId, ptReservationId);
             throw new PtCourseForbiddenException();
         }
@@ -300,9 +300,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .map(ptCourse -> {
                     OrganizationQueryPort.OrganizationInfo org =
                             organizationQueryPort.findById(ptCourse.getOrganizationId());
-                    // TODO : trainerName만 쓸거면 findTrainerNameById 으로 변경
-                    TrainerProfileQueryPort.TrainerDisplayInfo trainer =
-                            trainerProfileQueryPort.findById(ptCourse.getTrainerProfileId());
+                    String trainerName = trainerProfileQueryPort.findTrainerNameById(ptCourse.getTrainerProfileId());
 
                     return new PopularCourseView(
                             ptCourse.getId(),
@@ -313,7 +311,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                             ptCourse.getTagId(),
                             tagMap.getOrDefault(ptCourse.getTagId(), null),
-                            trainer.trainerName(),
+                            trainerName,
                             org.roadAddress()
                     );
                 })

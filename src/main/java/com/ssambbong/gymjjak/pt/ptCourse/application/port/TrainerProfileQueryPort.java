@@ -1,13 +1,12 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.port;
 
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo;
+
 import java.util.List;
 import java.util.Map;
 
 // 트레이너 프로필 조회 Port
 public interface TrainerProfileQueryPort {
-
-    // TODO: 이거 지우기! Adapter랑 JpaRepo까지 지워주세요!
-    TrainerInfo findByUserId(Long userId);
 
     // 활성화중인 트레이너 프로필 id 조회
     Long findActiveTrainerProfileIdByUserId(Long userId);
@@ -21,25 +20,11 @@ public interface TrainerProfileQueryPort {
     // 트레이너 name 조회
     String findTrainerNameById(Long trainerProfileId);
 
-    // TODO: dto 클래스를 반환타입으로 바꾸기
+    // 목록 조회용 요약 정보 배치 조회 (N+1 방지)
     Map<Long, TrainerSummaryInfo> findSummaryAllByIds(List<Long> ids);
 
     // 상세 조회용 전체 정보 조회
     TrainerDisplayInfo findById(Long trainerProfileId);
-
-    record TrainerInfo(
-            Long trainerProfileId,
-            Long organizationId
-    ) {}
-
-    // TODO: pt 도메인에서 dto로 만들
-    //   pt/ptCourse/application/port/dto/TrainerSummaryInfo.java로 만들기,
-    // 목록 조회용 경량 DTO (trainerName, averageRating, reviewCount만 포함)
-    record TrainerSummaryInfo(
-            String trainerName,
-            Double averageRating,
-            int reviewCount
-    ) {}
 
     record TrainerDisplayInfo(
             String trainerName,
