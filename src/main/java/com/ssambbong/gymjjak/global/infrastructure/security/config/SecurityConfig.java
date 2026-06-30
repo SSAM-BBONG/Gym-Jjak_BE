@@ -206,7 +206,9 @@ public class SecurityConfig {
         // 프론트엔드 주소 허용
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
-                "http://localhost:8080"
+                "http://localhost:8080",
+                // 프론트 배포 주소
+                "http://13.209.67.161"
 //                "https://gymjjak.com"
         ));
 
