@@ -192,10 +192,10 @@ public class TrainerProfileQueryService implements TrainerProfileQueryUseCase {
 
             log.info(
                     "event=trainer_profile_search_succeeded, " +
-                            "page={}, size={}, totalElements={}, returnedCount={}",
+                            "page={}, size={}, hasNext={}, returnedCount={}",
                     result.page(),
                     result.size(),
-                    result.totalElements(),
+                    result.hasNext(),
                     result.content().size()
             );
 

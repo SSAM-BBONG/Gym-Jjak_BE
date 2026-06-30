@@ -3,8 +3,8 @@ package com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.
 import com.ssambbong.gymjjak.trainer.trainerprofile.application.query.SearchTrainerResult;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerProfileStatus;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.entity.TrainerProfileJpaEntity;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,29 +18,68 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
 
     Optional<TrainerProfileJpaEntity> findByUserId(Long userId);
 
-    @Query("""
-            select new com.ssambbong.gymjjak.trainer.trainerprofile.application.query.SearchTrainerResult(
-            tp.trainerProfileId,
-            u.name,
-            u.username,
-            u.nickname
-        )
-        from TrainerProfileJpaEntity tp
-        join UserJpaEntity u on u.id = tp.userId
-        where tp.status = :status
-          and (
-                :keyword is null
-                or u.name like concat('%', :keyword, '%') 
-                or u.username like concat('%', :keyword, '%') 
-                or u.nickname like concat('%', :keyword, '%') 
-          )
-        order by u.name asc, tp.trainerProfileId asc
-    """)
-    Page<SearchTrainerResult> searchTrainers(
-            @Param("status")TrainerProfileStatus status,
+    @Query(value = """
+        select
+            result.trainerProfileId as trainerProfileId,
+            result.name as name,
+            result.username as username,
+            result.nickname as nickname
+        from (
+            select
+                tp.trainer_profile_id as trainerProfileId,
+                u.name as name,
+                u.username as username,
+                u.nickname as nickname
+            from trainer_profiles tp
+            join users u
+                on u.user_id = tp.user_id
+            where tp.status = :status
+              and u.username like concat(:keyword, '%')
+
+            union
+
+            select
+                tp.trainer_profile_id as trainerProfileId,
+                u.name as name,
+                u.username as username,
+                u.nickname as nickname
+            from trainer_profiles tp
+            join users u
+                on u.user_id = tp.user_id
+            where tp.status = :status
+              and u.name like concat(:keyword, '%')
+
+            union
+
+            select
+                tp.trainer_profile_id as trainerProfileId,
+                u.name as name,
+                u.username as username,
+                u.nickname as nickname
+            from trainer_profiles tp
+            join users u
+                on u.user_id = tp.user_id
+            where tp.status = :status
+              and u.nickname like concat(:keyword, '%')
+        ) result
+        order by result.name asc, result.trainerProfileId asc
+        """, nativeQuery = true)
+    Slice<SearchTrainerRow> searchTrainers(
+            @Param("status") String status,
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    interface SearchTrainerRow {
+        Long getTrainerProfileId();
+
+        String getName();
+
+        String getUsername();
+
+        String getNickname();
+    }
+
 
     // userId, status로 트레이너 프로필Id 조회
     @Query("""
