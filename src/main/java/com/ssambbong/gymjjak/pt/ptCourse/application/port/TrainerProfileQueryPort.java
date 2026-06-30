@@ -34,9 +34,10 @@ public interface TrainerProfileQueryPort {
 
     // TODO: pt 도메인에서 dto로 만들
     //   pt/ptCourse/application/port/dto/TrainerSummaryInfo.java로 만들기,
-    // 목록 조회용 경량 DTO (trainerName, reviewCount만 포함)
+    // 목록 조회용 경량 DTO (trainerName, averageRating, reviewCount만 포함)
     record TrainerSummaryInfo(
             String trainerName,
+            Double averageRating,
             int reviewCount
     ) {}
 

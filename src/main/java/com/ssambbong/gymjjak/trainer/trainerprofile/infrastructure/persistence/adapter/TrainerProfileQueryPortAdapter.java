@@ -104,6 +104,7 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
                         TrainerProfileJpaEntity::getTrainerProfileId,
                         e -> new TrainerSummaryInfo(
                                 e.getTrainerName(),
+                                e.getAverageRating() != null ? e.getAverageRating().doubleValue() : null,
                                 e.getReviewCount()
                         )
                 ));

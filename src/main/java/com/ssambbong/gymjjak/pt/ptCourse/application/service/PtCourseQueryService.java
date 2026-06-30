@@ -89,6 +89,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             org != null ? org.roadAddress() : null,
                             org != null ? org.latitude() : null,
                             org != null ? org.longitude() : null,
+                            trainer != null ? trainer.averageRating() : null,
                             trainer != null ? trainer.reviewCount() : 0
                     );
                 })
@@ -353,32 +354,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
             log.error("event=pt_course_thumbnail_url_resolve_failed fileId={}", fileId, e);
             return null;
         }
-    }
-
-    // ptCourse + enrich(조직/트레이너) -> 목록 응답용 View 변환
-    private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap, Map<Long, String> tagMap) {
-        OrganizationQueryPort.OrganizationInfo org =
-                organizationQueryPort.findById(ptCourse.getOrganizationId());
-        TrainerProfileQueryPort.TrainerDisplayInfo trainer =
-                trainerProfileQueryPort.findById(ptCourse.getTrainerProfileId());
-
-        return new PtCourseListView(
-                ptCourse.getId(),
-                ptCourse.getTitle(),
-                resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
-                ptCourse.getPrice(),
-                ptCourse.getTagId(),
-                tagMap.getOrDefault(ptCourse.getTagId(), null),
-                ptCourse.getCategoryId(),
-                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
-                trainer.trainerName(),
-                org.organizationId(),
-                org.businessName(),
-                org.roadAddress(),
-                org.latitude(),
-                org.longitude(),
-                trainer.reviewCount()
-        );
     }
 
     // TODO: 트레이너 프로필 관련 api는 port로 쏘지 말고.
