@@ -78,7 +78,6 @@ scrape_configs:
           __path__: ./logs/gym-jjak-performance.log
 
     pipeline_stages:
-      # 성능 로그도 날짜로 시작하므로 동일하게 multiline 처리
       - multiline:
           firstline: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}'
           max_wait_time: 3s
