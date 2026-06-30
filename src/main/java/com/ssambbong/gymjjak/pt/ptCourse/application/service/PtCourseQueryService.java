@@ -300,7 +300,13 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .map(ptCourse -> {
                     OrganizationQueryPort.OrganizationInfo org =
                             organizationQueryPort.findById(ptCourse.getOrganizationId());
-                    String trainerName = trainerProfileQueryPort.findTrainerNameById(ptCourse.getTrainerProfileId());
+                    String trainerName;
+                    try {
+                        trainerName = trainerProfileQueryPort.findTrainerNameById(ptCourse.getTrainerProfileId());
+                    } catch (Exception e) {
+                        log.warn("event=pt_course_popular_trainer_not_found trainerProfileId={}", ptCourse.getTrainerProfileId());
+                        trainerName = null;
+                    }
 
                     return new PopularCourseView(
                             ptCourse.getId(),
@@ -354,8 +360,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         }
     }
 
-    // TODO: 트레이너 프로필 관련 api는 port로 쏘지 말고.
-    //  프론트에서 트레이너 프로필 조회 getTrainerProfileDetail() 매소드 비동기로 호출하는 식으로 변경
     // ptCourse + TrainerDisplayInfo + 커리큘럼/스케쥴 목록 -> 상세 응답용 View 반환
     private PtCourseDetailView toDetailView(PtCourse ptCourse) {
         TrainerProfileQueryPort.TrainerDisplayInfo trainer =
