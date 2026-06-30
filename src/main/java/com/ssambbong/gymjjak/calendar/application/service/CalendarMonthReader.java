@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthPtResult;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,11 @@ public class CalendarMonthReader {
     private final CalendarPortToPtReservation calendarPortToPtReservation;
     private final WorkoutDiaryPort workoutDiaryPort;
 
+    @Cacheable(
+            cacheNames = "calendarMonth",
+            key = "'user:' + #userId + ':year:' + #year + ':month:' + #month",
+            sync = true
+    )
     public CalendarMonthResult findCalendarMonth(
             Long userId,
             Integer year,

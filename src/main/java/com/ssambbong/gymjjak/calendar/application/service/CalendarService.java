@@ -63,12 +63,7 @@ public class CalendarService implements CalendarUsecase {
                 diary
         );
     }
-
-    @Cacheable(
-            cacheNames = "calendarMonth",
-            key = "'user:' + #userId + ':year:' + #year + ':month:' + #month",
-            sync = true
-    )
+    
     @Override
     public CalendarMonthResult findCalendarMonth(
             Long userId,
