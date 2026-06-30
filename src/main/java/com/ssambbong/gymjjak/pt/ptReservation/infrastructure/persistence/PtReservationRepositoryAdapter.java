@@ -77,6 +77,11 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
     }
 
     @Override
+    public List<LocalDateTime> findReservedStartAtsByPtCourseId(Long ptCourseId, LocalDateTime from, LocalDateTime to) {
+        return repository.findReservedStartAtsByPtCourseIdAndRange(ptCourseId, from, to);
+    }
+
+    @Override
     @Transactional
     public void updateStatus(PtReservation ptReservation) {
         PtReservationJpaEntity entity = repository.findById(ptReservation.getId())

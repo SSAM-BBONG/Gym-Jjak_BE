@@ -43,19 +43,6 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
                 );
     }
 
-    // userId로 활성화된 트레이너 프로필 ID 조회
-    @Override
-    public Long findActiveTrainerProfileIdByUserId(Long userId) {
-        return trainerProfileRepository
-                .findTrainerProfileIdByUserIdAndStatus(
-                        userId,
-                        TrainerProfileStatus.ACTIVE
-                )
-                .orElseThrow(() ->
-                        new TrainerProfileNotFoundException("userId", userId)
-                );
-    }
-
     // ACTIVE 상태 트레이너 수
     // TODO: 통계 대시보드 태스트 후, trainerProfile index 추가 고려해도 될듯
     @Override
