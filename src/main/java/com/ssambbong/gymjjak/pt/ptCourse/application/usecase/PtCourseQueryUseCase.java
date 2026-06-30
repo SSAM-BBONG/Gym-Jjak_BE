@@ -71,17 +71,8 @@ public interface PtCourseQueryUseCase {
             String description,
             int price,
             int totalSessionCount,
-            Double averageRating,
-            int reviewCount,
-            // 조직
             Long organizationId,
-            // 트레이너
             Long trainerProfileId,
-            String trainerName,
-            Long trainerProfileFileId,
-            String trainerIntroduction,
-            List<String> certifications,
-            List<String> awards,
             List<CurriculumView> curriculums,
             List<ScheduleView> schedules,
             List<ReviewQueryPort.ReviewSummary> recentReviews
