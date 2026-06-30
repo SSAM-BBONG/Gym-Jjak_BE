@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     command: -config.file=/etc/loki/loki-config.yml
     ports:
-      - "${LOKI_PORT:-3100}:-3100}:3100"
+      - "${LOKI_PORT:-3100}:3100"
     volumes:
       - ./monitoring/loki/loki-config.deploy.yml:/etc/loki/loki-config.yml:ro
       - gymjjak-loki-data:/loki-data
