@@ -65,10 +65,6 @@ public class UserMailAdapterFromOrganization implements UserCreationPort {
             throw new UserException(UserErrorCode.DUPLICATE_USERNAME);
         }
 
-        if (springDataUserRepository.existsByNickname(businessName)) {
-            throw new UserException(UserErrorCode.DUPLICATE_NICKNAME);
-        }
-
     }
 
     private String generateTemporaryPassword() {

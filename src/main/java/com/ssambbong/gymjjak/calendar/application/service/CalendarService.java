@@ -22,13 +22,14 @@ import java.util.TreeMap;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CalendarService implements CalendarUsecase {
 
     private final CalendarPortToPtReservation calendarPortToPtReservation;
     private final WorkoutDiaryPort workoutDiaryPort;
+    private final CalendarMonthReader calendarMonthReader;
 
     @Override
+    @Transactional(readOnly = true)
     public CalendarDayResult findCalendarDay(
             Long userId,
             LocalDate date
@@ -65,7 +66,8 @@ public class CalendarService implements CalendarUsecase {
 
     @Cacheable(
             cacheNames = "calendarMonth",
-            key = "'user:' + #userId + ':year:' + #year + ':month:' + #month"
+            key = "'user:' + #userId + ':year:' + #year + ':month:' + #month",
+            sync = true
     )
     @Override
     public CalendarMonthResult findCalendarMonth(
@@ -74,6 +76,27 @@ public class CalendarService implements CalendarUsecase {
             Integer month
     ) {
 
+        validateMonthRequest(userId, year, month);
+
+        log.info(
+                "event=calendar_month_cache_miss userId={} year={} month={}",
+                userId,
+                year,
+                month
+        );
+
+        return calendarMonthReader.findCalendarMonth(
+                userId,
+                year,
+                month
+        );
+    }
+
+    private void validateMonthRequest(
+            Long userId,
+            Integer year,
+            Integer month
+    ) {
         if (userId == null) {
             throw new CalendarException(CalendarErrorCode.USER_ID_REQUIRED);
         }
@@ -89,59 +112,6 @@ public class CalendarService implements CalendarUsecase {
         if (month < 1 || month > 12) {
             throw new CalendarException(CalendarErrorCode.INVALID_MONTH);
         }
-
-        YearMonth yearMonth = YearMonth.of(year, month);
-
-        LocalDate startDate = yearMonth.atDay(1);
-        LocalDate endDate = yearMonth.plusMonths(1).atDay(1);
-
-        LocalDateTime startAt = startDate.atStartOfDay();
-        LocalDateTime endAt = endDate.atStartOfDay();
-
-        log.debug("event=calendarMonth_find_start userId={}", userId);
-
-        List<CalendarMonthPtResult> pts =
-                calendarPortToPtReservation.findPtDatesByUserIdAndPeriod(
-                        userId,
-                        startAt,
-                        endAt
-                );
-
-        List<CalendarMonthDiaryResult> diaries =
-                workoutDiaryPort.findDiaryTitlesByUserIdAndPeriod(
-                        userId,
-                        startDate,
-                        endDate
-                );
-
-        Map<LocalDate, CalendarMonthDayAccumulator> dayMap = new TreeMap<>();
-
-        for (CalendarMonthPtResult pt : pts) {
-            dayMap.computeIfAbsent(
-                    pt.date(),
-                    date -> new CalendarMonthDayAccumulator(date)
-            ).markPt();
-        }
-
-        for (CalendarMonthDiaryResult diary : diaries) {
-            dayMap.computeIfAbsent(
-                    diary.date(),
-                    date -> new CalendarMonthDayAccumulator(date)
-            ).setDiaryTitle(diary.diaryTitle());
-        }
-
-        List<CalendarMonthDayResult> days = dayMap.values()
-                .stream()
-                .map(CalendarMonthDayAccumulator::toResult)
-                .toList();
-
-        log.info("event=calendarMonth_find_succeed userId={}", userId);
-
-        return new CalendarMonthResult(
-                year,
-                month,
-                days
-        );
     }
 
     private static class CalendarMonthDayAccumulator {
