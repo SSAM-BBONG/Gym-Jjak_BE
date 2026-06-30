@@ -4,12 +4,7 @@
 # - 수집한 로그를 Loki HTTP API를 통해 전송
 # - 재시작 시 중복 로그 방지를 위해 읽은 위치 기록
 
-# Promtail 서버 설정 섹션
-# Promtail이 수신할 HTTP/gRPC 요청에 대한 포트 설정
 server:
-  # Promtail이 수신할 HTTP 포트 번호
-  # 외부에서 Promtail의 상태 확인(/metrics 엔드포인트) 또는 로그 전송 시 사용
-  # loki-config.yaml의 server.http_listen_port: 3100과 구분되어야 함 (같은 포트 불가)
   http_listen_port: 9080
 
   # gRPC 포트 설정
@@ -30,7 +25,7 @@ positions:
 clients:
   # 첫 번째 Loki 서버 연결 설정
   # Docker Compose 내부에서는 loki 서비스명으로 접근합니다.
-  - url: http://{MONITORING_EC2_PRIVATE_IP}:3100/loki/api/v1/push
+  - url: http://${MONITORING_EC2_PRIVATE_IP}:3100/loki/api/v1/push
     # 설명:
     # - 127.0.0.1: Windows에서 loki-windows-amd64.exe를 직접 실행하는 로컬 루프백 주소
     # - 일부 Windows/DNS 환경에서는 Promtail이 localhost를 외부 DNS로 조회해 실패할 수 있으므로 IP를 직접 사용한다.
