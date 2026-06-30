@@ -10,6 +10,7 @@ public record PtReservationCanceledEvent(
         Long ptReservationId,
         Instant occurredAt
 ) implements DomainEvent {
+
     public PtReservationCanceledEvent {
         Objects.requireNonNull(receiverId, "receiverId는 필수입니다.");
         Objects.requireNonNull(ptReservationId, "ptReservationId는 필수입니다.");

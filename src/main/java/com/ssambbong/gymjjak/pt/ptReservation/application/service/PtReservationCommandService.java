@@ -10,6 +10,8 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.command.CancelPtReserv
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationApprovedEvent;
+import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationCanceledEvent;
+import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationRequestedEvent;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
@@ -97,6 +99,15 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 saved.getId()
         ));
 
+        // 트레이너에게 새 예약 신청 알림
+        Long trainerUserId = trainerQueryPort.findUserIdByTrainerProfileId(
+                ptCourse.getTrainerProfileId()
+        );
+        eventPublisher.publishEvent(
+                new PtReservationRequestedEvent(
+                        trainerUserId,
+                        saved.getId()));
+
         evictMonthAfterCommit(
                 command.userId(),
                 command.reservedStartAt()
@@ -143,6 +154,14 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
         reservation.changeStatus(command.status());
         ptReservationRepository.updateStatus(reservation);
+
+        // 예약 취소 시 알림 발송
+        if (command.status() == PtReservationStatus.CANCELLED) {
+            eventPublisher.publishEvent(
+                    new PtReservationCanceledEvent(
+                    reservationUserId, command.ptReservationId()
+            ));
+        }
 
         evictMonthAfterCommit(
                 reservationUserId,
