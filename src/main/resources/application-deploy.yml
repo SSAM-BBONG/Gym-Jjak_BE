@@ -18,7 +18,12 @@ spring:
 logging:
   level:
     root: info
+    com.ssambbong.gymjjak: info
+    org.springframework.web: info
+    org.springframework.security: info
+    org.springframework.messaging: info
     org.hibernate.SQL: warn
+    org.hibernate.orm.jdbc.bind: warn
 
 management:
   endpoint:
