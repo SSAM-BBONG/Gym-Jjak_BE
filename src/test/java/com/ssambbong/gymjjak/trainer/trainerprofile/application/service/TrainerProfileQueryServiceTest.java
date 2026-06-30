@@ -170,8 +170,6 @@ class TrainerProfileQueryServiceTest {
                         ),
                         0,
                         10,
-                        2L,
-                        1,
                         false
                 );
 
@@ -191,8 +189,6 @@ class TrainerProfileQueryServiceTest {
 
         assertThat(result.page()).isZero();
         assertThat(result.size()).isEqualTo(10);
-        assertThat(result.totalElements()).isEqualTo(2L);
-        assertThat(result.totalPages()).isEqualTo(1);
         assertThat(result.hasNext()).isFalse();
 
         verify(trainerProfileSearchQueryPort)
