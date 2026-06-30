@@ -113,17 +113,6 @@ class PtCourseQueryServiceTest {
         // given
         PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
-        when(trainerProfileQueryPort.findById(eq(1L))).thenReturn(
-                new TrainerProfileQueryPort.TrainerDisplayInfo(
-                        "트레이너01",
-                        "안전하게 지도합니다.",
-                        4.6,
-                        1,
-                        null,
-                        List.of(),
-                        List.of()
-                )
-        );
 
         List<PtCurriculum> curriculums = List.of(
                 PtCurriculum.restore(1L, 1L, 1, "기초 체력 평가", "체력 측정 및 목표 설정"),
@@ -142,7 +131,7 @@ class PtCourseQueryServiceTest {
 
         // then
         assertEquals(1L, result.ptCourseId());
-        assertEquals("트레이너01", result.trainerName());
+        assertEquals(1L, result.trainerProfileId());
 
         // 커리큘럼 세부 필드 검증
         assertEquals(2, result.curriculums().size());

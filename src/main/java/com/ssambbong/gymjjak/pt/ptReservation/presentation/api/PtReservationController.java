@@ -83,12 +83,12 @@ public class PtReservationController {
         );
     }
 
-    @GetMapping("/reservations/me/{ptReservationId}")
+    @GetMapping("/reservations/me/{reservationId}")
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "내 PT 예약 상세 조회", description = "본인의 PT 예약 상세 정보를 조회한다.")
     public ResponseEntity<GlobalApiResponse<MyPtReservationDetailResponse>> findMyReservationDetail(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long ptReservationId   // 조회할 예약 ID
+            @PathVariable("reservationId") Long ptReservationId
     ) {
         var view = ptReservationQueryUseCase.findMyReservationDetail(
                 authUser.userId(),
@@ -115,14 +115,14 @@ public class PtReservationController {
             @ApiResponse(responseCode = "403", description = "본인 예약 아님", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음", content = @Content(schema = @Schema()))
     })
-    @PatchMapping("/reservations/{ptReservationId}/status")
+    @PatchMapping("/reservations/{reservationId}/status")
     public ResponseEntity<GlobalApiResponse<ChangePtReservationStatusResponse>> changePtReservationStatus(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long ptReservationId,
+            @PathVariable Long reservationId,
             @RequestBody @Valid ChangePtReservationStatusRequest request
     ) {
         PtReservation reservation = ptReservationCommandUseCase.changePtReservationStatus(
-                new ChangePtReservationStatusCommand(authUser.userId(), ptReservationId, request.status()));
+                new ChangePtReservationStatusCommand(authUser.userId(), reservationId, request.status()));
         ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
                 reservation.getStatus(),
                 reservation.getProgressCount(),

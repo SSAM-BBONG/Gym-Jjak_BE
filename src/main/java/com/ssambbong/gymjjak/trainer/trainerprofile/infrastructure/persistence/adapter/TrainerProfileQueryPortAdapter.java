@@ -125,4 +125,10 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
                 awards
         );
     }
+
+    // TODO: 임시 구현
+    @Override
+    public Long findUserIdByTrainerProfileId(Long trainerProfileId) {
+        return 0L;
+    }
 }
