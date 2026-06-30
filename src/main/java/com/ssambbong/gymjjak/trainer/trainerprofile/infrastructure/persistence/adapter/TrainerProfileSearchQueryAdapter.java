@@ -26,23 +26,23 @@ public class TrainerProfileSearchQueryAdapter implements TrainerProfileSearchQue
                 condition.size()
         );
 
-        Slice<SpringDataTrainerProfileRepository.SearchTrainerRow> page =
+        Slice<SpringDataTrainerProfileRepository.SearchTrainerRow> slice =
                 repository.searchTrainers(
                         TrainerProfileStatus.ACTIVE.name(),
                         condition.keyword(),
                         pageRequest
                 );
 
-        List<SearchTrainerResult> content = page.getContent()
+        List<SearchTrainerResult> content = slice.getContent()
                 .stream()
                 .map(this::toResult)
                 .toList();
 
         return new SearchTrainerListResult(
                 content,
-                page.getNumber(),
-                page.getSize(),
-                page.hasNext()
+                slice.getNumber(),
+                slice.getSize(),
+                slice.hasNext()
         );
     }
 
