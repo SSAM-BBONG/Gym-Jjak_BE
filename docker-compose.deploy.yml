@@ -56,7 +56,9 @@ services:
     image: grafana/promtail:2.9.8
     container_name: gymjjak-promtail
     restart: unless-stopped
-    command: -config.file=/etc/promtail/promtail-config.yml
+    command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
+    environment:
+      MONITORING_EC2_PRIVATE_IP: ${MONITORING_EC2_PRIVATE_IP}
     volumes:
       - ./monitoring/promtail/promtail-config.deploy.yml:/etc/promtail/promtail-config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
