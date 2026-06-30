@@ -8,11 +8,7 @@ import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseStatusInvalidException;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.StudentNotFoundException;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.TrainerProfileNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.*;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -29,8 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -107,6 +104,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .orElseThrow(PtCourseNotFoundException::new);
 
         if (ptCourse.getStatus() != PtCourseStatus.VISIBLE) {
+            log.warn("event=pt_course_detail_find_failed reason=not_visible ptCourseId={} status={}", ptCourseId, ptCourse.getStatus());
             throw new PtCourseNotFoundException();
         }
 
@@ -120,6 +118,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         // null·VISIBLE·HIDDEN만 허용 (enum 추가 시 의도치 않은 통과 방지)
         if (status != null && status != PtCourseStatus.VISIBLE && status != PtCourseStatus.HIDDEN) {
+            log.warn("event=pt_my_courses_find_failed reason=invalid_status userId={} status={}", userId, status);
             throw new PtCourseStatusInvalidException();
         }
 
@@ -397,5 +396,81 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 schedules,
                 reviewQueryPort.findRecentByTrainerProfileId(ptCourse.getTrainerProfileId(), 3)
         );
+    }
+
+    @Override
+    public AvailableDatesView findAvailableDates(Long ptCourseId) {
+        log.debug("event=pt_course_available_dates_find ptCourseId={}", ptCourseId);
+        ptCourseRepository.findById(ptCourseId)
+                .orElseThrow(() -> {
+                    log.warn("event=pt_course_available_dates_find_failed reason=course_not_found ptCourseId={}", ptCourseId);
+                    return new PtCourseNotFoundException();
+                });
+
+        List<com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule> schedules =
+                ptCourseScheduleRepository.findAllByPtCourseId(ptCourseId);
+        if (schedules.isEmpty()) return new AvailableDatesView(List.of());
+
+        LocalDate firstDay = LocalDate.now();
+        LocalDate lastDay = firstDay.plusDays(29);
+
+        Set<LocalDateTime> reserved = new HashSet<>(
+                ptReservationRepository.findReservedStartAtsByPtCourseId(
+                        ptCourseId,
+                        firstDay.atStartOfDay(),
+                        lastDay.plusDays(1).atStartOfDay()
+                )
+        );
+
+        List<LocalDate> availableDates = new ArrayList<>();
+        LocalDate date = firstDay;
+        while (!date.isAfter(lastDay)) {
+            final LocalDate d = date;
+            boolean hasAvailable = schedules.stream()
+                    .filter(s -> s.getDayOfWeek() == d.getDayOfWeek())
+                    .anyMatch(s -> !reserved.contains(LocalDateTime.of(d, s.getStartTime())));
+            if (hasAvailable) availableDates.add(d);
+            date = date.plusDays(1);
+        }
+
+        log.info("event=pt_course_available_dates_find_succeeded ptCourseId={} from={} to={} count={}",
+                ptCourseId, firstDay, lastDay, availableDates.size());
+        return new AvailableDatesView(availableDates);
+    }
+
+    @Override
+    public AvailableTimeSlotsView findAvailableTimeSlots(Long ptCourseId, LocalDate date) {
+        if (date.isBefore(LocalDate.now())) {
+            log.warn("event=pt_course_available_time_slots_failed reason=past_date ptCourseId={} date={}", ptCourseId, date);
+            throw new PtCourseInvalidException();
+        }
+        log.debug("event=pt_course_available_time_slots_find ptCourseId={} date={}", ptCourseId, date);
+        ptCourseRepository.findById(ptCourseId)
+                .orElseThrow(() -> {
+                    log.warn("event=pt_course_available_time_slots_find_failed reason=course_not_found ptCourseId={}", ptCourseId);
+                    return new PtCourseNotFoundException();
+                });
+
+        Set<LocalDateTime> reserved = new HashSet<>(
+                ptReservationRepository.findReservedStartAtsByPtCourseId(
+                        ptCourseId,
+                        date.atStartOfDay(),
+                        date.plusDays(1).atStartOfDay()
+                )
+        );
+
+        List<TimeSlotView> timeSlots = ptCourseScheduleRepository.findAllByPtCourseId(ptCourseId).stream()
+                .filter(s -> s.getDayOfWeek() == date.getDayOfWeek())
+                .sorted(Comparator.comparing(com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule::getStartTime))
+                .map(s -> new TimeSlotView(
+                        s.getStartTime(),
+                        s.getEndTime(),
+                        !reserved.contains(LocalDateTime.of(date, s.getStartTime()))
+                ))
+                .toList();
+
+        log.info("event=pt_course_available_time_slots_find_succeeded ptCourseId={} date={} slots={}",
+                ptCourseId, date, timeSlots.size());
+        return new AvailableTimeSlotsView(date, timeSlots);
     }
 }

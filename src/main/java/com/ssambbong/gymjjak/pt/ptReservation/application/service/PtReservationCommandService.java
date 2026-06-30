@@ -3,7 +3,9 @@ package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CancelPtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
@@ -14,6 +16,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDupl
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationScheduleMismatchException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
@@ -25,7 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -35,6 +41,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
     private final PtReservationRepository ptReservationRepository;
     private final PtCourseRepository ptCourseRepository;
+    private final PtCourseScheduleRepository ptCourseScheduleRepository;
     private final TrainerQueryPort trainerQueryPort;
     private final ApplicationEventPublisher eventPublisher;
     private final CalendarCacheEvictionPort calendarCacheEvictionPort;
@@ -51,6 +58,8 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                             command.ptCourseId());
                     return new PtCourseNotFoundException();
                 });
+
+        validateSchedule(ptCourse.getId(), command.reservedStartAt(), command.reservedEndAt());
 
         if (ptReservationRepository.existsByPtCourseIdAndTimeOverlap(
                 command.ptCourseId(),
@@ -177,6 +186,25 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
         log.info("event=pt_reservation_cancel_succeeded ptReservationId={}", command.ptReservationId());
         return reservation;
+    }
+
+    private void validateSchedule(Long ptCourseId, LocalDateTime reservedStartAt, LocalDateTime reservedEndAt) {
+        DayOfWeek day = reservedStartAt.getDayOfWeek();
+        LocalTime startTime = reservedStartAt.toLocalTime();
+        LocalTime endTime = reservedEndAt.toLocalTime();
+
+        List<PtCourseSchedule> schedules = ptCourseScheduleRepository.findAllByPtCourseId(ptCourseId);
+        boolean matched = schedules.stream().anyMatch(s ->
+                s.getDayOfWeek() == day &&
+                s.getStartTime().equals(startTime) &&
+                s.getEndTime().equals(endTime)
+        );
+
+        if (!matched) {
+            log.warn("event=pt_reservation_create_failed reason=schedule_mismatch ptCourseId={} day={} start={} end={}",
+                    ptCourseId, day, startTime, endTime);
+            throw new PtReservationScheduleMismatchException();
+        }
     }
 
     private void evictMonthAfterCommit(

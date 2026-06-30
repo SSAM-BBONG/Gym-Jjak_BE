@@ -32,6 +32,12 @@ public interface PtCourseQueryUseCase {
     // PT 통계 조회
     PtStatsView findStats();
 
+    // 예약 가능 날짜 조회 (오늘부터 30일)
+    AvailableDatesView findAvailableDates(Long ptCourseId);
+
+    // 예약 가능 시간 슬롯 조회 (날짜 기준)
+    AvailableTimeSlotsView findAvailableTimeSlots(Long ptCourseId, LocalDate date);
+
     // ──── 목록 뷰 ────
     record PtCourseListView(
             Long ptCourseId,
@@ -134,6 +140,14 @@ public interface PtCourseQueryUseCase {
             int totalSessionCount,
             String title
     ) {}
+
+    // ──── 예약 가능 날짜 뷰 ────
+    record AvailableDatesView(List<LocalDate> availableDates) {}
+
+    // ──── 예약 가능 시간 슬롯 뷰 ────
+    record AvailableTimeSlotsView(LocalDate date, List<TimeSlotView> timeSlots) {}
+
+    record TimeSlotView(LocalTime startTime, LocalTime endTime, boolean available) {}
 
     // ──── PT 통계 뷰 ────
     record PtStatsView(
