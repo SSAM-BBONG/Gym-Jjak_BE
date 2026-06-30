@@ -26,6 +26,9 @@ public interface TrainerProfileQueryPort {
     // 상세 조회용 전체 정보 조회
     TrainerDisplayInfo findById(Long trainerProfileId);
 
+    // trainerProfileId -> userId 역방향 조회
+    Long findUserIdByTrainerProfileId(Long trainerProfileId);
+
     record TrainerDisplayInfo(
             String trainerName,
             String introduction,

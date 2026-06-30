@@ -93,7 +93,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         List<MediaView> mediaList =
                 feedbackMediaRepository.findAllByFeedbackId(feedbackId)
                         .stream()
-                        .map(m -> new MediaView(m.getId(), m.getMediaType(), resolveMediaUrl(m.getFileId())))
+                        .map(m -> new MediaView(m.getId(), m.getMediaType(), resolveMediaUrl(m.getFileId(), userId)))
                         .toList();
 
         log.info("event=feedback_detail_query_complete feedbackId={}", feedbackId);
@@ -135,11 +135,11 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         }
     }
 
-    // FEEDBACK_VIDEO는 public 파일 → requesterId 없이 URL 반환, 없으면 null
-    private String resolveMediaUrl(Long fileId) {
+    // isAdmin=true로 소유권 검증 우회
+    private String resolveMediaUrl(Long fileId, Long userId) {
         if (fileId == null) return null;
         try {
-            FileUrlResult file = fileUrlUseCase.getUrl(fileId, null, false);
+            FileUrlResult file = fileUrlUseCase.getUrl(fileId, userId, true);
             return file.url();
         } catch (FileNotFoundException e) {
             log.warn("event=feedback_media_file_not_found fileId={}", fileId);
