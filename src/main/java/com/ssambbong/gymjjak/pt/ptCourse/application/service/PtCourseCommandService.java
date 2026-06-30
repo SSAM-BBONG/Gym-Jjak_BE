@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseComma
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.DeletePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UpdatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
@@ -46,6 +47,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
     private final PtCurriculumRepository ptCurriculumRepository;
     private final PtCourseScheduleRepository ptCourseScheduleRepository;
     private final TrainerProfileQueryPort trainerProfileQueryPort;
+    private final OrganizationQueryPort organizationQueryPort;
     private final PtReservationCountQueryPort ptReservationCountQueryPort;
     private final FileUseCase fileUseCase;
 
@@ -102,14 +104,14 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 curriculumCount, scheduleCount
         );
 
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
+        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+        Long organizationId = organizationQueryPort.findOrganizationIdByTrainerProfileId(trainerProfileId);
 
         Long thumbnailFileId = registerThumbnailFile(command.userId(), command.thumbnailFile());
 
         PtCourse ptCourse = PtCourse.create(
-                trainerInfo.organizationId(),
-                trainerInfo.trainerProfileId(),
+                organizationId,
+                trainerProfileId,
                 command.categoryId(),
                 command.tagId(),
                 thumbnailFileId,
@@ -151,9 +153,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 });
 
         // 본인 강습 여부 확인
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_course_update_failed reason=forbidden userId={}, ptCourseId={}", command.userId(), command.ptCourseId());
             throw new PtCourseForbiddenException();
         }
@@ -295,9 +296,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 });
 
         // 본인 PT인지 여부 검증
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_course_status_change_failed, reason=forbidden, userId={}, ptCourseId={}",
                     command.userId(), command.ptCourseId());
             throw new PtCourseForbiddenException();
@@ -329,9 +329,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         }
 
         // 본인 강습 여부 확인
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_course_delete_failed reason=forbidden userId={} ptCourseId={}", command.userId(), command.ptCourseId());
             throw new PtCourseForbiddenException();
         }

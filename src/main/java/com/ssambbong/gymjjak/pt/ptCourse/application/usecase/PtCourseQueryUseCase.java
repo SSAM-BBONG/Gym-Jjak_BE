@@ -36,7 +36,7 @@ public interface PtCourseQueryUseCase {
     record PtCourseListView(
             Long ptCourseId,
             String title,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             int price,
             // 태그
             Long tagId,
@@ -53,13 +53,14 @@ public interface PtCourseQueryUseCase {
             Double latitude,
             Double longitude,
             // 리뷰
+            Double averageRating,
             int reviewCount
     ) {}
 
     // ──── 상세 뷰 ────
     record PtCourseDetailView(
             Long ptCourseId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String description,
             int price,
@@ -99,7 +100,7 @@ public interface PtCourseQueryUseCase {
     // ──── 내 강습 목록 뷰 ────
     record MyPtCourseListView(
             Long ptCourseId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String trainerName,
             PtCourseStatus status,
@@ -147,7 +148,7 @@ public interface PtCourseQueryUseCase {
             Long ptCourseId,
             String title,
             int price,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             Long categoryId,
             String categoryName,
             Long tagId,

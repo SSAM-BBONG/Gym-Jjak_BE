@@ -1,5 +1,8 @@
 package com.ssambbong.gymjjak.pt.ptReservation.application.service;
 
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.FeedbackQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.PtCourseQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
@@ -26,6 +29,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
     private final PtReservationRepository ptReservationRepository;
     private final PtCourseQueryPort ptCourseQueryPort; // title, thumbnailFileId, trainerName
     private final FeedbackQueryPort feedbackQueryPort; // lastDate
+    private final FileUrlUseCase fileUrlUseCase;
 
     @Override
     public List<MyPtReservationView> findMyReservations(Long userId, PtReservationStatus status) {
@@ -76,7 +80,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
         log.info("event=pt_reservation_detail_succeeded ptReservationId={}", ptReservationId);
         return new PtReservationDetailView(
-                courseInfo.thumbnailFileId(),
+                resolveThumbnailUrl(courseInfo.thumbnailFileId()),
                 courseInfo.title(),
                 courseInfo.trainerName(),
                 reservation.getStatus(),
@@ -85,6 +89,20 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 curriculumViews
         );
 
+    }
+
+    private String resolveThumbnailUrl(Long fileId) {
+        if (fileId == null) return null;
+        try {
+            FileUrlResult file = fileUrlUseCase.getUrl(fileId, null, false);
+            return file.url();
+        } catch (FileNotFoundException e) {
+            log.warn("event=pt_reservation_thumbnail_not_found fileId={}", fileId);
+            return null;
+        } catch (RuntimeException e) {
+            log.error("event=pt_reservation_thumbnail_url_resolve_failed fileId={}", fileId, e);
+            return null;
+        }
     }
 
     private MyPtReservationView toView(PtReservation reservation) {
@@ -99,7 +117,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         // 위 + PtReservation 자체 데이터 합쳐 View 생성
         return new MyPtReservationView(
                 reservation.getId(),              // ptReservationId
-                courseInfo.thumbnailFileId(),     // pt_courses
+                resolveThumbnailUrl(courseInfo.thumbnailFileId()),
                 courseInfo.title(),               // pt_courses
                 courseInfo.trainerName(),         // trainer_profiles (via adapter)
                 reservation.getStatus(),        // pt_reservations 자기 컬럼

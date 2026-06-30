@@ -1,8 +1,12 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
@@ -47,6 +51,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
     private final TagQueryUseCase tagQueryUseCase;
     private final ReviewQueryPort reviewQueryPort;
+    private final FileUrlUseCase fileUrlUseCase;
 
     @Override
     @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_all")
@@ -63,16 +68,16 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<Long> trainerIds = courses.stream().map(PtCourse::getTrainerProfileId).distinct().toList();
 
         Map<Long, OrganizationQueryPort.OrganizationInfo> orgMap         = organizationQueryPort.findAllByIds(orgIds);
-        Map<Long, TrainerProfileQueryPort.TrainerSummaryInfo> trainerMap = trainerProfileQueryPort.findSummaryAllByIds(trainerIds);
+        Map<Long, TrainerSummaryInfo> trainerMap = trainerProfileQueryPort.findSummaryAllByIds(trainerIds);
 
         List<PtCourseListView> result = courses.stream()
                 .map(c -> {
-                    OrganizationQueryPort.OrganizationInfo org             = orgMap.get(c.getOrganizationId());
-                    TrainerProfileQueryPort.TrainerSummaryInfo trainer     = trainerMap.get(c.getTrainerProfileId());
+                    OrganizationQueryPort.OrganizationInfo org = orgMap.get(c.getOrganizationId());
+                    TrainerSummaryInfo trainer = trainerMap.get(c.getTrainerProfileId());
                     return new PtCourseListView(
                             c.getId(),
                             c.getTitle(),
-                            c.getThumbnailFileId(),
+                            resolveThumbnailUrl(c.getThumbnailFileId()),
                             c.getPrice(),
                             c.getTagId(),
                             tagMap.getOrDefault(c.getTagId(), null),
@@ -84,6 +89,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             org != null ? org.roadAddress() : null,
                             org != null ? org.latitude() : null,
                             org != null ? org.longitude() : null,
+                            trainer != null ? trainer.averageRating() : null,
                             trainer != null ? trainer.reviewCount() : 0
                     );
                 })
@@ -118,9 +124,9 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         }
 
         // 로그인한 userId로 트레이너 프로필 ID 조회
-        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        Long trainerProfileId;
         try {
-            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+            trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(userId);
         } catch (TrainerProfileNotFoundException e) {
             log.warn("event=pt_my_courses_find_failed reason=trainer_not_found, userId={}", userId);
             throw e;
@@ -128,12 +134,11 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         // 같은 트레이너의 강습이므로 trainerName은 1회만 조회 후 전체 카드에 재사용
         String trainerName = trainerProfileQueryPort
-                .findSummaryById(trainerInfo.trainerProfileId())
-                .trainerName();
+                .findTrainerNameById(trainerProfileId);
 
         // status=null이면 VISIBLE+HIDDEN 전체, 지정 시 해당 status만
         List<PtCourse> courses = ptCourseRepository
-                .findAllByTrainerProfileId(trainerInfo.trainerProfileId(), status);
+                .findAllByTrainerProfileId(trainerProfileId, status);
 
         // 강습 ID 목록으로 예약 수를 한 번에 집계 (N+1 방지)
         List<Long> courseIds = courses.stream().map(PtCourse::getId).toList();
@@ -143,7 +148,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<MyPtCourseListView> result = courses.stream()
                 .map(course -> new MyPtCourseListView(
                         course.getId(),
-                        course.getThumbnailFileId(),
+                        resolveThumbnailUrl(course.getThumbnailFileId()),
                         course.getTitle(),
                         trainerName,
                         course.getStatus(),
@@ -168,14 +173,14 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 });
 
         // 본인 강습 여부 확인 (트레이너 프로필 ID 비교)
-        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        Long trainerProfileId;
         try {
-            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+            trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(userId);
         } catch (TrainerProfileNotFoundException e) {
             log.warn("event=pt_course_reservations_find_failed reason=trainer_not_found userId={}", userId);
             throw e;
         }
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_course_reservations_find_failed reason=forbidden userId={}, ptCourseId={}", userId, ptCourseId);
             throw new PtCourseForbiddenException();
         }
@@ -225,16 +230,16 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .orElseThrow(PtCourseNotFoundException::new);
 
         // 트레이너 프로필 조회
-        TrainerProfileQueryPort.TrainerInfo trainerInfo;
+        Long trainerProfileId;
         try {
-            trainerInfo = trainerProfileQueryPort.findByUserId(userId);
+            trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(userId);
         } catch (TrainerProfileNotFoundException e) {
             log.warn("event=pt_reservation_detail_find_failed reason=trainer_not_found userId={}", userId);
             throw e;
         }
 
         // 본인 강습 여부 확인
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_reservation_detail_find_failed reason=forbidden userId={}, ptReservationId={}", userId, ptReservationId);
             throw new PtCourseForbiddenException();
         }
@@ -295,19 +300,24 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .map(ptCourse -> {
                     OrganizationQueryPort.OrganizationInfo org =
                             organizationQueryPort.findById(ptCourse.getOrganizationId());
-                    TrainerProfileQueryPort.TrainerDisplayInfo trainer =
-                            trainerProfileQueryPort.findById(ptCourse.getTrainerProfileId());
+                    String trainerName;
+                    try {
+                        trainerName = trainerProfileQueryPort.findTrainerNameById(ptCourse.getTrainerProfileId());
+                    } catch (Exception e) {
+                        log.warn("event=pt_course_popular_trainer_not_found trainerProfileId={}", ptCourse.getTrainerProfileId());
+                        trainerName = null;
+                    }
 
                     return new PopularCourseView(
                             ptCourse.getId(),
                             ptCourse.getTitle(),
                             ptCourse.getPrice(),
-                            ptCourse.getThumbnailFileId(),
+                            resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
                             ptCourse.getCategoryId(),
                             categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                             ptCourse.getTagId(),
                             tagMap.getOrDefault(ptCourse.getTagId(), null),
-                            trainer.trainerName(),
+                            trainerName,
                             org.roadAddress()
                     );
                 })
@@ -335,30 +345,19 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ));
     }
 
-    // ptCourse + enrich(조직/트레이너) -> 목록 응답용 View 변환
-    private PtCourseListView toListView(PtCourse ptCourse, Map<Long, String> categoryMap, Map<Long, String> tagMap) {
-        OrganizationQueryPort.OrganizationInfo org =
-                organizationQueryPort.findById(ptCourse.getOrganizationId());
-        TrainerProfileQueryPort.TrainerDisplayInfo trainer =
-                trainerProfileQueryPort.findById(ptCourse.getTrainerProfileId());
-
-        return new PtCourseListView(
-                ptCourse.getId(),
-                ptCourse.getTitle(),
-                ptCourse.getThumbnailFileId(),
-                ptCourse.getPrice(),
-                ptCourse.getTagId(),
-                tagMap.getOrDefault(ptCourse.getTagId(), null),
-                ptCourse.getCategoryId(),
-                categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
-                trainer.trainerName(),
-                org.organizationId(),
-                org.businessName(),
-                org.roadAddress(),
-                org.latitude(),
-                org.longitude(),
-                trainer.reviewCount()
-        );
+    // PT_THUMBNAIL은 public 파일 → requesterId 없이 URL 반환, 없으면 null
+    private String resolveThumbnailUrl(Long fileId) {
+        if (fileId == null) return null;
+        try {
+            FileUrlResult file = fileUrlUseCase.getUrl(fileId, null, false);
+            return file.url();
+        } catch (FileNotFoundException e) {
+            log.warn("event=pt_course_thumbnail_not_found fileId={}", fileId);
+            return null;
+        } catch (RuntimeException e) {
+            log.error("event=pt_course_thumbnail_url_resolve_failed fileId={}", fileId, e);
+            return null;
+        }
     }
 
     // ptCourse + TrainerDisplayInfo + 커리큘럼/스케쥴 목록 -> 상세 응답용 View 반환
@@ -380,7 +379,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         return new PtCourseDetailView(
                 ptCourse.getId(),
-                ptCourse.getThumbnailFileId(),
+                resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
                 ptCourse.getTitle(),
                 ptCourse.getDescription(),
                 ptCourse.getPrice(),

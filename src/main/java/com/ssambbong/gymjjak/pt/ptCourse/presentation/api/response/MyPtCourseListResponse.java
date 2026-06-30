@@ -4,7 +4,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCas
 
 public record MyPtCourseListResponse(
         Long ptCourseId,
-        Long thumbnailFileId,
+        String thumbnailUrl,
         String title,
         String trainerName,
         String status,               // VISIBLE / HIDDEN
@@ -14,7 +14,7 @@ public record MyPtCourseListResponse(
     public static MyPtCourseListResponse from(PtCourseQueryUseCase.MyPtCourseListView view) {
         return new MyPtCourseListResponse(
                 view.ptCourseId(),
-                view.thumbnailFileId(),
+                view.thumbnailUrl(),
                 view.title(),
                 view.trainerName(),
                 view.status().name(),

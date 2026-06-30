@@ -11,7 +11,7 @@ public record MyPtReservationsResponse(
 ) {
     public record PtReservationInfo(
             Long ptReservationId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String trainerName,
             PtReservationStatus status,
@@ -24,7 +24,7 @@ public record MyPtReservationsResponse(
         List<PtReservationInfo> infos = views.stream()
                 .map(v -> new PtReservationInfo(
                         v.ptReservationId(),
-                        v.thumbnailFileId(),
+                        v.thumbnailUrl(),
                         v.title(),
                         v.trainerName(),
                         v.status(),

@@ -15,8 +15,8 @@ public record PtCourseDetailResponse(
         @Schema(description = "PT 강습 ID", example = "1")
         Long ptCourseId,
 
-        @Schema(description = "썸네일 파일 ID")
-        Long thumbnailFileId,
+        @Schema(description = "썸네일 이미지 URL")
+        String thumbnailUrl,
 
         @Schema(description = "제목", example = "맞춤 PT 1개월 과정")
         String title,
@@ -105,7 +105,7 @@ public record PtCourseDetailResponse(
 
         return new PtCourseDetailResponse(
                 view.ptCourseId(),
-                view.thumbnailFileId(),
+                view.thumbnailUrl(),
                 view.title(),
                 view.description(),
                 view.price(),
