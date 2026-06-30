@@ -33,4 +33,7 @@ public interface PtReservationRepository {
 
     // 특정 상태 예약 수 집계 (통계용)
     long countByStatus(PtReservationStatus status);
+
+    // 특정 강습의 기간 내 RESERVED 예약 시작 시각 목록 (가용 날짜/시간 슬롯 계산용)
+    List<LocalDateTime> findReservedStartAtsByPtCourseId(Long ptCourseId, LocalDateTime from, LocalDateTime to);
 }

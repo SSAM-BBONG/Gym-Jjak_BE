@@ -13,6 +13,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -90,6 +91,27 @@ public class GlobalExceptionHandler {
         Map<String, Object> details = Map.of("errors", errors);
 
         log.warn("event=exception_handled, reason=constraint_violation traceId={}, details={}", traceId, details);
+
+        return ResponseEntity
+                .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
+                .body(GlobalApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId, details));
+    }
+
+    // @RequestParam 타입 변환 실패 (잘못된 날짜 형식, 존재하지 않는 날짜 등)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<GlobalApiErrorResponse> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException exception
+    ) {
+        String traceId = getTraceId();
+
+        log.warn("event=exception_handled reason=type_mismatch param={} value={} traceId={}",
+                exception.getName(), exception.getValue(), traceId);
+
+        Map<String, Object> details = Map.of("errors", List.of(Map.of(
+                "field", exception.getName(),
+                "rejectedValue", exception.getValue() != null ? exception.getValue().toString() : "null",
+                "reason", "올바르지 않은 값입니다."
+        )));
 
         return ResponseEntity
                 .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())

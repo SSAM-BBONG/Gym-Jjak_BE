@@ -105,6 +105,21 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("cancelledStatus") PtReservationStatus cancelledStatus
     );
 
+    // 가용 날짜/시간 슬롯 계산용 — 강습의 기간 내 RESERVED 예약 시작 시각 목록
+    @Query("""
+        SELECT r.reservedStartAt
+        FROM PtReservationJpaEntity r
+        WHERE r.ptCourseId = :ptCourseId
+          AND r.reservedStartAt >= :from
+          AND r.reservedStartAt < :to
+          AND r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED
+        """)
+    List<LocalDateTime> findReservedStartAtsByPtCourseIdAndRange(
+            @Param("ptCourseId") Long ptCourseId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
     // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
     @Query("""
         SELECT r.userId, r.id
