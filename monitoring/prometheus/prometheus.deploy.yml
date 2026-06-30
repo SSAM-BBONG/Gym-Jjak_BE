@@ -7,4 +7,4 @@ scrape_configs:
     metrics_path: "/actuator/prometheus"
     static_configs:
       - targets:
-          - "EB_도메인_또는_PRIVATE_IP:8081"
+          - "{GYMJJAK_PRIVATE_IP}:8081"
