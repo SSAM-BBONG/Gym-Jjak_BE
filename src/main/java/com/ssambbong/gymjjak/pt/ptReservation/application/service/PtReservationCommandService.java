@@ -99,14 +99,10 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 saved.getId()
         ));
 
-        // 트레이너에게 새 예약 신청 알림
-        Long trainerUserId = trainerQueryPort.findUserIdByTrainerProfileId(
-                ptCourse.getTrainerProfileId()
-        );
-        eventPublisher.publishEvent(
-                new PtReservationRequestedEvent(
-                        trainerUserId,
-                        saved.getId()));
+        // 트레이너에게 새 예약 신청 알림 (트레이너 userId 조회 실패 시 알림 생략, 예약은 정상 처리)
+        trainerQueryPort.findUserIdByTrainerProfileId(ptCourse.getTrainerProfileId())
+                .ifPresent(trainerUserId -> eventPublisher.publishEvent(
+                        new PtReservationRequestedEvent(trainerUserId, saved.getId())));
 
         evictMonthAfterCommit(
                 command.userId(),

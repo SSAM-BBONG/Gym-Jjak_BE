@@ -29,10 +29,15 @@ public class TrainerQueryAdapter implements TrainerQueryPort {
 
     // TODO: 트레이너 담당자에게 TrainerProfileQueryPortAdapter 구현 요청 후 교체
     @Override
-    public Long findUserIdByTrainerProfileId(Long trainerProfileId) {
-        return ((Number) em.createNativeQuery(
-                        "SELECT user_id FROM trainer_profiles WHERE trainer_profile_id = ?")
-                .setParameter(1, trainerProfileId)
-                .getSingleResult()).longValue();
+    public Optional<Long> findUserIdByTrainerProfileId(Long trainerProfileId) {
+        try {
+            Number result = (Number) em.createNativeQuery(
+                            "SELECT user_id FROM trainer_profiles WHERE trainer_profile_id = ?")
+                    .setParameter(1, trainerProfileId)
+                    .getSingleResult();
+            return Optional.ofNullable(result).map(Number::longValue);
+        } catch (jakarta.persistence.NoResultException e) {
+            return Optional.empty();
+        }
     }
 }
