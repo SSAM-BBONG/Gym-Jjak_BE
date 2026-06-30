@@ -422,13 +422,17 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 )
         );
 
+        LocalDateTime now = LocalDateTime.now();
         List<LocalDate> availableDates = new ArrayList<>();
         LocalDate date = firstDay;
         while (!date.isAfter(lastDay)) {
             final LocalDate d = date;
             boolean hasAvailable = schedules.stream()
                     .filter(s -> s.getDayOfWeek() == d.getDayOfWeek())
-                    .anyMatch(s -> !reserved.contains(LocalDateTime.of(d, s.getStartTime())));
+                    .anyMatch(s -> {
+                        LocalDateTime slotStart = LocalDateTime.of(d, s.getStartTime());
+                        return slotStart.isAfter(now) && !reserved.contains(slotStart);
+                    });
             if (hasAvailable) availableDates.add(d);
             date = date.plusDays(1);
         }
@@ -459,14 +463,15 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 )
         );
 
+        LocalDateTime now = LocalDateTime.now();
         List<TimeSlotView> timeSlots = ptCourseScheduleRepository.findAllByPtCourseId(ptCourseId).stream()
                 .filter(s -> s.getDayOfWeek() == date.getDayOfWeek())
                 .sorted(Comparator.comparing(com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule::getStartTime))
-                .map(s -> new TimeSlotView(
-                        s.getStartTime(),
-                        s.getEndTime(),
-                        !reserved.contains(LocalDateTime.of(date, s.getStartTime()))
-                ))
+                .map(s -> {
+                    LocalDateTime slotStart = LocalDateTime.of(date, s.getStartTime());
+                    boolean available = slotStart.isAfter(now) && !reserved.contains(slotStart);
+                    return new TimeSlotView(s.getStartTime(), s.getEndTime(), available);
+                })
                 .toList();
 
         log.info("event=pt_course_available_time_slots_find_succeeded ptCourseId={} date={} slots={}",

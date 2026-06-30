@@ -18,8 +18,8 @@ public enum PtCourseResponseCode implements ResponseCode {
     PT_COURSE_DELETED("PT_COURSE_DELETED", "PT 강습 삭제 성공"),
     PT_COURSE_POPULAR("PT_COURSE_POPULAR", "인기 강습 조회 성공"),
     PT_STATS("PT_STATS", "PT 통계 조회 성공"),
-    AVAILABLE_DATES_FETCHED("AVAILABLE_DATES_FETCHED", "예약 가능 날짜 조회 성공"),
-    AVAILABLE_TIME_SLOTS_FETCHED("AVAILABLE_TIME_SLOTS_FETCHED", "예약 가능 시간 슬롯 조회 성공");
+    AVAILABLE_DATES_FETCHED("PT_COURSE_200_AVAILABLE_DATES", "예약 가능 날짜 조회 성공"),
+    AVAILABLE_TIME_SLOTS_FETCHED("PT_COURSE_200_AVAILABLE_TIME_SLOTS", "예약 가능 시간 슬롯 조회 성공");
 
     private final String code;
     private final String message;

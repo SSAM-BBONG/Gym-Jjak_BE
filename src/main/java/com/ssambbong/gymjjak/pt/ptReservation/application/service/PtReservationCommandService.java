@@ -59,6 +59,13 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                     return new PtCourseNotFoundException();
                 });
 
+        if (command.reservedStartAt() == null || command.reservedEndAt() == null
+                || !command.reservedEndAt().isAfter(command.reservedStartAt())) {
+            log.warn("event=pt_reservation_create_failed reason=invalid_time userId={} start={} end={}",
+                    command.userId(), command.reservedStartAt(), command.reservedEndAt());
+            throw new PtReservationInvalidException();
+        }
+
         validateSchedule(ptCourse.getId(), command.reservedStartAt(), command.reservedEndAt());
 
         if (ptReservationRepository.existsByPtCourseIdAndTimeOverlap(

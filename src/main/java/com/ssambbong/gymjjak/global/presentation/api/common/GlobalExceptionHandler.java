@@ -107,9 +107,15 @@ public class GlobalExceptionHandler {
         log.warn("event=exception_handled reason=type_mismatch param={} value={} traceId={}",
                 exception.getName(), exception.getValue(), traceId);
 
+        Map<String, Object> details = Map.of("errors", List.of(Map.of(
+                "field", exception.getName(),
+                "rejectedValue", exception.getValue() != null ? exception.getValue().toString() : "null",
+                "reason", "올바르지 않은 값입니다."
+        )));
+
         return ResponseEntity
                 .status(CommonErrorCode.INVALID_INPUT.getHttpStatus())
-                .body(GlobalApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId));
+                .body(GlobalApiErrorResponse.of(CommonErrorCode.INVALID_INPUT, traceId, details));
     }
 
     // DB unique constraint 위반 (중복 데이터)
