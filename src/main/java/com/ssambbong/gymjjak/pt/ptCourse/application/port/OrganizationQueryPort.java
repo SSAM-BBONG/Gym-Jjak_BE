@@ -9,6 +9,9 @@ public interface OrganizationQueryPort {
 
     Map<Long, OrganizationInfo> findAllByIds(List<Long> ids);
 
+    // trainerProfileId로 소속 조직 ID 조회 (PT 강습 생성 시)
+    Long findOrganizationIdByTrainerProfileId(Long trainerProfileId);
+
     // 통계 -> 활성화 된 등록된 헬스장 수
     long countActive();
 

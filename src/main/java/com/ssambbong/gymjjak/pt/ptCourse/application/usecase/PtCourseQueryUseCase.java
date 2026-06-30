@@ -53,6 +53,7 @@ public interface PtCourseQueryUseCase {
             Double latitude,
             Double longitude,
             // 리뷰
+            Double averageRating,
             int reviewCount
     ) {}
 
