@@ -359,11 +359,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         }
     }
 
-    // ptCourse + TrainerDisplayInfo + 커리큘럼/스케쥴 목록 -> 상세 응답용 View 반환
+    // ptCourse + 커리큘럼/스케쥴 목록 -> 상세 응답용 View 반환
     private PtCourseDetailView toDetailView(PtCourse ptCourse) {
-        TrainerProfileQueryPort.TrainerDisplayInfo trainer =
-                trainerProfileQueryPort.findById(ptCourse.getTrainerProfileId());
-
         // 커리큘럼 조회 (도메인 모델 -> View 변환)
         List<CurriculumView> curriculums = ptCurriculumRepository.findAllByPtCourseId(ptCourse.getId()).stream()
                 .map(c -> new CurriculumView(c.getId(), c.getSessionNo(), c.getTitle(), c.getContent()))
@@ -383,15 +380,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourse.getDescription(),
                 ptCourse.getPrice(),
                 ptCourse.getTotalSessionCount(),
-                trainer.averageRating(),
-                trainer.reviewCount(),
                 ptCourse.getOrganizationId(),
                 ptCourse.getTrainerProfileId(),
-                trainer.trainerName(),
-                trainer.profileFileId(),
-                trainer.introduction(),
-                trainer.certifications(),
-                trainer.awards(),
                 curriculums,
                 schedules,
                 reviewQueryPort.findRecentByTrainerProfileId(ptCourse.getTrainerProfileId(), 3)
