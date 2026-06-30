@@ -10,7 +10,6 @@ import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.e
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.repository.SpringDataTrainerAwardRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.repository.SpringDataTrainerCertificationRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.repository.SpringDataTrainerProfileRepository;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +27,6 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
     private final SpringDataTrainerProfileRepository trainerProfileRepository;
     private final SpringDataTrainerCertificationRepository certificationRepository;
     private final SpringDataTrainerAwardRepository awardRepository;
-    private final EntityManager em;
 
     // userId로 활성화된 트레이너 프로필 ID 조회
     @Override

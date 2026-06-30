@@ -105,7 +105,6 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         );
 
         Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
-        // trainerProfileId → organizationId 조회 구현 필요
         Long organizationId = organizationQueryPort.findOrganizationIdByTrainerProfileId(trainerProfileId);
 
         Long thumbnailFileId = registerThumbnailFile(command.userId(), command.thumbnailFile());
