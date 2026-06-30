@@ -4,7 +4,8 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCas
 import io.swagger.v3.oas.annotations.media.Schema;
 
 // PT 강습 목록 카드 응답 DTO
-public record PtCourseViewResponse(
+public record
+PtCourseViewResponse(
 
         @Schema(description = "PT 강습 ID", example = "1")
         Long ptCourseId,
@@ -48,6 +49,9 @@ public record PtCourseViewResponse(
         @Schema(description = "경도", example = "127.0396")
         Double longitude,
 
+        @Schema(description = "트레이너 평균 별점", example = "4.8")
+        Double averageRating,
+
         @Schema(description = "리뷰 수", example = "127")
         int reviewCount
 
@@ -68,6 +72,7 @@ public record PtCourseViewResponse(
                 view.organizationRoadAddress(),
                 view.latitude(),
                 view.longitude(),
+                view.averageRating(),
                 view.reviewCount()
         );
     }

@@ -18,7 +18,7 @@ public class TrainerQueryAdapter implements TrainerQueryPort {
     public Optional<Long> findTrainerProfileIdByUserId(Long userId) {
         try {
             return Optional.of(
-                    trainerProfileQueryPort.findByUserId(userId).trainerProfileId()
+                    trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(userId)
             );
         } catch (TrainerProfileNotFoundException e) {
             return Optional.empty();

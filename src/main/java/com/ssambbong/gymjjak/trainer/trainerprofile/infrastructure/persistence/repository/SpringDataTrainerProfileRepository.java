@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -117,6 +118,17 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
             @Param("averageRating") BigDecimal averageRating,
             @Param("reviewCount") int reviewCount
             );
+
+    // 목록 조회용 배치 조회 (ACTIVE 필터 포함)
+    @Query("""
+        SELECT tp FROM TrainerProfileJpaEntity tp
+        WHERE tp.trainerProfileId IN :ids
+          AND tp.status = :status
+        """)
+    List<TrainerProfileJpaEntity> findAllByIdsAndStatus(
+            @Param("ids") List<Long> ids,
+            @Param("status") TrainerProfileStatus status
+    );
 
     // ACTIVE 상태 트레이너 수 집계
     long countByStatus(TrainerProfileStatus status);
