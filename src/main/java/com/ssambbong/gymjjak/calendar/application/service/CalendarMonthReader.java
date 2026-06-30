@@ -28,11 +28,6 @@ public class CalendarMonthReader {
     private final CalendarPortToPtReservation calendarPortToPtReservation;
     private final WorkoutDiaryPort workoutDiaryPort;
 
-    @Cacheable(
-            cacheNames = "calendarMonth",
-            key = "'user:' + #userId + ':year:' + #year + ':month:' + #month",
-            sync = true
-    )
     public CalendarMonthResult findCalendarMonth(
             Long userId,
             Integer year,
