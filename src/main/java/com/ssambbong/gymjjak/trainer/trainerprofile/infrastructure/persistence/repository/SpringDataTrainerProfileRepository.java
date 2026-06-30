@@ -20,51 +20,67 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
     Optional<TrainerProfileJpaEntity> findByUserId(Long userId);
 
     @Query(value = """
-        select
-            result.trainerProfileId as trainerProfileId,
-            result.name as name,
-            result.username as username,
-            result.nickname as nickname
-        from (
             select
-                tp.trainer_profile_id as trainerProfileId,
-                u.name as name,
-                u.username as username,
-                u.nickname as nickname
-            from trainer_profiles tp
-            join users u
-                on u.user_id = tp.user_id
-            where tp.status = :status
-              and u.username like concat(:keyword, '%')
-
-            union
-
-            select
-                tp.trainer_profile_id as trainerProfileId,
-                u.name as name,
-                u.username as username,
-                u.nickname as nickname
-            from trainer_profiles tp
-            join users u
-                on u.user_id = tp.user_id
-            where tp.status = :status
-              and u.name like concat(:keyword, '%')
-
-            union
-
-            select
-                tp.trainer_profile_id as trainerProfileId,
-                u.name as name,
-                u.username as username,
-                u.nickname as nickname
-            from trainer_profiles tp
-            join users u
-                on u.user_id = tp.user_id
-            where tp.status = :status
-              and u.nickname like concat(:keyword, '%')
-        ) result
-        order by result.name asc, result.trainerProfileId asc
-        """, nativeQuery = true)
+                result.trainerProfileId as trainerProfileId,
+                result.name as name,
+                result.username as username,
+                result.nickname as nickname
+            from (
+                select
+                    tp.trainer_profile_id as trainerProfileId,
+                    u.name as name,
+                    u.username as username,
+                    u.nickname as nickname
+                from trainer_profiles tp
+                join users u
+                    on u.user_id = tp.user_id
+                where tp.status = :status
+                  and :keyword is null
+            
+                union
+            
+                select
+                    tp.trainer_profile_id as trainerProfileId,
+                    u.name as name,
+                    u.username as username,
+                    u.nickname as nickname
+                from trainer_profiles tp
+                join users u
+                    on u.user_id = tp.user_id
+                where tp.status = :status
+                  and :keyword is not null
+                  and u.username like concat(:keyword, '%')
+            
+                union
+            
+                select
+                    tp.trainer_profile_id as trainerProfileId,
+                    u.name as name,
+                    u.username as username,
+                    u.nickname as nickname
+                from trainer_profiles tp
+                join users u
+                    on u.user_id = tp.user_id
+                where tp.status = :status
+                  and :keyword is not null
+                  and u.name like concat(:keyword, '%')
+            
+                union
+            
+                select
+                    tp.trainer_profile_id as trainerProfileId,
+                    u.name as name,
+                    u.username as username,
+                    u.nickname as nickname
+                from trainer_profiles tp
+                join users u
+                    on u.user_id = tp.user_id
+                where tp.status = :status
+                  and :keyword is not null
+                  and u.nickname like concat(:keyword, '%')
+            ) result
+            order by result.name asc, result.trainerProfileId asc
+            """, nativeQuery = true)
     Slice<SearchTrainerRow> searchTrainers(
             @Param("status") String status,
             @Param("keyword") String keyword,
