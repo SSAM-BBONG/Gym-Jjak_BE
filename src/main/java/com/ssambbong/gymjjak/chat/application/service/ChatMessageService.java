@@ -53,7 +53,7 @@ public class ChatMessageService implements ChatMessageUseCase {
 
     @Monitored(name = "gymjjak.chat.message.duration", domain = "chat", action = "find_messages")
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ChatMessageListResult findMessages(Long requesterId, ChatMessageQuery query) {
         validateParticipant(query.chatRoomId(), requesterId);
 

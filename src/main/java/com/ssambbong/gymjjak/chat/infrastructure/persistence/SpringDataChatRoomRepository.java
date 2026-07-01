@@ -50,9 +50,10 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
                 SELECT chat_room_id, MAX(chat_message_id) AS max_id
                 FROM chat_messages
                 WHERE chat_room_id IN (
-                    SELECT chat_room_id FROM chat_rooms
-                    WHERE (user_id = :requesterId OR trainer_profile_id = :requesterId)
-                      AND status != 'DELETED'
+                    SELECT cr2.chat_room_id FROM chat_rooms cr2
+                    LEFT JOIN trainer_profiles tp2 ON cr2.trainer_profile_id = tp2.trainer_profile_id
+                    WHERE (cr2.user_id = :requesterId OR tp2.user_id = :requesterId)
+                      AND cr2.status != 'DELETED'
                 )
                 GROUP BY chat_room_id
             ) AS last_ids ON last_ids.chat_room_id = cr.chat_room_id
@@ -61,9 +62,10 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
                 SELECT chat_room_id, COUNT(*) AS cnt
                 FROM chat_messages
                 WHERE chat_room_id IN (
-                    SELECT chat_room_id FROM chat_rooms
-                    WHERE (user_id = :requesterId OR trainer_profile_id = :requesterId)
-                      AND status != 'DELETED'
+                    SELECT cr2.chat_room_id FROM chat_rooms cr2
+                    LEFT JOIN trainer_profiles tp2 ON cr2.trainer_profile_id = tp2.trainer_profile_id
+                    WHERE (cr2.user_id = :requesterId OR tp2.user_id = :requesterId)
+                      AND cr2.status != 'DELETED'
                 )
                   AND sender_id != :requesterId
                   AND is_read = false
