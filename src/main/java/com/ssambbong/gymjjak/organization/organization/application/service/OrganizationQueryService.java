@@ -12,6 +12,7 @@ import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNot
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.AdminTrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerDetailView;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,17 +27,20 @@ public class OrganizationQueryService implements OrganizationQueryUseCase {
     private final OrganizationRepository organizationRepository;
     private final OrganizationTrainerRepository organizationTrainerRepository;
 
+    @Monitored(name = "gymjjak.org.query.duration", domain = "organization", action = "find_my")
     @Override
     public MyOrganizationResult findMyOrganization(Long organizationAccountId) {
         return organizationRepository.findMyOrganizationByAccountId(organizationAccountId)
                 .orElseThrow(OrganizationNotFoundException::new);
     }
 
+    @Monitored(name = "gymjjak.org.query.duration", domain = "organization", action = "find_all")
     @Override
     public OrganizationListResult findOrganizations(OrganizationListQuery query) {
         return organizationRepository.findAllForAdmin(query);
     }
 
+    @Monitored(name = "gymjjak.org.query.duration", domain = "organization", action = "find_admin_detail")
     @Override
     public OrganizationAdminDetailResult findOrganizationAdminDetail(Long organizationId) {
         Organization organization = organizationRepository.findById(organizationId)
@@ -71,6 +75,7 @@ public class OrganizationQueryService implements OrganizationQueryUseCase {
         );
     }
 
+    @Monitored(name = "gymjjak.org.query.duration", domain = "organization", action = "find_detail")
     @Override
     public OrganizationDetailResult findOrganizationDetail(Long organizationId) {
         Organization organization = organizationRepository.findById(organizationId)
