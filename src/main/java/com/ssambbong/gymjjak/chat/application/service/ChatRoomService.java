@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 
 @Slf4j
 @Service
@@ -39,6 +40,7 @@ public class ChatRoomService implements ChatRoomUseCase {
     private final FileUrlUseCase fileUrlUseCase;
     private final ChatMetricsPort chatMetricsPort;
 
+    @Monitored(name = "gymjjak.chat.room.duration", domain = "chat", action = "create_room")
     @Override
     @Transactional
     public Long createChatRoom(CreateChatRoomCommand command) {
@@ -109,6 +111,7 @@ public class ChatRoomService implements ChatRoomUseCase {
                 chatRoomId, requesterId, chatRoom.getStatus());
     }
 
+    @Monitored(name = "gymjjak.chat.room.duration", domain = "chat", action = "get_rooms")
     @Override
     @Transactional(readOnly = true)
     public ChatRoomListResult getChatRooms(Long requesterId) {

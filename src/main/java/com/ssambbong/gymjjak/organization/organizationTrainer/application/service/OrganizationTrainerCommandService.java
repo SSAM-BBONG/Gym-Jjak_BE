@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.Organ
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
 import com.ssambbong.gymjjak.organization.organizationTrainer.exception.OrganizationTrainerAlreadyExistsException;
 import com.ssambbong.gymjjak.organization.organizationTrainer.exception.OrganizationTrainerNotFoundException;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,6 +25,7 @@ public class OrganizationTrainerCommandService implements OrganizationTrainerCom
     private final OrganizationTrainerRepository organizationTrainerRepository;
     private final OrganizationTrainerMetricsPort organizationTrainerMetricsPort;
 
+    @Monitored(name = "gymjjak.org.trainer.command.duration", domain = "org_trainer", action = "add")
     @Override
     @Transactional
     public Long addTrainer(AddOrganizationTrainerCommand command) {

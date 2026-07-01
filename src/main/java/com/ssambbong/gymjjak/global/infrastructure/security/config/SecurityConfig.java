@@ -208,7 +208,8 @@ public class SecurityConfig {
                 "http://localhost:3000",
                 "http://localhost:8080",
                 // 프론트 배포 주소
-                "http://13.209.67.161"
+//                "http://13.209.67.161",
+                "https://13.124.200.97.sslip.io"
 //                "https://gymjjak.com"
         ));
 

@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
 import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.global.domain.common.model.FileType;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.OrgApplicationMetricsPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
@@ -45,6 +46,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
     private final OrganizationMetricsPort organizationMetricsPort;
     private final ApplicationEventPublisher eventPublisher;
 
+    @Monitored(name = "gymjjak.org.application.command.duration", domain = "org_application", action = "create")
     @Override
     @Transactional
     public Long createOrganizationApplication(OrganizationApplicationCreateCommand command) {
@@ -112,6 +114,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         return applicationId;
     }
 
+    @Monitored(name = "gymjjak.org.application.command.duration", domain = "org_application", action = "approve")
     @Override
     @Transactional
     public void approveOrganizationApplication(Long organizationApplicationId, Long reviewedBy) {
@@ -140,6 +143,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationApproved, "recordOrgApplicationApproved");
     }
 
+    @Monitored(name = "gymjjak.org.application.command.duration", domain = "org_application", action = "reject")
     @Override
     @Transactional
     public void rejectOrganizationApplication(Long organizationApplicationId, Long reviewedBy, String rejectReason) {
@@ -158,6 +162,7 @@ public class OrganizationApplicationCommandService implements OrganizationApplic
         recordMetricSafely(orgApplicationMetricsPort::recordOrgApplicationRejected, "recordOrgApplicationRejected");
     }
 
+    @Monitored(name = "gymjjak.org.application.command.duration", domain = "org_application", action = "cancel")
     @Override
     @Transactional
     public void cancelOrganizationApplication(Long organizationApplicationId, Long applicantId) {
