@@ -61,6 +61,8 @@ public class SecurityConfig {
                 // URL별 인증/인가 설정
                 .authorizeHttpRequests(auth -> auth
 
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers("/api/auth/logout").authenticated()
 
                         // 회원가입, 로그인, 토큰 재발급 등 인증 없이 접근 가능
@@ -71,7 +73,8 @@ public class SecurityConfig {
                                 "/login/oauth2/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/ws/**"
+                                "/ws/**",
+                                "/error"
                         ).permitAll()
 
                         .requestMatchers("/api/token/reissue").permitAll()
@@ -209,8 +212,9 @@ public class SecurityConfig {
                 "http://localhost:8080",
                 // 프론트 배포 주소
 //                "http://13.209.67.161",
-                "https://13.124.200.97.sslip.io"
+//                "https://13.124.200.97.sslip.io"
 //                "https://gymjjak.com"
+                "https://gymjjak.site"
         ));
 
         // 허용 HTTP 메서드
