@@ -89,7 +89,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             org != null ? org.latitude() : null,
                             org != null ? org.longitude() : null,
                             trainer != null ? trainer.averageRating() : null,
-                            trainer != null ? trainer.reviewCount() : 0
+                            trainer != null ? trainer.reviewCount() : 0,
+                            c.getCreatedAt()
                     );
                 })
                 .toList();
