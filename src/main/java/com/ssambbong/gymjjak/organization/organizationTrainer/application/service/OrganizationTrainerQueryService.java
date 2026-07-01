@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNot
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.usecase.OrganizationTrainerQueryUseCase;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class OrganizationTrainerQueryService implements OrganizationTrainerQuery
     private final OrganizationTrainerRepository organizationTrainerRepository;
     private final OrganizationRepository organizationRepository;
 
+    @Monitored(name = "gymjjak.org.trainer.query.duration", domain = "org_trainer", action = "find_all")
     @Override
     public List<TrainerSummary> findMyOrganizationTrainers(Long organizationAccountId) {
         Organization organization = organizationRepository.findByOrganizationAccountId(organizationAccountId)

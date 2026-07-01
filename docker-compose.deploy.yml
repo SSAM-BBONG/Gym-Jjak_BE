@@ -53,8 +53,22 @@ services:
 
       CLOVA_OCR_INVOKE_URL: ${CLOVA_OCR_INVOKE_URL}
       CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2.8
+    container_name: gymjjak-caddy
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
-      - "${DEPLOY_BACKEND_PORT:-8081}:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - gymjjak-caddy-data:/data
+      - gymjjak-caddy-config:/config
 
   promtail:
     image: grafana/promtail:2.9.8
@@ -67,3 +81,7 @@ services:
       - ./monitoring/promtail/promtail-config.deploy.yml:/etc/promtail/promtail-config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+volumes:
+  gymjjak-caddy-data:
+  gymjjak-caddy-config:

@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.O
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.DuplicateRequestedLoginIdException;
 import com.ssambbong.gymjjak.organization.organizationApplication.exception.OrganizationApplicationNotFoundException;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class OrganizationApplicationQueryService implements OrganizationApplicat
 
     private final OrganizationApplicationRepository organizationApplicationRepository;
 
+    @Monitored(name = "gymjjak.org.application.query.duration", domain = "org_application", action = "find_my")
     @Override
     public List<OrganizationApplication> findMyOrganizationApplications(Long applicantUserId) {
         return organizationApplicationRepository.findAllByApplicantUserId(applicantUserId);
@@ -40,6 +42,7 @@ public class OrganizationApplicationQueryService implements OrganizationApplicat
                 .orElseThrow(OrganizationApplicationNotFoundException::new);
     }
 
+    @Monitored(name = "gymjjak.org.application.query.duration", domain = "org_application", action = "find_pending")
     @Override
     public ApplicationListResult findPendingOrganizationApplications(ApplicationListQuery query) {
         return organizationApplicationRepository.findAllByStatus(OrganizationApplicationStatus.PENDING, query);
