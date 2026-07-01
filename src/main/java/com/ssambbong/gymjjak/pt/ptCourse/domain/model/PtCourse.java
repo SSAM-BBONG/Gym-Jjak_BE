@@ -19,6 +19,7 @@ public class PtCourse {
     private int totalSessionCount;
 
     private PtCourseStatus status;
+    private LocalDateTime createdAt;
     private LocalDateTime deletedAt;
 
     private PtCourse(Long id,
@@ -100,6 +101,7 @@ public class PtCourse {
             int price,
             int totalSessionCount,
             PtCourseStatus status,
+            LocalDateTime createdAt,
             LocalDateTime deletedAt
     ) {
         PtCourse ptCourse = new PtCourse(
@@ -115,6 +117,7 @@ public class PtCourse {
                 totalSessionCount,
                 status
         );
+        ptCourse.createdAt = createdAt;
         ptCourse.deletedAt = deletedAt;
         return ptCourse;
     }
@@ -175,6 +178,7 @@ public class PtCourse {
     public int getPrice() { return price; }
     public int getTotalSessionCount() { return totalSessionCount; }
     public PtCourseStatus getStatus() { return status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getDeletedAt() { return deletedAt; }
 
 }

@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -60,7 +61,8 @@ public interface PtCourseQueryUseCase {
             Double longitude,
             // 리뷰
             Double averageRating,
-            int reviewCount
+            int reviewCount,
+            LocalDateTime createdAt
     ) {}
 
     // ──── 상세 뷰 ────

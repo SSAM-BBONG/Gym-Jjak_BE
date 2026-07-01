@@ -16,6 +16,7 @@ public class CacheConfig {
     private static final String CALENDAR_MONTH_CACHE = "calendarMonth";
     private static final String PT_MAIN_STATS_CACHE = "ptMainStats";
     private static final String PT_MAIN_POPULAR_CACHE = "ptMainPopular";
+    private static final String PT_COURSE_LIST = "ptCourseList";
 
     @Bean
     public CacheManager cacheManager() {
@@ -47,6 +48,15 @@ public class CacheConfig {
                 Caffeine.newBuilder()
                         .maximumSize(100)
                         .expireAfterWrite(Duration.ofHours(1))
+                        .recordStats()
+                        .build()
+        );
+
+        cacheManager.registerCustomCache(
+                PT_COURSE_LIST,
+                Caffeine.newBuilder()
+                        .maximumSize(1_000)
+                        .expireAfterWrite(Duration.ofMinutes(30))
                         .recordStats()
                         .build()
         );
