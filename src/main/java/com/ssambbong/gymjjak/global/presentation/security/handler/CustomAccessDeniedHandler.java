@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -17,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 // 인가 실패
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
@@ -31,6 +33,18 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     ) throws IOException {
 
         AuthErrorCode errorCode = AuthErrorCode.ACCESS_DENIED;
+
+        log.warn(
+                "event=access_denied status={} method={} uri={} queryString={} remoteAddr={} xForwardedFor={} userAgent={} message={}",
+                errorCode.getHttpStatus().value(),
+                request.getMethod(),
+                request.getRequestURI(),
+                request.getQueryString(),
+                request.getRemoteAddr(),
+                request.getHeader("X-Forwarded-For"),
+                request.getHeader("User-Agent"),
+                accessDeniedException.getMessage()
+        );
 
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
