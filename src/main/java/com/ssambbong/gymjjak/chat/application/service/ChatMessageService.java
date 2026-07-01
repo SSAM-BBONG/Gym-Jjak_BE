@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 
 @Slf4j
 @Service
@@ -38,6 +39,7 @@ public class ChatMessageService implements ChatMessageUseCase {
         chatMessageRepository.markAsRead(messageId);
     }
 
+    @Monitored(name = "gymjjak.chat.message.duration", domain = "chat", action = "create_message")
     @Override
     @Transactional
     public ChatMessage createMessage(SendChatMessageCommand command) {
@@ -49,8 +51,9 @@ public class ChatMessageService implements ChatMessageUseCase {
         return saved;
     }
 
+    @Monitored(name = "gymjjak.chat.message.duration", domain = "chat", action = "find_messages")
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ChatMessageListResult findMessages(Long requesterId, ChatMessageQuery query) {
         validateParticipant(query.chatRoomId(), requesterId);
 

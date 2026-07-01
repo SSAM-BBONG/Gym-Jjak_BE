@@ -234,9 +234,11 @@ loki-data/
 monitoring/loki/data/
 monitoring/promtail/promtail-positions.yml
 data/
+monitoring/grafana/dashboards
 
 # 더미 데이터
 src/main/resources/db/dummy-data.sql
+src/main/resources/db/performance-seed.sql
 
 # k6 load test files
 /k6/
