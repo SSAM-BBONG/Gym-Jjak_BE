@@ -52,7 +52,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final FileUrlUseCase fileUrlUseCase;
 
     @Override
-    @Cacheable("ptCourseList")
+    @Cacheable(value = "ptCourseList", sync = true)
     @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_all")
     public List<PtCourseListView> findAllPtCourses() {
         log.debug("event=pt_courses_find_all");
