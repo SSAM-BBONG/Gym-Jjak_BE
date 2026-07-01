@@ -24,7 +24,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOriginPatterns(
                         "http://localhost:3000",
                         "http://localhost:8080",
-                        "https://13.124.200.97.sslip.io"
+                        "https://13.124.200.97.sslip.io",
+                        "https://gymjjak.site",
+                        "https://www.gymjjak.site"
                 )
                 .addInterceptors(jwtHandshakeInterceptor)
                 .withSockJS();
