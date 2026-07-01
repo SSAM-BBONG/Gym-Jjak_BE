@@ -3,11 +3,13 @@ package com.ssambbong.gymjjak.global.infrastructure.config;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.List;
 
 @Configuration
 @EnableCaching
@@ -15,17 +17,21 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager(
-                "calendarMonth"
-        );
-
-        cacheManager.setCaffeine(
-                Caffeine.newBuilder()
-                        .maximumSize(10_000)
-                        .expireAfterWrite(Duration.ofMinutes(30))
-                        .recordStats()
-        );
-
+        SimpleCacheManager cacheManager = new SimpleCacheManager();
+        cacheManager.setCaches(List.of(
+                buildCache("calendarMonth", 10_000, Duration.ofHours(1)),
+                buildCache("ptCourseList",  1_000,  Duration.ofMinutes(30))
+        ));
         return cacheManager;
+    }
+
+    private CaffeineCache buildCache(String name, long maxSize, Duration ttl) {
+        return new CaffeineCache(name,
+                Caffeine.newBuilder()
+                        .maximumSize(maxSize)
+                        .expireAfterWrite(ttl)
+                        .recordStats()
+                        .build()
+        );
     }
 }

@@ -29,6 +29,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepos
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
     private final FileUseCase fileUseCase;
 
     @Override
+    @CacheEvict(value = "ptCourseList", allEntries = true)
     public Long createPtCourse(CreatePtCourseCommand command) {
 
         int curriculumCount = command.curriculums() == null ? 0 : command.curriculums().size();
@@ -142,6 +144,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
     // PT 강습 수정
     @Override
+    @CacheEvict(value = "ptCourseList", allEntries = true)
     public Long updatePtCourse(UpdatePtCourseCommand command) {
         log.debug("event=pt_course_update_started userId={}, ptCourseId={}", command.userId(), command.ptCourseId());
 
@@ -283,6 +286,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
     // PT 상태 변경
     @Override
+    @CacheEvict(value = "ptCourseList", allEntries = true)
     public void changePtCourseStatus(ChangePtCourseStatusCommand command) {
         log.debug("event=pt_course_status_change_started, userId={}, ptCourseId={}, status={}",
                 command.userId(), command.ptCourseId(), command.status());
@@ -311,6 +315,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
     // PT 강습 삭제
     @Override
+    @CacheEvict(value = "ptCourseList", allEntries = true)
     public void deletePtCourse(DeletePtCourseCommand command) {
         log.debug("event=pt_course_delete_started userId={} ptCourseId={}",
                 command.userId(), command.ptCourseId());

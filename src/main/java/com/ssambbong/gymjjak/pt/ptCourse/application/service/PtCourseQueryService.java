@@ -21,6 +21,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRep
 import com.ssambbong.gymjjak.tag.application.usecase.TagQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +52,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final FileUrlUseCase fileUrlUseCase;
 
     @Override
+    @Cacheable(value = "ptCourseList", sync = true)
     @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_all")
     public List<PtCourseListView> findAllPtCourses() {
         log.debug("event=pt_courses_find_all");
@@ -87,7 +89,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             org != null ? org.latitude() : null,
                             org != null ? org.longitude() : null,
                             trainer != null ? trainer.averageRating() : null,
-                            trainer != null ? trainer.reviewCount() : 0
+                            trainer != null ? trainer.reviewCount() : 0,
+                            c.getCreatedAt()
                     );
                 })
                 .toList();

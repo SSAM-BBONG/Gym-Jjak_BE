@@ -1,7 +1,9 @@
 package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
 
 // PT 강습 목록 카드 응답 DTO
 public record
@@ -53,7 +55,11 @@ PtCourseViewResponse(
         Double averageRating,
 
         @Schema(description = "리뷰 수", example = "127")
-        int reviewCount
+        int reviewCount,
+
+        @Schema(description = "강습 등록일시", example = "2026-06-28T23:19:54")
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        LocalDateTime createdAt
 
 ) {
     public static PtCourseViewResponse from(PtCourseQueryUseCase.PtCourseListView view) {
@@ -73,7 +79,8 @@ PtCourseViewResponse(
                 view.latitude(),
                 view.longitude(),
                 view.averageRating(),
-                view.reviewCount()
+                view.reviewCount(),
+                view.createdAt()
         );
     }
 }
