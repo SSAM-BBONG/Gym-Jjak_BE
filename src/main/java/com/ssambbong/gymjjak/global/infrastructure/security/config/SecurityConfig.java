@@ -214,7 +214,8 @@ public class SecurityConfig {
 //                "http://13.209.67.161",
 //                "https://13.124.200.97.sslip.io"
 //                "https://gymjjak.com"
-                "https://gymjjak.site"
+                "https://gymjjak.site",
+                "https://www.gymjjak.site"
         ));
 
         // 허용 HTTP 메서드
