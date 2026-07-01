@@ -268,6 +268,12 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     // PT 통계 조회
+    @Cacheable(
+            cacheNames = "ptMainStats",
+            key = "'main'",
+            sync = true
+    )
+    @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_stats")
     @Override
     public PtStatsView findStats() {
         log.debug("event=pt_stats_find");
@@ -284,30 +290,69 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     // 인기 강습 조회
+    @Cacheable(
+            cacheNames = "ptMainPopular",
+            key = "'limit:4'",
+            sync = true
+    )
     @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_popular")
     @Override
     public List<PopularCourseView> findPopular() {
         log.debug("event=pt_courses_popular_find");
 
-        // 태그 ID → 이름 매핑 (N+1 방지)
-        Map<Long, String> tagMap = tagQueryUseCase.handle().stream()
-                .collect(Collectors.toMap(
-                        TagQueryUseCase.TagView::tagId,
-                        TagQueryUseCase.TagView::name
-                ));
-
+        // 카테고리/태그는 전체 목록을 한 번에 조회해서 ID -> 이름 Map으로 변환한다.
+        Map<Long, String> tagMap = buildTagMap();
         Map<Long, String> categoryMap = buildCategoryMap();
 
-        List<PopularCourseView> result = ptCourseRepository.findPopular(4).stream()
+        // 예약 수 기준 인기 PT 강습을 먼저 조회한다.
+        List<PtCourse> popularCourses = ptCourseRepository.findPopular(4);
+        if (popularCourses.isEmpty()) {
+            log.info("event=pt_courses_popular_find_succeeded count=0");
+            return List.of();
+        }
+
+        // 인기 PT 목록에 포함된 조직 ID만 추출해서 조직 단건 조회 반복을 방지한다.
+        List<Long> organizationIds = popularCourses.stream()
+                .map(PtCourse::getOrganizationId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        // 인기 PT 목록에 포함된 트레이너 프로필 ID만 추출해서 트레이너 단건 조회 반복을 방지한다.
+        List<Long> trainerProfileIds = popularCourses.stream()
+                .map(PtCourse::getTrainerProfileId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        // 조직/트레이너 정보를 배치 조회하여 N+1 조회를 줄인다.
+        Map<Long, OrganizationQueryPort.OrganizationInfo> organizationMap =
+                organizationQueryPort.findAllByIds(organizationIds);
+
+        Map<Long, TrainerSummaryInfo> trainerMap =
+                trainerProfileQueryPort.findSummaryAllByIds(trainerProfileIds);
+
+        // 조회된 인기 PT 목록과 배치 조회 결과를 조합해 응답 View를 생성한다.
+        List<PopularCourseView> result = popularCourses.stream()
                 .map(ptCourse -> {
-                    OrganizationQueryPort.OrganizationInfo org =
-                            organizationQueryPort.findById(ptCourse.getOrganizationId());
-                    String trainerName;
-                    try {
-                        trainerName = trainerProfileQueryPort.findTrainerNameById(ptCourse.getTrainerProfileId());
-                    } catch (Exception e) {
-                        log.warn("event=pt_course_popular_trainer_not_found trainerProfileId={}", ptCourse.getTrainerProfileId());
-                        trainerName = null;
+                    OrganizationQueryPort.OrganizationInfo organization =
+                            organizationMap.get(ptCourse.getOrganizationId());
+
+                    TrainerSummaryInfo trainer =
+                            trainerMap.get(ptCourse.getTrainerProfileId());
+
+                    if (organization == null) {
+                        log.warn(
+                                "event=pt_course_popular_organization_not_found organizationId={}",
+                                ptCourse.getOrganizationId()
+                        );
+                    }
+
+                    if (trainer == null) {
+                        log.warn(
+                                "event=pt_course_popular_trainer_not_found trainerProfileId={}",
+                                ptCourse.getTrainerProfileId()
+                        );
                     }
 
                     return new PopularCourseView(
@@ -319,8 +364,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             categoryMap.getOrDefault(ptCourse.getCategoryId(), null),
                             ptCourse.getTagId(),
                             tagMap.getOrDefault(ptCourse.getTagId(), null),
-                            trainerName,
-                            org.roadAddress()
+                            trainer != null ? trainer.trainerName() : null,
+                            organization != null ? organization.roadAddress() : null
                     );
                 })
                 .toList();
