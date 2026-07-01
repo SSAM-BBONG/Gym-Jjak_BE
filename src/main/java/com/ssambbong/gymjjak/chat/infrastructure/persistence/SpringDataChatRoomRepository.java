@@ -40,17 +40,35 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
                 CASE WHEN cr.user_id = :requesterId THEN tp.trainer_name ELSE u.nickname END AS partnerName,
                 CASE WHEN cr.user_id = :requesterId THEN 'TRAINER' ELSE 'USER' END AS partnerRole,
                 CASE WHEN cr.user_id = :requesterId THEN tp.profile_file_id ELSE NULL END AS partnerProfileFileId,
-                (SELECT cm.content FROM chat_messages cm
-                 WHERE cm.chat_room_id = cr.chat_room_id
-                 ORDER BY cm.created_at DESC LIMIT 1) AS lastMessage,
+                last_cm.content AS lastMessage,
                 cr.last_message_at AS lastMessageAt,
-                (SELECT COUNT(*) FROM chat_messages cm
-                 WHERE cm.chat_room_id = cr.chat_room_id
-                   AND cm.sender_id != :requesterId
-                   AND cm.is_read = false) AS unreadCount
+                COALESCE(unread.cnt, 0) AS unreadCount
             FROM chat_rooms cr
             LEFT JOIN trainer_profiles tp ON cr.trainer_profile_id = tp.trainer_profile_id
             LEFT JOIN users u ON cr.user_id = u.user_id
+            LEFT JOIN (
+                SELECT chat_room_id, MAX(chat_message_id) AS max_id
+                FROM chat_messages
+                WHERE chat_room_id IN (
+                    SELECT chat_room_id FROM chat_rooms
+                    WHERE (user_id = :requesterId OR trainer_profile_id = :requesterId)
+                      AND status != 'DELETED'
+                )
+                GROUP BY chat_room_id
+            ) AS last_ids ON last_ids.chat_room_id = cr.chat_room_id
+            LEFT JOIN chat_messages last_cm ON last_cm.chat_message_id = last_ids.max_id
+            LEFT JOIN (
+                SELECT chat_room_id, COUNT(*) AS cnt
+                FROM chat_messages
+                WHERE chat_room_id IN (
+                    SELECT chat_room_id FROM chat_rooms
+                    WHERE (user_id = :requesterId OR trainer_profile_id = :requesterId)
+                      AND status != 'DELETED'
+                )
+                  AND sender_id != :requesterId
+                  AND is_read = false
+                GROUP BY chat_room_id
+            ) AS unread ON unread.chat_room_id = cr.chat_room_id
             WHERE (cr.user_id = :requesterId OR tp.user_id = :requesterId)
               AND cr.status != 'DELETED'
               AND NOT (cr.user_id = :requesterId AND cr.user_left = true)
