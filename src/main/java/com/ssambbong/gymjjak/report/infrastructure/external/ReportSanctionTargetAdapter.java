@@ -1,8 +1,10 @@
 package com.ssambbong.gymjjak.report.infrastructure.external;
 
+import com.ssambbong.gymjjak.report.application.port.feedback.FeedbackSanctionPort;
 import com.ssambbong.gymjjak.report.application.port.ptcourse.PtCourseSanctionPort;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionTargetPort;
+import com.ssambbong.gymjjak.report.application.port.trainerreview.TrainerReviewSanctionPort;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,8 @@ public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
 
 
     private final PtCourseSanctionPort ptCourseSanctionPort;
+    private final FeedbackSanctionPort feedbackSanctionPort;
+    private final TrainerReviewSanctionPort trainerReviewSanctionPort;
 
     @Override
     public void applySanction(ReportTargetType targetType, Long targetId, ReportSanctionAction action) {
@@ -24,11 +28,20 @@ public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
 
         switch (targetType) {
             case PT_COURSE -> ptCourseSanctionPort.applySanction(targetId, action);
+
+            case FEEDBACK -> {
+                if (action == ReportSanctionAction.APPLY_MANUAL_BLIND) {
+                    feedbackSanctionPort.applySanction(targetId, action);
+                }
+            }
+
+            case TRAINER_REVIEW -> {
+                if (action == ReportSanctionAction.APPLY_MANUAL_BLIND) {
+                    trainerReviewSanctionPort.applySanction(targetId, action);
+                }
+            }
             case POST, COMMENT -> {
                 // TODO: 게시글/댓글 자동 블라인드 적용/해제 포트 구현 후 연결
-            }
-            default -> {
-                // TODO : FEEDBACK, TRAINER_REVIEW는 자동 제재 대상 아님, 추후 구현 예정
             }
         }
     }

@@ -13,10 +13,7 @@ import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCas
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupSoftDeleteFailedException;
 import com.ssambbong.gymjjak.report.domain.exception.ReportNotFoundException;
-import com.ssambbong.gymjjak.report.domain.model.Report;
-import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
-import com.ssambbong.gymjjak.report.domain.model.ReportGroupReviewStatus;
-import com.ssambbong.gymjjak.report.domain.model.ReportGroupSanctionStatus;
+import com.ssambbong.gymjjak.report.domain.model.*;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
 import com.ssambbong.gymjjak.report.infrastructure.metrics.ReportGroupMetric;
@@ -47,8 +44,12 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
     @Override
     public AdminReportReasonItem approveReport(ApproveReportCommand command) {
 
-        log.info("[ReportCommandService] 관리자 개별 신고 승인 처리 시작 - reportGroupId: {}, reportId: {}, adminId: {}",
-                command.reportGroupId(), command.reportId(), command.adminId());
+        log.info(
+                "event=report_approve_started reportGroupId={}, reportId={}, adminId={}",
+                command.reportGroupId(),
+                command.reportId(),
+                command.adminId()
+        );
 
         // 단건 신고 내역 엔티티 조회
         Report report = getReport(command.reportId());
@@ -59,7 +60,11 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
         // 도메인 - 단건 신고 상태 pending -> approve
         report.approve(command.adminId(), LocalDateTime.now());
 
-        log.debug("[ReportCommandService] 개별 신고 상태 APPROVED 변경 완료 - reportId: {}", report.getReportId());
+        log.debug(
+                "event=report_status_changed reportId={}, status={}",
+                report.getReportId(),
+                report.getStatus()
+        );
 
         // 변경 신고 상태 영속성 계층, java repo에 저장
         Report savedReport = reportRepository.save(report);
@@ -81,8 +86,17 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
         // 처리 관리자 pk값 기록
         reportGroup.markProcessedBy(command.adminId());
 
-        // 최종 재계산 신고 그룹 데이터 저장
-        reportGroupRepository.save(reportGroup);
+        if (isManualBlindOnApproveTarget(reportGroup)) {
+            // 수동 블라인드 처리
+            applyManualBlind(
+                    reportGroup,
+                    command.adminId(),
+                    LocalDateTime.now()
+            );
+        } else {
+            // 최종 재계산 신고 그룹 데이터 저장
+            reportGroupRepository.save(reportGroup);
+        }
 
         // 개별 신고 승인 성공 Metric 저장
         reportMetric.countApprovedReport();
@@ -93,8 +107,16 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
             reportGroupMetric.countCompletedReportGroup();
         }
 
-        log.info("[ReportCommandService] 관리자 개별 신고 승인 및 그룹 상태 재계산 완료 - reportGroupId: {}, 최종 리뷰 상태: {}, 최종 제재 상태: {}",
-                reportGroup.getReportGroupId(), reportGroup.getReviewStatus(), reportGroup.getSanctionStatus());
+        log.info(
+                "event=report_approve_completed reportGroupId={}, reportId={}, adminId={}, reviewStatus={}, sanctionStatus={}, targetType={}, targetId={}",
+                reportGroup.getReportGroupId(),
+                savedReport.getReportId(),
+                command.adminId(),
+                reportGroup.getReviewStatus(),
+                reportGroup.getSanctionStatus(),
+                reportGroup.getTargetType(),
+                reportGroup.getTargetId()
+        );
 
         // 화면 뿌려줄 dto 형태로 변경하여 리턴
         return toReviewReportResult(savedReport);
@@ -104,8 +126,12 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
     @Override
     public AdminReportReasonItem rejectReport(RejectReportCommand command) {
 
-        log.info("[ReportCommandService] 관리자 개별 신고 반려 처리 시작 - reportGroupId: {}, reportId: {}, adminId: {}",
-                command.reportGroupId(), command.reportId(), command.adminId());
+        log.info(
+                "event=report_reject_started reportGroupId={}, reportId={}, adminId={}",
+                command.reportGroupId(),
+                command.reportId(),
+                command.adminId()
+        );
         // 신고 조회
         Report report = getReport(command.reportId());
         // 신고 그룹 소속 신고 여부 검증
@@ -140,8 +166,16 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
             );
         }
 
-        log.info("[ReportCommandService] 관리자 개별 신고 반려 및 그룹 상태 동기화 완료 - reportGroupId: {}, 최종 리뷰 상태: {}, 최종 제재 상태: {}",
-                reportGroup.getReportGroupId(), reportGroup.getReviewStatus(), reportGroup.getSanctionStatus());
+        log.info(
+                "event=report_reject_completed reportGroupId={}, reportId={}, adminId={}, reviewStatus={}, sanctionStatus={}, targetType={}, targetId={}",
+                reportGroup.getReportGroupId(),
+                savedReport.getReportId(),
+                command.adminId(),
+                reportGroup.getReviewStatus(),
+                reportGroup.getSanctionStatus(),
+                reportGroup.getTargetType(),
+                reportGroup.getTargetId()
+        );
 
         // 개별 신고 반려 성공 카운트
         reportMetric.countRejectedReport();
@@ -157,15 +191,48 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
 
     @Override
     public void manuallyBlindReportGroup(ManualBlindReportGroupCommand command) {
-        log.info("event=reportGroup_manualBlind_start reportGroupId={}", command.reportGroupId());
+        log.info(
+                "event=report_group_manual_blind_started reportGroupId={}, adminId={}",
+                command.reportGroupId(),
+                command.adminId()
+        );
 
         LocalDateTime now = LocalDateTime.now();
 
         ReportGroup reportGroup = getReportGroup(command.reportGroupId());
 
-        reportGroup.manuallyBlind(command.adminId());
+        applyManualBlind(
+                reportGroup,
+                command.adminId(),
+                now
+        );
+
+        log.info(
+                "event=report_group_manual_blind_completed reportGroupId={}, targetType={}, targetId={}, adminId={}",
+                reportGroup.getReportGroupId(),
+                reportGroup.getTargetType(),
+                reportGroup.getTargetId(),
+                command.adminId()
+        );
+    }
+
+    // 수동 블라인드 적용
+    private void applyManualBlind(
+            ReportGroup reportGroup,
+            Long adminId,
+            LocalDateTime now
+    ) {
+        reportGroup.manuallyBlind(adminId);
 
         ReportGroup savedReportGroup = reportGroupRepository.save(reportGroup);
+
+        log.info(
+                "event=report_group_manual_blind_sanction_requested reportGroupId={}, targetType={}, targetId={}, adminId={}",
+                savedReportGroup.getReportGroupId(),
+                savedReportGroup.getTargetType(),
+                savedReportGroup.getTargetId(),
+                adminId
+        );
 
         reportSanctionTargetPort.applySanction(
                 savedReportGroup.getTargetType(),
@@ -183,14 +250,12 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
                     savedReportGroup.getReportGroupId()
             );
         }
+    }
 
-        log.info(
-                "event=reportGroup_manualBlind_completed reportGroupId={}, targetType={}, targetId={}, adminId={}",
-                savedReportGroup.getReportGroupId(),
-                savedReportGroup.getTargetType(),
-                savedReportGroup.getTargetId(),
-                command.adminId()
-        );
+    // 수동 블라인드 대상 검증 메서드
+    private boolean isManualBlindOnApproveTarget(ReportGroup reportGroup) {
+        return reportGroup.getTargetType() == ReportTargetType.FEEDBACK
+                || reportGroup.getTargetType() == ReportTargetType.TRAINER_REVIEW;
     }
 
     private Report getReport(Long reportId) {
