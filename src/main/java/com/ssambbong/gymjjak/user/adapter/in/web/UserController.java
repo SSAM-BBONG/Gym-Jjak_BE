@@ -77,6 +77,7 @@ public class UserController {
 
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @DeleteMapping("/me")
     @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 한다.")
     public ResponseEntity<GlobalApiResponse<Void>> deleteUser (@AuthenticationPrincipal AuthUser authUser) {
