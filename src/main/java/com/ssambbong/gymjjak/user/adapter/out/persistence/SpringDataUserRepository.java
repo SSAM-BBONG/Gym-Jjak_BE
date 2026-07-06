@@ -24,7 +24,7 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
 
     boolean existsByNickname(String nickname);
 
-    boolean existsByPhone(String phone);
+    boolean existsByPhoneAndRole(String phone, UserRole role);
 
     Optional<UserJpaEntity> findByUsername(String username);
 

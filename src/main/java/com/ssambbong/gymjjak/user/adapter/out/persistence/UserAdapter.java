@@ -61,8 +61,8 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     }
 
     @Override
-    public boolean existsByPhone(String phone) {
-        return springDataUserRepository.existsByPhone(phone);
+    public boolean existsByPhoneAndRole(String phone, UserRole role) {
+        return springDataUserRepository.existsByPhoneAndRole(phone, role);
     }
 
     @Override
