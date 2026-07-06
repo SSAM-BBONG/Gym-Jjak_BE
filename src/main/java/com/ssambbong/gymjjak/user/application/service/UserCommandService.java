@@ -8,10 +8,7 @@ import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
-import com.ssambbong.gymjjak.user.domain.model.Blacklist;
-import com.ssambbong.gymjjak.user.domain.model.BlacklistType;
-import com.ssambbong.gymjjak.user.domain.model.User;
-import com.ssambbong.gymjjak.user.domain.model.UserStatus;
+import com.ssambbong.gymjjak.user.domain.model.*;
 import com.ssambbong.gymjjak.user.domain.policy.UserPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -366,7 +363,7 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     public void validateDuplicatePhone(String phone) {
-        if (userPort.existsByPhone(phone)) {
+        if (userPort.existsByPhoneAndRole(phone, UserRole.USER)) {
             throw new UserException(UserErrorCode.DUPLICATE_PHONE);
         }
     }
@@ -438,7 +435,7 @@ public class UserCommandService implements UserCommandUseCase {
             throw new UserException(UserErrorCode.DUPLICATE_NICKNAME);
         }
 
-        if (userPort.existsByPhone(phone)) {
+        if (userPort.existsByPhoneAndRole(phone, UserRole.USER)) {
             throw new UserException(UserErrorCode.DUPLICATE_PHONE);
         }
 
