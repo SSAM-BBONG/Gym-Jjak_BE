@@ -1,13 +1,12 @@
 package com.ssambbong.gymjjak.report.infrastructure.external;
 
-import com.ssambbong.gymjjak.report.application.port.PtCourseSanctionPort;
+import com.ssambbong.gymjjak.report.application.port.ptcourse.PtCourseSanctionPort;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionTargetPort;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -16,8 +15,6 @@ public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
 
 
     private final PtCourseSanctionPort ptCourseSanctionPort;
-//    private final PostSanctionPort postSanctionPort;
-//    private final CommentSanctionPort commentSanctionPort;
 
     @Override
     public void applySanction(ReportTargetType targetType, Long targetId, ReportSanctionAction action) {
