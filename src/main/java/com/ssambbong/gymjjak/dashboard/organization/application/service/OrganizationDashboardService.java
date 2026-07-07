@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.dashboard.organization.application.service;
 
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
+import com.ssambbong.gymjjak.dashboard.organization.application.query.TrainerClientResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.usecase.OrganizationDashboardUseCase;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
@@ -9,6 +10,8 @@ import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.SpringD
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,5 +33,22 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
         long currentUserCount = springDataPtReservationRepository.countDistinctCurrentUsersByOrganizationId(organizationId);
 
         return new OrgStatsResult(trainerCount, totalUserCount, currentUserCount);
+    }
+
+    @Override
+    public List<TrainerClientResult> getTrainerClients(Long userId) {
+        Long organizationId = organizationRepository.findByOrganizationAccountId(userId)
+                .orElseThrow(OrganizationNotFoundException::new)
+                .getOrganizationId();
+
+        return organizationTrainerRepository.findTrainerClientsByOrganizationId(organizationId)
+                .stream()
+                .map(s -> new TrainerClientResult(
+                        s.trainerProfileId(),
+                        s.trainerName(),
+                        s.averageRating(),
+                        s.clientCount()
+                ))
+                .toList();
     }
 }
