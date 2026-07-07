@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.report.application.port;
+package com.ssambbong.gymjjak.report.application.port.user;
 
 import java.util.Optional;
 
