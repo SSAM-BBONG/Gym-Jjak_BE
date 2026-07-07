@@ -44,4 +44,36 @@ public class CommunityPost {
                 0L
         );
     }
+
+    public static CommunityPost reconstruct(
+            Long id,
+            Long userId,
+            CommunityPostType type,
+            String title,
+            String content,
+            Long viewCount
+    ) {
+
+        return new CommunityPost(
+                id,
+                userId,
+                type,
+                title,
+                content,
+                viewCount
+        );
+    }
+
+    public void update(
+            String title,
+            String content
+    ) {
+
+        this.title = title;
+        this.content = content;
+    }
+
+    public boolean isOwner(Long userId) {
+        return this.userId.equals(userId);
+    }
 }

@@ -182,4 +182,25 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
             @Param("postId") Long postId,
             @Param("userId") Long userId
     );
+
+    Optional<CommunityPostJpaEntity> findByIdAndDeletedAtIsNull(
+            Long id
+    );
+
+    @Modifying(
+            flushAutomatically = true,
+            clearAutomatically = true
+    )
+    @Query("""
+        UPDATE CommunityPostJpaEntity cp
+        SET cp.title = :title,
+            cp.content = :content
+        WHERE cp.id = :postId
+          AND cp.deletedAt IS NULL
+        """)
+    int updateCommunityPost(
+            @Param("postId") Long postId,
+            @Param("title") String title,
+            @Param("content") String content
+    );
 }

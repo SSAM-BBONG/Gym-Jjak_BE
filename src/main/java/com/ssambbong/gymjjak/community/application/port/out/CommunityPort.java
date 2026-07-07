@@ -30,4 +30,12 @@ public interface CommunityPort {
     );
 
     void increaseViewCount(Long postId);
+
+    Optional<CommunityPost> findCommunityPostById(
+            Long postId
+    );
+
+    void updateCommunityPost(
+            CommunityPost communityPost
+    );
 }

@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.community.application.port.in;
 
 import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.UpdateCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
@@ -19,5 +20,9 @@ public interface CommunityUseCase {
     CommunityPostDetailResult findCommunityPostDetail(
             Long userId,
             Long postId
+    );
+
+    void updateCommunityPost(
+            UpdateCommunityPostCommand command
     );
 }

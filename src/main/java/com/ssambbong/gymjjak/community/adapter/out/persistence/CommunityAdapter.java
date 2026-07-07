@@ -1,12 +1,15 @@
 package com.ssambbong.gymjjak.community.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.community.adapter.out.persistence.entity.CommunityPostJpaEntity;
+import com.ssambbong.gymjjak.community.adapter.out.persistence.mapper.CommunityMapper;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityPostDetailProjection;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.repository.SpringDataCommunityRepository;
 import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
 import com.ssambbong.gymjjak.community.application.result.CommunityCommentResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
+import com.ssambbong.gymjjak.community.domain.exception.CommunityErrorCode;
+import com.ssambbong.gymjjak.community.domain.exception.CommunityException;
 import com.ssambbong.gymjjak.community.domain.model.CommunityPost;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +25,22 @@ import java.util.Optional;
 public class CommunityAdapter implements CommunityPort {
 
     private final SpringDataCommunityRepository springDataCommunityRepository;
+    private final CommunityMapper communityMapper;
 
     @Override
-    public Long saveCommunityPost(CommunityPost communityPost) {
+    public Long saveCommunityPost(
+            CommunityPost communityPost
+    ) {
 
-        CommunityPostJpaEntity savedCommunityPost = springDataCommunityRepository.save(CommunityPostJpaEntity.from(communityPost));
+        CommunityPostJpaEntity entity =
+                communityMapper.toEntity(
+                        communityPost
+                );
+
+        CommunityPostJpaEntity savedCommunityPost =
+                springDataCommunityRepository.save(
+                        entity
+                );
 
         return savedCommunityPost.getId();
     }
@@ -46,20 +60,8 @@ public class CommunityAdapter implements CommunityPort {
                         typeValue,
                         pageable
                 )
-                .map(projection ->
-                        new CommunityPostListResult(
-                                projection.getPostId(),
-                                CommunityPostType.valueOf(
-                                        projection.getType()
-                                ),
-                                projection.getTitle(),
-                                projection.getContent(),
-                                projection.getAuthor(),
-                                projection.getCreatedAt(),
-                                projection.getViewCount(),
-                                projection.getLikeCount(),
-                                projection.getCommentCount()
-                        )
+                .map(
+                        communityMapper::toPostListResult
                 );
     }
 
@@ -117,35 +119,14 @@ public class CommunityAdapter implements CommunityPort {
                                 userId
                         )
                         .stream()
-                        .map(projection ->
-                                new CommunityCommentResult(
-                                        projection.getCommentId(),
-                                        projection.getAuthor(),
-                                        projection.getCreatedAt(),
-                                        projection.getContent(),
-                                        toBoolean(projection.getMine())
-                                )
+                        .map(
+                                communityMapper::toCommentResult
                         )
                         .toList();
 
-        CommunityPostDetailProjection post =
-                postProjection.get();
-
         return Optional.of(
-                new CommunityPostDetailResult(
-                        post.getPostId(),
-                        CommunityPostType.valueOf(
-                                post.getType()
-                        ),
-                        post.getTitle(),
-                        post.getContent(),
-                        post.getAuthor(),
-                        post.getCreatedAt(),
-                        post.getViewCount(),
-                        post.getLikeCount(),
-                        post.getCommentCount(),
-                        toBoolean(post.getMine()),
-                        toBoolean(post.getLikedByMe()),
+                communityMapper.toPostDetailResult(
+                        postProjection.get(),
                         comments
                 )
         );
@@ -153,5 +134,40 @@ public class CommunityAdapter implements CommunityPort {
 
     private boolean toBoolean(Long value) {
         return value != null && value == 1L;
+    }
+
+    @Override
+    public Optional<CommunityPost> findCommunityPostById(
+            Long postId
+    ) {
+
+        return springDataCommunityRepository
+                .findByIdAndDeletedAtIsNull(
+                        postId
+                )
+                .map(
+                        communityMapper::toDomain
+                );
+    }
+
+    @Override
+    public void updateCommunityPost(
+            CommunityPost communityPost
+    ) {
+
+        int updatedRowCount =
+                springDataCommunityRepository
+                        .updateCommunityPost(
+                                communityPost.getId(),
+                                communityPost.getTitle(),
+                                communityPost.getContent()
+                        );
+
+        if (updatedRowCount == 0) {
+
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
+            );
+        }
     }
 }

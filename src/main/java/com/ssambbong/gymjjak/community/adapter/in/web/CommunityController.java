@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.community.adapter.in.web;
 
 import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityPostRequest;
+import com.ssambbong.gymjjak.community.adapter.in.web.request.UpdateCommunityPostRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostDetailResponse;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostListResponse;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityResponseCode;
@@ -127,6 +128,30 @@ public class CommunityController {
                                 CommunityResponseCode
                                         .COMMUNITY_POST_DETAIL_FETCHED,
                                 CommunityPostDetailResponse.from(result)
+                        )
+                );
+    }
+
+    @PatchMapping("/posts/{postId}")
+    @Operation(summary = "내 게시글 수정", description = "현재 로그인 사용자가 작성한 커뮤니티 게시글의 제목과 내용을 수정하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> updateCommunityPost(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "수정할 게시글 ID", example = "1")
+            @PathVariable Long postId,
+            @Valid @RequestBody UpdateCommunityPostRequest request) {
+
+        communityUseCase.updateCommunityPost(
+                request.toCommand(
+                        authUser.userId(),
+                        postId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode.COMMUNITY_POST_UPDATED
                         )
                 );
     }

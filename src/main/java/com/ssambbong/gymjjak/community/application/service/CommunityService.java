@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.community.application.service;
 
 import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.UpdateCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
@@ -126,6 +127,49 @@ public class CommunityService implements CommunityUseCase {
         return result;
     }
 
+    @Override
+    public void updateCommunityPost(
+            UpdateCommunityPostCommand command
+    ) {
+
+        CommunityPost communityPost =
+                communityPort
+                        .findCommunityPostById(
+                                command.postId()
+                        )
+                        .orElseThrow(
+                                () -> new CommunityException(
+                                        CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
+                                )
+                        );
+
+        log.debug(
+                "event=communityPost_update_start userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+
+        validateCommunityPostOwner(
+                communityPost,
+                command.userId()
+        );
+
+        communityPost.update(
+                command.title(),
+                command.content()
+        );
+
+        communityPort.updateCommunityPost(
+                communityPost
+        );
+
+        log.info(
+                "event=communityPost_update_succeed userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+    }
+
     private void validateCommunityPostExists(Long postId) {
 
         if (!communityPort.existsCommunityPost(postId)) {
@@ -145,6 +189,19 @@ public class CommunityService implements CommunityUseCase {
 
             throw new CommunityException(
                     CommunityErrorCode.NOTICE_WRITE_FORBIDDEN
+            );
+        }
+    }
+
+    private void validateCommunityPostOwner(
+            CommunityPost communityPost,
+            Long userId
+    ) {
+
+        if (!communityPost.isOwner(userId)) {
+
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_POST_UPDATE_FORBIDDEN
             );
         }
     }

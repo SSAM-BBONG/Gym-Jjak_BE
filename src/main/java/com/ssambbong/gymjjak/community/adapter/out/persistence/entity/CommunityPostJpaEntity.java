@@ -65,15 +65,20 @@ public class CommunityPostJpaEntity {
         this.viewCount = viewCount;
     }
 
-    public static CommunityPostJpaEntity from(
-            CommunityPost communityPost
+    public static CommunityPostJpaEntity create(
+            Long userId,
+            CommunityPostType type,
+            String title,
+            String content,
+            Long viewCount
     ) {
+
         return new CommunityPostJpaEntity(
-                communityPost.getUserId(),
-                communityPost.getType(),
-                communityPost.getTitle(),
-                communityPost.getContent(),
-                communityPost.getViewCount()
+                userId,
+                type,
+                title,
+                content,
+                viewCount
         );
     }
 }
