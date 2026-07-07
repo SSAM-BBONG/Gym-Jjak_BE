@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UpdatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.service.PtCourseCommandService;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
@@ -44,6 +45,7 @@ class PtCourseCommandServiceTest {
     @Mock private PtCurriculumRepository ptCurriculumRepository;
     @Mock private PtCourseScheduleRepository ptCourseScheduleRepository;
     @Mock private TrainerProfileQueryPort trainerProfileQueryPort;
+    @Mock private OrganizationQueryPort organizationQueryPort;
     @Mock private PtReservationCountQueryPort ptReservationCountQueryPort;
     @Mock private FileUseCase fileUseCase;
 
@@ -72,14 +74,14 @@ class PtCourseCommandServiceTest {
         );
         CreatePtCourseCommand command = defaultCommand("체계적인 가슴 집중 PT", "가슴 근육 발달에 특화된 12주 프로그램", 50000, curriculums);
 
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
+        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
 
         PtCourse savedPtCourse = PtCourse.restore(
                 1L, 1L, 1L, 1L, 1L, 1L,
                 "체계적인 가슴 집중 PT",
                 "가슴 근육 발달에 특화된 12주 프로그램",
-                50000, 2, PtCourseStatus.VISIBLE, null
+                50000, 2, PtCourseStatus.VISIBLE, null, null
         );
         when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
         when(ptCurriculumRepository.saveAll(any())).thenReturn(List.of());
@@ -105,8 +107,8 @@ class PtCourseCommandServiceTest {
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명"))
         );
 
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
+        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
@@ -125,8 +127,8 @@ class PtCourseCommandServiceTest {
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명"))
         );
 
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
+        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
@@ -252,13 +254,13 @@ class PtCourseCommandServiceTest {
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
 
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
+        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
         when(fileUseCase.registerFiles(any()))
                 .thenReturn(List.of(new FileRegistrationResult(99L, FileType.PT_THUMBNAIL)));
 
         PtCourse savedPtCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, 99L, "제목", "설명", 50000, 1, PtCourseStatus.VISIBLE, null
+                1L, 1L, 1L, 1L, 1L, 99L, "제목", "설명", 50000, 1, PtCourseStatus.VISIBLE, null, null
         );
         when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
         when(ptCurriculumRepository.saveAll(any())).thenReturn(List.of());
@@ -285,8 +287,8 @@ class PtCourseCommandServiceTest {
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
 
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
+        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
         when(fileUseCase.registerFiles(any())).thenReturn(List.of());
 
         // when & then
@@ -329,7 +331,7 @@ class PtCourseCommandServiceTest {
     }
 
     private PtCourse existingPtCourse() {
-        return PtCourse.restore(1L, 1L, 1L, 1L, 1L, null, "기존 제목", "기존 설명", 50000, 2, PtCourseStatus.VISIBLE, null);
+        return PtCourse.restore(1L, 1L, 1L, 1L, 1L, null, "기존 제목", "기존 설명", 50000, 2, PtCourseStatus.VISIBLE, null, null);
     }
 
     @Test
@@ -340,8 +342,7 @@ class PtCourseCommandServiceTest {
         UpdatePtCourseCommand command = defaultUpdateCommand();
 
         when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existingPtCourse()));
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
 
         // when
         Long ptCourseId = ptCourseCommandService.updatePtCourse(command);
@@ -371,11 +372,10 @@ class PtCourseCommandServiceTest {
     void updatePtCourse_forbidden_throwsException() {
 
         // given — trainerProfileId=2인 강습을 userId=1(trainerProfileId=99)이 수정 시도
-        PtCourse other = PtCourse.restore(1L, 1L, 2L, 2L, null, null, "다른 트레이너 강습", "설명", 30000, 1, PtCourseStatus.VISIBLE, null);
+        PtCourse other = PtCourse.restore(1L, 1L, 2L, 2L, null, null, "다른 트레이너 강습", "설명", 30000, 1, PtCourseStatus.VISIBLE, null, null);
 
         when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(other));
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 99L)); // 본인 trainerProfileId=99
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(99L); // 본인 trainerProfileId=99
 
         // when & then
         assertThrows(PtCourseForbiddenException.class,
@@ -397,8 +397,7 @@ class PtCourseCommandServiceTest {
         );
 
         when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existingPtCourse()));
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
         when(ptReservationCountQueryPort.countActiveByPtCourseIds(List.of(1L)))
                 .thenReturn(Map.of(1L, 3)); // 활성 수강생 3명
 
@@ -425,8 +424,7 @@ class PtCourseCommandServiceTest {
         );
 
         when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existingPtCourse()));
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
         when(ptReservationCountQueryPort.countActiveByPtCourseIds(List.of(1L)))
                 .thenReturn(Map.of(1L, 0));
 
@@ -449,8 +447,7 @@ class PtCourseCommandServiceTest {
         );
 
         when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existingPtCourse()));
-        when(trainerProfileQueryPort.findByUserId(1L))
-                .thenReturn(new TrainerProfileQueryPort.TrainerInfo(1L, 1L));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
         when(fileUseCase.registerFiles(any()))
                 .thenReturn(List.of(new FileRegistrationResult(99L, FileType.PT_THUMBNAIL)));
 
