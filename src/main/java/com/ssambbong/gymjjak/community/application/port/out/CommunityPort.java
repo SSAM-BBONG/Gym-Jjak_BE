@@ -1,10 +1,13 @@
 package com.ssambbong.gymjjak.community.application.port.out;
 
+import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
 import com.ssambbong.gymjjak.community.domain.model.CommunityPost;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.Optional;
 
 public interface CommunityPort {
     Long saveCommunityPost(CommunityPost communityPost);
@@ -13,4 +16,18 @@ public interface CommunityPort {
             CommunityPostType type,
             Pageable pageable
     );
+
+    boolean existsCommunityPost(Long postId);
+
+    Optional<CommunityPostDetailResult> findCommunityPostDetail(
+            Long postId,
+            Long userId
+    );
+
+    boolean saveViewIfAbsent(
+            Long postId,
+            Long userId
+    );
+
+    void increaseViewCount(Long postId);
 }

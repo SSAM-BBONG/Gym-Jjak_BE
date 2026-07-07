@@ -10,7 +10,8 @@ import org.springframework.http.HttpStatus;
 public enum CommunityResponseCode implements ResponseCode {
 
     COMMUNITY_POST_CREATED("COMMUNITY_201_001", "게시글이 등록되었습니다."),
-    COMMUNITY_POST_LIST_FETCHED("COMMUNITY_200_001", "게시글 목록을 조회했습니다.");
+    COMMUNITY_POST_LIST_FETCHED("COMMUNITY_200_001", "게시글 목록을 조회했습니다."),
+    COMMUNITY_POST_DETAIL_FETCHED("COMMUNITY_200_002", "게시글 상세를 조회했습니다.");
 
     private final String code;
     private final String message;

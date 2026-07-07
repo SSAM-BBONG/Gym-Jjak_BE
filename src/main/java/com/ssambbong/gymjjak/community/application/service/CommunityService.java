@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.community.application.service;
 import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
+import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
 import com.ssambbong.gymjjak.community.domain.exception.CommunityErrorCode;
 import com.ssambbong.gymjjak.community.domain.exception.CommunityException;
@@ -28,6 +29,10 @@ public class CommunityService implements CommunityUseCase {
             CreateCommunityPostCommand command
     ) {
 
+        log.debug("event=communityPost_create_start userId={}, type={}",
+                command.userId(),
+                command.type());
+
         validateCreatePermission(
                 command.type(),
                 command.role()
@@ -40,19 +45,95 @@ public class CommunityService implements CommunityUseCase {
                 command.content()
         );
 
-        return communityPort.saveCommunityPost(communityPost);
+        Long postId =
+                communityPort.saveCommunityPost(
+                        communityPost
+                );
+
+        log.info("event=communityPost_create_succeed userId={}, postId={}, type={}",
+                command.userId(),
+                postId,
+                command.type());
+
+        return postId;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CommunityPostListResult> findCommunityPosts(
             CommunityPostType type,
             Pageable pageable
     ) {
+        log.debug("event=communityPost_listFind_start type={}",
+                type == null ? "ALL" : type);
 
-        return communityPort.findCommunityPosts(
-                type,
-                pageable
-        );
+        Page<CommunityPostListResult> result =
+                communityPort.findCommunityPosts(
+                        type,
+                        pageable
+                );
+
+        log.info("event=communityPost_listFind_succeed type={}, page={}, size={}, totalElements={}",
+                type == null ? "ALL" : type,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                result.getTotalElements());
+
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public CommunityPostDetailResult findCommunityPostDetail(
+            Long userId,
+            Long postId
+    ) {
+
+        log.debug("event=communityPost_detailFind userId={}, postId={}",
+                userId,
+                postId);
+
+        validateCommunityPostExists(postId);
+
+        boolean firstView =
+                communityPort.saveViewIfAbsent(
+                        postId,
+                        userId
+                );
+
+        if (firstView) {
+            communityPort.increaseViewCount(postId);
+        }
+
+        CommunityPostDetailResult result =
+                communityPort
+                        .findCommunityPostDetail(
+                                postId,
+                                userId
+                        )
+                        .orElseThrow(
+                                () -> new CommunityException(
+                                        CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
+                                )
+                        );
+
+        log.info("event=communityPost_detailFind userId={}, postId={}, firstView={}, viewCount={}",
+                userId,
+                postId,
+                firstView,
+                result.viewCount());
+
+        return result;
+    }
+
+    private void validateCommunityPostExists(Long postId) {
+
+        if (!communityPort.existsCommunityPost(postId)) {
+
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
+            );
+        }
     }
 
     private void validateCreatePermission(

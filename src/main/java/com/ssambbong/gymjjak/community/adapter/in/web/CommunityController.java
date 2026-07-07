@@ -1,10 +1,12 @@
 package com.ssambbong.gymjjak.community.adapter.in.web;
 
 import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityPostRequest;
+import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostDetailResponse;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostListResponse;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityResponseCode;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CreateCommunityPostResponse;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
+import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
@@ -56,7 +58,7 @@ public class CommunityController {
                 );
     }
 
-    @GetMapping
+    @GetMapping("/posts")
     @Operation(summary = "게시글 목록 조회", description = "전체, 자유게시판, 공지 게시글 목록을 조회하는 요청이다.")
     public ResponseEntity<
             GlobalApiResponse<Page<CommunityPostListResponse>>> findCommunityPosts(
@@ -87,6 +89,44 @@ public class CommunityController {
                         GlobalApiResponse.ok(
                                 CommunityResponseCode.COMMUNITY_POST_LIST_FETCHED,
                                 response
+                        )
+                );
+    }
+
+    @GetMapping("/posts/{postId}")
+    @Operation(
+            summary = "게시글 상세 조회",
+            description = "커뮤니티 게시글의 상세 정보와 댓글 목록을 조회하는 요청이다."
+    )
+    public ResponseEntity<
+            GlobalApiResponse<CommunityPostDetailResponse>
+            > findCommunityPostDetail(
+
+            @AuthenticationPrincipal
+            AuthUser authUser,
+
+            @Parameter(
+                    description = "게시글 ID",
+                    example = "1"
+            )
+            @PathVariable
+            Long postId
+    ) {
+
+        CommunityPostDetailResult result =
+                communityUseCase
+                        .findCommunityPostDetail(
+                                authUser.userId(),
+                                postId
+                        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_POST_DETAIL_FETCHED,
+                                CommunityPostDetailResponse.from(result)
                         )
                 );
     }
