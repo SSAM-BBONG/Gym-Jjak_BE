@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.organization.organization.infrastructure.persistence;
 
-import com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminView;
 import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
