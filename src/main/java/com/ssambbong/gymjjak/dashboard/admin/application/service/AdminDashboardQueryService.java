@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.dashboard.admin.application.service;
 
+import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminContentStatisticsResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminMemberStatisticsResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminPendingStatisticsResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.query.MonthlyUserSignupResult;
@@ -8,6 +9,10 @@ import com.ssambbong.gymjjak.organization.organization.domain.model.Organization
 import com.ssambbong.gymjjak.organization.organization.infrastructure.persistence.SpringDataOrganizationRepository;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
 import com.ssambbong.gymjjak.organization.organizationApplication.infrastructure.persistence.SpringDataOrganizationApplicationRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
+import com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence.SpringDataPtCourseRepository;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroupReviewStatus;
+import com.ssambbong.gymjjak.report.infrastructure.persistence.SpringDataReportGroupRepository;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
 import com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persistence.SpringDataTrainerApplicationRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerProfileStatus;
@@ -39,6 +44,8 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
     private final SpringDataOrganizationRepository organizationRepository;
     private final SpringDataOrganizationApplicationRepository organizationApplicationRepository;
     private final SpringDataTrainerApplicationRepository  trainerApplicationRepository;
+    private final SpringDataPtCourseRepository ptCourseRepository;
+    private final SpringDataReportGroupRepository reportGroupRepository;
 
 
     @Override
@@ -93,6 +100,38 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
         return AdminPendingStatisticsResult.builder()
                 .pendingTrainerApplicationCount(pendingTrainerApplicationCount)
                 .pendingOrganizationApplicationCount(pendingOrganizationApplicationCount)
+                .build();
+    }
+
+    @Override
+    public AdminContentStatisticsResult findContentStatistics() {
+        log.info("event=admin_dashboard_find_content_statistics_started");
+
+        long activePtCourseCount =
+                ptCourseRepository.countByStatus(PtCourseStatus.VISIBLE);
+
+        long blindedPtCourseCount =
+                ptCourseRepository.countByStatus(PtCourseStatus.BLOCKED);
+
+        long pendingReportGroupCount =
+                reportGroupRepository.countByReviewStatusAndDeletedAtIsNull(
+                        ReportGroupReviewStatus.PENDING
+                );
+
+        log.info(
+                "event=admin_dashboard_find_content_statistics_succeeded, " +
+                        "activePtCourseCount={}, " +
+                        "blindedPtCourseCount={}, " +
+                        "pendingReportGroupCount={}",
+                activePtCourseCount,
+                blindedPtCourseCount,
+                pendingReportGroupCount
+        );
+
+        return AdminContentStatisticsResult.builder()
+                .activePtCourseCount(activePtCourseCount)
+                .blindedPtCourseCount(blindedPtCourseCount)
+                .pendingReportGroupCount(pendingReportGroupCount)
                 .build();
     }
 
