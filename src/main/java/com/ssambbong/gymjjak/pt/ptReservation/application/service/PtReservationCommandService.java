@@ -54,16 +54,20 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 command.userId(), command.ptCourseId(),
                 command.reservedStartAt(), command.reservedEndAt());
 
+        // FOR UPDATE로 잠금 획득 — 동시 예약 요청 시 한 번에 하나씩 처리
         PtCourse ptCourse = ptCourseRepository.findByIdForUpdate(command.ptCourseId())
                 .orElseThrow(() -> {
-                    log.warn("event=pt_reservation_create_failed reason=pt_course_not_found, ptCourseId={}",
+                    log.warn("event=pt_reservation_create_failed " +
+                                    "reason=pt_course_not_found, ptCourseId={}",
                             command.ptCourseId());
                     return new PtCourseNotFoundException();
                 });
 
+        // 예약 시간 null 및 시간 순서 검증 (종료 > 시작이어야 함)
         if (command.reservedStartAt() == null || command.reservedEndAt() == null
                 || !command.reservedEndAt().isAfter(command.reservedStartAt())) {
-            log.warn("event=pt_reservation_create_failed reason=invalid_time userId={} start={} end={}",
+            log.warn("event=pt_reservation_create_failed " +
+                            "reason=invalid_time userId={} start={} end={}",
                     command.userId(), command.reservedStartAt(), command.reservedEndAt());
             throw new PtReservationInvalidException();
         }

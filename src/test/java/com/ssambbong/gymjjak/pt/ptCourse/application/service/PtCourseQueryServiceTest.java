@@ -1,17 +1,20 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
 import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
-import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
-import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCurriculum;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
+import com.ssambbong.gymjjak.tag.application.usecase.TagQueryUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,9 +25,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -38,6 +44,13 @@ class PtCourseQueryServiceTest {
     @Mock private CategoryQueryUseCase categoryQueryUseCase;
     @Mock private OrganizationQueryPort organizationQueryPort;
     @Mock private TrainerProfileQueryPort trainerProfileQueryPort;
+    @Mock private PtReservationCountQueryPort ptReservationCountQueryPort;
+    @Mock private PtReservationRepository ptReservationRepository;
+    @Mock private UserNicknameQueryPort userNicknameQueryPort;
+    @Mock private CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
+    @Mock private TagQueryUseCase tagQueryUseCase;
+    @Mock private ReviewQueryPort reviewQueryPort;
+    @Mock private FileUrlUseCase fileUrlUseCase;
 
     @InjectMocks
     private PtCourseQueryService ptCourseQueryService;
@@ -48,7 +61,7 @@ class PtCourseQueryServiceTest {
         return PtCourse.restore(
                 id, 1L, 1L, 1L, 1L, null,
                 "맞춤 PT", "PT 소개글", 300000, 8,
-                status, null
+                status, null, null
         );
     }
 
@@ -56,15 +69,15 @@ class PtCourseQueryServiceTest {
         when(categoryQueryUseCase.handle()).thenReturn(
                 List.of(new CategoryQueryUseCase.CategoryView(1L, "헬스", null, 0L))
         );
+        when(tagQueryUseCase.handle()).thenReturn(List.of());
 
-        when(organizationQueryPort.findById(eq(1L))).thenReturn(
-                new OrganizationQueryPort.OrganizationInfo(
+        when(organizationQueryPort.findAllByIds(any())).thenReturn(
+                Map.of(1L, new OrganizationQueryPort.OrganizationInfo(
                         1L, "짐짝피트니스", "서울 강남구", 37.5007, 127.0365,
-                        "02-1234-5678", null, null)
+                        "02-1234-5678", null, null))
         );
-        when(trainerProfileQueryPort.findById(eq(1L))).thenReturn(
-                new TrainerProfileQueryPort.TrainerDisplayInfo(
-                        "트레이너01", "안전하게 지도합니다.", 4.6, 1, null, List.of(), List.of())
+        when(trainerProfileQueryPort.findSummaryAllByIds(any())).thenReturn(
+                Map.of(1L, new TrainerSummaryInfo(1L, "트레이너01", 4.6, 1))
         );
     }
 
@@ -96,6 +109,7 @@ class PtCourseQueryServiceTest {
         // given
         when(ptCourseRepository.findAllVisible()).thenReturn(List.of());
         when(categoryQueryUseCase.handle()).thenReturn(List.of());
+        when(tagQueryUseCase.handle()).thenReturn(List.of());
 
         // when
         List<PtCourseQueryUseCase.PtCourseListView> result =
@@ -124,6 +138,7 @@ class PtCourseQueryServiceTest {
                 PtCourseSchedule.restore(1L, 1L, DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0))
         );
         when(ptCourseScheduleRepository.findAllByPtCourseId(1L)).thenReturn(schedules);
+        when(reviewQueryPort.findRecentByTrainerProfileId(anyLong(), anyInt())).thenReturn(List.of());
 
         // when
         PtCourseQueryUseCase.PtCourseDetailView result =

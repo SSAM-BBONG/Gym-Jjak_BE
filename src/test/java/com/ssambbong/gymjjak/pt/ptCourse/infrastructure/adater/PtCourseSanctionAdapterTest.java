@@ -36,7 +36,7 @@ class PtCourseSanctionAdapterTest {
         PtCourse ptCourse = PtCourse.restore(
                 1L, 1L, 1L, 1L, 1L, null,
                 "PT 강습", "설명", 50000, 12,
-                PtCourseStatus.VISIBLE, null
+                PtCourseStatus.VISIBLE, null, null
         );
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
 
@@ -55,7 +55,7 @@ class PtCourseSanctionAdapterTest {
         PtCourse ptCourse = PtCourse.restore(
                 1L, 1L, 1L, 1L, 1L, null,
                 "PT 강습", "설명", 50000, 12,
-                PtCourseStatus.BLOCKED, null
+                PtCourseStatus.BLOCKED, null, null
         );
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
 

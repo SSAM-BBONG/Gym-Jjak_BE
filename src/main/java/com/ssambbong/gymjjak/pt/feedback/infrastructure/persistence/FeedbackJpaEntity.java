@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.feedback.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
+import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -33,12 +34,13 @@ public class FeedbackJpaEntity extends BaseTimeEntity {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;
+    private FeedbackStatus status;
 
     @Builder
     private FeedbackJpaEntity(Long id, Long ptReservationId, Long ptCurriculumId,
-                              Long trainerProfileId, Long userId, String content, String status) {
+                              Long trainerProfileId, Long userId, String content, FeedbackStatus status) {
         this.id = id;
         this.ptReservationId = ptReservationId;
         this.ptCurriculumId = ptCurriculumId;
