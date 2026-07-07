@@ -88,4 +88,6 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
     Optional<TrainerApplicationJpaEntity> findByIdForUpdate(
             @Param("trainerApplicationId") Long trainerApplicationId
     );
+
+    long countByStatus(TrainerApplicationStatus status);
 }

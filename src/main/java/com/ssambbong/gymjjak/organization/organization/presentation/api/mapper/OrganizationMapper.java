@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.organization.organization.presentation.api.mapper;
 
 import com.ssambbong.gymjjak.global.infrastructure.config.MapStructConfig;
-import com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminView;
 import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationDetailResult;

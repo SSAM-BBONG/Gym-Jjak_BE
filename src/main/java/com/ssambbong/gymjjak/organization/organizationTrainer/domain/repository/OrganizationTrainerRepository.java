@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository;
 
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.AdminTrainerSummary;
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerClientSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerDetailView;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
@@ -34,6 +35,9 @@ public interface OrganizationTrainerRepository {
     List<AdminTrainerSummary> findAdminTrainersByOrganizationId(Long organizationId);
 
     long countAccumulatedMembersByOrganizationId(Long organizationId);
+
+    // [dashboard] 트레이너별 누적 수강생 수 목록
+    List<TrainerClientSummary> findTrainerClientsByOrganizationId(Long organizationId);
 
     List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
 

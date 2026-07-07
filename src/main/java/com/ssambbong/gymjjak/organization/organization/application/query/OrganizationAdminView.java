@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.organization.organization.application;
+package com.ssambbong.gymjjak.organization.organization.application.query;
 
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.user.application.service;
 
+import com.ssambbong.gymjjak.report.application.port.user.UserQueryPort;
 import com.ssambbong.gymjjak.user.application.command.*;
 import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
 import com.ssambbong.gymjjak.user.application.result.*;
@@ -446,5 +447,11 @@ public class UserCommandService implements UserCommandUseCase {
         );
 
         userPort.save(user);
+    }
+
+    @Override
+    public UserUsernameAndNicknameResult findUsernameAndNickname(Long userId) {
+
+        return userPort.findUsernameAndNickname(userId);
     }
 }
