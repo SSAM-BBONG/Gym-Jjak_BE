@@ -1,0 +1,52 @@
+package com.ssambbong.gymjjak.dashboard.organization.presentation;
+
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
+import com.ssambbong.gymjjak.dashboard.organization.application.usecase.OrganizationDashboardUseCase;
+import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.DashboardResponseCode;
+import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgStatsResponse;
+import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
+import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Tag(name = "Dashboard", description = "조직 대시보드 API")
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/dashboard/organization")
+public class OrganizationDashboardController {
+
+    private final OrganizationDashboardUseCase organizationDashboardUseCase;
+
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
+    @Operation(summary = "헬스장 통계 조회", description = "조직 계정이 헬스장 트레이너 수, 누적 이용자 수, 현재 이용자 수를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = OrgStatsResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "조직을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/stats")
+    public ResponseEntity<GlobalApiResponse<OrgStatsResponse>> getStats(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        OrgStatsResult result = organizationDashboardUseCase.getStats(authUser.userId());
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(DashboardResponseCode.ORG_STATS_FOUND, OrgStatsResponse.from(result))
+        );
+    }
+}

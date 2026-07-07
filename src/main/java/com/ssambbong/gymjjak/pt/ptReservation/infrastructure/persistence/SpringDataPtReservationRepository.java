@@ -120,6 +120,24 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("to") LocalDateTime to
     );
 
+    // 대시보드 — 조직별 누적 이용자 수 (CANCELLED 제외 DISTINCT user_id)
+    @Query(value = """
+            SELECT COUNT(DISTINCT r.user_id)
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+            """, nativeQuery = true)
+    long countDistinctUsersByOrganizationId(@Param("organizationId") Long organizationId);
+
+    // 대시보드 — 조직별 현재 이용자 수 (IN_PROGRESS DISTINCT user_id)
+    @Query(value = """
+            SELECT COUNT(DISTINCT r.user_id)
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status = 'IN_PROGRESS'
+            """, nativeQuery = true)
+    long countDistinctCurrentUsersByOrganizationId(@Param("organizationId") Long organizationId);
+
     // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
     @Query("""
         SELECT r.userId, r.id
