@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.report.application.policy;
 
-import com.ssambbong.gymjjak.report.application.port.UserProfileView;
-import com.ssambbong.gymjjak.report.application.port.UserQueryPort;
+import com.ssambbong.gymjjak.report.application.port.user.UserProfileView;
+import com.ssambbong.gymjjak.report.application.port.user.UserQueryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
