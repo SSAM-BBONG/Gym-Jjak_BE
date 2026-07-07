@@ -1,0 +1,17 @@
+package com.ssambbong.gymjjak.community.domain.exception;
+
+import com.ssambbong.gymjjak.global.domain.common.exception.ErrorCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@RequiredArgsConstructor
+public enum CommunityErrorCode implements ErrorCode {
+
+    NOTICE_WRITE_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMUNITY_403_001", "공지글은 관리자만 작성할 수 있습니다.");
+
+    private final HttpStatus httpStatus;
+    private final String code;
+    private final String message;
+}

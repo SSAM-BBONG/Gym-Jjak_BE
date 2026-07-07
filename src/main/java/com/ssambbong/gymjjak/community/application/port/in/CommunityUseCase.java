@@ -1,0 +1,17 @@
+package com.ssambbong.gymjjak.community.application.port.in;
+
+import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
+import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+public interface CommunityUseCase {
+
+    Long createCommunityPost(CreateCommunityPostCommand command);
+
+    Page<CommunityPostListResult> findCommunityPosts(
+            CommunityPostType type,
+            Pageable pageable
+    );
+}
