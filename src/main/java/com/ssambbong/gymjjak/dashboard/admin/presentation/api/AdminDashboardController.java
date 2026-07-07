@@ -1,9 +1,11 @@
-package com.ssambbong.gymjjak.dashboard.admin.presentation;
+package com.ssambbong.gymjjak.dashboard.admin.presentation.api;
 
 import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminMemberStatisticsResult;
+import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminPendingStatisticsResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.usecase.AdminDashboardQueryUseCase;
 import com.ssambbong.gymjjak.dashboard.admin.presentation.api.response.AdminDashboardResponseCode;
 import com.ssambbong.gymjjak.dashboard.admin.presentation.api.response.AdminMemberStatisticsResponse;
+import com.ssambbong.gymjjak.dashboard.admin.presentation.api.response.AdminPendingStatisticsResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,11 +34,7 @@ public class AdminDashboardController {
     @GetMapping("/members")
     @Operation(
             summary = "관리자 대시보드 회원 현황 조회",
-            description = """
-                    관리자 대시보드에서 사용하는 회원 현황 데이터를 조회합니다.
-                    전체 이용자 수, 전체 트레이너 수, 전체 헬스장 수, 최근 6개월 월별 가입자 수를 반환합니다.
-                    """
-    )
+            description = "전체 이용자 수, 전체 트레이너 수, 전체 헬스장 수, 최근 6개월 월별 가입자 수 반환 ")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "관리자 대시보드 회원 현황 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패"),
@@ -52,6 +50,28 @@ public class AdminDashboardController {
                 GlobalApiResponse.ok(
                         AdminDashboardResponseCode.ADMIN_MEMBER_STATISTICS_FOUND,
                         AdminMemberStatisticsResponse.from(result)
+                )
+        );
+    }
+
+    @GetMapping("/approvals/pending")
+    @Operation(
+            summary = "관리자 대시보드 승인 대기 현황 조회",
+            description = "트레이너 신청 대기 수와 조직 신청 대기 수 조회.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "관리자 대시보드 승인 대기 현황 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 없음")
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<GlobalApiResponse<AdminPendingStatisticsResponse>> findPendingStatistics() {
+        AdminPendingStatisticsResult result =
+                adminDashboardQueryUseCase.findPendingStatistics();
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        AdminDashboardResponseCode.ADMIN_PENDING_STATISTICS_FOUND,
+                        AdminPendingStatisticsResponse.from(result)
                 )
         );
     }
