@@ -59,8 +59,8 @@ class UserCommandServiceTest {
                 .thenReturn(false);
         when(userPort.existsByNickname(command.nickname()))
                 .thenReturn(false);
-        when(userPort.existsByPhone(command.phone()))
-                .thenReturn(false);
+//        when(userPort.existsByPhoneAndRole(command.phone()))
+//                .thenReturn(false);
 
         when(userPort.encode(command.password()))
                 .thenReturn("encodedPassword");
@@ -158,8 +158,8 @@ class UserCommandServiceTest {
                 .thenReturn(false);
         when(userPort.existsByNickname(command.nickname()))
                 .thenReturn(false);
-        when(userPort.existsByPhone(command.phone()))
-                .thenReturn(true);
+//        when(userPort.existsByPhone(command.phone()))
+//                .thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> userCommandService.registerUser(command))

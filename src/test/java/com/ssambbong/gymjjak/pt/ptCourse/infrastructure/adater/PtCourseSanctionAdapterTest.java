@@ -53,7 +53,7 @@ class PtCourseSanctionAdapterTest {
     void releaseAutoBlind_success() {
         // Given
         PtCourse ptCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, null,
+                1L, 1L, 1L, 1L, null,
                 "PT 강습", "설명", 50000, 12,
                 PtCourseStatus.BLOCKED, null, null
         );
