@@ -1,9 +1,11 @@
 package com.ssambbong.gymjjak.community.adapter.out.persistence;
 
+import com.ssambbong.gymjjak.community.adapter.out.persistence.entity.CommunityCommentJpaEntity;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.entity.CommunityPostJpaEntity;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.mapper.CommunityMapper;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityCommentProjection;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityPostDetailProjection;
+import com.ssambbong.gymjjak.community.adapter.out.persistence.repository.SpringDataCommunityCommentRepository;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.repository.SpringDataCommunityRepository;
 import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
 import com.ssambbong.gymjjak.community.application.result.CommunityCommentCursorResult;
@@ -12,6 +14,7 @@ import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailRes
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
 import com.ssambbong.gymjjak.community.domain.exception.CommunityErrorCode;
 import com.ssambbong.gymjjak.community.domain.exception.CommunityException;
+import com.ssambbong.gymjjak.community.domain.model.CommunityComment;
 import com.ssambbong.gymjjak.community.domain.model.CommunityPost;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class CommunityAdapter implements CommunityPort {
 
     private final SpringDataCommunityRepository springDataCommunityRepository;
     private final CommunityMapper communityMapper;
+    private final SpringDataCommunityCommentRepository springDataCommunityCommentRepository;
 
     @Override
     public Long saveCommunityPost(
@@ -94,7 +98,9 @@ public class CommunityAdapter implements CommunityPort {
     public boolean existsCommunityPost(Long postId) {
 
         return springDataCommunityRepository
-                .existsById(postId);
+                .existsByIdAndDeletedAtIsNull(
+                        postId
+                );
     }
 
     @Override
@@ -170,7 +176,7 @@ public class CommunityAdapter implements CommunityPort {
     ) {
 
         return springDataCommunityRepository
-                .findById(postId).map(communityMapper::toDomain);
+                .findByIdAndDeletedAtIsNull(postId).map(communityMapper::toDomain);
     }
 
     @Override
@@ -195,12 +201,6 @@ public class CommunityAdapter implements CommunityPort {
     @Override
     public void deleteCommunityPost(Long postId) {
 
-        springDataCommunityRepository.deleteCommunityCommentsByPostId(postId);
-
-        springDataCommunityRepository.deleteCommunityPostLikesByPostId(postId);
-
-        springDataCommunityRepository.deleteCommunityPostViewsByPostId(postId);
-
         int deletedRowCount = springDataCommunityRepository.deleteCommunityPostById(postId);
 
         if (deletedRowCount == 0) {
@@ -209,5 +209,22 @@ public class CommunityAdapter implements CommunityPort {
                     CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
             );
         }
+    }
+
+    @Override
+    public Long saveCommunityComment(
+            CommunityComment communityComment
+    ) {
+
+        CommunityCommentJpaEntity entity =
+                communityMapper
+                        .toCommentEntity(
+                                communityComment
+                        );
+
+        CommunityCommentJpaEntity savedComment =
+                springDataCommunityCommentRepository.save(entity);
+
+        return savedComment.getId();
     }
 }

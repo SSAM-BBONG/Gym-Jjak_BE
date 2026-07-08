@@ -48,6 +48,9 @@ public class CommunityPostJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     private CommunityPostJpaEntity(
             Long userId,
             CommunityPostType type,

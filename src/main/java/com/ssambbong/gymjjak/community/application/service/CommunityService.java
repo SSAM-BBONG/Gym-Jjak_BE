@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.community.application.service;
 
+import com.ssambbong.gymjjak.community.application.command.CreateCommunityCommentCommand;
 import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.command.UpdateCommunityPostCommand;
@@ -9,6 +10,7 @@ import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailRes
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
 import com.ssambbong.gymjjak.community.domain.exception.CommunityErrorCode;
 import com.ssambbong.gymjjak.community.domain.exception.CommunityException;
+import com.ssambbong.gymjjak.community.domain.model.CommunityComment;
 import com.ssambbong.gymjjak.community.domain.model.CommunityPost;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import lombok.RequiredArgsConstructor;
@@ -192,6 +194,38 @@ public class CommunityService implements CommunityUseCase {
                 command.userId(),
                 command.postId()
         );
+    }
+
+    @Override
+    public Long createCommunityComment(
+            CreateCommunityCommentCommand command
+    ) {
+
+        validateCommunityPostExists(
+                command.postId()
+        );
+
+        log.debug("event=communityComment_create_start userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+
+        CommunityComment communityComment =
+                CommunityComment.create(
+                        command.postId(),
+                        command.userId(),
+                        command.content()
+                );
+
+        Long commentId = communityPort.saveCommunityComment(communityComment);
+
+        log.info("event=communityComment_create_succeed userId={}, postId={}, commentId={}",
+                command.userId(),
+                command.postId(),
+                commentId
+        );
+
+        return commentId;
     }
 
     private void validateCommunityPostDeleteOwner(CommunityPost communityPost, Long userId) {

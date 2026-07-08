@@ -1,11 +1,9 @@
 package com.ssambbong.gymjjak.community.adapter.in.web;
 
+import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityCommentRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityPostRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.request.UpdateCommunityPostRequest;
-import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostDetailResponse;
-import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostListResponse;
-import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityResponseCode;
-import com.ssambbong.gymjjak.community.adapter.in.web.response.CreateCommunityPostResponse;
+import com.ssambbong.gymjjak.community.adapter.in.web.response.*;
 import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
@@ -169,6 +167,35 @@ public class CommunityController {
                         GlobalApiResponse.ok(
                                 CommunityResponseCode
                                         .COMMUNITY_POST_DELETED
+                        )
+                );
+    }
+
+    @PostMapping("/posts/{postId}/comments")
+    @Operation(summary = "댓글 작성", description = "현재 로그인 사용자가 커뮤니티 게시글에 댓글을 작성하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<CreateCommunityCommentResponse>> createCommunityComment(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "댓글을 작성할 게시글 ID", example = "1")
+            @PathVariable Long postId,
+            @Valid @RequestBody CreateCommunityCommentRequest request) {
+
+        Long commentId =
+                communityUseCase.createCommunityComment(
+                        request.toCommand(
+                                authUser.userId(),
+                                postId
+                        )
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        GlobalApiResponse.created(
+                                CommunityResponseCode
+                                        .COMMUNITY_COMMENT_CREATED,
+                                CreateCommunityCommentResponse.from(
+                                        commentId
+                                )
                         )
                 );
     }
