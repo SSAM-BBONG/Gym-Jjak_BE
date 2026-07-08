@@ -30,6 +30,9 @@ public class PartJpaEntity extends BaseCreatedUpdatedEntity {
     }
 
     public void changeName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name must not be null or blank");
+        }
         this.name = name;
     }
 }
