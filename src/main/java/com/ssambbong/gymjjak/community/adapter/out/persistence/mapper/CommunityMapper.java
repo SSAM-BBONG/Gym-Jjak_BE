@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.community.adapter.out.persistence.entity.CommunityP
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityCommentProjection;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityPostDetailProjection;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityPostListProjection;
+import com.ssambbong.gymjjak.community.application.result.CommunityCommentCursorResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityCommentResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
@@ -94,7 +95,7 @@ public interface CommunityMapper {
 
     default CommunityPostDetailResult toPostDetailResult(
             CommunityPostDetailProjection projection,
-            List<CommunityCommentResult> comments
+            CommunityCommentCursorResult comments
     ) {
 
         if (projection == null) {

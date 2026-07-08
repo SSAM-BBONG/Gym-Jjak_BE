@@ -61,7 +61,7 @@ public record CommunityPostDetailResponse(
         boolean likedByMe,
 
         @Schema(description = "댓글 목록")
-        List<CommunityCommentResponse> comments
+        CommunityCommentCursorResponse comments
 
 ) {
 
@@ -81,10 +81,9 @@ public record CommunityPostDetailResponse(
                 result.commentCount(),
                 result.mine(),
                 result.likedByMe(),
-                result.comments()
-                        .stream()
-                        .map(CommunityCommentResponse::from)
-                        .toList()
+                CommunityCommentCursorResponse.from(
+                        result.comments()
+                )
         );
     }
 }

@@ -2,9 +2,11 @@ package com.ssambbong.gymjjak.community.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.community.adapter.out.persistence.entity.CommunityPostJpaEntity;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.mapper.CommunityMapper;
+import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityCommentProjection;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityPostDetailProjection;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.repository.SpringDataCommunityRepository;
 import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
+import com.ssambbong.gymjjak.community.application.result.CommunityCommentCursorResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityCommentResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
@@ -98,7 +100,9 @@ public class CommunityAdapter implements CommunityPort {
     @Override
     public Optional<CommunityPostDetailResult> findCommunityPostDetail(
             Long postId,
-            Long userId
+            Long userId,
+            Long commentCursorId,
+            int commentSize
     ) {
 
         Optional<CommunityPostDetailProjection> postProjection =
@@ -112,23 +116,47 @@ public class CommunityAdapter implements CommunityPort {
             return Optional.empty();
         }
 
-        List<CommunityCommentResult> comments =
+        List<CommunityCommentProjection> commentProjections =
                 springDataCommunityRepository
-                        .findCommunityComments(
+                        .findCommunityCommentsByCursor(
                                 postId,
-                                userId
-                        )
+                                userId,
+                                commentCursorId,
+                                commentSize + 1
+                        );
+
+        boolean hasNext =
+                commentProjections.size() > commentSize;
+
+        List<CommunityCommentResult> comments =
+                commentProjections
                         .stream()
+                        .limit(commentSize)
                         .map(
                                 communityMapper::toCommentResult
                         )
                         .toList();
 
+        Long nextCursorId =
+                hasNext && !comments.isEmpty()
+                        ? comments.get(
+                        comments.size() - 1
+                ).commentId()
+                        : null;
+
+        CommunityCommentCursorResult commentCursorResult =
+                new CommunityCommentCursorResult(
+                        comments,
+                        nextCursorId,
+                        hasNext
+                );
+
         return Optional.of(
-                communityMapper.toPostDetailResult(
-                        postProjection.get(),
-                        comments
-                )
+                communityMapper
+                        .toPostDetailResult(
+                                postProjection.get(),
+                                commentCursorResult
+                        )
         );
     }
 

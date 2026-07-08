@@ -21,7 +21,9 @@ public interface CommunityPort {
 
     Optional<CommunityPostDetailResult> findCommunityPostDetail(
             Long postId,
-            Long userId
+            Long userId,
+            Long commentCursorId,
+            int commentSize
     );
 
     boolean saveViewIfAbsent(

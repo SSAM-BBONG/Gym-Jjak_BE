@@ -87,7 +87,9 @@ public class CommunityService implements CommunityUseCase {
     @Transactional
     public CommunityPostDetailResult findCommunityPostDetail(
             Long userId,
-            Long postId
+            Long postId,
+            Long commentCursorId,
+            int commentSize
     ) {
 
         log.debug("event=communityPost_detailFind userId={}, postId={}",
@@ -106,17 +108,14 @@ public class CommunityService implements CommunityUseCase {
             communityPort.increaseViewCount(postId);
         }
 
-        CommunityPostDetailResult result =
-                communityPort
-                        .findCommunityPostDetail(
+        CommunityPostDetailResult result = communityPort.findCommunityPostDetail(
                                 postId,
-                                userId
-                        )
-                        .orElseThrow(
+                                userId,
+                                commentCursorId,
+                                commentSize
+                        ).orElseThrow(
                                 () -> new CommunityException(
-                                        CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
-                                )
-                        );
+                                        CommunityErrorCode.COMMUNITY_POST_NOT_FOUND));
 
         log.info("event=communityPost_detailFind userId={}, postId={}, firstView={}, viewCount={}",
                 userId,

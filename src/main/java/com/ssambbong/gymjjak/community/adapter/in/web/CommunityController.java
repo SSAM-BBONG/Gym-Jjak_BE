@@ -13,7 +13,6 @@ import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -96,18 +95,23 @@ public class CommunityController {
 
     @GetMapping("/posts/{postId}")
     @Operation(summary = "게시글 상세 조회", description = "커뮤니티 게시글의 상세 정보와 댓글 목록을 조회하는 요청이다.")
-    public ResponseEntity<
-            GlobalApiResponse<CommunityPostDetailResponse>> findCommunityPostDetail(
+    public ResponseEntity<GlobalApiResponse<CommunityPostDetailResponse>> findCommunityPostDetail(
             @AuthenticationPrincipal AuthUser authUser,
             @Parameter(description = "게시글 ID", example = "1")
-            @PathVariable Long postId) {
+            @PathVariable Long postId,
+            @Parameter(description = "댓글 Cursor ID. 최초 조회 시 입력하지 않는다.", example = "20")
+            @RequestParam(required = false) Long commentCursorId,
+            @Parameter(description = "댓글 조회 개수", example = "20")
+            @RequestParam(defaultValue = "20") int commentSize
+    ) {
 
         CommunityPostDetailResult result =
-                communityUseCase
-                        .findCommunityPostDetail(
-                                authUser.userId(),
-                                postId
-                        );
+                communityUseCase.findCommunityPostDetail(
+                        authUser.userId(),
+                        postId,
+                        commentCursorId,
+                        commentSize
+                );
 
         return ResponseEntity
                 .status(HttpStatus.OK)

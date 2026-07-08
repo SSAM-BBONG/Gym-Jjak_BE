@@ -19,7 +19,9 @@ public interface CommunityUseCase {
 
     CommunityPostDetailResult findCommunityPostDetail(
             Long userId,
-            Long postId
+            Long postId,
+            Long commentCursorId,
+            int commentSize
     );
 
     void updateCommunityPost(

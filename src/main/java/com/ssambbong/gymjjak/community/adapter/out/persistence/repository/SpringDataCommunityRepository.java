@@ -173,14 +173,22 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
 
                 WHERE c.community_post_id = :postId
                   AND c.deleted_at IS NULL
+                  AND (
+                      :cursorId IS NULL
+                      OR c.community_comment_id > :cursorId
+                  )
 
-                ORDER BY c.created_at ASC
+                ORDER BY c.community_comment_id ASC
+
+                LIMIT :limit
                 """,
             nativeQuery = true
     )
-    List<CommunityCommentProjection> findCommunityComments(
+    List<CommunityCommentProjection> findCommunityCommentsByCursor(
             @Param("postId") Long postId,
-            @Param("userId") Long userId
+            @Param("userId") Long userId,
+            @Param("cursorId") Long cursorId,
+            @Param("limit") int limit
     );
 
     Optional<CommunityPostJpaEntity> findByIdAndDeletedAtIsNull(

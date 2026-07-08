@@ -18,7 +18,7 @@ public record CommunityPostDetailResult(
         Long commentCount,
         boolean mine,
         boolean likedByMe,
-        List<CommunityCommentResult> comments
+        CommunityCommentCursorResult comments
 
 ) {
 }
