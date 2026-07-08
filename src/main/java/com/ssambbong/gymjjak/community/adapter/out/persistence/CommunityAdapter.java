@@ -280,4 +280,17 @@ public class CommunityAdapter implements CommunityPort {
                         userId
                 ) > 0;
     }
+
+    @Override
+    public boolean deleteCommunityPostLike(
+            Long postId,
+            Long userId
+    ) {
+
+        return springDataCommunityRepository
+                .deleteCommunityPostLike(
+                        postId,
+                        userId
+                ) > 0;
+    }
 }

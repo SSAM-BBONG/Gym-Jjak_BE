@@ -250,6 +250,12 @@ public class CommunityService implements CommunityUseCase {
                 command.userId()
         );
 
+        log.debug("event=communityComment_update_succeed userId={}, postId={}, commentId={}",
+                command.userId(),
+                communityComment.getPostId(),
+                command.commentId()
+        );
+
         communityComment.update(
                 command.content()
         );
@@ -258,8 +264,7 @@ public class CommunityService implements CommunityUseCase {
                 communityComment
         );
 
-        log.info(
-                "event=community_comment_updated userId={}, postId={}, commentId={}",
+        log.info("event=communityComment_update_succeed userId={}, postId={}, commentId={}",
                 command.userId(),
                 communityComment.getPostId(),
                 command.commentId()
@@ -290,13 +295,17 @@ public class CommunityService implements CommunityUseCase {
                 communityComment,
                 command.userId()
         );
+        log.debug("event=communityComment_delete_succeed userId={}, postId={}, commentId={}",
+                command.userId(),
+                communityComment.getPostId(),
+                command.commentId()
+        );
 
         communityPort.deleteCommunityComment(
                 command.commentId()
         );
 
-        log.info(
-                "event=community_comment_deleted userId={}, postId={}, commentId={}",
+        log.info("event=communityComment_delete_succeed userId={}, postId={}, commentId={}",
                 command.userId(),
                 communityComment.getPostId(),
                 command.commentId()
@@ -309,6 +318,11 @@ public class CommunityService implements CommunityUseCase {
     ) {
 
         validateCommunityPostExists(
+                command.postId()
+        );
+
+        log.debug("event=communityPost_like_start userId={}, postId={}",
+                command.userId(),
                 command.postId()
         );
 
@@ -327,8 +341,42 @@ public class CommunityService implements CommunityUseCase {
             );
         }
 
-        log.info(
-                "event=community_post_like_created userId={}, postId={}",
+        log.info("event=communityPost_like_succeed userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+    }
+
+    @Override
+    public void deleteCommunityPostLike(
+            DeleteCommunityPostLikeCommand command
+    ) {
+
+        validateCommunityPostExists(
+                command.postId()
+        );
+
+        log.debug("event=communityPost_likeDelete_start userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+
+        boolean deleted =
+                communityPort
+                        .deleteCommunityPostLike(
+                                command.postId(),
+                                command.userId()
+                        );
+
+        if (!deleted) {
+
+            throw new CommunityException(
+                    CommunityErrorCode
+                            .COMMUNITY_POST_LIKE_NOT_FOUND
+            );
+        }
+
+        log.info("event=communityPost_likeDelete_succeed userId={}, postId={}",
                 command.userId(),
                 command.postId()
         );

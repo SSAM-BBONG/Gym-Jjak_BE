@@ -241,4 +241,18 @@ public interface SpringDataCommunityRepository
             @Param("userId") Long userId
     );
 
+    @Modifying
+    @Query(
+            value = """
+                DELETE FROM community_post_likes
+                WHERE community_post_id = :postId
+                  AND user_id = :userId
+                """,
+            nativeQuery = true
+    )
+    int deleteCommunityPostLike(
+            @Param("postId") Long postId,
+            @Param("userId") Long userId
+    );
+
 }

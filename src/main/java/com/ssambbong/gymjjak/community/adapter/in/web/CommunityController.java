@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.community.adapter.in.web.response.*;
 import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostLikeCommand;
 import com.ssambbong.gymjjak.community.application.command.DeleteCommunityCommentCommand;
 import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostLikeCommand;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
@@ -272,6 +273,30 @@ public class CommunityController {
                         GlobalApiResponse.created(
                                 CommunityResponseCode
                                         .COMMUNITY_POST_LIKE_CREATED
+                        )
+                );
+    }
+
+    @DeleteMapping("/post/{postId}/likes")
+    @Operation(summary = "게시글 좋아요 취소", description = "현재 로그인 사용자가 커뮤니티 게시글에 등록한 좋아요를 취소하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityPostLike(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "좋아요를 취소할 게시글 ID", example = "1")
+            @PathVariable Long postId) {
+
+        communityUseCase.deleteCommunityPostLike(
+                new DeleteCommunityPostLikeCommand(
+                        authUser.userId(),
+                        postId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_POST_LIKE_DELETED
                         )
                 );
     }
