@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -66,10 +67,9 @@ public class CommunityController {
             @Parameter(description = "게시글 유형. 미입력 시 전체 게시글을 조회한다.", example = "FREE")
             @RequestParam(required = false) CommunityPostType type,
             @Parameter(description = "페이지 번호. 0부터 시작한다.", example = "0")
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
             @Parameter(description = "페이지 크기", example = "20")
-            @RequestParam(defaultValue = "20")
-            int size
+            @RequestParam(defaultValue = "20") @Min(1) int size
     ) {
 
         Pageable pageable = PageRequest.of(
@@ -95,24 +95,12 @@ public class CommunityController {
     }
 
     @GetMapping("/posts/{postId}")
-    @Operation(
-            summary = "게시글 상세 조회",
-            description = "커뮤니티 게시글의 상세 정보와 댓글 목록을 조회하는 요청이다."
-    )
+    @Operation(summary = "게시글 상세 조회", description = "커뮤니티 게시글의 상세 정보와 댓글 목록을 조회하는 요청이다.")
     public ResponseEntity<
-            GlobalApiResponse<CommunityPostDetailResponse>
-            > findCommunityPostDetail(
-
-            @AuthenticationPrincipal
-            AuthUser authUser,
-
-            @Parameter(
-                    description = "게시글 ID",
-                    example = "1"
-            )
-            @PathVariable
-            Long postId
-    ) {
+            GlobalApiResponse<CommunityPostDetailResponse>> findCommunityPostDetail(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "게시글 ID", example = "1")
+            @PathVariable Long postId) {
 
         CommunityPostDetailResult result =
                 communityUseCase

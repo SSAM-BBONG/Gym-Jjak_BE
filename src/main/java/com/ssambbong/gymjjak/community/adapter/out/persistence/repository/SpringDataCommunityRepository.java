@@ -46,7 +46,7 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
                         u.nickname,
                         cp.created_at,
                         cp.view_count
-                    ORDER BY cp.created_at DESC
+                    ORDER BY cp.created_at DESC, cp.community_post_id DESC
                     """,
             countQuery = """
                     SELECT COUNT(*)

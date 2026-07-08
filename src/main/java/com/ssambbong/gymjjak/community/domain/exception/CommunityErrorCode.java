@@ -11,7 +11,9 @@ public enum CommunityErrorCode implements ErrorCode {
 
     NOTICE_WRITE_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMUNITY_403_001", "공지글은 관리자만 작성할 수 있습니다."),
     COMMUNITY_POST_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMUNITY_404_001", "게시글을 찾을 수 없습니다."),
-    COMMUNITY_POST_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMUNITY_403_002", "본인의 게시글만 수정할 수 있습니다.");
+    COMMUNITY_POST_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "COMMUNITY_403_002", "본인의 게시글만 수정할 수 있습니다."),
+    TITLE_REQUIRED(HttpStatus.NOT_FOUND, "COMMUNITY_404_002", "제목은 필수입니다."),
+    CONTENT_REQUIRED(HttpStatus.NOT_FOUND, "COMMUNITY_404_003", "내용은 필수입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

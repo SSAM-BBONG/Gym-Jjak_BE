@@ -1,5 +1,7 @@
 package com.ssambbong.gymjjak.community.domain.model;
 
+import com.ssambbong.gymjjak.community.domain.exception.CommunityErrorCode;
+import com.ssambbong.gymjjak.community.domain.exception.CommunityException;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import lombok.Getter;
 
@@ -35,6 +37,16 @@ public class CommunityPost {
             String title,
             String content
     ) {
+        if (title == null || title.isBlank()) {
+            throw new CommunityException(
+                    CommunityErrorCode.TITLE_REQUIRED);
+        }
+
+        if (content == null || content.isBlank()) {
+            throw new CommunityException(
+                    CommunityErrorCode.CONTENT_REQUIRED);
+        }
+
         return new CommunityPost(
                 null,
                 userId,
@@ -53,6 +65,16 @@ public class CommunityPost {
             String content,
             Long viewCount
     ) {
+
+        if (title == null || title.isBlank()) {
+            throw new CommunityException(
+                    CommunityErrorCode.TITLE_REQUIRED);
+        }
+
+        if (content == null || content.isBlank()) {
+            throw new CommunityException(
+                    CommunityErrorCode.CONTENT_REQUIRED);
+        }
 
         return new CommunityPost(
                 id,
