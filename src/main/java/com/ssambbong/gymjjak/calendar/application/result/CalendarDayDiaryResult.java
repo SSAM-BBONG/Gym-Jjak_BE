@@ -6,7 +6,6 @@ public record CalendarDayDiaryResult(
         Long workoutDiaryId,
         String title,
         String content,
-        LocalDate date,
-        String category
+        LocalDate date
 ) {
 }

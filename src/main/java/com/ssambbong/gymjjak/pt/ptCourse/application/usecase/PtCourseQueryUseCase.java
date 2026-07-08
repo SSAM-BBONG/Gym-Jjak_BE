@@ -45,12 +45,9 @@ public interface PtCourseQueryUseCase {
             String title,
             String thumbnailUrl,
             int price,
-            // 태그
-            Long tagId,
-            String tagName,
-            // 카테고리
-            Long categoryId,
-            String categoryName,
+            // 부위
+            Long partId,
+            String partName,
             // 트레이너
             String trainerName,
             // 조직
@@ -156,10 +153,8 @@ public interface PtCourseQueryUseCase {
             String title,
             int price,
             String thumbnailUrl,
-            Long categoryId,
-            String categoryName,
-            Long tagId,
-            String tagName,
+            Long partId,
+            String partName,
             String trainerName,
             String roadAddress
     ) {}

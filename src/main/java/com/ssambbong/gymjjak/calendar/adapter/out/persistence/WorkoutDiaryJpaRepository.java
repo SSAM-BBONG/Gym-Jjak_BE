@@ -2,7 +2,6 @@ package com.ssambbong.gymjjak.calendar.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthDiaryResult;
-import com.ssambbong.gymjjak.category.infrastructure.persistence.CategoryJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,11 +26,9 @@ public interface WorkoutDiaryJpaRepository extends JpaRepository<WorkoutDiaryJpa
              d.id,
              d.title,
              d.content,
-             d.diaryDate,
-             c.name
+             d.diaryDate
         )
         from WorkoutDiaryJpaEntity d
-        join CategoryJpaEntity c on c.id = d.categoryId
         where d.userId = :userId
           and d.diaryDate = :date
     """)

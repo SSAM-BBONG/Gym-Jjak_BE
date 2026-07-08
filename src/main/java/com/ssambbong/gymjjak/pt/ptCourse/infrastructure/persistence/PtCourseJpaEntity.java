@@ -25,11 +25,8 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
     @Column(name = "trainer_profile_id", nullable = false)
     private Long trainerProfileId;
 
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;
-
-    @Column(name = "tag_id", nullable = false)
-    private Long tagId;
+    @Column(name = "part_id", nullable = false)
+    private Long partId;
 
     @Column(name = "thumbnail_file_id")
     private Long thumbnailFileId;
@@ -52,8 +49,7 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
 
     public PtCourseJpaEntity(Long organizationId,
                              Long trainerProfileId,
-                             Long categoryId,
-                             Long tagId,
+                             Long partId,
                              Long thumbnailFileId,
                              String title,
                              String description,
@@ -63,8 +59,7 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
     ) {
         this.organizationId = organizationId;
         this.trainerProfileId = trainerProfileId;
-        this.categoryId = categoryId;
-        this.tagId = tagId;
+        this.partId = partId;
         this.thumbnailFileId = thumbnailFileId;
         this.title = title;
         this.description = description;
@@ -84,11 +79,10 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
         super.setDeletedAt(deletedAt);
     }
 
-    // 강습 정보 수정 (제목·설명·카테고리·태그·가격·썸네일·총 회차) — 더티체킹으로 UPDATE
-    public void updateFields(Long categoryId, Long tagId, Long thumbnailFileId,
+    // 강습 정보 수정 (제목·설명·파트·가격·썸네일·총 회차) — 더티체킹으로 UPDATE
+    public void updateFields(Long partId, Long thumbnailFileId,
                              String title, String description, int price, int totalSessionCount) {
-        this.categoryId = categoryId;
-        this.tagId = tagId;
+        this.partId = partId;
         this.thumbnailFileId = thumbnailFileId;
         this.title = title;
         this.description = description;
