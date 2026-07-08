@@ -1,9 +1,6 @@
 package com.ssambbong.gymjjak.community.application.port.in;
 
-import com.ssambbong.gymjjak.community.application.command.CreateCommunityCommentCommand;
-import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
-import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
-import com.ssambbong.gymjjak.community.application.command.UpdateCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.*;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
@@ -31,4 +28,6 @@ public interface CommunityUseCase {
     void deleteCommunityPost(DeleteCommunityPostCommand command);
 
     Long createCommunityComment(CreateCommunityCommentCommand command);
+
+    void updateCommunityComment(UpdateCommunityCommentCommand command);
 }

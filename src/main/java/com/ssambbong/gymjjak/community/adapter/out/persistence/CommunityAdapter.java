@@ -227,4 +227,25 @@ public class CommunityAdapter implements CommunityPort {
 
         return savedComment.getId();
     }
+
+    @Override
+    public Optional<CommunityComment> findCommunityCommentById(Long commentId) {
+
+        return springDataCommunityCommentRepository
+                .findByIdAndDeletedAtIsNull(commentId).map(communityMapper::toCommentDomain);
+    }
+
+    @Override
+    public void updateCommunityComment(CommunityComment communityComment) {
+
+        int updatedRowCount = springDataCommunityCommentRepository.updateCommunityComment(
+                                communityComment.getId(),
+                                communityComment.getContent());
+
+        if (updatedRowCount == 0) {
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_COMMENT_NOT_FOUND
+            );
+        }
+    }
 }

@@ -137,6 +137,22 @@ public interface CommunityMapper {
         );
     }
 
+    default CommunityComment toCommentDomain(
+            CommunityCommentJpaEntity entity
+    ) {
+
+        if (entity == null) {
+            return null;
+        }
+
+        return CommunityComment.reconstruct(
+                entity.getId(),
+                entity.getPostId(),
+                entity.getUserId(),
+                entity.getContent()
+        );
+    }
+
     default boolean toBoolean(Long value) {
         return Long.valueOf(1L).equals(value);
     }

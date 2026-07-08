@@ -2,6 +2,8 @@ package com.ssambbong.gymjjak.community.domain.model;
 
 import lombok.Getter;
 
+import java.util.Objects;
+
 @Getter
 public class CommunityComment {
 
@@ -33,6 +35,38 @@ public class CommunityComment {
                 postId,
                 userId,
                 content
+        );
+    }
+
+    public static CommunityComment reconstruct(
+            Long id,
+            Long postId,
+            Long userId,
+            String content
+    ) {
+
+        return new CommunityComment(
+                id,
+                postId,
+                userId,
+                content
+        );
+    }
+
+    public void update(
+            String content
+    ) {
+
+        this.content = content;
+    }
+
+    public boolean isOwner(
+            Long userId
+    ) {
+
+        return Objects.equals(
+                this.userId,
+                userId
         );
     }
 }

@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.community.adapter.in.web;
 
 import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityCommentRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityPostRequest;
+import com.ssambbong.gymjjak.community.adapter.in.web.request.UpdateCommunityCommentRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.request.UpdateCommunityPostRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.*;
 import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
@@ -196,6 +197,31 @@ public class CommunityController {
                                 CreateCommunityCommentResponse.from(
                                         commentId
                                 )
+                        )
+                );
+    }
+
+    @PatchMapping("/comments/{commentId}")
+    @Operation(summary = "내 댓글 수정", description = "현재 로그인 사용자가 작성한 커뮤니티 댓글의 내용을 수정하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> updateCommunityComment(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "수정할 댓글 ID", example = "1")
+            @PathVariable Long commentId,
+            @Valid @RequestBody UpdateCommunityCommentRequest request) {
+
+        communityUseCase.updateCommunityComment(
+                request.toCommand(
+                        authUser.userId(),
+                        commentId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_COMMENT_UPDATED
                         )
                 );
     }

@@ -1,9 +1,6 @@
 package com.ssambbong.gymjjak.community.application.service;
 
-import com.ssambbong.gymjjak.community.application.command.CreateCommunityCommentCommand;
-import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
-import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
-import com.ssambbong.gymjjak.community.application.command.UpdateCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.*;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
@@ -226,6 +223,61 @@ public class CommunityService implements CommunityUseCase {
         );
 
         return commentId;
+    }
+
+    @Override
+    public void updateCommunityComment(
+            UpdateCommunityCommentCommand command
+    ) {
+
+        CommunityComment communityComment =
+                communityPort
+                        .findCommunityCommentById(
+                                command.commentId()
+                        )
+                        .orElseThrow(
+                                () -> new CommunityException(
+                                        CommunityErrorCode.COMMUNITY_COMMENT_NOT_FOUND
+                                )
+                        );
+
+        validateCommunityPostExists(
+                communityComment.getPostId()
+        );
+
+        validateCommunityCommentOwner(
+                communityComment,
+                command.userId()
+        );
+
+        communityComment.update(
+                command.content()
+        );
+
+        communityPort.updateCommunityComment(
+                communityComment
+        );
+
+        log.info(
+                "event=community_comment_updated userId={}, postId={}, commentId={}",
+                command.userId(),
+                communityComment.getPostId(),
+                command.commentId()
+        );
+    }
+
+    private void validateCommunityCommentOwner(
+            CommunityComment communityComment,
+            Long userId
+    ) {
+
+        if (!communityComment.isOwner(userId)) {
+
+            throw new CommunityException(
+                    CommunityErrorCode
+                            .COMMUNITY_COMMENT_UPDATE_FORBIDDEN
+            );
+        }
     }
 
     private void validateCommunityPostDeleteOwner(CommunityPost communityPost, Long userId) {
