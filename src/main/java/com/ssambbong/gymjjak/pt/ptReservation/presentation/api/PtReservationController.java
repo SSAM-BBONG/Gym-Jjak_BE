@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CancelPtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
+import com.ssambbong.gymjjak.pt.ptReservation.application.result.MonthlyPtReservationResult;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
@@ -24,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "PT 예약", description = "PT 예약 관련 API")
 @RestController
@@ -156,5 +159,33 @@ public class PtReservationController {
                 PtReservationResponseCode.PT_RESERVATION_CANCELLED,
                 CancelPtReservationResponse.from(reservation)
         ));
+    }
+
+    // AdminDashboard - 월별 예약된 pt 수 조회
+    @GetMapping("/dashboard/admin/reservations")
+    @Operation(
+            summary = "관리자 대시보드 월별 예약 PT 수 조회",
+            description = """
+                관리자 대시보드에서 사용하는 월별 예약 PT 수를 조회.
+                최근 6개월 기준으로 CANCELLED 상태를 제외한 예약 수 조회.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "관리자 대시보드 월별 예약 PT 수 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 없음")
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<GlobalApiResponse<AdminMonthlyPtReservationStatisticsResponse>>
+    findMonthlyPtReservationsForAdminDashboard() {
+        List<MonthlyPtReservationResult> results =
+                ptReservationQueryUseCase.findMonthlyPtReservations();
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        PtReservationResponseCode.ADMIN_MONTHLY_PT_RESERVATIONS_FETCHED,
+                        AdminMonthlyPtReservationStatisticsResponse.from(results)
+                )
+        );
     }
 }

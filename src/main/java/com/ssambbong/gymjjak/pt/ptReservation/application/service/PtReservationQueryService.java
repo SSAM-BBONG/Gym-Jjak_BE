@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.FeedbackQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.PtCourseQueryPort;
+import com.ssambbong.gymjjak.pt.ptReservation.application.result.MonthlyPtReservationResult;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
@@ -17,8 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -30,6 +35,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
     private final PtCourseQueryPort ptCourseQueryPort; // title, thumbnailFileId, trainerName
     private final FeedbackQueryPort feedbackQueryPort; // lastDate
     private final FileUrlUseCase fileUrlUseCase;
+    private static final int MONTH_RANGE = 6; // adminDashboard 월별 통계 기준 6개월
 
     @Override
     public List<MyPtReservationView> findMyReservations(Long userId, PtReservationStatus status) {
@@ -89,6 +95,59 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 curriculumViews
         );
 
+    }
+
+    // AdminDashboard : 월별 예약된 pt 수 조회
+    @Override
+    public List<MonthlyPtReservationResult> findMonthlyPtReservations() {
+        log.info("event=pt_reservation_monthly_statistics_started");
+
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth startMonth = currentMonth.minusMonths(MONTH_RANGE - 1);
+
+        // 시작 달 : 02
+        LocalDateTime startDate = startMonth.atDay(1).atStartOfDay();
+        // 종료 달
+        LocalDateTime endDate = currentMonth.plusMonths(1).atDay(1).atStartOfDay();
+        // 월별 예약 수를 Map으로 반환
+        Map<String, Long> reservationCountByMonth =
+                ptReservationRepository.findMonthlyReservationCounts(
+                                PtReservationStatus.CANCELLED,
+                                startDate,
+                                endDate
+                        )
+                        .stream()
+                        // MonthlyReservationCount(월,인원) -> map 방식으로 변환해주는거 "월" : 인원
+                        .collect(Collectors.toMap(
+                                // key
+                                PtReservationRepository.MonthlyReservationCount::month,
+                                // value
+                                PtReservationRepository.MonthlyReservationCount::count
+                        ));
+
+        List<MonthlyPtReservationResult> result =
+                // 숫자 스트림 생성
+                IntStream.range(0, MONTH_RANGE)
+                        // int를 YearMonth 객체로 변환
+                        .mapToObj(startMonth::plusMonths)
+                        .map(month -> {
+                            // YearMonth을 key로 저장, 아래 요건 그 "2026-06" 형태로 나옴
+                            String monthKey = month.toString();
+
+                            return MonthlyPtReservationResult.builder()
+                                    .month(monthKey)
+                                    // 있으면 값 사용, 없으면 0
+                                    .count(reservationCountByMonth.getOrDefault(monthKey, 0L))
+                                    .build();
+                        })
+                        .toList();
+
+        log.info(
+                "event=pt_reservation_monthly_statistics_succeeded, count={}",
+                result.size()
+        );
+
+        return result;
     }
 
     private String resolveThumbnailUrl(Long fileId) {
