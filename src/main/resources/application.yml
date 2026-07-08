@@ -109,10 +109,6 @@ app:
     withdrawn-user:
       enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED}
 
-    trainer-review:
-      period-days: ${APP_RETENTION_TRAINER_REVIEW_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_TRAINER_REVIEW_BATCH_SIZE}
-
 clova:
   ocr:
     invoke-url: "${CLOVA_OCR_INVOKE_URL}"
