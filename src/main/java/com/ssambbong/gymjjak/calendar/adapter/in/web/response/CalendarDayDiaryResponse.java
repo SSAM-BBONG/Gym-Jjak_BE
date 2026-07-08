@@ -8,16 +8,14 @@ public record CalendarDayDiaryResponse(
         Long workoutDiaryId,
         String title,
         String content,
-        LocalDate date,
-        String category
+        LocalDate date
 ) {
     public static CalendarDayDiaryResponse from(CalendarDayDiaryResult result) {
         return new CalendarDayDiaryResponse(
                 result.workoutDiaryId(),
                 result.title(),
                 result.content(),
-                result.date(),
-                result.category()
+                result.date()
         );
     }
 }

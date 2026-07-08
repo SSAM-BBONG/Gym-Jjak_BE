@@ -224,5 +224,23 @@ public class UserController {
         );
     }
 
+    @GetMapping("/mypage")
+    @Operation(summary = "회원 username 및 nickname 조회", description = "현재 로그인한 회원의 username과 nickname을 조회하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<UserUsernameAndNicknameResponse>>
+    findUsernameAndNickname(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+
+        UserUsernameAndNicknameResult result =
+                userCommandUseCase.findUsernameAndNickname(authUser.userId());
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        UserResponseCode.USER_PROFILE_FOUND,
+                        UserUsernameAndNicknameResponse.from(result)
+                )
+        );
+    }
+
 
 }

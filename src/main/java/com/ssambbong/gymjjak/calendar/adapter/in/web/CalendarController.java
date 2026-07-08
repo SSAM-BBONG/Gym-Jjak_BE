@@ -42,7 +42,6 @@ public class CalendarController {
                 authUser.userId(),
                 new CreateWorkoutDiaryCommand(
                         request.diaryDate(),
-                        request.categoryName(),
                         request.title(),
                         request.content()
                 )

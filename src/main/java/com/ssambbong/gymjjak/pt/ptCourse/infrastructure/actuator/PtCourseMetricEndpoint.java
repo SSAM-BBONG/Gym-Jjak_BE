@@ -23,11 +23,7 @@ public class PtCourseMetricEndpoint {
         long blocked = ptCourseRepository.countByStatus(PtCourseStatus.BLOCKED);
         long deleted = ptCourseRepository.countByStatus(PtCourseStatus.DELETED);
 
-        List<NamedCountItem> categoryDistribution = ptCourseRepository.countGroupByCategoryName().stream()
-                .map(row -> new NamedCountItem((String) row[0], ((Number) row[1]).longValue()))
-                .toList();
-
-        List<NamedCountItem> tagDistribution = ptCourseRepository.countGroupByTagName().stream()
+        List<NamedCountItem> partDistribution = ptCourseRepository.countGroupByPartName().stream()
                 .map(row -> new NamedCountItem((String) row[0], ((Number) row[1]).longValue()))
                 .toList();
 
@@ -35,8 +31,7 @@ public class PtCourseMetricEndpoint {
                 .map(row -> new PriceRangeItem((String) row[0], ((Number) row[1]).longValue()))
                 .toList();
 
-        return new PtCourseSummary(visible, hidden, blocked, deleted,
-                categoryDistribution, tagDistribution, priceDistribution);
+        return new PtCourseSummary(visible, hidden, blocked, deleted, partDistribution, priceDistribution);
     }
 
     public record PtCourseSummary(
@@ -44,9 +39,8 @@ public class PtCourseMetricEndpoint {
             long hiddenCount,
             long blockedCount,
             long deletedCount,
-            List<NamedCountItem> categoryDistribution,  // 카테고리별 PT 집중도
-            List<NamedCountItem> tagDistribution,        // 태그별 PT 집중도
-            List<PriceRangeItem> priceDistribution       // 가격대별 분포
+            List<NamedCountItem> partDistribution,
+            List<PriceRangeItem> priceDistribution
     ) {}
 
     public record NamedCountItem(String name, long count) {}

@@ -1,0 +1,141 @@
+[33mcommit 1ed4f4315f86c7b28ddeb2529b6b841b344abdf7[m
+Merge: 9a48919 837e779
+Author: juwon <sjw4690@gmail.com>
+Date:   Mon Jun 29 13:00:39 2026 +0900
+
+    Merge branch 'develop' of https://github.com/SSAM-BBONG/Gym-Jjak_BE into feature-calendar
+
+[33mcommit 7741414327e27b4de3de001bf86197a3385b5ed9[m
+Merge: fe59a23 5230fc2
+Author: hyunj11 <rlaguswl1127@g.eulji.ac.kr>
+Date:   Mon Jun 29 11:53:00 2026 +0900
+
+    [PR] 알림 메트릭 추가
+    
+    [PR] 알림 메트릭 추가
+
+[33mcommit c9d578d315c3ffa0b60a733a985db99a80f8eebb[m
+Merge: 102b2ef 7a7f46f
+Author: hyunj11 <rlaguswl1127@g.eulji.ac.kr>
+Date:   Mon Jun 29 10:16:14 2026 +0900
+
+    [PR]만료 데이터 하드딜리트 스케줄러 구현
+    
+    [PR]만료 데이터 하드딜리트 스케줄러 구현
+
+[33mcommit 609c845e732e85ee02935bc0822b065e3f53c49d[m
+Merge: 2cfc3f5 3056fac
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Mon Jun 29 01:23:54 2026 +0900
+
+    Merge remote-tracking branch 'origin/develop' into feature/kjw/scheduler
+
+[33mcommit 1ce2b9e0c4b503279a8a7821c3c50d69b0f751b7[m
+Merge: 6952573 4dad643
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Mon Jun 29 01:17:06 2026 +0900
+
+    Merge remote-tracking branch 'origin/develop' into feature/kjw/scheduler
+
+[33mcommit 69525733b37664163a25e3da1f80cf5eb8b2ae65[m
+Merge: fc2c6a9 0d0d9c9
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Sun Jun 28 20:33:21 2026 +0900
+
+    Merge remote-tracking branch 'origin/develop' into feature/kjw/scheduler
+
+[33mcommit 6eea520fbbbd218029fb88b33573880619421824[m
+Merge: a7fdd99 56a9e41
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Fri Jun 26 18:56:08 2026 +0900
+
+    Merge remote-tracking branch 'origin/develop' into feature/kjw/scheduler
+    
+    # Conflicts:
+    #       .gitignore
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/infrastructure/persistence/TrainerReviewRepositoryAdapter.java
+
+[33mcommit d22f14c4a3fc99c94f7eaefed5ad458f691adf21[m
+Merge: 7f76acf 977cfbc
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Fri Jun 26 16:05:49 2026 +0900
+
+    Merge remote-tracking branch 'origin/develop' into feature/kjw/port
+    
+    # Conflicts:
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/infrastructure/persistence/SpringDataTrainerReviewRepository.java
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/infrastructure/persistence/TrainerReviewRepositoryAdapter.java
+
+[33mcommit 4c91102163a962dc604db3c90ba756cf1585ecdd[m
+Merge: e286f7a 1735d5b
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Fri Jun 26 14:45:51 2026 +0900
+
+    Merge remote-tracking branch 'origin/develop' into refactor/matric
+    
+    # Conflicts:
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/domain/repository/TrainerReviewRepository.java
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/infrastructure/persistence/TrainerReviewRepositoryAdapter.java
+
+[33mcommit a7fdd992d06ff526590cb7b5cf91234407e72f23[m
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Fri Jun 26 14:45:14 2026 +0900
+
+    임시커밋
+
+[33mcommit 6294909d787aead61289c0f6e3d5a214523b0a7f[m
+Merge: 20d0172 1735d5b
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Fri Jun 26 14:42:13 2026 +0900
+
+    Merge remote-tracking branch 'origin/develop' into feature/kjw/scheduler
+    
+    # Conflicts:
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/application/retention/TrainerReviewRetentionJob.java
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/application/retention/TrainerReviewRetentionProperties.java
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/application/retention/TrainerReviewRetentionService.java
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/domain/repository/TrainerReviewRepository.java
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/infrastructure/config/TrainerReviewRetentionConfig.java
+    #       src/main/java/com/ssambbong/gymjjak/trainerReview/infrastructure/persistence/TrainerReviewRepositoryAdapter.java
+
+[33mcommit 306adb03c487603f1a308183317ce76c42921f86[m
+Merge: 4838ed0 6eedff9
+Author: vinent-an <xxv211@naver.com>
+Date:   Fri Jun 26 13:40:26 2026 +0900
+
+    2026-06-26 13:40분 develop 머지
+
+[33mcommit 6eedff9f6428aecd312e5452ddd1d34cb7a6fc28[m
+Merge: 2d86ae4 843c476
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Fri Jun 26 12:44:53 2026 +0900
+
+    [PR] 피드백, 강사평 하드딜리트 스케줄 배치 구현
+    
+    [PR] 피드백, 강사평 하드딜리트 스케줄 배치 구현
+
+[33mcommit 20d0172413b12890719ff8572fa48072a5103a28[m
+Merge: 97557d2 2d86ae4
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Fri Jun 26 12:01:11 2026 +0900
+
+    Merge remote-tracking branch 'origin/develop' into feature/kjw/scheduler
+
+[33mcommit 97557d2dca1a9c2791fb73fdc6a1088b19117c0f[m
+Author: jaewon9804 <kumjaewon9804@g.eulji.ac.kr>
+Date:   Fri Jun 26 11:53:00 2026 +0900
+
+    임시커밋
+
+[33mcommit 843c47649d3d0e25462601bfe6a1298886a10c15[m
+Merge: 73d65e9 0a4b9f0
+Author: hyunj11 <rlaguswl1127@g.eulji.ac.kr>
+Date:   Fri Jun 26 10:23:00 2026 +0900
+
+    Merge branch 'develop' into feature/trainerReview/retention
+
+[33mcommit 73d65e9d2718fd009afb16c0b479dfb196ca1ffd[m[33m ([m[1;31morigin/feature/trainerReview/retention[m[33m, [m[1;32mfeature/trainerReview/retention[m[33m)[m
+Author: hyunj11 <rlaguswl1127@g.eulji.ac.kr>
+Date:   Fri Jun 26 10:14:39 2026 +0900
+
+    feature: 피드백, 강사평 하드딜리트 스케줄 배치 구현

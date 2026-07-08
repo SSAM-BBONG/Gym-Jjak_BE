@@ -2,10 +2,7 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
 import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
-import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
-import com.ssambbong.gymjjak.user.application.result.FindTrainerUserResult;
-import com.ssambbong.gymjjak.user.application.result.FindUserResult;
-import com.ssambbong.gymjjak.user.application.result.PageResult;
+import com.ssambbong.gymjjak.user.application.result.*;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
@@ -247,6 +244,20 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
                 result.isLast(),
                 result.hasNext(),
                 result.hasPrevious()
+        );
+    }
+
+    @Override
+    public UserUsernameAndNicknameResult findUsernameAndNickname(Long userId) {
+
+        UserJpaEntity user = springDataUserRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserException(UserErrorCode.USER_NOT_FOUND)
+                );
+
+        return new UserUsernameAndNicknameResult(
+                user.getUsername(),
+                user.getNickname()
         );
     }
 
