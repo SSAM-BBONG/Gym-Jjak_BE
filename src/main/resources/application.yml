@@ -106,38 +106,12 @@ app:
       zone: "${APP_SCHEDULER_RETENTION_ZONE:Asia/Seoul}"
 
   retention:
-    report-group:
-      period-days: ${APP_RETENTION_REPORT_GROUP_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_REPORT_GROUP_BATCH_SIZE}
-
     withdrawn-user:
       enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED}
-      period-days: ${APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
-
-    pt-course:
-      period-days: ${APP_RETENTION_PT_COURSE_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_PT_COURSE_BATCH_SIZE}
-
-    feedback:
-      period-days: ${APP_RETENTION_FEEDBACK_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_FEEDBACK_BATCH_SIZE}
 
     trainer-review:
       period-days: ${APP_RETENTION_TRAINER_REVIEW_PERIOD_DAYS}
       batch-size: ${APP_RETENTION_TRAINER_REVIEW_BATCH_SIZE}
-
-    notification:
-      period-days: ${APP_RETENTION_NOTIFICATION_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_NOTIFICATION_BATCH_SIZE}
-
-    organization-trainer:
-      period-days: ${APP_RETENTION_ORGANIZATION_TRAINER_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_ORGANIZATION_TRAINER_BATCH_SIZE}
-
-    chat-room:
-      period-days: ${APP_RETENTION_CHAT_ROOM_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_CHAT_ROOM_BATCH_SIZE}
 
 clova:
   ocr:

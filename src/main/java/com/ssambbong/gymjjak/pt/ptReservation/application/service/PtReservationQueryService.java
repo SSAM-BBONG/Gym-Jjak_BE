@@ -17,9 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
+import java.time.*;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,6 +33,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
     private final PtCourseQueryPort ptCourseQueryPort; // title, thumbnailFileId, trainerName
     private final FeedbackQueryPort feedbackQueryPort; // lastDate
     private final FileUrlUseCase fileUrlUseCase;
+    private final Clock clock;
     private static final int MONTH_RANGE = 6; // adminDashboard 월별 통계 기준 6개월
 
     @Override
@@ -102,7 +101,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
     public List<MonthlyPtReservationResult> findMonthlyPtReservations() {
         log.info("event=pt_reservation_monthly_statistics_started");
 
-        YearMonth currentMonth = YearMonth.now();
+        YearMonth currentMonth = YearMonth.now(clock);
         YearMonth startMonth = currentMonth.minusMonths(MONTH_RANGE - 1);
 
         // 시작 달 : 02
@@ -122,7 +121,9 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                                 // key
                                 PtReservationRepository.MonthlyReservationCount::month,
                                 // value
-                                PtReservationRepository.MonthlyReservationCount::count
+                                PtReservationRepository.MonthlyReservationCount::count,
+                                // month 값 중복이면 합산
+                                Long::sum
                         ));
 
         List<MonthlyPtReservationResult> result =

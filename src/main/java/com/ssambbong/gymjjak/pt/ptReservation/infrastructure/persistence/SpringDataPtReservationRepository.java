@@ -140,6 +140,7 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
                    count(*) as count
             from pt_reservations r
             where r.status <> :cancelledStatus
+              and r.cancelled_at is null
               and r.reserved_start_at >= :startDate
               and r.reserved_start_at < :endDate
             group by date_format(r.reserved_start_at, '%Y-%m')
