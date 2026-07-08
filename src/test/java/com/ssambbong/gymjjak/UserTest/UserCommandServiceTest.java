@@ -59,7 +59,7 @@ class UserCommandServiceTest {
                 .thenReturn(false);
         when(userPort.existsByNickname(command.nickname()))
                 .thenReturn(false);
-        when(userPort.existsByPhone(command.phone()))
+        when(userPort.existsByPhoneAndRole(command.phone(), UserRole.USER))
                 .thenReturn(false);
 
         when(userPort.encode(command.password()))
@@ -158,7 +158,7 @@ class UserCommandServiceTest {
                 .thenReturn(false);
         when(userPort.existsByNickname(command.nickname()))
                 .thenReturn(false);
-        when(userPort.existsByPhone(command.phone()))
+        when(userPort.existsByPhoneAndRole(command.phone(), UserRole.USER))
                 .thenReturn(true);
 
         // when & then

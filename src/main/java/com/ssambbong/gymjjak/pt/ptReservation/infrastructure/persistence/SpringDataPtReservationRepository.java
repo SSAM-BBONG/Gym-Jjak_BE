@@ -151,4 +151,30 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("to") LocalDateTime to
     );
 
+    // AdminDashboard 월별 예야된 pt 수 조회
+    @Query(
+            value = """
+            select date_format(r.reserved_start_at, '%Y-%m') as month,
+                   count(*) as count
+            from pt_reservations r
+            where r.status <> :cancelledStatus
+              and r.cancelled_at is null
+              and r.reserved_start_at >= :startDate
+              and r.reserved_start_at < :endDate
+            group by date_format(r.reserved_start_at, '%Y-%m')
+            order by month asc
+            """,
+            nativeQuery = true
+    )
+    List<MonthlyPtReservationRow> findMonthlyPtReservations(
+            @Param("cancelledStatus") String cancelledStatus,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    interface MonthlyPtReservationRow {
+        String getMonth();
+
+        Long getCount();
+    }
 }
