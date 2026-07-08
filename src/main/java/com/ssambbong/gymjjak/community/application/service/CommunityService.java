@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.community.application.service;
 
 import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.command.UpdateCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
@@ -167,6 +168,40 @@ public class CommunityService implements CommunityUseCase {
                 command.userId(),
                 command.postId()
         );
+    }
+
+    @Override
+    public void deleteCommunityPost(DeleteCommunityPostCommand command) {
+
+        CommunityPost communityPost = communityPort.findCommunityPostById(command.postId())
+                        .orElseThrow(() -> new CommunityException(CommunityErrorCode.COMMUNITY_POST_NOT_FOUND));
+
+        validateCommunityPostDeleteOwner(
+                communityPost,
+                command.userId()
+        );
+
+        log.debug("event=communityPost_delete_start userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+
+        communityPort.deleteCommunityPost(command.postId());
+
+        log.info("event=communityPost_delete_succeed userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+    }
+
+    private void validateCommunityPostDeleteOwner(CommunityPost communityPost, Long userId) {
+
+        if (!communityPost.isOwner(userId)) {
+
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_POST_DELETE_FORBIDDEN
+            );
+        }
     }
 
     private void validateCommunityPostExists(Long postId) {

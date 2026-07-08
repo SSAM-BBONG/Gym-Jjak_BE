@@ -33,11 +33,9 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
                         ON u.user_id = cp.user_id
                     LEFT JOIN community_comments c
                         ON c.community_post_id = cp.community_post_id
-                        AND c.deleted_at IS NULL
                     LEFT JOIN community_post_likes l
                         ON l.community_post_id = cp.community_post_id
-                    WHERE cp.deleted_at IS NULL
-                        AND (:type IS NULL OR cp.type = :type)
+                    WHERE (:type IS NULL OR cp.type = :type)
                     GROUP BY
                         cp.community_post_id,
                         cp.type,
@@ -51,8 +49,7 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
             countQuery = """
                     SELECT COUNT(*)
                     FROM community_posts cp
-                    WHERE cp.deleted_at IS NULL
-                        AND (:type IS NULL OR cp.type = :type)
+                    WHERE (:type IS NULL OR cp.type = :type)
                     """,
             nativeQuery = true
     )
@@ -80,15 +77,12 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
             @Param("userId") Long userId
     );
 
-    boolean existsByIdAndDeletedAtIsNull(Long id);
-
     @Modifying
     @Query(
             value = """
                 UPDATE community_posts
                 SET view_count = view_count + 1
                 WHERE community_post_id = :postId
-                  AND deleted_at IS NULL
                 """,
             nativeQuery = true
     )
@@ -117,7 +111,6 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
                         SELECT COUNT(*)
                         FROM community_comments c
                         WHERE c.community_post_id = cp.community_post_id
-                          AND c.deleted_at IS NULL
                     ) AS commentCount,
 
                     CASE
@@ -143,7 +136,6 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
                     ON u.user_id = cp.user_id
 
                 WHERE cp.community_post_id = :postId
-                  AND cp.deleted_at IS NULL
                 """,
             nativeQuery = true
     )
@@ -172,7 +164,6 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
                     ON u.user_id = c.user_id
 
                 WHERE c.community_post_id = :postId
-                  AND c.deleted_at IS NULL
                   AND (
                       :cursorId IS NULL
                       OR c.community_comment_id > :cursorId
@@ -191,10 +182,6 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
             @Param("limit") int limit
     );
 
-    Optional<CommunityPostJpaEntity> findByIdAndDeletedAtIsNull(
-            Long id
-    );
-
     @Modifying(
             flushAutomatically = true,
             clearAutomatically = true
@@ -204,11 +191,60 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
         SET cp.title = :title,
             cp.content = :content
         WHERE cp.id = :postId
-          AND cp.deletedAt IS NULL
         """)
     int updateCommunityPost(
             @Param("postId") Long postId,
             @Param("title") String title,
             @Param("content") String content
     );
+
+    @Modifying
+    @Query(
+            value = """
+                DELETE FROM community_comments
+                WHERE community_post_id = :postId
+                """,
+            nativeQuery = true
+    )
+    int deleteCommunityCommentsByPostId(
+            @Param("postId") Long postId
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                DELETE FROM community_post_likes
+                WHERE community_post_id = :postId
+                """,
+            nativeQuery = true
+    )
+    int deleteCommunityPostLikesByPostId(
+            @Param("postId") Long postId
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                DELETE FROM community_post_views
+                WHERE community_post_id = :postId
+                """,
+            nativeQuery = true
+    )
+    int deleteCommunityPostViewsByPostId(
+            @Param("postId") Long postId
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                DELETE FROM community_posts
+                WHERE community_post_id = :postId
+                """,
+            nativeQuery = true
+    )
+    int deleteCommunityPostById(
+            @Param("postId") Long postId
+    );
+
+
 }

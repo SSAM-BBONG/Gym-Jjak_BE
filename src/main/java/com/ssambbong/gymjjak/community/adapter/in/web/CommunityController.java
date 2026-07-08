@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostDeta
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostListResponse;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityResponseCode;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.CreateCommunityPostResponse;
+import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
@@ -144,6 +145,30 @@ public class CommunityController {
                 .body(
                         GlobalApiResponse.ok(
                                 CommunityResponseCode.COMMUNITY_POST_UPDATED
+                        )
+                );
+    }
+
+    @DeleteMapping("/posts/{postId}")
+    @Operation(summary = "내 게시글 삭제", description = "현재 로그인 사용자가 작성한 커뮤니티 게시글을 삭제하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityPost(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "삭제할 게시글 ID", example = "1")
+            @PathVariable Long postId) {
+
+        communityUseCase.deleteCommunityPost(
+                new DeleteCommunityPostCommand(
+                        authUser.userId(),
+                        postId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_POST_DELETED
                         )
                 );
     }

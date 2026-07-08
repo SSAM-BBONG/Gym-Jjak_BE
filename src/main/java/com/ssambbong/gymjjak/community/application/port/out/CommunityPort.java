@@ -37,7 +37,7 @@ public interface CommunityPort {
             Long postId
     );
 
-    void updateCommunityPost(
-            CommunityPost communityPost
-    );
+    void updateCommunityPost(CommunityPost communityPost);
+
+    void deleteCommunityPost(Long postId);
 }

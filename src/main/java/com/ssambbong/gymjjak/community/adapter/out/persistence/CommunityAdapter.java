@@ -94,7 +94,7 @@ public class CommunityAdapter implements CommunityPort {
     public boolean existsCommunityPost(Long postId) {
 
         return springDataCommunityRepository
-                .existsByIdAndDeletedAtIsNull(postId);
+                .existsById(postId);
     }
 
     @Override
@@ -170,18 +170,11 @@ public class CommunityAdapter implements CommunityPort {
     ) {
 
         return springDataCommunityRepository
-                .findByIdAndDeletedAtIsNull(
-                        postId
-                )
-                .map(
-                        communityMapper::toDomain
-                );
+                .findById(postId).map(communityMapper::toDomain);
     }
 
     @Override
-    public void updateCommunityPost(
-            CommunityPost communityPost
-    ) {
+    public void updateCommunityPost(CommunityPost communityPost) {
 
         int updatedRowCount =
                 springDataCommunityRepository
@@ -192,6 +185,25 @@ public class CommunityAdapter implements CommunityPort {
                         );
 
         if (updatedRowCount == 0) {
+
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
+            );
+        }
+    }
+
+    @Override
+    public void deleteCommunityPost(Long postId) {
+
+        springDataCommunityRepository.deleteCommunityCommentsByPostId(postId);
+
+        springDataCommunityRepository.deleteCommunityPostLikesByPostId(postId);
+
+        springDataCommunityRepository.deleteCommunityPostViewsByPostId(postId);
+
+        int deletedRowCount = springDataCommunityRepository.deleteCommunityPostById(postId);
+
+        if (deletedRowCount == 0) {
 
             throw new CommunityException(
                     CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
