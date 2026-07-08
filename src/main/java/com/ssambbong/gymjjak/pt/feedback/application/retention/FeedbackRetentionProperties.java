@@ -1,25 +1,46 @@
 package com.ssambbong.gymjjak.pt.feedback.application.retention;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-// application.yml의 app.retention.feedback 블록을 바인딩
-@ConfigurationProperties(prefix = "app.retention.feedback")
-public record FeedbackRetentionProperties(
-        long periodDays, // 소프트딜리트 후 하드딜리트까지 보존 일수 (기본 90일)
-        int batchSize    // 1회 실행 시 처리할 최대 행 수 (1~500)
-) {
-    public FeedbackRetentionProperties {
+@Component
+public class FeedbackRetentionProperties {
+
+    private static final long DEFAULT_PERIOD_DAYS = 90L;
+    private static final int DEFAULT_BATCH_SIZE = 100;
+
+    private final long periodDays;
+    private final int batchSize;
+
+    public FeedbackRetentionProperties() {
+        this(DEFAULT_PERIOD_DAYS, DEFAULT_BATCH_SIZE);
+    }
+
+    public FeedbackRetentionProperties(
+            long periodDays,
+            int batchSize
+    ) {
         if (periodDays <= 0) {
             throw new IllegalArgumentException("피드백 삭제 기준일이 존재하지 않습니다.");
         }
+
         if (batchSize <= 0 || batchSize > 500) {
             throw new IllegalArgumentException("피드백 삭제 배치사이즈는 1~500 사이여야 합니다.");
         }
+
+        this.periodDays = periodDays;
+        this.batchSize = batchSize;
     }
 
-    // 하드딜리트 기준 시각 = now - periodDays
+    public long periodDays() {
+        return periodDays;
+    }
+
+    public int batchSize() {
+        return batchSize;
+    }
+
     public LocalDateTime threshold(LocalDateTime now) {
         return now.minusDays(periodDays);
     }

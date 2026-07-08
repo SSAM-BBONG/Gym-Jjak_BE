@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
@@ -46,11 +47,12 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
     private final SpringDataTrainerApplicationRepository  trainerApplicationRepository;
     private final SpringDataPtCourseRepository ptCourseRepository;
     private final SpringDataReportGroupRepository reportGroupRepository;
+    private final Clock clock;
 
 
     @Override
     public AdminMemberStatisticsResult findMemberStatistics() {
-        log.info("event=admin_dashboard_findMemberStatistics_started");
+        log.info("event=admin_dashboard_find_member_statistics_started");
         long totalUserCount = userRepository.countActiveUsers();
 
         long totalTrainerCount = trainerProfileRepository.countByStatus(
@@ -65,7 +67,7 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
         List<MonthlyUserSignupResult> monthlyUserSignups =
                 findRecentMonthlyUserSignups();
 
-        log.info("event=admin_dashboard_findMemberStatistics_succeeded");
+        log.info("event=admin_dashboard_find_member_statistics_succeeded");
 
         return AdminMemberStatisticsResult.builder()
                 .totalUserCount(totalUserCount)
@@ -137,7 +139,7 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
 
     private List<MonthlyUserSignupResult> findRecentMonthlyUserSignups() {
 
-        YearMonth currentMonth = YearMonth.now();
+        YearMonth currentMonth = YearMonth.now(clock);
 
         YearMonth startMonth = currentMonth.minusMonths(MONTH_RANGE - 1);
 
