@@ -5,9 +5,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCas
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
-// PT 강습 목록 카드 응답 DTO
-public record
-PtCourseViewResponse(
+public record PtCourseViewResponse(
 
         @Schema(description = "PT 강습 ID", example = "1")
         Long ptCourseId,
@@ -21,17 +19,11 @@ PtCourseViewResponse(
         @Schema(description = "가격", example = "45000")
         int price,
 
-        @Schema(description = "태그 ID", example = "1")
-        Long tagId,
+        @Schema(description = "부위 ID", example = "1")
+        Long partId,
 
-        @Schema(description = "태그명", example = "전신")
-        String tagName,
-
-        @Schema(description = "카테고리 ID", example = "1")
-        Long categoryId,
-
-        @Schema(description = "카테고리명", example = "벌크업")
-        String categoryName,
+        @Schema(description = "부위명", example = "전신")
+        String partName,
 
         @Schema(description = "트레이너 이름", example = "Ket Trainer")
         String trainerName,
@@ -68,10 +60,8 @@ PtCourseViewResponse(
                 view.title(),
                 view.thumbnailUrl(),
                 view.price(),
-                view.tagId(),
-                view.tagName(),
-                view.categoryId(),
-                view.categoryName(),
+                view.partId(),
+                view.partName(),
                 view.trainerName(),
                 view.organizationId(),
                 view.organizationBusinessName(),

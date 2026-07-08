@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 public enum CalendarErrorCode implements ErrorCode {
 
     USER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_001", "유저를 찾을 수 없습니다."),
-    CATEGORY_ID_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_002", "카테고리는 필수입니다."),
+    PART_ID_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_002", "운동 부위는 필수입니다."),
     DIARY_DATE_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_003", "일지 날짜는 필수입니다."),
     DIARY_TITLE_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_004", "일지 제목은 필수입니다."),
     DIARY_TITLE_TOO_LONG(HttpStatus.BAD_REQUEST, "CALENDAR_400_005", "일지 제목은 100자 이하로 입력해야 합니다."),

@@ -46,10 +46,8 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
         PtCourseJpaEntity entity = repository.findById(ptCourse.getId())
                 .orElseThrow(PtCourseNotFoundException::new);
 
-        // 강습 필드 수정 (제목·설명·카테고리·태그·가격·썸네일·총 회차)
         entity.updateFields(
-                ptCourse.getCategoryId(),
-                ptCourse.getTagId(),
+                ptCourse.getPartId(),
                 ptCourse.getThumbnailFileId(),
                 ptCourse.getTitle(),
                 ptCourse.getDescription(),

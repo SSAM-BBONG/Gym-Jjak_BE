@@ -1,8 +1,8 @@
 package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.report.application.policy.ReportTargetOwnerPolicy;
-import com.ssambbong.gymjjak.report.application.port.UserProfileView;
-import com.ssambbong.gymjjak.report.application.port.UserQueryPort;
+import com.ssambbong.gymjjak.report.application.port.user.UserProfileView;
+import com.ssambbong.gymjjak.report.application.port.user.UserQueryPort;
 import com.ssambbong.gymjjak.report.application.query.*;
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.*;

@@ -2,7 +2,7 @@ package com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.
 
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.exception.TrainerProfileNotFoundException;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.repository.SpringDataTrainerProfileRepository;
-import com.ssambbong.gymjjak.trainerReview.application.port.TrainerProfileRatingUpdatePort;
+import com.ssambbong.gymjjak.pt.trainerReview.application.port.TrainerProfileRatingUpdatePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

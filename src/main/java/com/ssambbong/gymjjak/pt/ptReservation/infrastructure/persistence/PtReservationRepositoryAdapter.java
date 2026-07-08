@@ -81,6 +81,26 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
         return repository.findReservedStartAtsByPtCourseIdAndRange(ptCourseId, from, to);
     }
 
+    // AdminDashboard - 월별 예약된 pt 수 조회
+    @Override
+    public List<MonthlyReservationCount> findMonthlyReservationCounts(
+            PtReservationStatus excludedStatus,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        return repository.findMonthlyPtReservations(
+                        excludedStatus.name(),
+                        startDate,
+                        endDate
+                )
+                .stream()
+                .map(row -> new MonthlyReservationCount(
+                        row.getMonth(),
+                        row.getCount() == null ? 0L : row.getCount()
+                ))
+                .toList();
+    }
+
     @Override
     @Transactional
     public void updateStatus(PtReservation ptReservation) {

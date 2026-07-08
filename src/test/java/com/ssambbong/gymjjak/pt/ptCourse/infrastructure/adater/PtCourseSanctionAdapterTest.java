@@ -34,9 +34,9 @@ class PtCourseSanctionAdapterTest {
     void applyAutoBlind_success() {
         // Given
         PtCourse ptCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, null,
+                1L, 1L, 1L, 1L, null,
                 "PT 강습", "설명", 50000, 12,
-                PtCourseStatus.VISIBLE, null
+                PtCourseStatus.VISIBLE, null, null
         );
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
 
@@ -53,9 +53,9 @@ class PtCourseSanctionAdapterTest {
     void releaseAutoBlind_success() {
         // Given
         PtCourse ptCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, null,
+                1L, 1L, 1L, 1L, null,
                 "PT 강습", "설명", 50000, 12,
-                PtCourseStatus.BLOCKED, null
+                PtCourseStatus.BLOCKED, null, null
         );
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
 

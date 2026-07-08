@@ -24,7 +24,7 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
 
     boolean existsByNickname(String nickname);
 
-    boolean existsByPhone(String phone);
+    boolean existsByPhoneAndRole(String phone, UserRole role);
 
     Optional<UserJpaEntity> findByUsername(String username);
 
@@ -217,6 +217,39 @@ where u.id = :userId
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    // dashboard : 전체 회원 수
+    @Query("""
+    select count(u)
+    from UserJpaEntity u
+    where u.deletedAt is null
+    """)
+    long countActiveUsers();
+
+    // dashboard : 월별 사용자 수
+    @Query(
+            value = """
+            select date_format(u.created_at, '%Y-%m') as month,
+                   count(*) as count
+            from users u
+            where u.deleted_at is null
+              and u.created_at >= :startDate
+              and u.created_at < :endDate
+            group by date_format(u.created_at, '%Y-%m')
+            order by month asc
+            """,
+            nativeQuery = true
+    )
+    List<MonthlyUserSignupRow> findMonthlyUserSignups(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    // dashboard : 월별 사용자 내부 인터페이스
+    interface MonthlyUserSignupRow {
+        String getMonth();
+        Long getCount();
+    }
 
 
 }

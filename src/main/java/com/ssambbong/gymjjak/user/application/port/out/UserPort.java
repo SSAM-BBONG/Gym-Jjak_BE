@@ -1,11 +1,9 @@
 package com.ssambbong.gymjjak.user.application.port.out;
 
-import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
-import com.ssambbong.gymjjak.user.application.result.FindTrainerUserResult;
-import com.ssambbong.gymjjak.user.application.result.FindUserResult;
-import com.ssambbong.gymjjak.user.application.result.PageResult;
+import com.ssambbong.gymjjak.user.application.result.*;
 import com.ssambbong.gymjjak.user.domain.model.SocialProvider;
 import com.ssambbong.gymjjak.user.domain.model.User;
+import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 
 import java.time.LocalDateTime;
@@ -20,7 +18,7 @@ public interface UserPort {
 
     boolean existsByNickname(String nickname);
 
-    boolean existsByPhone(String phone);
+    boolean existsByPhoneAndRole(String phone,  UserRole role);
 
     String encode(String rawPassword);
 
@@ -53,4 +51,6 @@ public interface UserPort {
     );
 
     PageResult<FindTrainerUserResult> findTrainerUsers(String keyword, int page, int size);
+
+    UserUsernameAndNicknameResult findUsernameAndNickname(Long userId);
 }

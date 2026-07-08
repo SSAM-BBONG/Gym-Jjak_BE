@@ -4,8 +4,7 @@ import java.util.List;
 
 public record CreatePtCourseCommand(
         Long userId,
-        Long categoryId,
-        Long tagId,
+        Long partId,
         String title,
         String description,
         int price,

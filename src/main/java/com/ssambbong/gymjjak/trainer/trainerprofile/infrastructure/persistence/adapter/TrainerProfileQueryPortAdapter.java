@@ -126,9 +126,10 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
         );
     }
 
-    // TODO: 임시 구현
     @Override
     public Long findUserIdByTrainerProfileId(Long trainerProfileId) {
-        return 0L;
+        return trainerProfileRepository.findById(trainerProfileId)
+                .map(TrainerProfileJpaEntity::getUserId)
+                .orElseThrow(() -> new TrainerProfileNotFoundException("trainerProfileId", trainerProfileId));
     }
 }

@@ -13,6 +13,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidEx
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
+import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackMediaRepository;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -75,7 +76,7 @@ class FeedbackCommandServiceTest {
         return Feedback.restore(
                 FEEDBACK_ID, PT_RESERVATION_ID, 1L,
                 TRAINER_PROFILE_ID, 2L,
-                "기존 피드백 내용", "ACTIVE", LocalDateTime.now()
+                "기존 피드백 내용", FeedbackStatus.ACTIVE, LocalDateTime.now()
         );
     }
 
@@ -124,7 +125,7 @@ class FeedbackCommandServiceTest {
         // given — 피드백의 ptReservationId가 요청의 ptReservationId와 다름
         Feedback mismatchFeedback = Feedback.restore(
                 FEEDBACK_ID, 999L, 1L, TRAINER_PROFILE_ID, 2L,
-                "내용", "ACTIVE", LocalDateTime.now()
+                "내용", FeedbackStatus.ACTIVE, LocalDateTime.now()
         );
         when(feedbackRepository.findById(FEEDBACK_ID)).thenReturn(Optional.of(mismatchFeedback));
 

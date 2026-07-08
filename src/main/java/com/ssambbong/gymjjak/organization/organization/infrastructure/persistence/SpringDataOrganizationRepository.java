@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.organization.organization.infrastructure.persistence;
 
-import com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminView;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +21,7 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
 
     @Query(
             value = """
-                    SELECT new com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView(
+                    SELECT new com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminView(
                         o.organizationId, a.requestedLoginId, o.businessName, o.representativeName,
                         o.representativePhone, COUNT(t), o.status, o.createdAt
                     )
