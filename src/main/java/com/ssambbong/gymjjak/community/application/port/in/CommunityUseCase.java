@@ -30,4 +30,6 @@ public interface CommunityUseCase {
     Long createCommunityComment(CreateCommunityCommentCommand command);
 
     void updateCommunityComment(UpdateCommunityCommentCommand command);
+
+    void deleteCommunityComment(DeleteCommunityCommentCommand command);
 }

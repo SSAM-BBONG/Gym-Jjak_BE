@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityPos
 import com.ssambbong.gymjjak.community.adapter.in.web.request.UpdateCommunityCommentRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.request.UpdateCommunityPostRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.response.*;
+import com.ssambbong.gymjjak.community.application.command.DeleteCommunityCommentCommand;
 import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
@@ -222,6 +223,30 @@ public class CommunityController {
                         GlobalApiResponse.ok(
                                 CommunityResponseCode
                                         .COMMUNITY_COMMENT_UPDATED
+                        )
+                );
+    }
+
+    @DeleteMapping("/comments/{commentId}")
+    @Operation(summary = "내 댓글 삭제", description = "현재 로그인 사용자가 작성한 커뮤니티 댓글을 삭제하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityComment(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "삭제할 댓글 ID", example = "1")
+            @PathVariable Long commentId) {
+
+        communityUseCase.deleteCommunityComment(
+                new DeleteCommunityCommentCommand(
+                        authUser.userId(),
+                        commentId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_COMMENT_DELETED
                         )
                 );
     }

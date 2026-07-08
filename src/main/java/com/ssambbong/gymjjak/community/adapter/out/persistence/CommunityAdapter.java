@@ -248,4 +248,23 @@ public class CommunityAdapter implements CommunityPort {
             );
         }
     }
+
+    @Override
+    public void deleteCommunityComment(
+            Long commentId
+    ) {
+
+        int deletedRowCount =
+                springDataCommunityCommentRepository
+                        .softDeleteCommunityCommentById(
+                                commentId
+                        );
+
+        if (deletedRowCount == 0) {
+
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_COMMENT_NOT_FOUND
+            );
+        }
+    }
 }

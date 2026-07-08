@@ -47,4 +47,6 @@ public interface CommunityPort {
     Optional<CommunityComment> findCommunityCommentById(Long commentId);
 
     void updateCommunityComment(CommunityComment communityComment);
+
+    void deleteCommunityComment(Long commentId);
 }

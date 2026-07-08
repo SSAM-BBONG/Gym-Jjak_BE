@@ -266,6 +266,57 @@ public class CommunityService implements CommunityUseCase {
         );
     }
 
+    @Override
+    public void deleteCommunityComment(
+            DeleteCommunityCommentCommand command
+    ) {
+
+        CommunityComment communityComment =
+                communityPort
+                        .findCommunityCommentById(
+                                command.commentId()
+                        )
+                        .orElseThrow(
+                                () -> new CommunityException(
+                                        CommunityErrorCode.COMMUNITY_COMMENT_NOT_FOUND
+                                )
+                        );
+
+        validateCommunityPostExists(
+                communityComment.getPostId()
+        );
+
+        validateCommunityCommentDeleteOwner(
+                communityComment,
+                command.userId()
+        );
+
+        communityPort.deleteCommunityComment(
+                command.commentId()
+        );
+
+        log.info(
+                "event=community_comment_deleted userId={}, postId={}, commentId={}",
+                command.userId(),
+                communityComment.getPostId(),
+                command.commentId()
+        );
+    }
+
+    private void validateCommunityCommentDeleteOwner(
+            CommunityComment communityComment,
+            Long userId
+    ) {
+
+        if (!communityComment.isOwner(userId)) {
+
+            throw new CommunityException(
+                    CommunityErrorCode
+                            .COMMUNITY_COMMENT_DELETE_FORBIDDEN
+            );
+        }
+    }
+
     private void validateCommunityCommentOwner(
             CommunityComment communityComment,
             Long userId
