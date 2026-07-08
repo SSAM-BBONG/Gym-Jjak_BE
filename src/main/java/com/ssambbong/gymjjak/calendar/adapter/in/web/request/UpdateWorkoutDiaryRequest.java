@@ -8,10 +8,6 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "운동 일지 수정 요청")
 public record UpdateWorkoutDiaryRequest(
 
-        @Schema(description = "카테고리", example = "재활")
-        @NotBlank(message = "카테고리는 필수입니다.")
-        String categoryName,
-
         @Schema(description = "제목", example = "힘든 운동을 한 날")
         @NotBlank(message = "일지 제목은 필수입니다.")
         @Size(max = 100, message = "일지 제목은 100자 이하로 입력해야 합니다.")
@@ -21,12 +17,7 @@ public record UpdateWorkoutDiaryRequest(
         @NotBlank(message = "일지 내용은 필수입니다.")
         String content
 ) {
-
     public UpdateWorkoutDiaryCommand toCommand() {
-        return new UpdateWorkoutDiaryCommand(
-                categoryName,
-                title,
-                content
-        );
+        return new UpdateWorkoutDiaryCommand(title, content);
     }
 }

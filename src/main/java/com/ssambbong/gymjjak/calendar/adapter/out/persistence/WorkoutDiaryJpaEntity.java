@@ -33,9 +33,6 @@ public class WorkoutDiaryJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;
-
     @Column(name = "feedback_id")
     private Long feedbackId;
 
@@ -50,24 +47,17 @@ public class WorkoutDiaryJpaEntity extends BaseCreatedUpdatedEntity {
 
     public WorkoutDiaryJpaEntity(
             Long userId,
-            Long categoryId,
             String title,
             String content,
             LocalDate diaryDate
     ) {
         this.userId = userId;
-        this.categoryId = categoryId;
         this.title = title;
         this.content = content;
         this.diaryDate = diaryDate;
     }
 
-    public void update(
-            Long categoryId,
-            String title,
-            String content
-    ) {
-        this.categoryId = categoryId;
+    public void update(String title, String content) {
         this.title = title;
         this.content = content;
     }

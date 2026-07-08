@@ -1,6 +1,5 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.service;
 
-import com.ssambbong.gymjjak.category.application.usecase.CategoryQueryUseCase;
 import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo;
@@ -14,7 +13,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
-import com.ssambbong.gymjjak.tag.application.usecase.TagQueryUseCase;
+import com.ssambbong.gymjjak.part.application.usecase.PartQueryUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,14 +40,13 @@ class PtCourseQueryServiceTest {
     @Mock private PtCourseRepository ptCourseRepository;
     @Mock private PtCurriculumRepository ptCurriculumRepository;
     @Mock private PtCourseScheduleRepository ptCourseScheduleRepository;
-    @Mock private CategoryQueryUseCase categoryQueryUseCase;
     @Mock private OrganizationQueryPort organizationQueryPort;
     @Mock private TrainerProfileQueryPort trainerProfileQueryPort;
     @Mock private PtReservationCountQueryPort ptReservationCountQueryPort;
     @Mock private PtReservationRepository ptReservationRepository;
     @Mock private UserNicknameQueryPort userNicknameQueryPort;
     @Mock private CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
-    @Mock private TagQueryUseCase tagQueryUseCase;
+    @Mock private PartQueryUseCase partQueryUseCase;
     @Mock private ReviewQueryPort reviewQueryPort;
     @Mock private FileUrlUseCase fileUrlUseCase;
 
@@ -59,17 +57,14 @@ class PtCourseQueryServiceTest {
 
     private PtCourse stubPtCourse(Long id, PtCourseStatus status) {
         return PtCourse.restore(
-                id, 1L, 1L, 1L, 1L, null,
+                id, 1L, 1L, 1L, null,
                 "맞춤 PT", "PT 소개글", 300000, 8,
                 status, null, null
         );
     }
 
     private void stubCategoryAndEnrich() {
-        when(categoryQueryUseCase.handle()).thenReturn(
-                List.of(new CategoryQueryUseCase.CategoryView(1L, "헬스", null, 0L))
-        );
-        when(tagQueryUseCase.handle()).thenReturn(List.of());
+        when(partQueryUseCase.handle()).thenReturn(List.of());
 
         when(organizationQueryPort.findAllByIds(any())).thenReturn(
                 Map.of(1L, new OrganizationQueryPort.OrganizationInfo(
@@ -97,7 +92,6 @@ class PtCourseQueryServiceTest {
 
         // then
         assertEquals(1, result.size());
-        assertEquals("헬스", result.get(0).categoryName());
         assertEquals("짐짝피트니스", result.get(0).organizationBusinessName());
         assertEquals("트레이너01", result.get(0).trainerName());
         verify(ptCourseRepository).findAllVisible();
@@ -108,8 +102,6 @@ class PtCourseQueryServiceTest {
     void findAllPtCourses_empty() {
         // given
         when(ptCourseRepository.findAllVisible()).thenReturn(List.of());
-        when(categoryQueryUseCase.handle()).thenReturn(List.of());
-        when(tagQueryUseCase.handle()).thenReturn(List.of());
 
         // when
         List<PtCourseQueryUseCase.PtCourseListView> result =

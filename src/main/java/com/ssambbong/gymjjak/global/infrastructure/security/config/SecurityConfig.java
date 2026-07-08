@@ -88,21 +88,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/reportgroup/**")
                         .hasAnyAuthority("ADMIN")
 
-                        // 카테고리 API
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/categories")
-                        .hasAnyAuthority("ADMIN", "TRAINER", "USER")
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**")
-                        .hasAnyAuthority("ADMIN", "TRAINER")
-
-                        // 태그 API
-                        .requestMatchers(HttpMethod.POST, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/tags/**")
-                        .hasAnyAuthority("ADMIN", "TRAINER")
+                        // 부위 API
+                        .requestMatchers(HttpMethod.POST, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/parts/**").hasAnyAuthority("ADMIN", "TRAINER", "USER")
 
                         // PT API
                         .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()

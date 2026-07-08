@@ -7,10 +7,8 @@ public record PopularPtCourseResponse(
         String title,
         int price,
         String thumbnailUrl,
-        Long categoryId,
-        String categoryName,
-        Long tagId,
-        String tagName,
+        Long partId,
+        String partName,
         String trainerName,
         String roadAddress
 ) {
@@ -20,10 +18,8 @@ public record PopularPtCourseResponse(
                 view.title(),
                 view.price(),
                 view.thumbnailUrl(),
-                view.categoryId(),
-                view.categoryName(),
-                view.tagId(),
-                view.tagName(),
+                view.partId(),
+                view.partName(),
                 view.trainerName(),
                 view.roadAddress()
         );
