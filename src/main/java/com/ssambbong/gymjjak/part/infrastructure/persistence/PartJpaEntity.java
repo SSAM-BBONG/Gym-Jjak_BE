@@ -18,7 +18,7 @@ public class PartJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "part_id")
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 50, unique = true)
     private String name;
 
     public PartJpaEntity(String name) {

@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.part.application.usecase.PartQueryUseCase;
 import com.ssambbong.gymjjak.part.presentation.api.request.CreatePartRequest;
 import com.ssambbong.gymjjak.part.presentation.api.request.UpdatePartRequest;
 import com.ssambbong.gymjjak.part.presentation.api.response.CreatePartResponse;
+import com.ssambbong.gymjjak.part.presentation.api.response.PartListResponse;
 import com.ssambbong.gymjjak.part.presentation.api.response.PartResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,7 +33,8 @@ public class PartController {
     @GetMapping
     public ResponseEntity<GlobalApiResponse<?>> getParts() {
         return ResponseEntity.ok(
-                GlobalApiResponse.ok(PartResponseCode.PART_LIST_SUCCESS, partQueryUseCase.handle())
+                GlobalApiResponse.ok(PartResponseCode.PART_LIST_SUCCESS,
+                        partQueryUseCase.handle().stream().map(PartListResponse::from).toList())
         );
     }
 
