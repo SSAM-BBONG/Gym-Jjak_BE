@@ -303,6 +303,37 @@ public class CommunityService implements CommunityUseCase {
         );
     }
 
+    @Override
+    public void createCommunityPostLike(
+            CreateCommunityPostLikeCommand command
+    ) {
+
+        validateCommunityPostExists(
+                command.postId()
+        );
+
+        boolean created =
+                communityPort
+                        .saveCommunityPostLikeIfAbsent(
+                                command.postId(),
+                                command.userId()
+                        );
+
+        if (!created) {
+
+            throw new CommunityException(
+                    CommunityErrorCode
+                            .COMMUNITY_POST_LIKE_ALREADY_EXISTS
+            );
+        }
+
+        log.info(
+                "event=community_post_like_created userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+    }
+
     private void validateCommunityCommentDeleteOwner(
             CommunityComment communityComment,
             Long userId

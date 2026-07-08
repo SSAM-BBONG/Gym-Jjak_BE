@@ -32,4 +32,6 @@ public interface CommunityUseCase {
     void updateCommunityComment(UpdateCommunityCommentCommand command);
 
     void deleteCommunityComment(DeleteCommunityCommentCommand command);
+
+    void createCommunityPostLike(CreateCommunityPostLikeCommand command);
 }

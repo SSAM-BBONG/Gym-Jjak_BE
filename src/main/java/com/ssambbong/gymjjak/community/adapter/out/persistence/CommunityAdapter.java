@@ -267,4 +267,17 @@ public class CommunityAdapter implements CommunityPort {
             );
         }
     }
+
+    @Override
+    public boolean saveCommunityPostLikeIfAbsent(
+            Long postId,
+            Long userId
+    ) {
+
+        return springDataCommunityRepository
+                .insertCommunityPostLikeIfAbsent(
+                        postId,
+                        userId
+                ) > 0;
+    }
 }

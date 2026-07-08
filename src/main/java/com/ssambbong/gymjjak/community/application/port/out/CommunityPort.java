@@ -49,4 +49,6 @@ public interface CommunityPort {
     void updateCommunityComment(CommunityComment communityComment);
 
     void deleteCommunityComment(Long commentId);
+
+    boolean saveCommunityPostLikeIfAbsent(Long postId, Long userId);
 }

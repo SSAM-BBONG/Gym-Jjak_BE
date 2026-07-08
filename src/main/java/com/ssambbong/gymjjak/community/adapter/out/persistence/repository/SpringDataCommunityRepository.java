@@ -222,4 +222,23 @@ public interface SpringDataCommunityRepository
             @Param("postId") Long postId
     );
 
+    @Modifying
+    @Query(
+            value = """
+                INSERT IGNORE INTO community_post_likes (
+                    community_post_id,
+                    user_id
+                )
+                VALUES (
+                    :postId,
+                    :userId
+                )
+                """,
+            nativeQuery = true
+    )
+    int insertCommunityPostLikeIfAbsent(
+            @Param("postId") Long postId,
+            @Param("userId") Long userId
+    );
+
 }
