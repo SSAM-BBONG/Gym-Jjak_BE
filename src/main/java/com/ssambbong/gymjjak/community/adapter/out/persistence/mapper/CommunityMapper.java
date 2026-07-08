@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.community.adapter.out.persistence.mapper;
 
+import com.ssambbong.gymjjak.community.adapter.out.persistence.entity.CommunityCommentJpaEntity;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.entity.CommunityPostJpaEntity;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityCommentProjection;
 import com.ssambbong.gymjjak.community.adapter.out.persistence.projection.CommunityPostDetailProjection;
@@ -8,6 +9,7 @@ import com.ssambbong.gymjjak.community.application.result.CommunityCommentCursor
 import com.ssambbong.gymjjak.community.application.result.CommunityCommentResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
+import com.ssambbong.gymjjak.community.domain.model.CommunityComment;
 import com.ssambbong.gymjjak.community.domain.model.CommunityPost;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import com.ssambbong.gymjjak.global.infrastructure.config.MapStructConfig;
@@ -117,6 +119,37 @@ public interface CommunityMapper {
                 toBoolean(projection.getMine()),
                 toBoolean(projection.getLikedByMe()),
                 comments
+        );
+    }
+
+    default CommunityCommentJpaEntity toCommentEntity(
+            CommunityComment communityComment
+    ) {
+
+        if (communityComment == null) {
+            return null;
+        }
+
+        return CommunityCommentJpaEntity.create(
+                communityComment.getPostId(),
+                communityComment.getUserId(),
+                communityComment.getContent()
+        );
+    }
+
+    default CommunityComment toCommentDomain(
+            CommunityCommentJpaEntity entity
+    ) {
+
+        if (entity == null) {
+            return null;
+        }
+
+        return CommunityComment.reconstruct(
+                entity.getId(),
+                entity.getPostId(),
+                entity.getUserId(),
+                entity.getContent()
         );
     }
 
