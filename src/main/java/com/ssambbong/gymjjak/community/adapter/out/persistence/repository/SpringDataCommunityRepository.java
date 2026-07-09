@@ -255,4 +255,19 @@ public interface SpringDataCommunityRepository
             @Param("userId") Long userId
     );
 
+    @Modifying
+    @Query(
+            value = """
+                UPDATE community_posts
+                SET deleted_at = NULL,
+                    updated_at = CURRENT_TIMESTAMP(6)
+                WHERE community_post_id = :postId
+                  AND deleted_at IS NOT NULL
+                """,
+            nativeQuery = true
+    )
+    int restoreCommunityPostById(
+            @Param("postId") Long postId
+    );
+
 }

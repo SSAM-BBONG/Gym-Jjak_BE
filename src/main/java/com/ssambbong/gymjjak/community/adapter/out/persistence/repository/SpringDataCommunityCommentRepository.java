@@ -43,4 +43,19 @@ public interface SpringDataCommunityCommentRepository
     int softDeleteCommunityCommentById(
             @Param("commentId") Long commentId
     );
+
+    @Modifying
+    @Query(
+            value = """
+                UPDATE community_comments
+                SET deleted_at = NULL,
+                    updated_at = CURRENT_TIMESTAMP(6)
+                WHERE community_comment_id = :commentId
+                  AND deleted_at IS NOT NULL
+                """,
+            nativeQuery = true
+    )
+    int restoreCommunityCommentById(
+            @Param("commentId") Long commentId
+    );
 }

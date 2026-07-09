@@ -17,6 +17,10 @@ import com.ssambbong.gymjjak.community.domain.exception.CommunityException;
 import com.ssambbong.gymjjak.community.domain.model.CommunityComment;
 import com.ssambbong.gymjjak.community.domain.model.CommunityPost;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
+import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
+import com.ssambbong.gymjjak.report.application.port.ReportTargetSnapshot;
+import com.ssambbong.gymjjak.report.application.port.community.PostReportTargetPort;
+import com.ssambbong.gymjjak.report.application.port.community.PostSanctionPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,9 +29,11 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
+import static com.ssambbong.gymjjak.report.application.port.ReportSanctionAction.RELEASE_AUTO_BLIND;
+
 @Component
 @RequiredArgsConstructor
-public class CommunityAdapter implements CommunityPort {
+public class CommunityAdapter implements CommunityPort, PostReportTargetPort, PostSanctionPort {
 
     private final SpringDataCommunityRepository springDataCommunityRepository;
     private final CommunityMapper communityMapper;
@@ -292,5 +298,59 @@ public class CommunityAdapter implements CommunityPort {
                         postId,
                         userId
                 ) > 0;
+    }
+
+    @Override
+    public ReportTargetSnapshot getSnapshot(
+            Long targetId
+    ) {
+
+        CommunityPostJpaEntity communityPost =
+                springDataCommunityRepository
+                        .findByIdAndDeletedAtIsNull(
+                                targetId
+                        )
+                        .orElseThrow(
+                                () -> new CommunityException(
+                                        CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
+                                )
+                        );
+
+        return new ReportTargetSnapshot(
+                communityPost.getId(),
+                communityPost.getUserId(),
+                communityPost.getTitle(),
+                communityPost.getContent(),
+                null
+        );
+    }
+
+    @Override
+    public void applySanction(
+            Long targetId,
+            ReportSanctionAction action
+    ) {
+
+        int affectedRowCount = switch (action) {
+
+            case APPLY_AUTO_BLIND,
+                 APPLY_MANUAL_BLIND ->
+                    springDataCommunityRepository
+                            .deleteCommunityPostById(
+                                    targetId
+                            );
+
+            case RELEASE_AUTO_BLIND ->
+                    springDataCommunityRepository
+                            .restoreCommunityPostById(
+                                    targetId
+                            );
+        };
+
+        if (affectedRowCount == 0) {
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_POST_NOT_FOUND
+            );
+        }
     }
 }
