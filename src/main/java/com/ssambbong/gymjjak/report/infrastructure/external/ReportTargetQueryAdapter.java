@@ -1,5 +1,8 @@
 package com.ssambbong.gymjjak.report.infrastructure.external;
 
+import com.ssambbong.gymjjak.report.application.port.chat.ChatReportTargetPort;
+import com.ssambbong.gymjjak.report.application.port.community.CommentReportTargetPort;
+import com.ssambbong.gymjjak.report.application.port.community.PostReportTargetPort;
 import com.ssambbong.gymjjak.report.application.port.feedback.FeedbackReportTargetPort;
 import com.ssambbong.gymjjak.report.application.port.ptcourse.PtCourseReportTargetPort;
 import com.ssambbong.gymjjak.report.application.port.ReportTargetQueryPort;
@@ -16,6 +19,9 @@ public class ReportTargetQueryAdapter implements ReportTargetQueryPort {
     private final PtCourseReportTargetPort ptCourseReportTargetPort;
     private final FeedbackReportTargetPort feedbackReportTargetPort;
     private final TrainerReviewReportTargetPort trainerReviewReportTargetPort;
+    private final PostReportTargetPort postReportTargetPort;
+    private final CommentReportTargetPort commentReportTargetPort;
+    private final ChatReportTargetPort chatReportTargetPort;
 
     @Override
     public ReportTargetSnapshot getSnapshot(ReportTargetType targetType, Long targetId) {
@@ -24,8 +30,9 @@ public class ReportTargetQueryAdapter implements ReportTargetQueryPort {
             case PT_COURSE -> ptCourseReportTargetPort.getSnapshot(targetId);
             case FEEDBACK -> feedbackReportTargetPort.getSnapshot(targetId);
             case TRAINER_REVIEW -> trainerReviewReportTargetPort.getSnapshot(targetId);
-            case POST -> throw new UnsupportedOperationException("POST 신고 대상 조회 포트 구현 필요");
-            case COMMENT -> throw new UnsupportedOperationException("COMMENT 신고 대상 조회 포트 구현 필요");
+            case POST -> postReportTargetPort.getSnapshot(targetId);
+            case COMMENT -> commentReportTargetPort.getSnapshot(targetId);
+            case CHAT -> chatReportTargetPort.getSnapshot(targetId);
         };
 
     }
