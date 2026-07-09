@@ -1,9 +1,11 @@
 package com.ssambbong.gymjjak.dashboard.organization.presentation;
 
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtCourseResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.TrainerClientResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.usecase.OrganizationDashboardUseCase;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.DashboardResponseCode;
+import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgPtCourseResponse;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgStatsResponse;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.TrainerClientResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
@@ -51,6 +53,31 @@ public class OrganizationDashboardController {
         OrgStatsResult result = organizationDashboardUseCase.getStats(authUser.userId());
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(DashboardResponseCode.ORG_STATS_FOUND, OrgStatsResponse.from(result))
+        );
+    }
+
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
+    @Operation(summary = "조직 PT 목록 조회", description = "조직 소속 트레이너들의 PT 과목 목록과 현재 수강생 수를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = OrgPtCourseResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "조직을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/pt-courses")
+    public ResponseEntity<GlobalApiResponse<List<OrgPtCourseResponse>>> getPtCourses(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        List<OrgPtCourseResult> results = organizationDashboardUseCase.getPtCourses(authUser.userId());
+        List<OrgPtCourseResponse> response = results.stream()
+                .map(OrgPtCourseResponse::from)
+                .toList();
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(DashboardResponseCode.ORG_PT_COURSES_FOUND, response)
         );
     }
 
