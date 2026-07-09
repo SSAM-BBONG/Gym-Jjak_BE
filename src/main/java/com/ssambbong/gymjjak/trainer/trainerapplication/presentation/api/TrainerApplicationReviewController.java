@@ -51,8 +51,9 @@ public class TrainerApplicationReviewController {
             @ApiResponse(responseCode = "401", description = "인증 실패"),
             @ApiResponse(responseCode = "403", description = "권한 없음")
     })
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
     public ResponseEntity<GlobalApiResponse<TrainerApplicationListResponse>> findTrainerApplications(
+            @AuthenticationPrincipal AuthUser authUser,
             @ModelAttribute @Valid FindTrainerApplicationsRequest request
     ) {
         TrainerApplicationListResult result =
@@ -62,7 +63,9 @@ public class TrainerApplicationReviewController {
                                 request.normalizedKeyword(),
                                 request.resolvedPage(),
                                 request.resolvedSize()
-                        )
+                        ),
+                        // 조직 계정의 userId
+                        authUser.userId()
                 );
 
         return ResponseEntity.status(200).body(
@@ -76,7 +79,7 @@ public class TrainerApplicationReviewController {
     @GetMapping("/{trainerApplicationId}")
     @Operation(
             summary = "트레이너 신청서 관리자 상세 조회",
-            description = "관리자가 특정 트레이너 신청서를 상세 조회합니다."
+            description = "헬스장 계정이 특정 트레이너 신청서를 상세 조회합니다."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "트레이너 신청서 관리자 상세 조회 성공"),
@@ -84,14 +87,17 @@ public class TrainerApplicationReviewController {
             @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
             @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음")
     })
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
     public ResponseEntity<GlobalApiResponse<TrainerApplicationReviewDetailResponse>> getTrainerApplicationReviewDetail(
             @PathVariable @Positive long trainerApplicationId,
             @AuthenticationPrincipal AuthUser authUser
             ) {
 
         TrainerApplicationReviewDetailResult result =
-                trainerApplicationReviewQueryUseCase.getTrainerApplicationReviewDetail(trainerApplicationId);
+                trainerApplicationReviewQueryUseCase.getTrainerApplicationReviewDetail(
+                        trainerApplicationId,
+                        authUser.userId()
+                        );
 
         FileUrlResult profileImageFile = resolveFileUrl(
                 result.profileImageFileId(),
@@ -160,7 +166,8 @@ public class TrainerApplicationReviewController {
     @PatchMapping("/{trainerApplicationId}/approve")
     @Operation(
             summary = "트레이너 신청 승인",
-            description = "관리자가 트레이너 신청을 승인합니다. 승인 시 사용자 권한이 TRAINER로 변경되고 트레이너 프로필이 생성됩니다."
+            description = "헬스장 계정이 트레이너 신청을 승인합니다. " +
+                    "승인 시 사용자 권한이 TRAINER로 변경되고 트레이너 프로필이 생성됩니다."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "트레이너 신청 승인 성공"),
@@ -169,7 +176,7 @@ public class TrainerApplicationReviewController {
             @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음"),
             @ApiResponse(responseCode = "409", description = "PENDING 상태가 아니어서 승인할 수 없음")
     })
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
     public ResponseEntity<GlobalApiResponse<ApproveTrainerApplicationResponse>> approveTrainerApplication(
             @PathVariable @Positive long trainerApplicationId,
             @AuthenticationPrincipal AuthUser authUser
@@ -195,7 +202,7 @@ public class TrainerApplicationReviewController {
     @PatchMapping("/{trainerApplicationId}/reject")
     @Operation(
             summary = "트레이너 신청 반려",
-            description = "관리자가 PENDING 상태의 트레이너 신청을 반려합니다."
+            description = "헬스장 계정이 PENDING 상태의 트레이너 신청을 반려합니다."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -223,7 +230,7 @@ public class TrainerApplicationReviewController {
                     description = "PENDING 상태가 아니어서 반려할 수 없음"
             )
     })
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
     public ResponseEntity<
             GlobalApiResponse<Void>
             > rejectTrainerApplication(

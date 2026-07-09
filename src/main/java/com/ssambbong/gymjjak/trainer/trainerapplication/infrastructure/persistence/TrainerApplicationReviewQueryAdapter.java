@@ -19,9 +19,12 @@ public class TrainerApplicationReviewQueryAdapter implements TrainerApplicationR
 
     private final SpringDataTrainerApplicationRepository springDataTrainerApplicationRepository;
 
+    // 조직별 트레이너 신청 목록 조회 기능
     @Override
-    public TrainerApplicationListResult findTrainerApplications(FindTrainerApplicationsCondition condition) {
-        // pageable 객체 생성
+    public TrainerApplicationListResult findTrainerApplications(
+            FindTrainerApplicationsCondition condition,
+            Long organizationId
+    ) {
         PageRequest pageRequest = PageRequest.of(
                 condition.page(),
                 condition.size()
@@ -29,6 +32,7 @@ public class TrainerApplicationReviewQueryAdapter implements TrainerApplicationR
 
         Page<TrainerApplicationSummaryResult> page =
                 springDataTrainerApplicationRepository.findTrainerApplicationSummaries(
+                        organizationId,
                         condition.status(),
                         condition.keyword(),
                         pageRequest
@@ -44,8 +48,15 @@ public class TrainerApplicationReviewQueryAdapter implements TrainerApplicationR
         );
     }
 
+    // 조직별 트레이너 신청 상세 조회 기능
     @Override
-    public Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(Long trainerApplicationId) {
-        return springDataTrainerApplicationRepository.findTrainerApplicationReviewDetailById(trainerApplicationId);
+    public Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(
+            Long trainerApplicationId,
+            Long organizationId
+    ) {
+        return springDataTrainerApplicationRepository.findTrainerApplicationReviewDetailById(
+                trainerApplicationId,
+                organizationId
+        );
     }
 }

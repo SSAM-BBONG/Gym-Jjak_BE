@@ -9,6 +9,10 @@ public record CreateTrainerApplicationCommand(
         // 트레이너 신청 요청한 사용자 ID
         Long applicantUserId,
 
+        // 신청 대상 조직 ID
+        // 조직 도메인에서 선택된 organizationId
+        Long organizationId,
+
         // 프로필 이미지 file
         UploadedFileMetadataCommand profileImageFile,
 
@@ -29,6 +33,12 @@ public record CreateTrainerApplicationCommand(
         if (applicantUserId == null || applicantUserId <= 0) {
             throw new InvalidTrainerApplicationException(
                     "applicantUserId는 1 이상이어야 합니다."
+            );
+        }
+
+        if (organizationId == null || organizationId <= 0) {
+            throw new InvalidTrainerApplicationException(
+                    "신청 대상 조직 ID는 1 이상이어야 합니다."
             );
         }
 

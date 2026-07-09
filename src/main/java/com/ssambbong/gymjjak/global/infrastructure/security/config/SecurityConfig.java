@@ -109,25 +109,33 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**")
 
                         .hasAnyAuthority("ADMIN", "USER","TRAINER","ORGANIZATION")
-                        // 트레이너 신청 목록 조회 - 관리자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
-                        .hasAuthority("ADMIN")
+                                // 트레이너 신청 목록 조회 - 조직
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
+                                .hasAuthority("ORGANIZATION")
 
-                        // 내 트레이너 신청서 상세 조회 - 사용자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
-                        .hasAnyAuthority("USER", "TRAINER")
+                                // 내 트레이너 신청서 상세 조회 - 사용자/트레이너
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
+                                .hasAnyAuthority("USER", "TRAINER")
 
-                         // 트레이너 신청서 관리자 상세 조회 - 관리자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications/*")
-                        .hasAuthority("ADMIN")
+                                // 트레이너 신청 상세 조회 - 조직
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/*")
+                                .hasAuthority("ORGANIZATION")
 
-                        // 트레이너 신청 생성 - 사용자
-                        .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
-                        .hasAuthority("USER")
+                                // 트레이너 신청 생성 - 사용자
+                                .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
+                                .hasAuthority("USER")
 
-                        // 트레이너 신청 승인 - 관리자
-                        .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
-                        .hasAuthority("ADMIN")
+                                // 트레이너 신청 승인 - 조직
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
+                                .hasAuthority("ORGANIZATION")
+
+                                // 트레이너 신청 반려 - 조직
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/reject")
+                                .hasAuthority("ORGANIZATION")
+
+                                // 트레이너 신청 수정/취소 - 사용자
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*")
+                                .hasAuthority("USER")
 
                         // 트레이너 검색 - 조직 및 관리자
                         .requestMatchers(HttpMethod.GET, "/api/trainers/search")
