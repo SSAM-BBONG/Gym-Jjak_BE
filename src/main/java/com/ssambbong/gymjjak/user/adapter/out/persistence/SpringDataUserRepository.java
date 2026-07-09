@@ -218,14 +218,6 @@ where u.id = :userId
             Pageable pageable
     );
 
-    // dashboard : 전체 회원 수
-    @Query("""
-    select count(u)
-    from UserJpaEntity u
-    where u.deletedAt is null
-    """)
-    long countActiveUsers();
-
     // dashboard : 월별 사용자 수
     @Query(
             value = """
@@ -244,6 +236,15 @@ where u.id = :userId
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    // dashboard : 전체 USER 일반 이용자 수
+    @Query("""
+            select count(u)
+            from UserJpaEntity u
+            where u.role = :role
+              and u.deletedAt is null
+            """)
+    long countActiveUsersByRole(@Param("role") UserRole role);
 
     // dashboard : 월별 사용자 내부 인터페이스
     interface MonthlyUserSignupRow {

@@ -14,7 +14,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface SpringDataCommunityRepository extends JpaRepository<CommunityPostJpaEntity, Long> {
+public interface SpringDataCommunityRepository
+        extends JpaRepository<CommunityPostJpaEntity, Long> {
 
     @Query(
             value = """
@@ -37,7 +38,7 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
                     LEFT JOIN community_post_likes l
                         ON l.community_post_id = cp.community_post_id
                     WHERE cp.deleted_at IS NULL
-                        AND (:type IS NULL OR cp.type = :type)
+                      AND (:type IS NULL OR cp.type = :type)
                     GROUP BY
                         cp.community_post_id,
                         cp.type,
@@ -46,13 +47,14 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
                         u.nickname,
                         cp.created_at,
                         cp.view_count
-                    ORDER BY cp.created_at DESC, cp.community_post_id DESC
+                    ORDER BY cp.created_at DESC,
+                             cp.community_post_id DESC
                     """,
             countQuery = """
                     SELECT COUNT(*)
                     FROM community_posts cp
                     WHERE cp.deleted_at IS NULL
-                        AND (:type IS NULL OR cp.type = :type)
+                      AND (:type IS NULL OR cp.type = :type)
                     """,
             nativeQuery = true
     )
@@ -80,16 +82,18 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
             @Param("userId") Long userId
     );
 
-    boolean existsByIdAndDeletedAtIsNull(Long id);
+    boolean existsByIdAndDeletedAtIsNull(
+            Long id
+    );
 
     @Modifying
     @Query(
             value = """
-                UPDATE community_posts
-                SET view_count = view_count + 1
-                WHERE community_post_id = :postId
-                  AND deleted_at IS NULL
-                """,
+                    UPDATE community_posts
+                    SET view_count = view_count + 1
+                    WHERE community_post_id = :postId
+                      AND deleted_at IS NULL
+                    """,
             nativeQuery = true
     )
     int increaseViewCount(
@@ -98,53 +102,51 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
 
     @Query(
             value = """
-                SELECT
-                    cp.community_post_id AS postId,
-                    cp.type AS type,
-                    cp.title AS title,
-                    cp.content AS content,
-                    u.nickname AS author,
-                    cp.created_at AS createdAt,
-                    cp.view_count AS viewCount,
+                    SELECT
+                        cp.community_post_id AS postId,
+                        cp.type AS type,
+                        cp.title AS title,
+                        cp.content AS content,
+                        u.nickname AS author,
+                        cp.created_at AS createdAt,
+                        cp.view_count AS viewCount,
 
-                    (
-                        SELECT COUNT(*)
-                        FROM community_post_likes l
-                        WHERE l.community_post_id = cp.community_post_id
-                    ) AS likeCount,
-
-                    (
-                        SELECT COUNT(*)
-                        FROM community_comments c
-                        WHERE c.community_post_id = cp.community_post_id
-                          AND c.deleted_at IS NULL
-                    ) AS commentCount,
-
-                    CASE
-                        WHEN cp.user_id = :userId
-                        THEN 1
-                        ELSE 0
-                    END AS mine,
-
-                    CASE
-                        WHEN EXISTS (
-                            SELECT 1
+                        (
+                            SELECT COUNT(*)
                             FROM community_post_likes l
                             WHERE l.community_post_id = cp.community_post_id
-                              AND l.user_id = :userId
-                        )
-                        THEN 1
-                        ELSE 0
-                    END AS likedByMe
+                        ) AS likeCount,
 
-                FROM community_posts cp
+                        (
+                            SELECT COUNT(*)
+                            FROM community_comments c
+                            WHERE c.community_post_id = cp.community_post_id
+                              AND c.deleted_at IS NULL
+                        ) AS commentCount,
 
-                JOIN users u
-                    ON u.user_id = cp.user_id
+                        CASE
+                            WHEN cp.user_id = :userId
+                            THEN 1
+                            ELSE 0
+                        END AS mine,
 
-                WHERE cp.community_post_id = :postId
-                  AND cp.deleted_at IS NULL
-                """,
+                        CASE
+                            WHEN EXISTS (
+                                SELECT 1
+                                FROM community_post_likes l
+                                WHERE l.community_post_id = cp.community_post_id
+                                  AND l.user_id = :userId
+                            )
+                            THEN 1
+                            ELSE 0
+                        END AS likedByMe
+
+                    FROM community_posts cp
+                    JOIN users u
+                        ON u.user_id = cp.user_id
+                    WHERE cp.community_post_id = :postId
+                      AND cp.deleted_at IS NULL
+                    """,
             nativeQuery = true
     )
     Optional<CommunityPostDetailProjection> findCommunityPostDetail(
@@ -154,34 +156,30 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
 
     @Query(
             value = """
-                SELECT
-                    c.community_comment_id AS commentId,
-                    u.nickname AS author,
-                    c.created_at AS createdAt,
-                    c.content AS content,
+                    SELECT
+                        c.community_comment_id AS commentId,
+                        u.nickname AS author,
+                        c.created_at AS createdAt,
+                        c.content AS content,
 
-                    CASE
-                        WHEN c.user_id = :userId
-                        THEN 1
-                        ELSE 0
-                    END AS mine
+                        CASE
+                            WHEN c.user_id = :userId
+                            THEN 1
+                            ELSE 0
+                        END AS mine
 
-                FROM community_comments c
-
-                JOIN users u
-                    ON u.user_id = c.user_id
-
-                WHERE c.community_post_id = :postId
-                  AND c.deleted_at IS NULL
-                  AND (
-                      :cursorId IS NULL
-                      OR c.community_comment_id > :cursorId
-                  )
-
-                ORDER BY c.community_comment_id ASC
-
-                LIMIT :limit
-                """,
+                    FROM community_comments c
+                    JOIN users u
+                        ON u.user_id = c.user_id
+                    WHERE c.community_post_id = :postId
+                      AND c.deleted_at IS NULL
+                      AND (
+                          :cursorId IS NULL
+                          OR c.community_comment_id > :cursorId
+                      )
+                    ORDER BY c.community_comment_id ASC
+                    LIMIT :limit
+                    """,
             nativeQuery = true
     )
     List<CommunityCommentProjection> findCommunityCommentsByCursor(
@@ -195,20 +193,66 @@ public interface SpringDataCommunityRepository extends JpaRepository<CommunityPo
             Long id
     );
 
-    @Modifying(
-            flushAutomatically = true,
-            clearAutomatically = true
-    )
+    @Modifying
     @Query("""
-        UPDATE CommunityPostJpaEntity cp
-        SET cp.title = :title,
-            cp.content = :content
-        WHERE cp.id = :postId
-          AND cp.deletedAt IS NULL
-        """)
+            UPDATE CommunityPostJpaEntity cp
+            SET cp.title = :title,
+                cp.content = :content
+            WHERE cp.id = :postId
+              AND cp.deletedAt IS NULL
+            """)
     int updateCommunityPost(
             @Param("postId") Long postId,
             @Param("title") String title,
             @Param("content") String content
     );
+
+    @Modifying
+    @Query(
+            value = """
+                    UPDATE community_posts
+                    SET deleted_at = CURRENT_TIMESTAMP(6),
+                        updated_at = CURRENT_TIMESTAMP(6)
+                    WHERE community_post_id = :postId
+                      AND deleted_at IS NULL
+                    """,
+            nativeQuery = true
+    )
+    int deleteCommunityPostById(
+            @Param("postId") Long postId
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                INSERT IGNORE INTO community_post_likes (
+                    community_post_id,
+                    user_id
+                )
+                VALUES (
+                    :postId,
+                    :userId
+                )
+                """,
+            nativeQuery = true
+    )
+    int insertCommunityPostLikeIfAbsent(
+            @Param("postId") Long postId,
+            @Param("userId") Long userId
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                DELETE FROM community_post_likes
+                WHERE community_post_id = :postId
+                  AND user_id = :userId
+                """,
+            nativeQuery = true
+    )
+    int deleteCommunityPostLike(
+            @Param("postId") Long postId,
+            @Param("userId") Long userId
+    );
+
 }

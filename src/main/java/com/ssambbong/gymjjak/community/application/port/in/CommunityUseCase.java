@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.community.application.port.in;
 
-import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
-import com.ssambbong.gymjjak.community.application.command.UpdateCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.*;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
@@ -24,7 +23,17 @@ public interface CommunityUseCase {
             int commentSize
     );
 
-    void updateCommunityPost(
-            UpdateCommunityPostCommand command
-    );
+    void updateCommunityPost(UpdateCommunityPostCommand command);
+
+    void deleteCommunityPost(DeleteCommunityPostCommand command);
+
+    Long createCommunityComment(CreateCommunityCommentCommand command);
+
+    void updateCommunityComment(UpdateCommunityCommentCommand command);
+
+    void deleteCommunityComment(DeleteCommunityCommentCommand command);
+
+    void createCommunityPostLike(CreateCommunityPostLikeCommand command);
+
+    void deleteCommunityPostLike(DeleteCommunityPostLikeCommand command );
 }
