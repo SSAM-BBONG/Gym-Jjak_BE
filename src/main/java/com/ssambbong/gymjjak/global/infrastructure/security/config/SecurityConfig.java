@@ -169,6 +169,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/calendar/**")
                         .authenticated()
 
+                        // Community API
+                        .requestMatchers("/api/community/**")
+                        .permitAll()
+
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
