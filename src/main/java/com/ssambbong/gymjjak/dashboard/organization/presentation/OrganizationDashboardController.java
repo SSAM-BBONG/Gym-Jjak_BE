@@ -1,10 +1,12 @@
 package com.ssambbong.gymjjak.dashboard.organization.presentation;
 
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtClientResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtCourseResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.TrainerClientResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.usecase.OrganizationDashboardUseCase;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.DashboardResponseCode;
+import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgPtClientResponse;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgPtCourseResponse;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgStatsResponse;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.TrainerClientResponse;
@@ -21,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -103,6 +106,32 @@ public class OrganizationDashboardController {
                 .toList();
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(DashboardResponseCode.TRAINER_CLIENTS_FOUND, response)
+        );
+    }
+
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
+    @Operation(summary = "PT 수강생 목록 조회", description = "특정 PT 강습의 현재 수강 중인 수강생 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = OrgPtClientResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "조직을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/pt-courses/{ptCourseId}/students")
+    public ResponseEntity<GlobalApiResponse<List<OrgPtClientResponse>>> getPtClients(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId
+    ) {
+        List<OrgPtClientResult> results = organizationDashboardUseCase.getPtClients(authUser.userId(), ptCourseId);
+        List<OrgPtClientResponse> response = results.stream()
+                .map(OrgPtClientResponse::from)
+                .toList();
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(DashboardResponseCode.ORG_PT_CLIENTS_FOUND, response)
         );
     }
 }

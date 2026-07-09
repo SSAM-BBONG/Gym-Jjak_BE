@@ -198,6 +198,24 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("organizationId") Long organizationId,
             @Param("startDate") LocalDateTime startDate);
 
+    // [dashboard] 조직 PT 수강생 목록 (IN_PROGRESS, 등록일 오름차순)
+    @Query(value = """
+            SELECT u.name                  AS userName,
+                   r.created_at            AS enrolledAt,
+                   r.progress_count        AS progressCount,
+                   pc.total_session_count  AS totalSessionCount
+            FROM pt_reservations r
+            JOIN users u  ON r.user_id = u.user_id
+            JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
+            WHERE r.pt_course_id = :ptCourseId
+              AND r.organization_id = :organizationId
+              AND r.status = 'IN_PROGRESS'
+            ORDER BY r.created_at ASC
+            """, nativeQuery = true)
+    List<PtClientRow> findPtClientsByPtCourseId(
+            @Param("ptCourseId") Long ptCourseId,
+            @Param("organizationId") Long organizationId);
+
     // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
     @Query("""
         SELECT r.userId, r.id
