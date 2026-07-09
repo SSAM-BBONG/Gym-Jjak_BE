@@ -149,10 +149,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/trainers/*")
                         .permitAll()
 
-                        // 트레이너 신청 수정 - 사용자
-                        .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*")
-                        .hasAuthority("USER")
-
                         // 트레이너 API
                         .requestMatchers("/api/trainers/**")
                         .hasAnyAuthority("TRAINER", "ADMIN")

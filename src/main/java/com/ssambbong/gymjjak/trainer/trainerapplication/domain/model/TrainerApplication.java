@@ -10,6 +10,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 public class TrainerApplication {
@@ -267,7 +268,7 @@ public class TrainerApplication {
             );
         }
 
-        if (!this.organizationId.equals(requesterOrganizationId)) {
+        if (!Objects.equals(this.organizationId, requesterOrganizationId)) {
             throw new ForbiddenTrainerApplicationReviewException(
                     requesterOrganizationId,
                     this.trainerApplicationId

@@ -74,22 +74,19 @@ public class OrganizationQueryPortAdapter implements OrganizationQueryPort, Trai
     // organizationId 기준 ACTIVE 상태 확인 메서드
     @Override
     public boolean existsActiveOrganizationById(Long organizationId) {
-        return organizationRepository.findById(organizationId)
-                .filter(organization ->
-                        organization.getStatus() == OrganizationStatus.ACTIVE
-                )
-                .isPresent();
+        return organizationRepository.existsByOrganizationIdAndStatus(
+                organizationId,
+                OrganizationStatus.ACTIVE
+        );
     }
 
     // 조직 계정의 조직 ID 조회 기능
     // organizationAccountId 기준 organizationId 반환 메서드
     @Override
     public Long findOrganizationIdByAccountId(Long organizationAccountId) {
-        return organizationRepository.findByOrganizationAccountId(organizationAccountId)
-                .filter(organization ->
-                        organization.getStatus() == OrganizationStatus.ACTIVE
-                )
-                .map(Organization::getOrganizationId)
-                .orElseThrow(OrganizationNotFoundException::new);
+        return organizationRepository.findIdByOrganizationAccountIdAndStatus(
+                organizationAccountId,
+                OrganizationStatus.ACTIVE
+        ).orElseThrow(OrganizationNotFoundException::new);
     }
 }

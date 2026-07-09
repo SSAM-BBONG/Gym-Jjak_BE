@@ -3,7 +3,6 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.respon
 import com.ssambbong.gymjjak.global.presentation.api.common.ResponseCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor

@@ -82,9 +82,9 @@ public class TrainerApplicationReviewController {
             description = "헬스장 계정이 특정 트레이너 신청서를 상세 조회합니다."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "트레이너 신청서 관리자 상세 조회 성공"),
+            @ApiResponse(responseCode = "200", description = "트레이너 신청서 상세 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+            @ApiResponse(responseCode = "403", description = "헬스장 계정 권한 없음"),
             @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음")
     })
     @PreAuthorize("hasAuthority('ORGANIZATION')")
@@ -172,7 +172,7 @@ public class TrainerApplicationReviewController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "트레이너 신청 승인 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+            @ApiResponse(responseCode = "403", description = "헬스장 계정 권한 없음"),
             @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음"),
             @ApiResponse(responseCode = "409", description = "PENDING 상태가 아니어서 승인할 수 없음")
     })
@@ -205,30 +205,12 @@ public class TrainerApplicationReviewController {
             description = "헬스장 계정이 PENDING 상태의 트레이너 신청을 반려합니다."
     )
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "트레이너 신청 반려 성공"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "반려 사유 누락 또는 잘못된 요청"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "인증 실패"
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "관리자 권한 없음"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "트레이너 신청서를 찾을 수 없음"
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "PENDING 상태가 아니어서 반려할 수 없음"
-            )
+            @ApiResponse(responseCode = "201", description = "트레이너 신청 반려 성공"),
+            @ApiResponse(responseCode = "400", description = "반려 사유 누락 또는 잘못된 요청"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "헬스장 계정 권한 없음"),
+            @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "PENDING 상태가 아니어서 반려할 수 없음")
     })
     @PreAuthorize("hasAuthority('ORGANIZATION')")
     public ResponseEntity<
