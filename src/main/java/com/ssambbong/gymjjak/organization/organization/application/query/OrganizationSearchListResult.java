@@ -6,5 +6,6 @@ public record OrganizationSearchListResult(
         List<OrganizationSearchResult> content,
         int page,
         int size,
-        boolean hasNext
+        long totalElements,
+        int totalPages
 ) {}

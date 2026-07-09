@@ -8,14 +8,16 @@ public record OrganizationSearchListResponse(
         List<OrganizationSearchResponse> content,
         int page,
         int size,
-        boolean hasNext
+        long totalElements,
+        int totalPages
 ) {
     public static OrganizationSearchListResponse from(OrganizationSearchListResult result) {
         return new OrganizationSearchListResponse(
                 result.content().stream().map(OrganizationSearchResponse::from).toList(),
                 result.page(),
                 result.size(),
-                result.hasNext()
+                result.totalElements(),
+                result.totalPages()
         );
     }
 }

@@ -119,7 +119,7 @@ public class OrganizationAdaptor implements OrganizationRepository {
 
     @Override
     public OrganizationSearchListResult searchOrganizations(String keyword, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.asc("businessName")));
+        PageRequest pageRequest = PageRequest.of(page, size);
         Page<OrganizationJpaEntity> result = springDataOrganizationRepository.searchByKeyword(
                 keyword, OrganizationStatus.ACTIVE, pageRequest);
         return new OrganizationSearchListResult(
@@ -133,9 +133,10 @@ public class OrganizationAdaptor implements OrganizationRepository {
                                 e.getFacilityPhone()
                         ))
                         .toList(),
-                page,
-                size,
-                result.hasNext()
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
         );
     }
 
