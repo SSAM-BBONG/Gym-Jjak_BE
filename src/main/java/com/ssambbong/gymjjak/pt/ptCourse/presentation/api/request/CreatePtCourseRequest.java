@@ -22,13 +22,9 @@ public record CreatePtCourseRequest(
         @NotBlank
         String description,
 
-        @Schema(description = "카테고리 ID", example = "1")
+        @Schema(description = "부위 ID", example = "1")
         @NotNull
-        Long categoryId,
-
-        @Schema(description = "태그 ID", example = "1")
-        @NotNull
-        Long tagId,
+        Long partId,
 
         @Schema(description = "가격 (1회당)", example = "50000")
         @Min(0)

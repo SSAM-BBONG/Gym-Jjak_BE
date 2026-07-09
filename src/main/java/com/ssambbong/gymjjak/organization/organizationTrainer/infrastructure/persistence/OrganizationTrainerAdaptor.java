@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.AdminTrainerSummary;
+import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerClientSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerDetailView;
 import com.ssambbong.gymjjak.organization.organizationTrainer.application.query.TrainerSummary;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.model.OrganizationTrainer;
@@ -114,6 +115,21 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
                         r.getTrainerName(),
                         r.getUsername(),
                         r.getRegisteredAt()
+                ))
+                .toList();
+    }
+
+    // [dashboard] 트레이너별 누적 수강생 수 목록
+    @Override
+    public List<TrainerClientSummary> findTrainerClientsByOrganizationId(Long organizationId) {
+        return springDataOrganizationTrainerRepository
+                .findTrainerClientsByOrganizationId(organizationId)
+                .stream()
+                .map(r -> new TrainerClientSummary(
+                        r.getTrainerProfileId(),
+                        r.getTrainerName(),
+                        r.getAverageRating(),
+                        r.getClientCount()
                 ))
                 .toList();
     }

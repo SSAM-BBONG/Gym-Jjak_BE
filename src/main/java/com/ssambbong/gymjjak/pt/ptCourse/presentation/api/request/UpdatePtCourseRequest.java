@@ -14,8 +14,7 @@ import java.util.List;
 public record UpdatePtCourseRequest(
         @NotBlank String title,
         @NotBlank String description,
-        @NotNull Long categoryId,
-        Long tagId,
+        @NotNull Long partId,
         @Min(0) int price,
         @Valid UploadedFileMetadataRequest thumbnailFile,
 
@@ -61,6 +60,6 @@ public record UpdatePtCourseRequest(
                 new UploadedFileMetadataCommand(
                         thumbnailFile.fileKey(), thumbnailFile.originalName(),
                         thumbnailFile.contentType(), thumbnailFile.fileSize());
-        return new UpdatePtCourseCommand(userId, ptCourseId, title, description, categoryId, tagId, price, thumbnailFileCommand, curriculumData, scheduleData);
+        return new UpdatePtCourseCommand(userId, ptCourseId, title, description, partId, price, thumbnailFileCommand, curriculumData, scheduleData);
     }
 }

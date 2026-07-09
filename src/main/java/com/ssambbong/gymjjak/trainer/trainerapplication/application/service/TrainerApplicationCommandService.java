@@ -13,6 +13,8 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.application.event.Traine
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.event.TrainerApplicationRejectedEvent;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.metrics.TrainerApplicationTimed;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationTrainerPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.result.RegisteredTrainerApplicationFiles;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.result.TrainerApprovalUserInfo;
@@ -50,7 +52,10 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     private final TrainerApplicationRepository trainerApplicationRepository;
     private final TransactionTemplate transactionTemplate;
     private final TrainerApplicationUserPort trainerApplicationUserPort;
+    private final TrainerApplicationOrganizationPort trainerApplicationOrganizationPort;
     private final ApprovedTrainerProfilePort approvedTrainerProfilePort;
+    // 헬스장 트레이너 테이블로 쏘는 Port 추가
+    private final TrainerApplicationOrganizationTrainerPort trainerApplicationOrganizationTrainerPort;
 
     private final ApplicationEventPublisher eventPublisher;
     // 메트릭 추가
@@ -62,6 +67,8 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
         // 필수값 검증
         validateRequiredCommand(command);
+        // 신청 대상 조직 검증
+        validateReceivableOrganization(command.organizationId());
         // 중복 신청 검증
         validateDuplicateApplication(command.applicantUserId());
 
@@ -131,6 +138,7 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
         TrainerApplication trainerApplication = TrainerApplication.create(
                 command.applicantUserId(),
+                command.organizationId(),
                 registeredFiles.profileImageFileId(),
                 registeredFiles.certificateFileId(),
                 command.qualifications(),
@@ -413,10 +421,17 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         // approve command 검증
         validateApproveCommand(command);
 
+        // 조직 userId로 조직Id 추출
+        Long organizationId =
+                trainerApplicationOrganizationPort.findOrganizationIdByAccountId(
+                        command.organizationAccountId()
+                );
+
         log.info(
-                "event=trainer_application_approve_started, trainerApplicationId={}, adminId={}",
+                "event=trainer_application_approve_started, trainerApplicationId={}, organizationAccountId={}, organizationId={}",
                 command.trainerApplicationId(),
-                command.adminId()
+                command.organizationAccountId(),
+                organizationId
         );
 
         // 심사받는 user 존재 여부 확인
@@ -424,9 +439,15 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                 trainerApplicationRepository.findByIdForUpdate(command.trainerApplicationId())
                 .orElseThrow(() -> new TrainerApplicationNotFoundException(command.trainerApplicationId()));
 
+        // 조직 검토 권한 검증
+        trainerApplication.validateReviewableBy(organizationId);
+
         // 승인된 user 처리
         TrainerApplication approvedTrainerApplication =
-                trainerApplication.approve(command.adminId(), LocalDateTime.now());
+                trainerApplication.approve(
+                        command.organizationAccountId(),
+                        LocalDateTime.now()
+                );
 
         // Users 도메인으로 role값 변경 port 요청
         TrainerApprovalUserInfo userInfo =
@@ -446,6 +467,13 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                 )
         );
 
+        // 조직 트레이너 테이블에 저장해달라고 하는 Port 추가
+        trainerApplicationOrganizationTrainerPort.registerApprovedTrainer(
+                organizationId,
+                trainerProfileId,
+                command.organizationAccountId()
+        );
+
         // 승인된 user 값 update
         trainerApplicationRepository.save(approvedTrainerApplication);
 
@@ -459,11 +487,12 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         );
 
         log.info(
-                "event=trainer_application_approve_succeeded, trainerApplicationId={}, userId={}, trainerProfileId={}, adminId={}",
+                "event=trainer_application_approve_succeeded, trainerApplicationId={}, userId={}, trainerProfileId={}, organizationAccountId={}, organizationId={}",
                 approvedTrainerApplication.getTrainerApplicationId(),
                 approvedTrainerApplication.getUserId(),
                 trainerProfileId,
-                command.adminId()
+                command.organizationAccountId(),
+                organizationId
         );
 
         return trainerProfileId;
@@ -480,10 +509,16 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
             );
         }
 
+        Long organizationId =
+                trainerApplicationOrganizationPort.findOrganizationIdByAccountId(
+                        command.organizationAccountId()
+                );
+
         log.info(
-                "event=trainer_application_reject_started, " +
-                        "trainerApplicationId={}, adminId={}",
-                command.trainerApplicationId(), command.adminId()
+                "event=trainer_application_reject_started, trainerApplicationId={}, organizationAccountId={}, organizationId={}",
+                command.trainerApplicationId(),
+                command.organizationAccountId(),
+                organizationId
         );
 
         TrainerApplication trainerApplication =
@@ -495,9 +530,11 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
                         )
                 );
 
+        trainerApplication.validateReviewableBy(organizationId);
+
         TrainerApplication rejectTrainerApplication =
                 trainerApplication.reject(
-                        command.adminId(),
+                        command.organizationAccountId(),
                         command.rejectReason(),
                         LocalDateTime.now()
                 );
@@ -514,11 +551,11 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         );
 
         log.info(
-                "event=trainer_application_reject_succeeded, " +
-                        "trainerApplicationId={}, applicantUserId={}, adminId={}",
+                "event=trainer_application_reject_succeeded, trainerApplicationId={}, applicantUserId={}, organizationAccountId={}, organizationId={}",
                 rejectTrainerApplication.getTrainerApplicationId(),
                 rejectTrainerApplication.getUserId(),
-                command.adminId()
+                command.organizationAccountId(),
+                organizationId
         );
     }
 
@@ -616,6 +653,18 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         if (command == null) {
             throw new InvalidTrainerApplicationException("command는 필수입니다.");
         }
+
+        if (command.trainerApplicationId() == null || command.trainerApplicationId() <= 0) {
+            throw new InvalidTrainerApplicationException(
+                    "trainerApplicationId는 1 이상이어야 합니다."
+            );
+        }
+
+        if (command.organizationAccountId() == null || command.organizationAccountId() <= 0) {
+            throw new InvalidTrainerApplicationException(
+                    "organizationAccountId는 1 이상이어야 합니다."
+            );
+        }
     }
 
 
@@ -694,6 +743,15 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
         if (command.introduction() == null || command.introduction().isBlank()) {
             throw new InvalidTrainerApplicationException("introduction은 필수입니다.");
+        }
+    }
+
+    // 신청 대상 조직 검증 기능
+    private void validateReceivableOrganization(Long organizationId) {
+        if (!trainerApplicationOrganizationPort.existsActiveOrganizationById(organizationId)) {
+            throw new InvalidTrainerApplicationException(
+                    "신청 가능한 조직이 존재하지 않습니다."
+            );
         }
     }
 

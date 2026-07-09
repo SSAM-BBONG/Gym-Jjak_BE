@@ -6,8 +6,14 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.Traine
 
 public interface TrainerApplicationReviewQueryUseCase {
     // 관리자 승인 관리 페이지 조회
-    TrainerApplicationListResult findTrainerApplications(FindTrainerApplicationsCondition condition);
+    TrainerApplicationListResult findTrainerApplications(
+            FindTrainerApplicationsCondition condition,
+            Long organizationAccountId
+    );
 
     // 관리자 트레이너 상세 조회
-    TrainerApplicationReviewDetailResult getTrainerApplicationReviewDetail(Long trainerApplicationId);
+    TrainerApplicationReviewDetailResult getTrainerApplicationReviewDetail(
+            Long trainerApplicationId,
+            Long organizationAccountId
+    );
 }

@@ -6,7 +6,6 @@ import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthDiaryResul
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
-import com.ssambbong.gymjjak.category.infrastructure.persistence.CategoryJpaEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +45,6 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
     public Long saveWorkoutDiary(WorkoutDiary workoutDiary) {
         WorkoutDiaryJpaEntity entity = new WorkoutDiaryJpaEntity(
                 workoutDiary.getUserId(),
-                workoutDiary.getCategoryId(),
                 workoutDiary.getTitle(),
                 workoutDiary.getContent(),
                 workoutDiary.getDiaryDate()
@@ -61,7 +59,6 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
     public void updateWorkoutDiary(
             Long userId,
             Long workoutDiaryId,
-            Long categoryId,
             String title,
             String content
     ) {
@@ -71,11 +68,7 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
                 )
                 .orElseThrow(() -> new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND));
 
-        workoutDiary.update(
-                categoryId,
-                title,
-                content
-        );
+        workoutDiary.update(title, content);
     }
 
     @Override

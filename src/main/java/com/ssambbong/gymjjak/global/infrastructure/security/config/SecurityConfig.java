@@ -88,21 +88,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/reportgroup/**")
                         .hasAnyAuthority("ADMIN")
 
-                        // 카테고리 API
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/categories")
-                        .hasAnyAuthority("ADMIN", "TRAINER", "USER")
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**")
-                        .hasAnyAuthority("ADMIN", "TRAINER")
-
-                        // 태그 API
-                        .requestMatchers(HttpMethod.POST, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/tags/**")
-                        .hasAnyAuthority("ADMIN", "TRAINER")
+                        // 부위 API
+                        .requestMatchers(HttpMethod.POST, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/parts/**").hasAnyAuthority("ADMIN", "TRAINER", "USER")
 
                         // PT API
                         .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
@@ -119,25 +109,33 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**")
 
                         .hasAnyAuthority("ADMIN", "USER","TRAINER","ORGANIZATION")
-                        // 트레이너 신청 목록 조회 - 관리자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
-                        .hasAuthority("ADMIN")
+                                // 트레이너 신청 목록 조회 - 조직
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
+                                .hasAuthority("ORGANIZATION")
 
-                        // 내 트레이너 신청서 상세 조회 - 사용자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
-                        .hasAnyAuthority("USER", "TRAINER")
+                                // 내 트레이너 신청서 상세 조회 - 사용자/트레이너
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
+                                .hasAnyAuthority("USER", "TRAINER")
 
-                         // 트레이너 신청서 관리자 상세 조회 - 관리자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications/*")
-                        .hasAuthority("ADMIN")
+                                // 트레이너 신청 상세 조회 - 조직
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/*")
+                                .hasAuthority("ORGANIZATION")
 
-                        // 트레이너 신청 생성 - 사용자
-                        .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
-                        .hasAuthority("USER")
+                                // 트레이너 신청 생성 - 사용자
+                                .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
+                                .hasAuthority("USER")
 
-                        // 트레이너 신청 승인 - 관리자
-                        .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
-                        .hasAuthority("ADMIN")
+                                // 트레이너 신청 승인 - 조직
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
+                                .hasAuthority("ORGANIZATION")
+
+                                // 트레이너 신청 반려 - 조직
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/reject")
+                                .hasAuthority("ORGANIZATION")
+
+                                // 트레이너 신청 수정/취소 - 사용자
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*")
+                                .hasAuthority("USER")
 
                         // 트레이너 검색 - 조직 및 관리자
                         .requestMatchers(HttpMethod.GET, "/api/trainers/search")
@@ -150,10 +148,6 @@ public class SecurityConfig {
                         // 프로필 ID로 트레이너 프로필 상세 조회
                         .requestMatchers(HttpMethod.GET, "/api/trainers/*")
                         .permitAll()
-
-                        // 트레이너 신청 수정 - 사용자
-                        .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*")
-                        .hasAuthority("USER")
 
                         // 트레이너 API
                         .requestMatchers("/api/trainers/**")

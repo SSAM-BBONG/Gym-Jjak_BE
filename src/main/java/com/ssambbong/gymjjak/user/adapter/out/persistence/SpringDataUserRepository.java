@@ -218,5 +218,39 @@ where u.id = :userId
             Pageable pageable
     );
 
+    // dashboard : 월별 사용자 수
+    @Query(
+            value = """
+            select date_format(u.created_at, '%Y-%m') as month,
+                   count(*) as count
+            from users u
+            where u.deleted_at is null
+              and u.created_at >= :startDate
+              and u.created_at < :endDate
+            group by date_format(u.created_at, '%Y-%m')
+            order by month asc
+            """,
+            nativeQuery = true
+    )
+    List<MonthlyUserSignupRow> findMonthlyUserSignups(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    // dashboard : 전체 USER 일반 이용자 수
+    @Query("""
+            select count(u)
+            from UserJpaEntity u
+            where u.role = :role
+              and u.deletedAt is null
+            """)
+    long countActiveUsersByRole(@Param("role") UserRole role);
+
+    // dashboard : 월별 사용자 내부 인터페이스
+    interface MonthlyUserSignupRow {
+        String getMonth();
+        Long getCount();
+    }
+
 
 }

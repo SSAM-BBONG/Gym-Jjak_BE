@@ -20,7 +20,6 @@ public interface WorkoutDiaryPort {
     void updateWorkoutDiary(
             Long userId,
             Long workoutDiaryId,
-            Long categoryId,
             String title,
             String content
     );

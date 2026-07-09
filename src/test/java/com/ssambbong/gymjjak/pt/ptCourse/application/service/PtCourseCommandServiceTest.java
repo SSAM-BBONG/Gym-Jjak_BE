@@ -55,7 +55,7 @@ class PtCourseCommandServiceTest {
     private CreatePtCourseCommand defaultCommand(String title, String description, int price,
                                                   List<CreatePtCourseCommand.CurriculumData> curriculums) {
         return new CreatePtCourseCommand(
-                1L, 1L, 1L,
+                1L, 1L,
                 title, description, price,
                 null,
                 curriculums,
@@ -78,7 +78,7 @@ class PtCourseCommandServiceTest {
         when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
 
         PtCourse savedPtCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, 1L,
+                1L, 1L, 1L, 1L, 1L,
                 "체계적인 가슴 집중 PT",
                 "가슴 근육 발달에 특화된 12주 프로그램",
                 50000, 2, PtCourseStatus.VISIBLE, null, null
@@ -181,7 +181,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
+                1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 List.of() // 빈 스케줄
         );
@@ -204,7 +204,7 @@ class PtCourseCommandServiceTest {
                 new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")
         );
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
+                1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 curriculums,
                 List.of(
                         new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"),
@@ -227,7 +227,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
+                1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 null,
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
@@ -249,7 +249,7 @@ class PtCourseCommandServiceTest {
         UploadedFileMetadataCommand thumbnailFile =
                 new UploadedFileMetadataCommand("file-key", "thumb.jpg", "image/jpeg", 1024L);
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "제목", "설명", 50000, thumbnailFile,
+                1L, 1L, "제목", "설명", 50000, thumbnailFile,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
@@ -260,7 +260,7 @@ class PtCourseCommandServiceTest {
                 .thenReturn(List.of(new FileRegistrationResult(99L, FileType.PT_THUMBNAIL)));
 
         PtCourse savedPtCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, 99L, "제목", "설명", 50000, 1, PtCourseStatus.VISIBLE, null, null
+                1L, 1L, 1L, 1L, 99L, "제목", "설명", 50000, 1, PtCourseStatus.VISIBLE, null, null
         );
         when(ptCourseRepository.save(any(PtCourse.class))).thenReturn(savedPtCourse);
         when(ptCurriculumRepository.saveAll(any())).thenReturn(List.of());
@@ -282,7 +282,7 @@ class PtCourseCommandServiceTest {
         UploadedFileMetadataCommand thumbnailFile =
                 new UploadedFileMetadataCommand("file-key", "thumb.jpg", "image/jpeg", 1024L);
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "제목", "설명", 50000, thumbnailFile,
+                1L, 1L, "제목", "설명", 50000, thumbnailFile,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
@@ -304,7 +304,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, 1L, 1L, "PT 강습 제목", "설명", 50000, null,
+                1L, 1L, "PT 강습 제목", "설명", 50000, null,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 null
         );
@@ -323,7 +323,7 @@ class PtCourseCommandServiceTest {
     private UpdatePtCourseCommand defaultUpdateCommand() {
         return new UpdatePtCourseCommand(
                 1L, 1L,
-                "수정된 PT 강습 제목", "수정된 설명", 2L, null, 60000,
+                "수정된 PT 강습 제목", "수정된 설명", 2L, 60000,
                 null,   // thumbnailFile — null이면 기존 유지
                 null,   // curriculums — null이면 변경 없음
                 null    // schedules — null이면 변경 없음
@@ -331,7 +331,7 @@ class PtCourseCommandServiceTest {
     }
 
     private PtCourse existingPtCourse() {
-        return PtCourse.restore(1L, 1L, 1L, 1L, 1L, null, "기존 제목", "기존 설명", 50000, 2, PtCourseStatus.VISIBLE, null, null);
+        return PtCourse.restore(1L, 1L, 1L, 1L, null, "기존 제목", "기존 설명", 50000, 2, PtCourseStatus.VISIBLE, null, null);
     }
 
     @Test
@@ -372,7 +372,7 @@ class PtCourseCommandServiceTest {
     void updatePtCourse_forbidden_throwsException() {
 
         // given — trainerProfileId=2인 강습을 userId=1(trainerProfileId=99)이 수정 시도
-        PtCourse other = PtCourse.restore(1L, 1L, 2L, 2L, null, null, "다른 트레이너 강습", "설명", 30000, 1, PtCourseStatus.VISIBLE, null, null);
+        PtCourse other = PtCourse.restore(1L, 1L, 2L, null, null, "다른 트레이너 강습", "설명", 30000, 1, PtCourseStatus.VISIBLE, null, null);
 
         when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(other));
         when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(99L); // 본인 trainerProfileId=99
@@ -391,7 +391,7 @@ class PtCourseCommandServiceTest {
         // given — 커리큘럼 수정 요청 포함
         UpdatePtCourseCommand command = new UpdatePtCourseCommand(
                 1L, 1L,
-                "수정된 PT 강습 제목", "수정된 설명", 2L, null, 60000, null,
+                "수정된 PT 강습 제목", "수정된 설명", 2L, 60000, null,
                 List.of(new UpdatePtCourseCommand.CurriculumData(1L, 1, "수정된 회차 제목", "수정된 회차 설명")),
                 null
         );
@@ -415,7 +415,7 @@ class PtCourseCommandServiceTest {
         // given — 활성 수강생 0명이지만 sessionNo 중복
         UpdatePtCourseCommand command = new UpdatePtCourseCommand(
                 1L, 1L,
-                "수정된 PT 강습 제목", "수정된 설명", 2L, null, 60000, null,
+                "수정된 PT 강습 제목", "수정된 설명", 2L, 60000, null,
                 List.of(
                         new UpdatePtCourseCommand.CurriculumData(null, 1, "회차1", "설명1"),
                         new UpdatePtCourseCommand.CurriculumData(null, 1, "회차2", "설명2") // 중복 sessionNo
@@ -442,7 +442,7 @@ class PtCourseCommandServiceTest {
                 new UploadedFileMetadataCommand("file-key", "thumb.jpg", "image/jpeg", 2048L);
         UpdatePtCourseCommand command = new UpdatePtCourseCommand(
                 1L, 1L,
-                "수정된 제목", "수정된 설명", 2L, null, 60000,
+                "수정된 제목", "수정된 설명", 2L, 60000,
                 thumbnailFile, null, null
         );
 

@@ -26,6 +26,16 @@ public interface OrganizationRepository {
 
     long countByStatus(OrganizationStatus status);
 
+    boolean existsByOrganizationIdAndStatus(
+            Long organizationId,
+            OrganizationStatus status
+    );
+
+    Optional<Long> findIdByOrganizationAccountIdAndStatus(
+            Long organizationAccountId,
+            OrganizationStatus status
+    );
+
     Optional<String> findRequestedLoginIdById(Long organizationId);
 
     List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);

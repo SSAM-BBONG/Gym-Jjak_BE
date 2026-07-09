@@ -24,7 +24,7 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
 
     Optional<TrainerApplicationJpaEntity> findTopByUserIdOrderByCreatedAtDescTrainerApplicationIdDesc(Long userId);
 
-    // 관리자 목록 조회 Query
+    // 조직별 트레이너 신청 목록 조회 기능
     @Query(
             value = """
                 select new com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationSummaryResult(
@@ -39,7 +39,8 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
                 )
                 from TrainerApplicationJpaEntity ta
                 join UserJpaEntity u on u.id = ta.userId
-                where ta.status = :status
+                where ta.organizationId = :organizationId
+                and ta.status = :status
                   and (
                        :keyword is null
                        or u.username like concat('%', :keyword, '%')
@@ -52,7 +53,8 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
                     select count(ta)
                     from TrainerApplicationJpaEntity ta
                     join UserJpaEntity  u on u.id = ta.userId
-                    where ta.status = :status
+                    where ta.organizationId = :organizationId
+                    and ta.status = :status
                     and (
                          :keyword is null
                          or u.username like concat('%', :keyword, '%')
@@ -62,23 +64,39 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
             """
     )
     Page<TrainerApplicationSummaryResult> findTrainerApplicationSummaries(
+            @Param("organizationId") Long organizationId,
             @Param("status") TrainerApplicationStatus status,
             @Param("keyword") String keyword,
             Pageable pageable
     );
 
+    // 조직별 트레이너 신청 상세 조회 기능
     @Query("""
         select new com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationReviewDetailResult(
-            ta.trainerApplicationId, ta.userId, ta.profileFileId, u.name, u.username, u.nickname,
-            ta.introduction, ta.qualifications, ta.certificateFileId, ta.awardHistories, ta.status
-            )
+            ta.trainerApplicationId,
+            ta.userId,
+            ta.profileFileId,
+            u.name,
+            u.username,
+            u.nickname,
+            ta.introduction,
+            ta.qualifications,
+            ta.certificateFileId,
+            ta.awardHistories,
+            ta.status
+        )
         from TrainerApplicationJpaEntity ta
         join UserJpaEntity u on u.id = ta.userId
         where ta.trainerApplicationId = :trainerApplicationId
+          and ta.organizationId = :organizationId
     """)
     Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(
-            @Param("trainerApplicationId") Long trainerApplicationId);
+            @Param("trainerApplicationId") Long trainerApplicationId,
+            @Param("organizationId") Long organizationId
+    );
 
+    // 승인/반려 처리 시 동시성 충돌을 방지
+    // 트레이너 신청서 조회
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select ta
@@ -88,4 +106,6 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
     Optional<TrainerApplicationJpaEntity> findByIdForUpdate(
             @Param("trainerApplicationId") Long trainerApplicationId
     );
+
+    long countByStatus(TrainerApplicationStatus status);
 }

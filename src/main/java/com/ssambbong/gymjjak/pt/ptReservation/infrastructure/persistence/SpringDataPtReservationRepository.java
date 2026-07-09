@@ -120,6 +120,84 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("to") LocalDateTime to
     );
 
+    // 대시보드 — 조직별 누적 이용자 수 (CANCELLED 제외 DISTINCT user_id)
+    @Query(value = """
+            SELECT COUNT(DISTINCT r.user_id)
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+            """, nativeQuery = true)
+    long countDistinctUsersByOrganizationId(@Param("organizationId") Long organizationId);
+
+    // 대시보드 — 조직별 현재 이용자 수 (IN_PROGRESS DISTINCT user_id)
+    @Query(value = """
+            SELECT COUNT(DISTINCT r.user_id)
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status = 'IN_PROGRESS'
+            """, nativeQuery = true)
+    long countDistinctCurrentUsersByOrganizationId(@Param("organizationId") Long organizationId);
+
+    // [dashboard] 이용자 추이 — 주 단위 집계 (월요일 기준, 최근 1년)
+    @Query(value = """
+            SELECT DATE(DATE_SUB(r.reserved_start_at, INTERVAL WEEKDAY(r.reserved_start_at) DAY)) AS date,
+                   COUNT(DISTINCT r.user_id)                                                        AS count
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+              AND r.reserved_start_at >= :startDate
+            GROUP BY date
+            ORDER BY date
+            """, nativeQuery = true)
+    List<TrendPointRow> findWeeklyUserTrendByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate);
+
+    // [dashboard] 이용자 추이 — 월 단위 집계 (최근 3년)
+    @Query(value = """
+            SELECT DATE(DATE_FORMAT(r.reserved_start_at, '%Y-%m-01')) AS date,
+                   COUNT(DISTINCT r.user_id)                           AS count
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+              AND r.reserved_start_at >= :startDate
+            GROUP BY date
+            ORDER BY date
+            """, nativeQuery = true)
+    List<TrendPointRow> findMonthlyUserTrendByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate);
+
+    // [dashboard] 이용자 추이 — 3개월 단위 집계 (분기 기준, 최근 3년)
+    @Query(value = """
+            SELECT DATE(CONCAT(YEAR(r.reserved_start_at), '-', LPAD((QUARTER(r.reserved_start_at) - 1) * 3 + 1, 2, '0'), '-01')) AS date,
+                   COUNT(DISTINCT r.user_id)                                                                                        AS count
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+              AND r.reserved_start_at >= :startDate
+            GROUP BY date
+            ORDER BY date
+            """, nativeQuery = true)
+    List<TrendPointRow> findThreeMonthlyUserTrendByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate);
+
+    // [dashboard] 이용자 추이 — 6개월 단위 집계 (1월/7월 기준, 최근 3년)
+    @Query(value = """
+            SELECT DATE(CONCAT(YEAR(r.reserved_start_at), '-', IF(MONTH(r.reserved_start_at) <= 6, '01', '07'), '-01')) AS date,
+                   COUNT(DISTINCT r.user_id)                                                                              AS count
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+              AND r.reserved_start_at >= :startDate
+            GROUP BY date
+            ORDER BY date
+            """, nativeQuery = true)
+    List<TrendPointRow> findSixMonthlyUserTrendByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate);
+
     // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
     @Query("""
         SELECT r.userId, r.id
@@ -133,4 +211,30 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("to") LocalDateTime to
     );
 
+    // AdminDashboard 월별 예야된 pt 수 조회
+    @Query(
+            value = """
+            select date_format(r.reserved_start_at, '%Y-%m') as month,
+                   count(*) as count
+            from pt_reservations r
+            where r.status <> :cancelledStatus
+              and r.cancelled_at is null
+              and r.reserved_start_at >= :startDate
+              and r.reserved_start_at < :endDate
+            group by date_format(r.reserved_start_at, '%Y-%m')
+            order by month asc
+            """,
+            nativeQuery = true
+    )
+    List<MonthlyPtReservationRow> findMonthlyPtReservations(
+            @Param("cancelledStatus") String cancelledStatus,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    interface MonthlyPtReservationRow {
+        String getMonth();
+
+        Long getCount();
+    }
 }

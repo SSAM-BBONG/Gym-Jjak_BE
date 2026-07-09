@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.organization.organization.infrastructure.persistence;
 
-import com.ssambbong.gymjjak.organization.organization.application.OrganizationAdminView;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminView;
 import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
@@ -70,6 +70,28 @@ public class OrganizationAdaptor implements OrganizationRepository {
     @Override
     public long countByStatus(OrganizationStatus status) {
         return springDataOrganizationRepository.countByStatus(status);
+    }
+
+    @Override
+    public boolean existsByOrganizationIdAndStatus(
+            Long organizationId,
+            OrganizationStatus status
+    ) {
+        return springDataOrganizationRepository.existsByOrganizationIdAndStatus(
+                organizationId,
+                status
+        );
+    }
+
+    @Override
+    public Optional<Long> findIdByOrganizationAccountIdAndStatus(
+            Long organizationAccountId,
+            OrganizationStatus status
+    ) {
+        return springDataOrganizationRepository.findIdByOrganizationAccountIdAndStatus(
+                organizationAccountId,
+                status
+        );
     }
 
     @Override
