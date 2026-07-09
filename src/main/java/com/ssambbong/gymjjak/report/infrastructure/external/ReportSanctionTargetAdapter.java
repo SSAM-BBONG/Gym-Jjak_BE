@@ -1,5 +1,8 @@
 package com.ssambbong.gymjjak.report.infrastructure.external;
 
+import com.ssambbong.gymjjak.report.application.port.chat.ChatSanctionPort;
+import com.ssambbong.gymjjak.report.application.port.community.CommentSanctionPort;
+import com.ssambbong.gymjjak.report.application.port.community.PostSanctionPort;
 import com.ssambbong.gymjjak.report.application.port.feedback.FeedbackSanctionPort;
 import com.ssambbong.gymjjak.report.application.port.ptcourse.PtCourseSanctionPort;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
@@ -19,6 +22,9 @@ public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
     private final PtCourseSanctionPort ptCourseSanctionPort;
     private final FeedbackSanctionPort feedbackSanctionPort;
     private final TrainerReviewSanctionPort trainerReviewSanctionPort;
+    private final PostSanctionPort postSanctionPort;
+    private final CommentSanctionPort commentSanctionPort;
+    private final ChatSanctionPort chatSanctionPort;
 
     @Override
     public void applySanction(ReportTargetType targetType, Long targetId, ReportSanctionAction action) {
@@ -40,8 +46,14 @@ public class ReportSanctionTargetAdapter implements ReportSanctionTargetPort {
                     trainerReviewSanctionPort.applySanction(targetId, action);
                 }
             }
-            case POST, COMMENT -> {
-                // TODO: 게시글/댓글 자동 블라인드 적용/해제 포트 구현 후 연결
+            case POST -> postSanctionPort.applySanction(targetId, action);
+
+            case COMMENT -> commentSanctionPort.applySanction(targetId, action);
+
+            case CHAT -> {
+                if (action == ReportSanctionAction.APPLY_MANUAL_BLIND) {
+                    chatSanctionPort.applySanction(targetId, action);
+                }
             }
         }
     }
