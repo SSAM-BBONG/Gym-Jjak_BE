@@ -2,27 +2,24 @@ package com.ssambbong.gymjjak.dashboard.admin.application.service;
 
 import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminContentStatisticsResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminMemberStatisticsResult;
-import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminPendingStatisticsResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.query.MonthlyUserSignupResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.usecase.AdminDashboardQueryUseCase;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 import com.ssambbong.gymjjak.organization.organization.infrastructure.persistence.SpringDataOrganizationRepository;
-import com.ssambbong.gymjjak.organization.organizationApplication.domain.model.OrganizationApplicationStatus;
-import com.ssambbong.gymjjak.organization.organizationApplication.infrastructure.persistence.SpringDataOrganizationApplicationRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence.SpringDataPtCourseRepository;
 import com.ssambbong.gymjjak.report.domain.model.ReportGroupReviewStatus;
 import com.ssambbong.gymjjak.report.infrastructure.persistence.SpringDataReportGroupRepository;
-import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
-import com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persistence.SpringDataTrainerApplicationRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerProfileStatus;
 import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.persistence.repository.SpringDataTrainerProfileRepository;
 import com.ssambbong.gymjjak.user.adapter.out.persistence.SpringDataUserRepository;
+import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
@@ -42,16 +39,17 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
     private final SpringDataUserRepository userRepository;
     private final SpringDataTrainerProfileRepository trainerProfileRepository;
     private final SpringDataOrganizationRepository organizationRepository;
-    private final SpringDataOrganizationApplicationRepository organizationApplicationRepository;
-    private final SpringDataTrainerApplicationRepository  trainerApplicationRepository;
     private final SpringDataPtCourseRepository ptCourseRepository;
     private final SpringDataReportGroupRepository reportGroupRepository;
+    private final Clock clock;
 
 
     @Override
     public AdminMemberStatisticsResult findMemberStatistics() {
-        log.info("event=admin_dashboard_findMemberStatistics_started");
-        long totalUserCount = userRepository.countActiveUsers();
+        log.info("event=admin_dashboard_find_member_statistics_started");
+        long totalUserCount = userRepository.countActiveUsersByRole(
+                UserRole.USER
+        );
 
         long totalTrainerCount = trainerProfileRepository.countByStatus(
                 TrainerProfileStatus.ACTIVE
@@ -65,41 +63,13 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
         List<MonthlyUserSignupResult> monthlyUserSignups =
                 findRecentMonthlyUserSignups();
 
-        log.info("event=admin_dashboard_findMemberStatistics_succeeded");
+        log.info("event=admin_dashboard_find_member_statistics_succeeded");
 
         return AdminMemberStatisticsResult.builder()
                 .totalUserCount(totalUserCount)
                 .totalTrainerCount(totalTrainerCount)
                 .totalOrganizationCount(totalOrganizationCount)
                 .monthlyUserSignups(monthlyUserSignups)
-                .build();
-    }
-
-    @Override
-    public AdminPendingStatisticsResult findPendingStatistics() {
-        log.info("event=admin_dashboard_find_pending_statistics_started");
-
-        long pendingTrainerApplicationCount =
-                trainerApplicationRepository.countByStatus(
-                        TrainerApplicationStatus.PENDING
-                );
-
-        long pendingOrganizationApplicationCount =
-                organizationApplicationRepository.countByStatus(
-                        OrganizationApplicationStatus.PENDING
-                );
-
-        log.info(
-                "event=admin_dashboard_find_pending_statistics_succeeded, " +
-                        "pendingTrainerApplicationCount={}, " +
-                        "pendingOrganizationApplicationCount={}",
-                pendingTrainerApplicationCount,
-                pendingOrganizationApplicationCount
-        );
-
-        return AdminPendingStatisticsResult.builder()
-                .pendingTrainerApplicationCount(pendingTrainerApplicationCount)
-                .pendingOrganizationApplicationCount(pendingOrganizationApplicationCount)
                 .build();
     }
 
@@ -137,7 +107,7 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
 
     private List<MonthlyUserSignupResult> findRecentMonthlyUserSignups() {
 
-        YearMonth currentMonth = YearMonth.now();
+        YearMonth currentMonth = YearMonth.now(clock);
 
         YearMonth startMonth = currentMonth.minusMonths(MONTH_RANGE - 1);
 

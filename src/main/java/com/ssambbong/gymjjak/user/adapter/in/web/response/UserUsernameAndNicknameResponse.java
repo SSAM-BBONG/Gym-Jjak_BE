@@ -4,7 +4,8 @@ import com.ssambbong.gymjjak.user.application.result.UserUsernameAndNicknameResu
 
 public record UserUsernameAndNicknameResponse(
         String username,
-        String nickname
+        String nickname,
+        boolean socialUser
 ) {
 
     public static UserUsernameAndNicknameResponse from(
@@ -12,7 +13,8 @@ public record UserUsernameAndNicknameResponse(
     ) {
         return new UserUsernameAndNicknameResponse(
                 result.username(),
-                result.nickname()
+                result.nickname(),
+                result.socialUser()
         );
     }
 }

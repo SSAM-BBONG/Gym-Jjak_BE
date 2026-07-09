@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.community.application.port.out;
 
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
+import com.ssambbong.gymjjak.community.domain.model.CommunityComment;
 import com.ssambbong.gymjjak.community.domain.model.CommunityPost;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import org.springframework.data.domain.Page;
@@ -37,7 +38,19 @@ public interface CommunityPort {
             Long postId
     );
 
-    void updateCommunityPost(
-            CommunityPost communityPost
-    );
+    void updateCommunityPost(CommunityPost communityPost);
+
+    void deleteCommunityPost(Long postId);
+
+    Long saveCommunityComment(CommunityComment communityComment);
+
+    Optional<CommunityComment> findCommunityCommentById(Long commentId);
+
+    void updateCommunityComment(CommunityComment communityComment);
+
+    void deleteCommunityComment(Long commentId);
+
+    boolean saveCommunityPostLikeIfAbsent(Long postId, Long userId);
+
+    boolean deleteCommunityPostLike(Long postId, Long userId);
 }

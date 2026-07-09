@@ -1,11 +1,14 @@
 package com.ssambbong.gymjjak.community.adapter.in.web;
 
+import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityCommentRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.request.CreateCommunityPostRequest;
+import com.ssambbong.gymjjak.community.adapter.in.web.request.UpdateCommunityCommentRequest;
 import com.ssambbong.gymjjak.community.adapter.in.web.request.UpdateCommunityPostRequest;
-import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostDetailResponse;
-import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityPostListResponse;
-import com.ssambbong.gymjjak.community.adapter.in.web.response.CommunityResponseCode;
-import com.ssambbong.gymjjak.community.adapter.in.web.response.CreateCommunityPostResponse;
+import com.ssambbong.gymjjak.community.adapter.in.web.response.*;
+import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostLikeCommand;
+import com.ssambbong.gymjjak.community.application.command.DeleteCommunityCommentCommand;
+import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.DeleteCommunityPostLikeCommand;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
@@ -144,6 +147,156 @@ public class CommunityController {
                 .body(
                         GlobalApiResponse.ok(
                                 CommunityResponseCode.COMMUNITY_POST_UPDATED
+                        )
+                );
+    }
+
+    @DeleteMapping("/posts/{postId}")
+    @Operation(summary = "내 게시글 삭제", description = "현재 로그인 사용자가 작성한 커뮤니티 게시글을 삭제하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityPost(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "삭제할 게시글 ID", example = "1")
+            @PathVariable Long postId) {
+
+        communityUseCase.deleteCommunityPost(
+                new DeleteCommunityPostCommand(
+                        authUser.userId(),
+                        postId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_POST_DELETED
+                        )
+                );
+    }
+
+    @PostMapping("/posts/{postId}/comments")
+    @Operation(summary = "댓글 작성", description = "현재 로그인 사용자가 커뮤니티 게시글에 댓글을 작성하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<CreateCommunityCommentResponse>> createCommunityComment(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "댓글을 작성할 게시글 ID", example = "1")
+            @PathVariable Long postId,
+            @Valid @RequestBody CreateCommunityCommentRequest request) {
+
+        Long commentId =
+                communityUseCase.createCommunityComment(
+                        request.toCommand(
+                                authUser.userId(),
+                                postId
+                        )
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        GlobalApiResponse.created(
+                                CommunityResponseCode
+                                        .COMMUNITY_COMMENT_CREATED,
+                                CreateCommunityCommentResponse.from(
+                                        commentId
+                                )
+                        )
+                );
+    }
+
+    @PatchMapping("/comments/{commentId}")
+    @Operation(summary = "내 댓글 수정", description = "현재 로그인 사용자가 작성한 커뮤니티 댓글의 내용을 수정하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> updateCommunityComment(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "수정할 댓글 ID", example = "1")
+            @PathVariable Long commentId,
+            @Valid @RequestBody UpdateCommunityCommentRequest request) {
+
+        communityUseCase.updateCommunityComment(
+                request.toCommand(
+                        authUser.userId(),
+                        commentId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_COMMENT_UPDATED
+                        )
+                );
+    }
+
+    @DeleteMapping("/comments/{commentId}")
+    @Operation(summary = "내 댓글 삭제", description = "현재 로그인 사용자가 작성한 커뮤니티 댓글을 삭제하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityComment(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "삭제할 댓글 ID", example = "1")
+            @PathVariable Long commentId) {
+
+        communityUseCase.deleteCommunityComment(
+                new DeleteCommunityCommentCommand(
+                        authUser.userId(),
+                        commentId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_COMMENT_DELETED
+                        )
+                );
+    }
+
+    @PostMapping("/posts/{postId}/likes")
+    @Operation(summary = "게시글 좋아요 등록", description = "현재 로그인 사용자가 커뮤니티 게시글에 좋아요를 등록하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> createCommunityPostLike(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "좋아요를 등록할 게시글 ID", example = "1")
+            @PathVariable Long postId) {
+
+        communityUseCase.createCommunityPostLike(
+                new CreateCommunityPostLikeCommand(
+                        authUser.userId(),
+                        postId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        GlobalApiResponse.created(
+                                CommunityResponseCode
+                                        .COMMUNITY_POST_LIKE_CREATED
+                        )
+                );
+    }
+
+    @DeleteMapping("/post/{postId}/likes")
+    @Operation(summary = "게시글 좋아요 취소", description = "현재 로그인 사용자가 커뮤니티 게시글에 등록한 좋아요를 취소하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityPostLike(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "좋아요를 취소할 게시글 ID", example = "1")
+            @PathVariable Long postId) {
+
+        communityUseCase.deleteCommunityPostLike(
+                new DeleteCommunityPostLikeCommand(
+                        authUser.userId(),
+                        postId
+                )
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode
+                                        .COMMUNITY_POST_LIKE_DELETED
                         )
                 );
     }

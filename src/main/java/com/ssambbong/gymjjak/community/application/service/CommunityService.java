@@ -1,13 +1,13 @@
 package com.ssambbong.gymjjak.community.application.service;
 
-import com.ssambbong.gymjjak.community.application.command.CreateCommunityPostCommand;
-import com.ssambbong.gymjjak.community.application.command.UpdateCommunityPostCommand;
+import com.ssambbong.gymjjak.community.application.command.*;
 import com.ssambbong.gymjjak.community.application.port.in.CommunityUseCase;
 import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostDetailResult;
 import com.ssambbong.gymjjak.community.application.result.CommunityPostListResult;
 import com.ssambbong.gymjjak.community.domain.exception.CommunityErrorCode;
 import com.ssambbong.gymjjak.community.domain.exception.CommunityException;
+import com.ssambbong.gymjjak.community.domain.model.CommunityComment;
 import com.ssambbong.gymjjak.community.domain.model.CommunityPost;
 import com.ssambbong.gymjjak.community.domain.type.CommunityPostType;
 import lombok.RequiredArgsConstructor;
@@ -167,6 +167,257 @@ public class CommunityService implements CommunityUseCase {
                 command.userId(),
                 command.postId()
         );
+    }
+
+    @Override
+    public void deleteCommunityPost(DeleteCommunityPostCommand command) {
+
+        CommunityPost communityPost = communityPort.findCommunityPostById(command.postId())
+                        .orElseThrow(() -> new CommunityException(CommunityErrorCode.COMMUNITY_POST_NOT_FOUND));
+
+        validateCommunityPostDeleteOwner(
+                communityPost,
+                command.userId()
+        );
+
+        log.debug("event=communityPost_delete_start userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+
+        communityPort.deleteCommunityPost(command.postId());
+
+        log.info("event=communityPost_delete_succeed userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+    }
+
+    @Override
+    public Long createCommunityComment(
+            CreateCommunityCommentCommand command
+    ) {
+
+        validateCommunityPostExists(
+                command.postId()
+        );
+
+        log.debug("event=communityComment_create_start userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+
+        CommunityComment communityComment =
+                CommunityComment.create(
+                        command.postId(),
+                        command.userId(),
+                        command.content()
+                );
+
+        Long commentId = communityPort.saveCommunityComment(communityComment);
+
+        log.info("event=communityComment_create_succeed userId={}, postId={}, commentId={}",
+                command.userId(),
+                command.postId(),
+                commentId
+        );
+
+        return commentId;
+    }
+
+    @Override
+    public void updateCommunityComment(
+            UpdateCommunityCommentCommand command
+    ) {
+
+        CommunityComment communityComment =
+                communityPort
+                        .findCommunityCommentById(
+                                command.commentId()
+                        )
+                        .orElseThrow(
+                                () -> new CommunityException(
+                                        CommunityErrorCode.COMMUNITY_COMMENT_NOT_FOUND
+                                )
+                        );
+
+        validateCommunityPostExists(
+                communityComment.getPostId()
+        );
+
+        validateCommunityCommentOwner(
+                communityComment,
+                command.userId()
+        );
+
+        log.debug("event=communityComment_update_succeed userId={}, postId={}, commentId={}",
+                command.userId(),
+                communityComment.getPostId(),
+                command.commentId()
+        );
+
+        communityComment.update(
+                command.content()
+        );
+
+        communityPort.updateCommunityComment(
+                communityComment
+        );
+
+        log.info("event=communityComment_update_succeed userId={}, postId={}, commentId={}",
+                command.userId(),
+                communityComment.getPostId(),
+                command.commentId()
+        );
+    }
+
+    @Override
+    public void deleteCommunityComment(
+            DeleteCommunityCommentCommand command
+    ) {
+
+        CommunityComment communityComment =
+                communityPort
+                        .findCommunityCommentById(
+                                command.commentId()
+                        )
+                        .orElseThrow(
+                                () -> new CommunityException(
+                                        CommunityErrorCode.COMMUNITY_COMMENT_NOT_FOUND
+                                )
+                        );
+
+        validateCommunityPostExists(
+                communityComment.getPostId()
+        );
+
+        validateCommunityCommentDeleteOwner(
+                communityComment,
+                command.userId()
+        );
+        log.debug("event=communityComment_delete_succeed userId={}, postId={}, commentId={}",
+                command.userId(),
+                communityComment.getPostId(),
+                command.commentId()
+        );
+
+        communityPort.deleteCommunityComment(
+                command.commentId()
+        );
+
+        log.info("event=communityComment_delete_succeed userId={}, postId={}, commentId={}",
+                command.userId(),
+                communityComment.getPostId(),
+                command.commentId()
+        );
+    }
+
+    @Override
+    public void createCommunityPostLike(
+            CreateCommunityPostLikeCommand command
+    ) {
+
+        validateCommunityPostExists(
+                command.postId()
+        );
+
+        log.debug("event=communityPost_like_start userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+
+        boolean created =
+                communityPort
+                        .saveCommunityPostLikeIfAbsent(
+                                command.postId(),
+                                command.userId()
+                        );
+
+        if (!created) {
+
+            throw new CommunityException(
+                    CommunityErrorCode
+                            .COMMUNITY_POST_LIKE_ALREADY_EXISTS
+            );
+        }
+
+        log.info("event=communityPost_like_succeed userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+    }
+
+    @Override
+    public void deleteCommunityPostLike(
+            DeleteCommunityPostLikeCommand command
+    ) {
+
+        validateCommunityPostExists(
+                command.postId()
+        );
+
+        log.debug("event=communityPost_likeDelete_start userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+
+        boolean deleted =
+                communityPort
+                        .deleteCommunityPostLike(
+                                command.postId(),
+                                command.userId()
+                        );
+
+        if (!deleted) {
+
+            throw new CommunityException(
+                    CommunityErrorCode
+                            .COMMUNITY_POST_LIKE_NOT_FOUND
+            );
+        }
+
+        log.info("event=communityPost_likeDelete_succeed userId={}, postId={}",
+                command.userId(),
+                command.postId()
+        );
+    }
+
+    private void validateCommunityCommentDeleteOwner(
+            CommunityComment communityComment,
+            Long userId
+    ) {
+
+        if (!communityComment.isOwner(userId)) {
+
+            throw new CommunityException(
+                    CommunityErrorCode
+                            .COMMUNITY_COMMENT_DELETE_FORBIDDEN
+            );
+        }
+    }
+
+    private void validateCommunityCommentOwner(
+            CommunityComment communityComment,
+            Long userId
+    ) {
+
+        if (!communityComment.isOwner(userId)) {
+
+            throw new CommunityException(
+                    CommunityErrorCode
+                            .COMMUNITY_COMMENT_UPDATE_FORBIDDEN
+            );
+        }
+    }
+
+    private void validateCommunityPostDeleteOwner(CommunityPost communityPost, Long userId) {
+
+        if (!communityPost.isOwner(userId)) {
+
+            throw new CommunityException(
+                    CommunityErrorCode.COMMUNITY_POST_DELETE_FORBIDDEN
+            );
+        }
     }
 
     private void validateCommunityPostExists(Long postId) {
