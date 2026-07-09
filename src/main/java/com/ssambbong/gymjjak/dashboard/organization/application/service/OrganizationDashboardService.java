@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.dashboard.organization.application.service;
 
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtCourseResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgTrendResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.TrainerClientResult;
@@ -8,6 +9,7 @@ import com.ssambbong.gymjjak.dashboard.organization.application.usecase.Organiza
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence.SpringDataPtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.SpringDataPtReservationRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.TrendPointRow;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
     private final OrganizationRepository organizationRepository;
     private final OrganizationTrainerRepository organizationTrainerRepository;
     private final SpringDataPtReservationRepository springDataPtReservationRepository;
+    private final SpringDataPtCourseRepository springDataPtCourseRepository;
 
     @Override
     public OrgStatsResult getStats(Long userId) {
@@ -74,6 +77,26 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
     private List<TrendPoint> toTrendPoints(List<TrendPointRow> rows) {
         return rows.stream()
                 .map(r -> new TrendPoint(r.getDate(), r.getCount()))
+                .toList();
+    }
+
+    @Override
+    public List<OrgPtCourseResult> getPtCourses(Long userId) {
+        Long organizationId = organizationRepository.findByOrganizationAccountId(userId)
+                .orElseThrow(OrganizationNotFoundException::new)
+                .getOrganizationId();
+
+        return springDataPtCourseRepository.findPtCoursesByOrganizationId(organizationId)
+                .stream()
+                .map(r -> new OrgPtCourseResult(
+                        r.getPtCourseId(),
+                        r.getTitle(),
+                        r.getPrice(),
+                        r.getTotalSessionCount(),
+                        r.getStatus(),
+                        r.getTrainerName(),
+                        r.getCurrentStudentCount()
+                ))
                 .toList();
     }
 }

@@ -5,6 +5,8 @@ import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtCours
 public record OrgPtCourseResponse(
         Long ptCourseId,
         String title,
+        int price,
+        int totalSessionCount,
         String status,
         String trainerName,
         long currentStudentCount
@@ -13,6 +15,8 @@ public record OrgPtCourseResponse(
         return new OrgPtCourseResponse(
                 result.ptCourseId(),
                 result.title(),
+                result.price(),
+                result.totalSessionCount(),
                 result.status(),
                 result.trainerName(),
                 result.currentStudentCount()

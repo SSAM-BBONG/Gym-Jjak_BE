@@ -4,6 +4,8 @@ package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence;
 public interface OrgPtCourseRow {
     Long getPtCourseId();
     String getTitle();
+    Integer getPrice();
+    Integer getTotalSessionCount();
     String getStatus();
     String getTrainerName();
     Long getCurrentStudentCount();

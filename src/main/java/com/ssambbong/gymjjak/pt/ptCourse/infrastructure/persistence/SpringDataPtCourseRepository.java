@@ -18,6 +18,8 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
     @Query(value = """
             SELECT pc.pt_course_id        AS ptCourseId,
                    pc.title               AS title,
+                   pc.price               AS price,
+                   pc.total_session_count AS totalSessionCount,
                    pc.status              AS status,
                    tp.trainer_name        AS trainerName,
                    COUNT(DISTINCT CASE WHEN pr.status = 'IN_PROGRESS' THEN pr.user_id END) AS currentStudentCount
