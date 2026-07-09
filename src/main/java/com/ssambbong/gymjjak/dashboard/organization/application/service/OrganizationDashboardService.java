@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.dashboard.organization.application.service;
 
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtClientResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtCourseResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgTrendResult;
@@ -96,6 +97,23 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
                         r.getStatus(),
                         r.getTrainerName(),
                         r.getCurrentStudentCount()
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<OrgPtClientResult> getPtClients(Long userId, Long ptCourseId) {
+        Long organizationId = organizationRepository.findByOrganizationAccountId(userId)
+                .orElseThrow(OrganizationNotFoundException::new)
+                .getOrganizationId();
+
+        return springDataPtReservationRepository.findPtClientsByPtCourseId(ptCourseId, organizationId)
+                .stream()
+                .map(r -> new OrgPtClientResult(
+                        r.getUserName(),
+                        r.getEnrolledAt(),
+                        r.getProgressCount(),
+                        r.getTotalSessionCount()
                 ))
                 .toList();
     }
