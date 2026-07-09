@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -270,4 +271,57 @@ public interface SpringDataCommunityRepository
             @Param("postId") Long postId
     );
 
+    @Query(
+            value = """
+                    SELECT community_post_id
+                    FROM community_posts
+                    WHERE deleted_at IS NOT NULL
+                      AND deleted_at < :threshold
+                    ORDER BY deleted_at ASC,
+                             community_post_id ASC
+                    LIMIT :batchSize
+                    """,
+            nativeQuery = true
+    )
+    List<Long> findHardDeleteCandidateIds(
+            @Param("threshold") LocalDateTime threshold,
+            @Param("batchSize") int batchSize
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                    DELETE FROM community_post_views
+                    WHERE community_post_id IN :postIds
+                    """,
+            nativeQuery = true
+    )
+    int hardDeletePostViewsByPostIds(
+            @Param("postIds") List<Long> postIds
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                    DELETE FROM community_post_likes
+                    WHERE community_post_id IN :postIds
+                    """,
+            nativeQuery = true
+    )
+    int hardDeletePostLikesByPostIds(
+            @Param("postIds") List<Long> postIds
+    );
+
+    @Modifying
+    @Query(
+            value = """
+                    DELETE FROM community_posts
+                    WHERE community_post_id IN :postIds
+                      AND deleted_at IS NOT NULL
+                    """,
+            nativeQuery = true
+    )
+    int hardDeleteByIds(
+            @Param("postIds") List<Long> postIds
+    );
 }
