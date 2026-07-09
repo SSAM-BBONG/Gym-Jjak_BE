@@ -14,6 +14,7 @@ import com.ssambbong.gymjjak.organization.organization.application.usecase.Organ
 import com.ssambbong.gymjjak.organization.organization.presentation.api.mapper.OrganizationMapper;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.request.OrganizationUpdateRequest;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.*;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -141,6 +142,29 @@ public class OrganizationController {
                         OrganizationResponseCode.ORGANIZATION_FOUND,
                         organizationMapper.toMyOrganizationResponse(result, fileUrlResult.url(), fileUrlResult.originalName())
                 )
+        );
+    }
+
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "조직 검색", description = "상호명 또는 대표자명으로 활성 조직을 검색합니다. 사용자/트레이너가 소속 신청 전 조직을 찾을 때 사용합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = OrganizationSearchListResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/search")
+    public ResponseEntity<GlobalApiResponse<OrganizationSearchListResponse>> searchOrganizations(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
+    ) {
+        OrganizationSearchListResult result = organizationQueryUseCase.searchOrganizations(keyword, page, size);
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(OrganizationResponseCode.ORGANIZATION_SEARCH_FOUND,
+                        OrganizationSearchListResponse.from(result))
         );
     }
 

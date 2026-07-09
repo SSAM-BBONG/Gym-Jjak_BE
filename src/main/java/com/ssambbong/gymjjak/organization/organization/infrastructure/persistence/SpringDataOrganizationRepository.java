@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.organization.organization.application.query.Organiz
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -79,4 +80,18 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
     @Modifying
     @Query(value = "DELETE FROM organizations WHERE organization_id IN :ids", nativeQuery = true)
     int hardDeleteByIds(@Param("ids") List<Long> ids);
+
+    @Query("""
+            SELECT o FROM OrganizationJpaEntity o
+            WHERE o.status = :status
+              AND (:keyword IS NULL
+                   OR o.businessName LIKE CONCAT('%', :keyword, '%')
+                   OR o.representativeName LIKE CONCAT('%', :keyword, '%'))
+            ORDER BY o.businessName ASC
+            """)
+    Page<OrganizationJpaEntity> searchByKeyword(
+            @Param("keyword") String keyword,
+            @Param("status") OrganizationStatus status,
+            Pageable pageable
+    );
 }
