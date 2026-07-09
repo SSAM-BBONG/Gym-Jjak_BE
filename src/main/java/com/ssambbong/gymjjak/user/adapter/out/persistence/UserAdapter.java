@@ -254,10 +254,14 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
                 .orElseThrow(() ->
                         new UserException(UserErrorCode.USER_NOT_FOUND)
                 );
+        boolean socialUser =
+                user.getSocialProvider() != null
+                        && user.getSocialId() != null;
 
         return new UserUsernameAndNicknameResult(
                 user.getUsername(),
-                user.getNickname()
+                user.getNickname(),
+                socialUser
         );
     }
 
