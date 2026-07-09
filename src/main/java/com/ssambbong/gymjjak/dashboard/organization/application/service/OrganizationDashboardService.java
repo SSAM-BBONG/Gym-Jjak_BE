@@ -1,7 +1,9 @@
 package com.ssambbong.gymjjak.dashboard.organization.application.service;
 
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgTrendResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.TrainerClientResult;
+import com.ssambbong.gymjjak.dashboard.organization.application.query.TrendPoint;
 import com.ssambbong.gymjjak.dashboard.organization.application.usecase.OrganizationDashboardUseCase;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
@@ -32,7 +34,22 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
         long totalUserCount = springDataPtReservationRepository.countDistinctUsersByOrganizationId(organizationId);
         long currentUserCount = springDataPtReservationRepository.countDistinctCurrentUsersByOrganizationId(organizationId);
 
-        return new OrgStatsResult(trainerCount, totalUserCount, currentUserCount);
+        List<TrendPoint> weekly = springDataPtReservationRepository
+                .findWeeklyUserTrendByOrganizationId(organizationId)
+                .stream().map(r -> new TrendPoint(r.getDate(), r.getCount())).toList();
+        List<TrendPoint> monthly = springDataPtReservationRepository
+                .findMonthlyUserTrendByOrganizationId(organizationId)
+                .stream().map(r -> new TrendPoint(r.getDate(), r.getCount())).toList();
+        List<TrendPoint> threeMonthly = springDataPtReservationRepository
+                .findThreeMonthlyUserTrendByOrganizationId(organizationId)
+                .stream().map(r -> new TrendPoint(r.getDate(), r.getCount())).toList();
+        List<TrendPoint> sixMonthly = springDataPtReservationRepository
+                .findSixMonthlyUserTrendByOrganizationId(organizationId)
+                .stream().map(r -> new TrendPoint(r.getDate(), r.getCount())).toList();
+
+        OrgTrendResult trend = new OrgTrendResult(weekly, monthly, threeMonthly, sixMonthly);
+
+        return new OrgStatsResult(trainerCount, totalUserCount, currentUserCount, trend);
     }
 
     @Override

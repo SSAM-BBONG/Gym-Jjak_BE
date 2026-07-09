@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "Dashboard", description = "조직 대시보드 API")
+@Tag(name = "조직 대시보드", description = "조직 대시보드 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/dashboard/organization")
