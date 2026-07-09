@@ -251,6 +251,7 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
             case COMMENT -> fallbackSnapshot(entity, "댓글");
             case FEEDBACK -> fallbackSnapshot(entity, "피드백");
             case TRAINER_REVIEW -> fallbackSnapshot(entity, "트레이너 리뷰");
+            case CHAT -> fallbackSnapshot(entity, "채팅");
         };
     }
 
@@ -309,7 +310,7 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     private ReportNavigationType resolveNavigationType(ReportTargetType targetType) {
         return switch (targetType) {
             case PT_COURSE, POST, FEEDBACK -> ReportNavigationType.PAGE;
-            case COMMENT, TRAINER_REVIEW -> ReportNavigationType.MODAL;
+            case COMMENT, TRAINER_REVIEW, CHAT -> ReportNavigationType.MODAL;
         };
     }
 }

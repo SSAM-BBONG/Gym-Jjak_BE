@@ -1,16 +1,23 @@
 package com.ssambbong.gymjjak.dashboard.organization.application.service;
 
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtClientResult;
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtCourseResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgTrendResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.TrainerClientResult;
+import com.ssambbong.gymjjak.dashboard.organization.application.query.TrendPoint;
 import com.ssambbong.gymjjak.dashboard.organization.application.usecase.OrganizationDashboardUseCase;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
 import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence.SpringDataPtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.SpringDataPtReservationRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.TrendPointRow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,6 +28,7 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
     private final OrganizationRepository organizationRepository;
     private final OrganizationTrainerRepository organizationTrainerRepository;
     private final SpringDataPtReservationRepository springDataPtReservationRepository;
+    private final SpringDataPtCourseRepository springDataPtCourseRepository;
 
     @Override
     public OrgStatsResult getStats(Long userId) {
@@ -32,7 +40,22 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
         long totalUserCount = springDataPtReservationRepository.countDistinctUsersByOrganizationId(organizationId);
         long currentUserCount = springDataPtReservationRepository.countDistinctCurrentUsersByOrganizationId(organizationId);
 
-        return new OrgStatsResult(trainerCount, totalUserCount, currentUserCount);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneYearAgo = now.minusYears(1);
+        LocalDateTime threeYearsAgo = now.minusYears(3);
+
+        List<TrendPoint> weekly = toTrendPoints(
+                springDataPtReservationRepository.findWeeklyUserTrendByOrganizationId(organizationId, oneYearAgo));
+        List<TrendPoint> monthly = toTrendPoints(
+                springDataPtReservationRepository.findMonthlyUserTrendByOrganizationId(organizationId, threeYearsAgo));
+        List<TrendPoint> threeMonthly = toTrendPoints(
+                springDataPtReservationRepository.findThreeMonthlyUserTrendByOrganizationId(organizationId, threeYearsAgo));
+        List<TrendPoint> sixMonthly = toTrendPoints(
+                springDataPtReservationRepository.findSixMonthlyUserTrendByOrganizationId(organizationId, threeYearsAgo));
+
+        OrgTrendResult trend = new OrgTrendResult(weekly, monthly, threeMonthly, sixMonthly);
+
+        return new OrgStatsResult(trainerCount, totalUserCount, currentUserCount, trend);
     }
 
     @Override
@@ -48,6 +71,49 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
                         s.trainerName(),
                         s.averageRating(),
                         s.clientCount()
+                ))
+                .toList();
+    }
+
+    private List<TrendPoint> toTrendPoints(List<TrendPointRow> rows) {
+        return rows.stream()
+                .map(r -> new TrendPoint(r.getDate(), r.getCount()))
+                .toList();
+    }
+
+    @Override
+    public List<OrgPtCourseResult> getPtCourses(Long userId) {
+        Long organizationId = organizationRepository.findByOrganizationAccountId(userId)
+                .orElseThrow(OrganizationNotFoundException::new)
+                .getOrganizationId();
+
+        return springDataPtCourseRepository.findPtCoursesByOrganizationId(organizationId)
+                .stream()
+                .map(r -> new OrgPtCourseResult(
+                        r.getPtCourseId(),
+                        r.getTitle(),
+                        r.getPrice(),
+                        r.getTotalSessionCount(),
+                        r.getStatus(),
+                        r.getTrainerName(),
+                        r.getCurrentStudentCount()
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<OrgPtClientResult> getPtClients(Long userId, Long ptCourseId) {
+        Long organizationId = organizationRepository.findByOrganizationAccountId(userId)
+                .orElseThrow(OrganizationNotFoundException::new)
+                .getOrganizationId();
+
+        return springDataPtReservationRepository.findPtClientsByPtCourseId(ptCourseId, organizationId)
+                .stream()
+                .map(r -> new OrgPtClientResult(
+                        r.getUserName(),
+                        r.getEnrolledAt(),
+                        r.getProgressCount(),
+                        r.getTotalSessionCount()
                 ))
                 .toList();
     }

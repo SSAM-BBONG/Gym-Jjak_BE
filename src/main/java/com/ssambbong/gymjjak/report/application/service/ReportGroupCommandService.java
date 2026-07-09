@@ -255,7 +255,8 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
     // 수동 블라인드 대상 검증 메서드
     private boolean isManualBlindOnApproveTarget(ReportGroup reportGroup) {
         return reportGroup.getTargetType() == ReportTargetType.FEEDBACK
-                || reportGroup.getTargetType() == ReportTargetType.TRAINER_REVIEW;
+                || reportGroup.getTargetType() == ReportTargetType.TRAINER_REVIEW
+                || reportGroup.getTargetType() == ReportTargetType.CHAT;
     }
 
     private Report getReport(Long reportId) {

@@ -138,6 +138,84 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             """, nativeQuery = true)
     long countDistinctCurrentUsersByOrganizationId(@Param("organizationId") Long organizationId);
 
+    // [dashboard] 이용자 추이 — 주 단위 집계 (월요일 기준, 최근 1년)
+    @Query(value = """
+            SELECT DATE(DATE_SUB(r.reserved_start_at, INTERVAL WEEKDAY(r.reserved_start_at) DAY)) AS date,
+                   COUNT(DISTINCT r.user_id)                                                        AS count
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+              AND r.reserved_start_at >= :startDate
+            GROUP BY date
+            ORDER BY date
+            """, nativeQuery = true)
+    List<TrendPointRow> findWeeklyUserTrendByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate);
+
+    // [dashboard] 이용자 추이 — 월 단위 집계 (최근 3년)
+    @Query(value = """
+            SELECT DATE(DATE_FORMAT(r.reserved_start_at, '%Y-%m-01')) AS date,
+                   COUNT(DISTINCT r.user_id)                           AS count
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+              AND r.reserved_start_at >= :startDate
+            GROUP BY date
+            ORDER BY date
+            """, nativeQuery = true)
+    List<TrendPointRow> findMonthlyUserTrendByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate);
+
+    // [dashboard] 이용자 추이 — 3개월 단위 집계 (분기 기준, 최근 3년)
+    @Query(value = """
+            SELECT DATE(CONCAT(YEAR(r.reserved_start_at), '-', LPAD((QUARTER(r.reserved_start_at) - 1) * 3 + 1, 2, '0'), '-01')) AS date,
+                   COUNT(DISTINCT r.user_id)                                                                                        AS count
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+              AND r.reserved_start_at >= :startDate
+            GROUP BY date
+            ORDER BY date
+            """, nativeQuery = true)
+    List<TrendPointRow> findThreeMonthlyUserTrendByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate);
+
+    // [dashboard] 이용자 추이 — 6개월 단위 집계 (1월/7월 기준, 최근 3년)
+    @Query(value = """
+            SELECT DATE(CONCAT(YEAR(r.reserved_start_at), '-', IF(MONTH(r.reserved_start_at) <= 6, '01', '07'), '-01')) AS date,
+                   COUNT(DISTINCT r.user_id)                                                                              AS count
+            FROM pt_reservations r
+            WHERE r.organization_id = :organizationId
+              AND r.status != 'CANCELLED'
+              AND r.reserved_start_at >= :startDate
+            GROUP BY date
+            ORDER BY date
+            """, nativeQuery = true)
+    List<TrendPointRow> findSixMonthlyUserTrendByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate);
+
+    // [dashboard] 조직 PT 수강생 목록 (IN_PROGRESS, 등록일 오름차순)
+    @Query(value = """
+            SELECT u.name                  AS userName,
+                   r.created_at            AS enrolledAt,
+                   r.progress_count        AS progressCount,
+                   pc.total_session_count  AS totalSessionCount
+            FROM pt_reservations r
+            JOIN users u  ON r.user_id = u.user_id
+            JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
+            WHERE r.pt_course_id = :ptCourseId
+              AND r.organization_id = :organizationId
+              AND r.status = 'IN_PROGRESS'
+            ORDER BY r.created_at ASC
+            """, nativeQuery = true)
+    List<PtClientRow> findPtClientsByPtCourseId(
+            @Param("ptCourseId") Long ptCourseId,
+            @Param("organizationId") Long organizationId);
+
     // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
     @Query("""
         SELECT r.userId, r.id
