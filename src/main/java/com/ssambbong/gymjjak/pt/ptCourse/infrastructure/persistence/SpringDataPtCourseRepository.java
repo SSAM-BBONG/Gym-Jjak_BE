@@ -27,8 +27,6 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
             JOIN trainer_profiles tp ON pc.trainer_profile_id = tp.trainer_profile_id
             LEFT JOIN pt_reservations pr ON pc.pt_course_id = pr.pt_course_id
             WHERE pc.organization_id = :organizationId
-              AND pc.deleted_at IS NULL
-              AND pc.status != 'DELETED'
             GROUP BY pc.pt_course_id, pc.title, pc.price, pc.total_session_count, pc.status, tp.trainer_name
             ORDER BY tp.trainer_name ASC, pc.pt_course_id DESC
             """, nativeQuery = true)
