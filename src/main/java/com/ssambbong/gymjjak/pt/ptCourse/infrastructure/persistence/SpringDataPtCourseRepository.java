@@ -14,6 +14,22 @@ import java.util.Optional;
 
 public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaEntity, Long> {
 
+    // [dashboard] 조직 소속 PT 목록 + 현재 수강생 수 집계 (트레이너 이름순)
+    @Query(value = """
+            SELECT pc.pt_course_id        AS ptCourseId,
+                   pc.title               AS title,
+                   pc.status              AS status,
+                   tp.trainer_name        AS trainerName,
+                   COUNT(DISTINCT CASE WHEN pr.status = 'IN_PROGRESS' THEN pr.user_id END) AS currentStudentCount
+            FROM pt_courses pc
+            JOIN trainer_profiles tp ON pc.trainer_profile_id = tp.trainer_profile_id
+            LEFT JOIN pt_reservations pr ON pc.pt_course_id = pr.pt_course_id
+            WHERE pc.organization_id = :organizationId
+            GROUP BY pc.pt_course_id, pc.title, pc.status, tp.trainer_name
+            ORDER BY tp.trainer_name ASC, pc.pt_course_id DESC
+            """, nativeQuery = true)
+    List<OrgPtCourseRow> findPtCoursesByOrganizationId(@Param("organizationId") Long organizationId);
+
     // 커리큘럼 수정 시 동시 예약 삽입 방지 — FOR UPDATE 잠금
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM PtCourseJpaEntity p WHERE p.id = :id")
