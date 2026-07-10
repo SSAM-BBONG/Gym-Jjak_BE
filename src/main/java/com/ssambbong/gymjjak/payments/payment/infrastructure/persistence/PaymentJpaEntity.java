@@ -24,8 +24,8 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "pt_reservations_id")
-    private Long ptReservationsId;
+    @Column(name = "pt_course_id")
+    private Long ptCourseId;
 
     @Column(name = "ai_subscription_id")
     private Long aiSubscriptionId;
@@ -61,14 +61,14 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
 
     public PaymentJpaEntity(
             Long userId,
-            Long ptReservationsId,
+            Long ptCourseId,
             Long aiSubscriptionId,
             String orderId,
             int amount,
             ProductType productType
     ) {
         this.userId = userId;
-        this.ptReservationsId = ptReservationsId;
+        this.ptCourseId = ptCourseId;
         this.aiSubscriptionId = aiSubscriptionId;
         this.orderId = orderId;
         this.amount = amount;
