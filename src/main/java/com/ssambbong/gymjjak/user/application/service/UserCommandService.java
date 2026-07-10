@@ -450,6 +450,7 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserUsernameAndNicknameResult findUsernameAndNickname(Long userId) {
 
         return userPort.findUsernameAndNickname(userId);
