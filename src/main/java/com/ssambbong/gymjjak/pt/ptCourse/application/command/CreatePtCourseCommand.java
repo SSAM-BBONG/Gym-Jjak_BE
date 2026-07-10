@@ -1,10 +1,11 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.command;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import java.util.List;
 
 public record CreatePtCourseCommand(
         Long userId,
-        Long partId,
+        PartType part,
         String title,
         String description,
         int price,

@@ -1,14 +1,14 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.command;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import java.util.List;
-import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 
 public record UpdatePtCourseCommand(
         Long userId,
         Long ptCourseId,
         String title,
         String description,
-        Long partId,
+        PartType part,
         int price,
         UploadedFileMetadataCommand thumbnailFile,
         List<CurriculumData> curriculums,

@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.usecase;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.ReviewQueryPort;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
@@ -46,8 +47,7 @@ public interface PtCourseQueryUseCase {
             String thumbnailUrl,
             int price,
             // 부위
-            Long partId,
-            String partName,
+            PartType part,
             // 트레이너
             String trainerName,
             // 조직
@@ -153,8 +153,7 @@ public interface PtCourseQueryUseCase {
             String title,
             int price,
             String thumbnailUrl,
-            Long partId,
-            String partName,
+            PartType part,
             String trainerName,
             String roadAddress
     ) {}
