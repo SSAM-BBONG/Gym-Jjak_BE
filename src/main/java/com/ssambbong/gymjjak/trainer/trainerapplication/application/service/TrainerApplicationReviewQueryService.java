@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.application.service;
 
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationReviewQueryPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.FindTrainerApplicationsCondition;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationListResult;
@@ -18,25 +19,38 @@ import org.springframework.transaction.annotation.Transactional;
 public class TrainerApplicationReviewQueryService implements TrainerApplicationReviewQueryUseCase {
 
     private final TrainerApplicationReviewQueryPort trainerApplicationReviewQueryPort;
+    private final TrainerApplicationOrganizationPort trainerApplicationOrganizationPort;
 
     // 트레이너 신청 목록 조회
     @Override
-    public TrainerApplicationListResult findTrainerApplications(FindTrainerApplicationsCondition condition) {
+    public TrainerApplicationListResult findTrainerApplications(
+            FindTrainerApplicationsCondition condition,
+            Long organizationAccountId
+    ) {
+        // 조직 userId로 조직ID 가져오기
+        Long organizationId =
+                trainerApplicationOrganizationPort.findOrganizationIdByAccountId(
+                        organizationAccountId
+                );
 
         log.info(
-                "event=trainer_application_review_list_query_start, status={}, keywordPresent={}, page={}, size={}",
+                "event=trainer_application_review_list_query_start, organizationId={}, status={}, keywordPresent={}, page={}, size={}",
+                organizationId,
                 condition.status(),
                 condition.keyword() != null,
                 condition.page(),
                 condition.size()
         );
 
-        // db 에서 대기 중인 신청들 조회
         TrainerApplicationListResult result =
-                trainerApplicationReviewQueryPort.findTrainerApplications(condition);
+                trainerApplicationReviewQueryPort.findTrainerApplications(
+                        condition,
+                        organizationId
+                );
 
         log.info(
-                "event=trainer_application_review_list_query_succeeded, status={}, keywordPresent={}, page={}, size={}, totalElements={}, returnedCount={}",
+                "event=trainer_application_review_list_query_succeeded, organizationId={}, status={}, keywordPresent={}, page={}, size={}, totalElements={}, returnedCount={}",
+                organizationId,
                 condition.status(),
                 condition.keyword() != null,
                 condition.page(),
@@ -50,19 +64,36 @@ public class TrainerApplicationReviewQueryService implements TrainerApplicationR
 
     // 트레이너 신청 상세 조회
     @Override
-    public TrainerApplicationReviewDetailResult getTrainerApplicationReviewDetail(Long trainerApplicationId) {
+    public TrainerApplicationReviewDetailResult getTrainerApplicationReviewDetail(
+            Long trainerApplicationId,
+            Long organizationAccountId
+    ) {
+        Long organizationId =
+                trainerApplicationOrganizationPort.findOrganizationIdByAccountId(
+                        organizationAccountId
+                );
+
         log.info(
-                "event=trainer_application_review_detail_query_start, trainerApplicationId={}",
-                trainerApplicationId
+                "event=trainer_application_review_detail_query_start, trainerApplicationId={}, organizationId={}",
+                trainerApplicationId,
+                organizationId
         );
 
         TrainerApplicationReviewDetailResult result =
-                trainerApplicationReviewQueryPort.findTrainerApplicationReviewDetailById(trainerApplicationId)
-                        .orElseThrow(() -> new TrainerApplicationNotFoundException(trainerApplicationId));
+                trainerApplicationReviewQueryPort.findTrainerApplicationReviewDetailById(
+                                trainerApplicationId,
+                                organizationId
+                        )
+                        .orElseThrow(() ->
+                                new TrainerApplicationNotFoundException(
+                                        trainerApplicationId
+                                )
+                        );
 
         log.info(
-                "event=trainer_application_review_detail_query_succeeded, trainerApplicationId={}, userId={}, status={}",
+                "event=trainer_application_review_detail_query_succeeded, trainerApplicationId={}, organizationId={}, userId={}, status={}",
                 result.trainerApplicationId(),
+                organizationId,
                 result.userId(),
                 result.status()
         );

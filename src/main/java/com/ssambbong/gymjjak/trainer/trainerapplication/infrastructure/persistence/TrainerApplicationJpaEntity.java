@@ -24,6 +24,10 @@ import java.util.List;
                 @Index(
                         name = "idx_trainer_applications_status_created_id",
                         columnList = "status, created_at, trainer_application_id"
+                ),
+                @Index(
+                        name = "idx_trainer_applications_organization_status_created_id",
+                        columnList = "organization_id, status, created_at, trainer_application_id"
                 )
         }
 )
@@ -37,6 +41,9 @@ public class TrainerApplicationJpaEntity extends BaseCreatedUpdatedEntity {
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
+
+    @Column(name = "organization_id")
+    private Long organizationId;
 
     @Column(name = "profile_file_id")
     private Long profileFileId;
@@ -72,6 +79,7 @@ public class TrainerApplicationJpaEntity extends BaseCreatedUpdatedEntity {
     private TrainerApplicationJpaEntity(
             Long trainerApplicationId,
             Long userId,
+            Long organizationId,
             Long profileFileId,
             Long certificateFileId,
             List<String> qualifications,
@@ -84,6 +92,7 @@ public class TrainerApplicationJpaEntity extends BaseCreatedUpdatedEntity {
     ) {
         this.trainerApplicationId = trainerApplicationId;
         this.userId = userId;
+        this.organizationId = organizationId;
         this.profileFileId = profileFileId;
         this.certificateFileId = certificateFileId;
         this.qualifications = qualifications == null ? List.of() : List.copyOf(qualifications);

@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNot
 import com.ssambbong.gymjjak.organization.organization.infrastructure.persistence.SpringDataOrganizationRepository;
 import com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.persistence.SpringDataOrganizationTrainerRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class OrganizationQueryPortAdapter implements OrganizationQueryPort {
+public class OrganizationQueryPortAdapter implements OrganizationQueryPort, TrainerApplicationOrganizationPort {
 
     private final OrganizationRepository organizationRepository;
     private final SpringDataOrganizationRepository springDataOrganizationRepository;
@@ -67,5 +68,25 @@ public class OrganizationQueryPortAdapter implements OrganizationQueryPort {
     @Override
     public long countActive() {
         return organizationRepository.countByStatus(OrganizationStatus.ACTIVE);
+    }
+
+    // 활성 조직 존재 여부 확인 기능
+    // organizationId 기준 ACTIVE 상태 확인 메서드
+    @Override
+    public boolean existsActiveOrganizationById(Long organizationId) {
+        return organizationRepository.existsByOrganizationIdAndStatus(
+                organizationId,
+                OrganizationStatus.ACTIVE
+        );
+    }
+
+    // 조직 계정의 조직 ID 조회 기능
+    // organizationAccountId 기준 organizationId 반환 메서드
+    @Override
+    public Long findOrganizationIdByAccountId(Long organizationAccountId) {
+        return organizationRepository.findIdByOrganizationAccountIdAndStatus(
+                organizationAccountId,
+                OrganizationStatus.ACTIVE
+        ).orElseThrow(OrganizationNotFoundException::new);
     }
 }

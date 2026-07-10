@@ -5,13 +5,15 @@ import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsRe
 public record OrgStatsResponse(
         long trainerCount,
         long totalUserCount,
-        long currentUserCount
+        long currentUserCount,
+        OrgTrendResponse trend
 ) {
     public static OrgStatsResponse from(OrgStatsResult result) {
         return new OrgStatsResponse(
                 result.trainerCount(),
                 result.totalUserCount(),
-                result.currentUserCount()
+                result.currentUserCount(),
+                OrgTrendResponse.from(result.trend())
         );
     }
 }

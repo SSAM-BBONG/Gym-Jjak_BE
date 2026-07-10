@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,7 @@ public class CommunityController {
 
     private final CommunityUseCase communityUseCase;
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @PostMapping("/posts")
     @Operation(summary = "게시글 작성", description = "게시글을 작성한다")
     public ResponseEntity<GlobalApiResponse<CreateCommunityPostResponse>> createCommunityPost(
@@ -127,6 +129,7 @@ public class CommunityController {
                 );
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @PatchMapping("/posts/{postId}")
     @Operation(summary = "내 게시글 수정", description = "현재 로그인 사용자가 작성한 커뮤니티 게시글의 제목과 내용을 수정하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> updateCommunityPost(
@@ -151,6 +154,7 @@ public class CommunityController {
                 );
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @DeleteMapping("/posts/{postId}")
     @Operation(summary = "내 게시글 삭제", description = "현재 로그인 사용자가 작성한 커뮤니티 게시글을 삭제하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityPost(
@@ -175,6 +179,7 @@ public class CommunityController {
                 );
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @PostMapping("/posts/{postId}/comments")
     @Operation(summary = "댓글 작성", description = "현재 로그인 사용자가 커뮤니티 게시글에 댓글을 작성하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<CreateCommunityCommentResponse>> createCommunityComment(
@@ -204,6 +209,7 @@ public class CommunityController {
                 );
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @PatchMapping("/comments/{commentId}")
     @Operation(summary = "내 댓글 수정", description = "현재 로그인 사용자가 작성한 커뮤니티 댓글의 내용을 수정하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> updateCommunityComment(
@@ -229,6 +235,7 @@ public class CommunityController {
                 );
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @DeleteMapping("/comments/{commentId}")
     @Operation(summary = "내 댓글 삭제", description = "현재 로그인 사용자가 작성한 커뮤니티 댓글을 삭제하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityComment(
@@ -253,6 +260,7 @@ public class CommunityController {
                 );
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @PostMapping("/posts/{postId}/likes")
     @Operation(summary = "게시글 좋아요 등록", description = "현재 로그인 사용자가 커뮤니티 게시글에 좋아요를 등록하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> createCommunityPostLike(
@@ -277,6 +285,7 @@ public class CommunityController {
                 );
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @DeleteMapping("/post/{postId}/likes")
     @Operation(summary = "게시글 좋아요 취소", description = "현재 로그인 사용자가 커뮤니티 게시글에 등록한 좋아요를 취소하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityPostLike(

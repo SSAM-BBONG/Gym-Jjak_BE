@@ -15,7 +15,8 @@ public enum ChatRoomErrorCode implements ErrorCode {
     CHAT_ROOM_ALREADY_LEFT(HttpStatus.CONFLICT, "CHAT_004", "이미 나간 채팅방입니다."),
     CHAT_ROOM_CLOSED(HttpStatus.BAD_REQUEST, "CHAT_005", "이미 종료된 채팅방입니다."),
     TRAINER_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_006", "해당 트레이너를 찾을 수 없습니다."),
-    INVALID_PT_COURSE(HttpStatus.BAD_REQUEST, "CHAT_007", "유효하지 않은 PT 코스입니다.");
+    INVALID_PT_COURSE(HttpStatus.BAD_REQUEST, "CHAT_007", "유효하지 않은 PT 코스입니다."),
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_008", "채팅 메시지를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

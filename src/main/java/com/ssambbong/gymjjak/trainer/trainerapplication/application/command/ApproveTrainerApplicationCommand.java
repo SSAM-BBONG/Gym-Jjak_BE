@@ -4,7 +4,7 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.Invalid
 
 public record ApproveTrainerApplicationCommand(
         Long trainerApplicationId,
-        Long adminId
+        Long organizationAccountId
 ) {
 
     public ApproveTrainerApplicationCommand {
@@ -14,9 +14,9 @@ public record ApproveTrainerApplicationCommand(
             );
         }
 
-        if (adminId == null || adminId <= 0) {
+        if (organizationAccountId == null || organizationAccountId <= 0) {
             throw new InvalidTrainerApplicationException(
-                    "adminId는 1 이상이어야 합니다."
+                    "organizationAccountId는 1 이상이어야 합니다."
             );
         }
     }
