@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request;
 import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UpdatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +15,7 @@ import java.util.List;
 public record UpdatePtCourseRequest(
         @NotBlank String title,
         @NotBlank String description,
-        @NotNull Long partId,
+        @NotNull PartType part,
         @Min(0) int price,
         @Valid UploadedFileMetadataRequest thumbnailFile,
 
@@ -60,6 +61,6 @@ public record UpdatePtCourseRequest(
                 new UploadedFileMetadataCommand(
                         thumbnailFile.fileKey(), thumbnailFile.originalName(),
                         thumbnailFile.contentType(), thumbnailFile.fileSize());
-        return new UpdatePtCourseCommand(userId, ptCourseId, title, description, partId, price, thumbnailFileCommand, curriculumData, scheduleData);
+        return new UpdatePtCourseCommand(userId, ptCourseId, title, description, part, price, thumbnailFileCommand, curriculumData, scheduleData);
     }
 }

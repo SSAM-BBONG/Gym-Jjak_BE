@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
@@ -19,11 +20,8 @@ public record PtCourseViewResponse(
         @Schema(description = "가격", example = "45000")
         int price,
 
-        @Schema(description = "부위 ID", example = "1")
-        Long partId,
-
-        @Schema(description = "부위명", example = "전신")
-        String partName,
+        @Schema(description = "운동 부위", example = "CHEST")
+        PartType part,
 
         @Schema(description = "트레이너 이름", example = "Ket Trainer")
         String trainerName,
@@ -60,8 +58,7 @@ public record PtCourseViewResponse(
                 view.title(),
                 view.thumbnailUrl(),
                 view.price(),
-                view.partId(),
-                view.partName(),
+                view.part(),
                 view.trainerName(),
                 view.organizationId(),
                 view.organizationBusinessName(),

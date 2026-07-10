@@ -11,7 +11,7 @@ public class PtCoursePersistenceMapper {
         return new PtCourseJpaEntity(
                 domain.getOrganizationId(),
                 domain.getTrainerProfileId(),
-                domain.getPartId(),
+                domain.getPart(),
                 domain.getThumbnailFileId(),
                 domain.getTitle(),
                 domain.getDescription(),
@@ -26,7 +26,7 @@ public class PtCoursePersistenceMapper {
                 entity.getId(),
                 entity.getOrganizationId(),
                 entity.getTrainerProfileId(),
-                entity.getPartId(),
+                entity.getPart(),
                 entity.getThumbnailFileId(),
                 entity.getTitle(),
                 entity.getDescription(),
