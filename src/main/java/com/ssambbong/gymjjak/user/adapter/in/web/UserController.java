@@ -225,11 +225,9 @@ public class UserController {
     }
 
     @GetMapping("/mypage")
-    @Operation(summary = "회원 username 및 nickname 조회", description = "현재 로그인한 회원의 username과 nickname을 조회하는 요청이다.")
-    public ResponseEntity<GlobalApiResponse<UserUsernameAndNicknameResponse>>
-    findUsernameAndNickname(
-            @AuthenticationPrincipal AuthUser authUser
-    ) {
+    @Operation(summary = "회원 username 및 nickname 조회, 소셜로그인 확인", description = "현재 로그인한 회원의 username과 nickname, 소셜 로그인 참 거짓을 조회하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<UserUsernameAndNicknameResponse>> findUsernameAndNickname(
+            @AuthenticationPrincipal AuthUser authUser) {
 
         UserUsernameAndNicknameResult result =
                 userCommandUseCase.findUsernameAndNickname(authUser.userId());

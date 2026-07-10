@@ -19,6 +19,23 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
 
     long countByStatus(OrganizationStatus status);
 
+    boolean existsByOrganizationIdAndStatus(
+            Long organizationId,
+            OrganizationStatus status
+    );
+
+    // 활성화상태의 조직 계정 조회
+    @Query("""
+            SELECT o.organizationId
+            FROM OrganizationJpaEntity o
+            WHERE o.organizationAccountId = :organizationAccountId
+              AND o.status = :status
+            """)
+    Optional<Long> findIdByOrganizationAccountIdAndStatus(
+            @Param("organizationAccountId") Long organizationAccountId,
+            @Param("status") OrganizationStatus status
+    );
+
     @Query(
             value = """
                     SELECT new com.ssambbong.gymjjak.organization.organization.application.query.OrganizationAdminView(

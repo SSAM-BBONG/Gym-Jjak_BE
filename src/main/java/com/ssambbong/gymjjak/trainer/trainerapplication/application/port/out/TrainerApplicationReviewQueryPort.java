@@ -8,9 +8,15 @@ import java.util.Optional;
 
 public interface TrainerApplicationReviewQueryPort {
 
-    // 관리자 심사용 목록 조회
-    TrainerApplicationListResult findTrainerApplications(FindTrainerApplicationsCondition condition);
+    // 조직별 트레이너 신청 목록 조회 기능
+    TrainerApplicationListResult findTrainerApplications(
+            FindTrainerApplicationsCondition condition,
+            Long organizationId
+    );
 
-    // 관리자 트레이너 상세 조회
-    Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(Long trainerApplicationId);
+    // 조직별 트레이너 신청 상세 조회 기능
+    Optional<TrainerApplicationReviewDetailResult> findTrainerApplicationReviewDetailById(
+            Long trainerApplicationId,
+            Long organizationId
+    );
 }
