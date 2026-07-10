@@ -286,7 +286,7 @@ public class CommunityController {
     }
 
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
-    @DeleteMapping("/post/{postId}/likes")
+    @DeleteMapping("/posts/{postId}/likes")
     @Operation(summary = "게시글 좋아요 취소", description = "현재 로그인 사용자가 커뮤니티 게시글에 등록한 좋아요를 취소하는 요청이다.")
     public ResponseEntity<GlobalApiResponse<Void>> deleteCommunityPostLike(
             @AuthenticationPrincipal AuthUser authUser,
