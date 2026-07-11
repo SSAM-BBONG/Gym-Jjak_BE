@@ -112,7 +112,7 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
                 .map(r -> new OrgPtClientResult(
                         r.getUserName(),
                         r.getEnrolledAt(),
-                        r.getProgressCount(),
+                        r.getCompletedCount(),
                         r.getTotalSessionCount()
                 ))
                 .toList();

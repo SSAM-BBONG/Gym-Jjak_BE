@@ -14,8 +14,11 @@ public interface PtReservationQueryUseCase {
     // 내 PT 예약 기록 상세 조회 + 본인 확인
     PtReservationDetailView findMyReservationDetail(Long userId, Long ptReservationId);
 
-    // // adminDashBoard에서 사용할 월별 예약된 pt 수 조회
+    // adminDashBoard에서 사용할 월별 예약된 pt 수 조회
     List<MonthlyPtReservationResult> findMonthlyPtReservations();
+
+    // 유저+코스 기준 완료 회차 수
+    int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId);
 
     record MyPtReservationView(
             Long ptReservationId,

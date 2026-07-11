@@ -6,6 +6,6 @@ import java.time.LocalDateTime;
 public interface PtClientRow {
     String getUserName();
     LocalDateTime getEnrolledAt();
-    Integer getProgressCount();
+    Integer getCompletedCount();
     Integer getTotalSessionCount();
 }

@@ -192,8 +192,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                         r.getId(),
                         nicknameMap.getOrDefault(r.getUserId(), null),
                         r.getStatus(),
-                        lastFeedbackDateMap.getOrDefault(r.getId(), null), // 피드백 없으면 null
-                        r.getProgressCount(),
+                        lastFeedbackDateMap.getOrDefault(r.getId(), null),
+                        ptReservationRepository.countCompletedByUserIdAndPtCourseId(r.getUserId(), r.getPtCourseId()),
                         r.getTotalSessionCount()
                 ))
                 .toList();
@@ -244,12 +244,15 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         log.info("event=pt_reservation_detail_find_succeeded ptReservationId={}", ptReservationId);
 
+        int progressCount = ptReservationRepository.countCompletedByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
+
         return new ReservationDetailView(
                 studentProfile.nickname(),
                 studentProfile.email(),
                 studentProfile.phone(),
                 reservation.getStatus(),
-                reservation.getProgressCount(),
+                progressCount,
                 reservation.getTotalSessionCount(),
                 ptCourse.getTitle()
         );

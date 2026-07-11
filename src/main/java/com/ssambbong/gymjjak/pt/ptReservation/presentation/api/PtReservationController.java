@@ -126,9 +126,11 @@ public class PtReservationController {
     ) {
         PtReservation reservation = ptReservationCommandUseCase.changePtReservationStatus(
                 new ChangePtReservationStatusCommand(authUser.userId(), reservationId, request.status()));
+        int progressCount = ptReservationQueryUseCase.countProgressByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
         ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
                 reservation.getStatus(),
-                reservation.getProgressCount(),
+                progressCount,
                 reservation.getTotalSessionCount()
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(PtReservationResponseCode.PT_RESERVATION_STATUS_UPDATED, response));

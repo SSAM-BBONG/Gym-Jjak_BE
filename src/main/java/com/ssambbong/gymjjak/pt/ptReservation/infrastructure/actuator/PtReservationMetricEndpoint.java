@@ -19,14 +19,11 @@ public class PtReservationMetricEndpoint {
         long total = ptReservationRepository.count();
         long completed = ptReservationRepository.countByStatus(PtReservationStatus.COMPLETED);
         long cancelled = ptReservationRepository.countByCancelledAtIsNotNull();
-        Double rawAvg = ptReservationRepository.findAverageProgressCount();
 
         double completionRate = total == 0 ? 0.0 : round1((double) completed / total * 100);
         double cancellationRate = total == 0 ? 0.0 : round1((double) cancelled / total * 100);
-        double averageProgressCount = rawAvg != null ? round1(rawAvg) : 0.0;
 
-        return new PtReservationSummary(total, completed, cancelled,
-                completionRate, cancellationRate, averageProgressCount);
+        return new PtReservationSummary(total, completed, cancelled, completionRate, cancellationRate);
     }
 
     private double round1(double value) {
@@ -37,8 +34,7 @@ public class PtReservationMetricEndpoint {
             long totalCount,
             long completedCount,
             long cancelledCount,
-            double completionRate,       // 수강 완료율 (%)
-            double cancellationRate,     // 취소율 (%)
-            double averageProgressCount  // 평균 진행 회차
+            double completionRate,   // 수강 완료율 (%)
+            double cancellationRate  // 취소율 (%)
     ) {}
 }

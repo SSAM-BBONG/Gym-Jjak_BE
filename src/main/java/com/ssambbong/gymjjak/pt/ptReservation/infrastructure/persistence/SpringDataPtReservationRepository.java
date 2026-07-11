@@ -63,10 +63,6 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     // 취소된 예약 수 (cancelledAt IS NOT NULL)
     long countByCancelledAtIsNotNull();
 
-    // progress_count 평균
-    @Query("SELECT AVG(r.progressCount) FROM PtReservationJpaEntity r")
-    Double findAverageProgressCount();
-
     @Query("""
     select new com.ssambbong.gymjjak.pt.ptReservation.application.result.PtCalendarDayResult(
         r.ptCourseId,
@@ -199,19 +195,20 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("organizationId") Long organizationId,
             @Param("startDate") LocalDateTime startDate);
 
-    // [dashboard] 조직 PT 수강생 목록 (IN_PROGRESS, 등록일 오름차순)
+    // [dashboard] 조직 PT 수강생 목록 (취소 제외, 수강생별 집계, 등록일 오름차순)
     @Query(value = """
-            SELECT u.name                  AS userName,
-                   r.created_at            AS enrolledAt,
-                   r.progress_count        AS progressCount,
-                   pc.total_session_count  AS totalSessionCount
+            SELECT u.name                                                             AS userName,
+                   MIN(r.created_at)                                                  AS enrolledAt,
+                   SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END)           AS completedCount,
+                   pc.total_session_count                                              AS totalSessionCount
             FROM pt_reservations r
-            JOIN users u  ON r.user_id = u.user_id
+            JOIN users u ON r.user_id = u.user_id
             JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
             WHERE r.pt_course_id = :ptCourseId
               AND r.organization_id = :organizationId
-              AND r.status = 'IN_PROGRESS'
-            ORDER BY r.created_at ASC
+              AND r.status != 'CANCELLED'
+            GROUP BY r.user_id, u.name, pc.total_session_count
+            ORDER BY MIN(r.created_at) ASC
             """, nativeQuery = true)
     List<PtClientRow> findPtClientsByPtCourseId(
             @Param("ptCourseId") Long ptCourseId,
@@ -219,6 +216,9 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
 
     // 유저+코스 기준 비취소 예약 수 (RESERVED + COMPLETED)
     int countByUserIdAndPtCourseIdAndStatusNot(Long userId, Long ptCourseId, PtReservationStatus status);
+
+    // 유저+코스 기준 특정 상태 예약 수
+    int countByUserIdAndPtCourseIdAndStatus(Long userId, Long ptCourseId, PtReservationStatus status);
 
     // reservedEndAt이 지난 RESERVED 예약 일괄 COMPLETED 처리
     @Modifying

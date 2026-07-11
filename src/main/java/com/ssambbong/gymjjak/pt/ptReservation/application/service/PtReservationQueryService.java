@@ -83,17 +83,25 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 .map(c -> new CurriculumView(c.id(), c.sessionNo(), c.title(), feedbackIdMap.get(c.id())))
                 .toList();
 
+        int progressCount = ptReservationRepository.countCompletedByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
+
         log.info("event=pt_reservation_detail_succeeded ptReservationId={}", ptReservationId);
         return new PtReservationDetailView(
                 resolveThumbnailUrl(courseInfo.thumbnailFileId()),
                 courseInfo.title(),
                 courseInfo.trainerName(),
                 reservation.getStatus(),
-                reservation.getProgressCount(),
+                progressCount,
                 reservation.getTotalSessionCount(),
                 curriculumViews
         );
 
+    }
+
+    @Override
+    public int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return ptReservationRepository.countCompletedByUserIdAndPtCourseId(userId, ptCourseId);
     }
 
     // AdminDashboard : 월별 예약된 pt 수 조회
@@ -174,16 +182,19 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         // feedbacks에서 가장 최근 피드백 날짜 조회
         LocalDate lastPtDate = feedbackQueryPort.findLastFeedbackDate(reservation.getId());
 
+        int progressCount = ptReservationRepository.countCompletedByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
+
         // 위 + PtReservation 자체 데이터 합쳐 View 생성
         return new MyPtReservationView(
-                reservation.getId(),              // ptReservationId
+                reservation.getId(),
                 resolveThumbnailUrl(courseInfo.thumbnailFileId()),
-                courseInfo.title(),               // pt_courses
-                courseInfo.trainerName(),         // trainer_profiles (via adapter)
-                reservation.getStatus(),        // pt_reservations 자기 컬럼
-                lastPtDate,                      // feedbacks (현재 null)
-                reservation.getProgressCount(), // pt_reservations 자기 컬럼
-                reservation.getTotalSessionCount() // pt_reservations 자기 컬럼
+                courseInfo.title(),
+                courseInfo.trainerName(),
+                reservation.getStatus(),
+                lastPtDate,
+                progressCount,
+                reservation.getTotalSessionCount()
         );
     }
 }

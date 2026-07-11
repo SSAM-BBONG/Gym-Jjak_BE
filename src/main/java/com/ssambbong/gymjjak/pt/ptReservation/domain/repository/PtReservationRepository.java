@@ -37,6 +37,9 @@ public interface PtReservationRepository {
     // 유저+코스 기준 비취소 예약 수 (RESERVED + COMPLETED)
     int countNonCancelledByUserIdAndPtCourseId(Long userId, Long ptCourseId);
 
+    // 유저+코스 기준 완료 회차 수
+    int countCompletedByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
     // 특정 강습의 기간 내 RESERVED 예약 시작 시각 목록 (가용 날짜/시간 슬롯 계산용)
     List<LocalDateTime> findReservedStartAtsByPtCourseId(Long ptCourseId, LocalDateTime from, LocalDateTime to);
 
