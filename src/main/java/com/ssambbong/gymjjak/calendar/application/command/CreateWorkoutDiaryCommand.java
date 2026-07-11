@@ -8,7 +8,7 @@ import java.util.List;
 public record CreateWorkoutDiaryCommand(
         LocalDate diaryDate,
         PartType part,
-        String exercise,
+        Long exerciseId,
         List<WorkoutDiarySetCommand> sets
 ) {
 }

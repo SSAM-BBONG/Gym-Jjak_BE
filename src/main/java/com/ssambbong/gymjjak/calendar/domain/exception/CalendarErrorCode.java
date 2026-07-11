@@ -26,6 +26,7 @@ public enum CalendarErrorCode implements ErrorCode {
     REPS_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_030", "횟수는 필수입니다."),
     INVALID_REPS(HttpStatus.BAD_REQUEST, "CALENDAR_400_031", "횟수는 1 이상이어야 합니다."),
     DUPLICATE_SET_ORDER(HttpStatus.BAD_REQUEST, "CALENDAR_400_032", "세트 순서는 중복될 수 없습니다."),
+    EXERCISE_NOT_FOUND(HttpStatus.NOT_FOUND, "CALENDAR_404_002", "운동 종목을 찾을 수 없습니다."),
     DIARY_ALREADY_EXISTS(HttpStatus.CONFLICT, "CALENDAR_409_001", "해당 날짜에 이미 작성된 일지가 있습니다."),
     DIARY_NOT_FOUND(HttpStatus.NOT_FOUND, "DIARY_404_001", "일지를 찾을 수 없습니다."),
     DATE_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_002", "날짜는 필수입니다."),

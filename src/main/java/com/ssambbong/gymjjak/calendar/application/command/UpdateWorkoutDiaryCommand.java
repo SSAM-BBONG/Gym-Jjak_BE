@@ -6,7 +6,7 @@ import java.util.List;
 
 public record UpdateWorkoutDiaryCommand(
         PartType part,
-        String exercise,
+        Long exerciseId,
         List<WorkoutDiarySetCommand> sets
 ) {
 }

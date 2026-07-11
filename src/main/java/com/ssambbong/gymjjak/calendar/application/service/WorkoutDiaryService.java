@@ -5,7 +5,9 @@ import com.ssambbong.gymjjak.calendar.application.command.UpdateWorkoutDiaryComm
 import com.ssambbong.gymjjak.calendar.application.command.WorkoutDiarySetCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
 import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarExercisePort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarExerciseSnapshot;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
@@ -27,17 +29,23 @@ import java.util.List;
 public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
     private final WorkoutDiaryPort workoutDiaryPort;
+    private final CalendarExercisePort calendarExercisePort;
     private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
     @Override
     public Long createWorkoutDiary(Long userId, CreateWorkoutDiaryCommand command) {
         log.debug("event=workoutDiary_create_start userId={}", userId);
 
+        CalendarExerciseSnapshot exercise = calendarExercisePort.findExerciseByIdAndPart(
+                command.exerciseId(),
+                command.part()
+        );
+
         WorkoutDiary workoutDiary = WorkoutDiary.create(
                 userId,
                 command.diaryDate(),
                 command.part(),
-                command.exercise(),
+                exercise.exerciseName(),
                 toDomainSets(command.sets())
         );
 
@@ -54,11 +62,16 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
         LocalDate diaryDate = workoutDiaryPort.findDiaryDateByUserIdAndWorkoutDiaryId(userId, workoutDiaryId);
 
+        CalendarExerciseSnapshot exercise = calendarExercisePort.findExerciseByIdAndPart(
+                command.exerciseId(),
+                command.part()
+        );
+
         WorkoutDiary workoutDiary = WorkoutDiary.create(
                 userId,
                 diaryDate,
                 command.part(),
-                command.exercise(),
+                exercise.exerciseName(),
                 toDomainSets(command.sets())
         );
 
