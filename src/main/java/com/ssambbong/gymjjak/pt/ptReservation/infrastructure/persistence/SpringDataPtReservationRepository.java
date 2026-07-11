@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence;
 import com.ssambbong.gymjjak.pt.ptReservation.application.result.PtCalendarDayResult;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -215,6 +216,20 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     List<PtClientRow> findPtClientsByPtCourseId(
             @Param("ptCourseId") Long ptCourseId,
             @Param("organizationId") Long organizationId);
+
+    // 유저+코스 기준 비취소 예약 수 (RESERVED + COMPLETED)
+    int countByUserIdAndPtCourseIdAndStatusNot(Long userId, Long ptCourseId, PtReservationStatus status);
+
+    // reservedEndAt이 지난 RESERVED 예약 일괄 COMPLETED 처리
+    @Modifying
+    @Query("""
+        UPDATE PtReservationJpaEntity r
+        SET r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.COMPLETED,
+            r.completedAt = :now
+        WHERE r.reservedEndAt <= :now
+          AND r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED
+        """)
+    int bulkCompleteExpired(@Param("now") LocalDateTime now);
 
     // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
     @Query("""

@@ -17,6 +17,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationC
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationLimitExceededException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationScheduleMismatchException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
@@ -31,9 +32,12 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
+
 
 @Slf4j
 @Service
@@ -72,8 +76,18 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationInvalidException();
         }
 
+        // 예약 수 (취소 미포함) >= 총 회차 수 면 예약 불가
+        int nonCancelledCount = ptReservationRepository.countNonCancelledByUserIdAndPtCourseId(
+                command.userId(), command.ptCourseId());
+        if (nonCancelledCount >= ptCourse.getTotalSessionCount()) {
+            log.warn("event=pt_reservation_create_failed reason=limit_exceeded userId={} ptCourseId={} count={} total={}",
+                    command.userId(), command.ptCourseId(), nonCancelledCount, ptCourse.getTotalSessionCount());
+            throw new PtReservationLimitExceededException();
+        }
+
         validateSchedule(ptCourse.getId(), command.reservedStartAt(), command.reservedEndAt());
 
+        // 중복 예약 검증
         if (ptReservationRepository.existsByPtCourseIdAndTimeOverlap(
                 command.ptCourseId(),
                 command.reservedStartAt(),
@@ -201,8 +215,13 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         Long reservationUserId = reservation.getUserId();
         LocalDateTime reservedStartAt = reservation.getReservedStartAt();
 
-        // 상태 변경 — 종결 상태(COMPLETED/CANCELLED)이면 도메인에서 예외 발생, cancelledAt 자동 설정
-        reservation.changeStatus(PtReservationStatus.CANCELLED);
+        // 당일 취소 → 노쇼 처리 (횟수 차감), 이전 취소 → 정상 취소 (횟수 반환)
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        PtReservationStatus newStatus = reservedStartAt.toLocalDate().isEqual(today)
+                ? PtReservationStatus.COMPLETED
+                : PtReservationStatus.CANCELLED;
+
+        reservation.changeStatus(newStatus);
         ptReservationRepository.updateStatus(reservation);
 
         evictMonthAfterCommit(

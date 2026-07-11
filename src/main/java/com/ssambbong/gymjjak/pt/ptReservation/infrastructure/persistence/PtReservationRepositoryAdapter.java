@@ -70,6 +70,11 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 .toList();
     }
 
+    @Override
+    public int countNonCancelledByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.countByUserIdAndPtCourseIdAndStatusNot(userId, ptCourseId, PtReservationStatus.CANCELLED);
+    }
+
     // 진행 중인 PT 수
     @Override
     public long countByStatus(PtReservationStatus status) {
