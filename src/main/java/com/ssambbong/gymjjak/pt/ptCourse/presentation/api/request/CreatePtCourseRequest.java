@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request;
 
 import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -22,9 +23,9 @@ public record CreatePtCourseRequest(
         @NotBlank
         String description,
 
-        @Schema(description = "부위 ID", example = "1")
+        @Schema(description = "운동 부위", example = "CHEST")
         @NotNull
-        Long partId,
+        PartType part,
 
         @Schema(description = "가격 (1회당)", example = "50000")
         @Min(0)

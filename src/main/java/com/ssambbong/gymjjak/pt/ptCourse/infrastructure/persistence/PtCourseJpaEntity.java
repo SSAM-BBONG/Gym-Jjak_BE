@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseTimeEntity;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -25,8 +26,9 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
     @Column(name = "trainer_profile_id", nullable = false)
     private Long trainerProfileId;
 
-    @Column(name = "part_id", nullable = false)
-    private Long partId;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "part", nullable = false, length = 30)
+    private PartType part;
 
     @Column(name = "thumbnail_file_id")
     private Long thumbnailFileId;
@@ -49,7 +51,7 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
 
     public PtCourseJpaEntity(Long organizationId,
                              Long trainerProfileId,
-                             Long partId,
+                             PartType part,
                              Long thumbnailFileId,
                              String title,
                              String description,
@@ -59,7 +61,7 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
     ) {
         this.organizationId = organizationId;
         this.trainerProfileId = trainerProfileId;
-        this.partId = partId;
+        this.part = part;
         this.thumbnailFileId = thumbnailFileId;
         this.title = title;
         this.description = description;
@@ -80,9 +82,9 @@ public class PtCourseJpaEntity extends BaseTimeEntity {
     }
 
     // 강습 정보 수정 (제목·설명·파트·가격·썸네일·총 회차) — 더티체킹으로 UPDATE
-    public void updateFields(Long partId, Long thumbnailFileId,
+    public void updateFields(PartType part, Long thumbnailFileId,
                              String title, String description, int price, int totalSessionCount) {
-        this.partId = partId;
+        this.part = part;
         this.thumbnailFileId = thumbnailFileId;
         this.title = title;
         this.description = description;

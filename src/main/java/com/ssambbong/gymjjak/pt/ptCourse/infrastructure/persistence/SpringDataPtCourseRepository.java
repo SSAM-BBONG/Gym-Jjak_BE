@@ -74,13 +74,12 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
     // 상태별 PT 코스 수
     long countByStatus(PtCourseStatus status);
 
-    // 부위별 PT 코스 수 (이름 포함, 소프트딜리트 제외)
+    // 부위별 PT 코스 수 (소프트딜리트 제외)
     @Query(value = """
-            SELECT p.name, COUNT(pc.pt_course_id)
+            SELECT pc.part, COUNT(pc.pt_course_id)
             FROM pt_courses pc
-            JOIN parts p ON p.part_id = pc.part_id
             WHERE pc.deleted_at IS NULL AND pc.status != 'DELETED'
-            GROUP BY p.part_id, p.name
+            GROUP BY pc.part
             ORDER BY COUNT(pc.pt_course_id) DESC
             """, nativeQuery = true)
     List<Object[]> countGroupByPartName();

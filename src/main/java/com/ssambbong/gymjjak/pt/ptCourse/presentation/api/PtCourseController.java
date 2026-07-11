@@ -61,7 +61,7 @@ public class PtCourseController {
     ) {
         CreatePtCourseCommand command = new CreatePtCourseCommand(
                 authUser.userId(),
-                request.partId(),
+                request.part(),
                 request.title(),
                 request.description(),
                 request.price(),

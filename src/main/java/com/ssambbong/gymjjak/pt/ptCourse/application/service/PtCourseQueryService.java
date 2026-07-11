@@ -17,7 +17,6 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotF
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
-import com.ssambbong.gymjjak.part.application.usecase.PartQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,7 +42,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final PtReservationRepository ptReservationRepository;
     private final UserNicknameQueryPort userNicknameQueryPort;
     private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
-    private final PartQueryUseCase partQueryUseCase;
     private final ReviewQueryPort reviewQueryPort;
     private final FileUrlUseCase fileUrlUseCase;
 
@@ -53,8 +50,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_all")
     public List<PtCourseListView> findAllPtCourses() {
         log.debug("event=pt_courses_find_all");
-
-        Map<Long, String> partMap = buildPartMap();
 
         List<PtCourse> courses = ptCourseRepository.findAllVisible();
         if (courses.isEmpty()) return List.of();
@@ -74,8 +69,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             c.getTitle(),
                             resolveThumbnailUrl(c.getThumbnailFileId()),
                             c.getPrice(),
-                            c.getPartId(),
-                            partMap.getOrDefault(c.getPartId(), null),
+                            c.getPart(),
                             trainer != null ? trainer.trainerName() : null,
                             org != null ? org.organizationId() : null,
                             org != null ? org.businessName() : null,
@@ -294,8 +288,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     public List<PopularCourseView> findPopular() {
         log.debug("event=pt_courses_popular_find");
 
-        Map<Long, String> partMap = buildPartMap();
-
         // 예약 수 기준 인기 PT 강습을 먼저 조회한다.
         List<PtCourse> popularCourses = ptCourseRepository.findPopular(4);
         if (popularCourses.isEmpty()) {
@@ -352,8 +344,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             ptCourse.getTitle(),
                             ptCourse.getPrice(),
                             resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
-                            ptCourse.getPartId(),
-                            partMap.getOrDefault(ptCourse.getPartId(), null),
+                            ptCourse.getPart(),
                             trainer != null ? trainer.trainerName() : null,
                             organization != null ? organization.roadAddress() : null
                     );
@@ -362,15 +353,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         log.info("event=pt_courses_popular_find_succeeded count={}", result.size());
         return result;
-    }
-
-    // partId -> partName 매핑
-    private Map<Long, String> buildPartMap() {
-        return partQueryUseCase.handle().stream()
-                .collect(Collectors.toMap(
-                        PartQueryUseCase.PartView::partId,
-                        PartQueryUseCase.PartView::name
-                ));
     }
 
     // PT_THUMBNAIL은 public 파일 → requesterId 없이 URL 반환, 없으면 null
