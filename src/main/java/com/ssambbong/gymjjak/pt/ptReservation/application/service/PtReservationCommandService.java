@@ -98,6 +98,13 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationDuplicateException();
         }
 
+        // 완료 처리 된 회차 수 >=1 이면 in_progress
+        int completedCount = ptReservationRepository.countCompletedByUserIdAndPtCourseId(
+                command.userId(), command.ptCourseId());
+        PtReservationStatus initialStatus = completedCount >= 1
+                ? PtReservationStatus.IN_PROGRESS
+                : PtReservationStatus.RESERVED;
+
         PtReservation ptReservation = PtReservation.create(
                 command.userId(),
                 command.ptCourseId(),
@@ -105,7 +112,8 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 ptCourse.getTrainerProfileId(),
                 command.reservedStartAt(),
                 command.reservedEndAt(),
-                ptCourse.getTotalSessionCount()
+                ptCourse.getTotalSessionCount(),
+                initialStatus
         );
 
         PtReservation saved = ptReservationRepository.save(ptReservation);

@@ -23,9 +23,13 @@ public class PtReservationAutoCompleteScheduler {
     @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
     public void autoCompleteExpiredReservations() {
         LocalDateTime now = LocalDateTime.now(SEOUL);
-        int count = ptReservationRepository.bulkCompleteExpired(now);
-        if (count > 0) {
-            log.info("event=pt_auto_complete_succeeded count={}", count);
+        int completed = ptReservationRepository.bulkCompleteExpired(now);
+        if (completed > 0) {
+            log.info("event=pt_auto_complete_succeeded count={}", completed);
+            int inProgress = ptReservationRepository.bulkUpdateToInProgress();
+            if (inProgress > 0) {
+                log.info("event=pt_auto_in_progress_succeeded count={}", inProgress);
+            }
         }
     }
 }

@@ -64,7 +64,8 @@ public class PtReservation {
             Long trainerProfileId,
             LocalDateTime reservedStartAt,
             LocalDateTime reservedEndAt,
-            int totalSessionCount
+            int totalSessionCount,
+            PtReservationStatus status
     ) {
         return new PtReservation(
                 null,
@@ -77,7 +78,7 @@ public class PtReservation {
                 null,   // cancelledAt
                 null,   // completedAt
                 totalSessionCount,
-                PtReservationStatus.RESERVED
+                status
         );
     }
 

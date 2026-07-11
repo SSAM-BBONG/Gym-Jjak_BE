@@ -231,6 +231,21 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
         """)
     int bulkCompleteExpired(@Param("now") LocalDateTime now);
 
+    // 완료된 세션이 1개 이상인 코스의 RESERVED 예약을 IN_PROGRESS로 일괄 전환
+    @Modifying
+    @Query(value = """
+        UPDATE pt_reservations r
+        SET r.status = 'IN_PROGRESS'
+        WHERE r.status = 'RESERVED'
+          AND EXISTS (
+              SELECT 1 FROM pt_reservations r2
+              WHERE r2.user_id = r.user_id
+                AND r2.pt_course_id = r.pt_course_id
+                AND r2.status = 'COMPLETED'
+          )
+        """, nativeQuery = true)
+    int bulkUpdateToInProgress();
+
     // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
     @Query("""
         SELECT r.userId, r.id
