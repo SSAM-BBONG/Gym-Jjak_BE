@@ -16,6 +16,7 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
             FROM payments p
             JOIN pt_courses pc ON p.pt_course_id = pc.pt_course_id
             WHERE pc.organization_id = :organizationId
+              AND pc.deleted_at IS NULL
               AND p.status = 'PAID'
               AND p.paid_at >= :startOfMonth
               AND p.paid_at < :startOfNextMonth
@@ -32,6 +33,7 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
             FROM payments p
             JOIN pt_courses pc ON p.pt_course_id = pc.pt_course_id
             WHERE pc.organization_id = :organizationId
+              AND pc.deleted_at IS NULL
               AND p.status = 'PAID'
             """, nativeQuery = true)
     long sumTotalRevenueByOrganizationId(@Param("organizationId") Long organizationId);
@@ -43,6 +45,7 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
             FROM payments p
             JOIN pt_courses pc ON p.pt_course_id = pc.pt_course_id
             WHERE pc.organization_id = :organizationId
+              AND pc.deleted_at IS NULL
               AND p.status = 'PAID'
               AND p.paid_at >= :startDate
             GROUP BY DATE_FORMAT(p.paid_at, '%Y-%m-01')
@@ -65,8 +68,10 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
             JOIN pt_courses pc ON p.pt_course_id = pc.pt_course_id
             JOIN trainer_profiles tp ON pc.trainer_profile_id = tp.trainer_profile_id
             WHERE pc.organization_id = :organizationId
+              AND pc.deleted_at IS NULL
               AND p.status = 'PAID'
             GROUP BY pc.trainer_profile_id, tp.trainer_name
+            ORDER BY pc.trainer_profile_id ASC
             """, nativeQuery = true)
     List<TrainerRevenueRow> findTrainerRevenueByOrganizationId(
             @Param("organizationId") Long organizationId,

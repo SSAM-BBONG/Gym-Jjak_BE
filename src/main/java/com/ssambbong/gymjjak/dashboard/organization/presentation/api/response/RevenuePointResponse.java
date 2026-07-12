@@ -6,6 +6,6 @@ import java.time.LocalDate;
 
 public record RevenuePointResponse(LocalDate date, long amount) {
     public static RevenuePointResponse from(TrendPoint point) {
-        return new RevenuePointResponse(point.date(), point.count());
+        return new RevenuePointResponse(point.date(), point.value());
     }
 }

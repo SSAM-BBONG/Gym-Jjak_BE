@@ -96,12 +96,12 @@ public class OrganizationDashboardService implements OrganizationDashboardUseCas
                 .map(r -> new TrendPoint(r.getDate(), r.getAmount()))
                 .toList();
 
-        long totalForRatio = springDataPaymentRepository
-                .findTrainerRevenueByOrganizationId(organizationId, startOfMonth, startOfNextMonth)
-                .stream().mapToLong(r -> r.getTotalAmount()).sum();
+        List<SpringDataPaymentRepository.TrainerRevenueRow> trainerRevenueRows =
+                springDataPaymentRepository.findTrainerRevenueByOrganizationId(organizationId, startOfMonth, startOfNextMonth);
 
-        List<TrainerSalesResult> trainerSales = springDataPaymentRepository
-                .findTrainerRevenueByOrganizationId(organizationId, startOfMonth, startOfNextMonth)
+        long totalForRatio = trainerRevenueRows.stream().mapToLong(r -> r.getTotalAmount()).sum();
+
+        List<TrainerSalesResult> trainerSales = trainerRevenueRows
                 .stream()
                 .map(r -> new TrainerSalesResult(
                         r.getTrainerProfileId(),
