@@ -5,6 +5,8 @@ import com.ssambbong.gymjjak.organization.organization.application.query.Organiz
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationDetailResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchQuery;
 import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationQueryUseCase;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
@@ -72,6 +74,17 @@ public class OrganizationQueryService implements OrganizationQueryUseCase {
                 organization.getCreatedAt(),
                 trainers.size(),
                 trainers
+        );
+    }
+
+    @Monitored(name = "gymjjak.org.query.duration", domain = "organization", action = "search")
+    @Override
+    public OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query) {
+        if (query.keyword() == null || query.keyword().isBlank()) {
+            return new OrganizationSearchListResult(List.of(), query.page(), query.size(), 0L, 0);
+        }
+        return organizationRepository.searchOrganizations(
+                new OrganizationSearchQuery(query.keyword().trim(), query.page(), query.size())
         );
     }
 

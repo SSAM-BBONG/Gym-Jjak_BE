@@ -2,21 +2,25 @@ package com.ssambbong.gymjjak.calendar.application.service;
 
 import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.command.UpdateWorkoutDiaryCommand;
+import com.ssambbong.gymjjak.calendar.application.command.WorkoutDiarySetCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
 import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarExercisePort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarExerciseSnapshot;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
+import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiarySet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -25,39 +29,31 @@ import java.time.LocalDate;
 public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
     private final WorkoutDiaryPort workoutDiaryPort;
+    private final CalendarExercisePort calendarExercisePort;
     private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
     @Override
     public Long createWorkoutDiary(Long userId, CreateWorkoutDiaryCommand command) {
         log.debug("event=workoutDiary_create_start userId={}", userId);
 
-        if (userId == null) {
-            throw new CalendarException(CalendarErrorCode.USER_ID_REQUIRED);
-        }
-
-        if (command.diaryDate() == null) {
-            throw new CalendarException(CalendarErrorCode.DIARY_DATE_REQUIRED);
-        }
-
-        if (workoutDiaryPort.existsByUserIdAndDiaryDate(userId, command.diaryDate())) {
-            throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
-        }
+        CalendarExerciseSnapshot exercise = calendarExercisePort.findExerciseByIdAndPart(
+                command.exerciseId(),
+                command.part()
+        );
 
         WorkoutDiary workoutDiary = WorkoutDiary.create(
                 userId,
-                command.title(),
-                command.content(),
-                command.diaryDate()
+                command.diaryDate(),
+                command.part(),
+                exercise.exerciseName(),
+                toDomainSets(command.sets())
         );
 
-        try {
-            Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
-            evictMonthAfterCommit(userId, command.diaryDate());
-            log.debug("event=workoutDiary_create_succeed userId={} workoutDiaryId={}", userId, workoutDiaryId);
-            return workoutDiaryId;
-        } catch (DataIntegrityViolationException ex) {
-            throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
-        }
+        Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
+        evictMonthAfterCommit(userId, command.diaryDate());
+
+        log.debug("event=workoutDiary_create_succeed userId={} workoutDiaryId={}", userId, workoutDiaryId);
+        return workoutDiaryId;
     }
 
     @Override
@@ -66,7 +62,26 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
         LocalDate diaryDate = workoutDiaryPort.findDiaryDateByUserIdAndWorkoutDiaryId(userId, workoutDiaryId);
 
-        workoutDiaryPort.updateWorkoutDiary(userId, workoutDiaryId, command.title(), command.content());
+        CalendarExerciseSnapshot exercise = calendarExercisePort.findExerciseByIdAndPart(
+                command.exerciseId(),
+                command.part()
+        );
+
+        WorkoutDiary workoutDiary = WorkoutDiary.create(
+                userId,
+                diaryDate,
+                command.part(),
+                exercise.exerciseName(),
+                toDomainSets(command.sets())
+        );
+
+        workoutDiaryPort.updateWorkoutDiary(
+                userId,
+                workoutDiaryId,
+                workoutDiary.getPart(),
+                workoutDiary.getExercise(),
+                workoutDiary.getSets()
+        );
 
         evictMonthAfterCommit(userId, diaryDate);
         log.debug("event=workoutDiary_update_succeed userId={}", userId);
@@ -85,6 +100,26 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
         evictMonthAfterCommit(userId, diaryDate);
         log.debug("event=workoutDiary_delete_succeed userId={}", userId);
+    }
+
+    private List<WorkoutDiarySet> toDomainSets(List<WorkoutDiarySetCommand> sets) {
+        if (sets == null) {
+            return List.of();
+        }
+        return sets.stream()
+                .map(this::toDomainSet)
+                .toList();
+    }
+
+    private WorkoutDiarySet toDomainSet(WorkoutDiarySetCommand set) {
+        if (set == null) {
+            return null;
+        }
+        return WorkoutDiarySet.create(
+                set.setOrder(),
+                set.weight(),
+                set.reps()
+        );
     }
 
     private void evictMonthAfterCommit(Long userId, LocalDate date) {

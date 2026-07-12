@@ -60,6 +60,7 @@ public class CommunityAdapter implements CommunityPort, PostReportTargetPort, Po
     @Override
     public Page<CommunityPostListResult> findCommunityPosts(
             CommunityPostType type,
+            String keyword,
             Pageable pageable
     ) {
 
@@ -70,6 +71,7 @@ public class CommunityAdapter implements CommunityPort, PostReportTargetPort, Po
         return springDataCommunityRepository
                 .findCommunityPosts(
                         typeValue,
+                        keyword,
                         pageable
                 )
                 .map(

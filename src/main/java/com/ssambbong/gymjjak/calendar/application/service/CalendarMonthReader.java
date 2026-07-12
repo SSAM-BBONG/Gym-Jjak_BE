@@ -8,7 +8,6 @@ import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthPtResult;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +50,7 @@ public class CalendarMonthReader {
                 );
 
         List<CalendarMonthDiaryResult> diaries =
-                workoutDiaryPort.findDiaryTitlesByUserIdAndPeriod(
+                workoutDiaryPort.findDiarySummariesByUserIdAndPeriod(
                         userId,
                         startDate,
                         endDate
@@ -70,7 +69,7 @@ public class CalendarMonthReader {
             dayMap.computeIfAbsent(
                     diary.date(),
                     CalendarMonthDayAccumulator::new
-            ).setDiaryTitle(diary.diaryTitle());
+            ).addDiary(diary.exercise());
         }
 
         List<CalendarMonthDayResult> days = dayMap.values()
@@ -91,7 +90,8 @@ public class CalendarMonthReader {
 
         private final LocalDate date;
         private boolean hasPt;
-        private String diaryTitle;
+        private String representativeExercise;
+        private int diaryCount;
 
         private CalendarMonthDayAccumulator(LocalDate date) {
             this.date = date;
@@ -101,16 +101,29 @@ public class CalendarMonthReader {
             this.hasPt = true;
         }
 
-        private void setDiaryTitle(String diaryTitle) {
-            this.diaryTitle = diaryTitle;
+        private void addDiary(String exercise) {
+            if (diaryCount == 0) {
+                this.representativeExercise = exercise;
+            }
+            this.diaryCount++;
         }
 
         private CalendarMonthDayResult toResult() {
             return new CalendarMonthDayResult(
                     date,
                     hasPt,
-                    diaryTitle
+                    diarySummary()
             );
+        }
+
+        private String diarySummary() {
+            if (diaryCount == 0) {
+                return null;
+            }
+            if (diaryCount == 1) {
+                return representativeExercise;
+            }
+            return representativeExercise + " 외 " + (diaryCount - 1) + "개";
         }
     }
 }
