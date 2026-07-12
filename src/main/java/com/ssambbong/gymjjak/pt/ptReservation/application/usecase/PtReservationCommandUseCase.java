@@ -15,4 +15,7 @@ public interface PtReservationCommandUseCase {
 
     // PT 코스 전체 취소
     void cancelPtReservation(CancelPtReservationCommand command);
+
+    // 개별 세션 취소
+    void cancelPtSession(CancelPtReservationCommand command);
 }

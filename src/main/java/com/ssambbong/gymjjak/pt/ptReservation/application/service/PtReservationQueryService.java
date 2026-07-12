@@ -11,6 +11,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForb
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,6 +108,53 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
     @Override
     public int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
         return ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
+    public List<PtSessionView> findMySessions(Long userId) {
+        log.debug("event=pt_session_list userId={}", userId);
+
+        List<PtReservation> sessions = ptReservationRepository.findAllByUserId(userId, null);
+
+        // distinct ptCourseId별 코스 정보 1회씩만 조회
+        List<Long> distinctCourseIds = sessions.stream()
+                .map(PtReservation::getPtCourseId)
+                .distinct()
+                .toList();
+
+        Map<Long, PtCourseQueryPort.PtCourseInfo> courseInfoMap = distinctCourseIds.stream()
+                .collect(Collectors.toMap(
+                        id -> id,
+                        ptCourseQueryPort::findPtCourseInfo
+                ));
+
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        List<PtSessionView> result = sessions.stream()
+                .map(r -> {
+                    PtCourseQueryPort.PtCourseInfo info = courseInfoMap.get(r.getPtCourseId());
+                    return new PtSessionView(
+                            r.getId(),
+                            r.getPtCourseId(),
+                            info.title(),
+                            info.trainerName(),
+                            r.getReservedStartAt(),
+                            r.getReservedEndAt(),
+                            computeSessionStatus(r, now)
+                    );
+                })
+                .toList();
+
+        log.info("event=pt_session_list_succeeded userId={} count={}", userId, result.size());
+        return result;
+    }
+
+    private PtSessionStatus computeSessionStatus(PtReservation r, LocalDateTime now) {
+        if (r.getStatus() == PtReservationStatus.CANCELLED) return PtSessionStatus.CANCELLED;
+        if (r.getStatus() == PtReservationStatus.COMPLETED || r.getReservedEndAt().isBefore(now)) {
+            return PtSessionStatus.COMPLETED;
+        }
+        return PtSessionStatus.RESERVED;
     }
 
     // AdminDashboard : 월별 예약된 pt 수 조회

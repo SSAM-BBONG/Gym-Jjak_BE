@@ -238,6 +238,39 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 reservation.getUserId(), reservation.getPtCourseId());
     }
 
+    @Override
+    public void cancelPtSession(CancelPtReservationCommand command) {
+        if (command.userId() == null || command.ptReservationId() == null) {
+            throw new PtReservationInvalidException();
+        }
+        log.debug("event=pt_session_cancel_started userId={} ptReservationId={}",
+                command.userId(), command.ptReservationId());
+
+        PtReservation reservation = ptReservationRepository.findById(command.ptReservationId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_session_cancel_failed reason=not_found ptReservationId={}",
+                            command.ptReservationId());
+                    return new PtReservationNotFoundException();
+                });
+
+        if (!reservation.getUserId().equals(command.userId())) {
+            log.warn("event=pt_session_cancel_failed reason=forbidden userId={} ptReservationId={}",
+                    command.userId(), command.ptReservationId());
+            throw new PtReservationForbiddenException();
+        }
+
+        // CANCELLED / COMPLETED 이면 도메인에서 PtReservationStatusInvalidException 발생
+        reservation.changeStatus(PtReservationStatus.CANCELLED);
+        ptReservationRepository.updateStatus(reservation);
+
+        eventPublisher.publishEvent(
+                new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
+
+        evictMonthAfterCommit(reservation.getUserId(), reservation.getReservedStartAt());
+
+        log.info("event=pt_session_cancel_succeeded ptReservationId={}", reservation.getId());
+    }
+
     private void validateSchedule(Long ptCourseId, LocalDateTime reservedStartAt, LocalDateTime reservedEndAt) {
         DayOfWeek day = reservedStartAt.getDayOfWeek();
         LocalTime startTime = reservedStartAt.toLocalTime();

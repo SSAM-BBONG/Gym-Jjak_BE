@@ -2,8 +2,10 @@ package com.ssambbong.gymjjak.pt.ptReservation.application.usecase;
 
 import com.ssambbong.gymjjak.pt.ptReservation.application.result.MonthlyPtReservationResult;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PtReservationQueryUseCase {
@@ -19,6 +21,9 @@ public interface PtReservationQueryUseCase {
 
     // 유저+코스 기준 완료 회차 수
     int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
+    // 내 PT 세션 목록 조회 (예약 탭)
+    List<PtSessionView> findMySessions(Long userId);
 
     record MyPtReservationView(
             Long ptReservationId,
@@ -47,5 +52,15 @@ public interface PtReservationQueryUseCase {
             int sessionNo,
             String title,
             Long feedbackId
+    ) {}
+
+    record PtSessionView(
+            Long ptReservationId,
+            Long ptCourseId,
+            String ptCourseTitle,
+            String trainerName,
+            LocalDateTime reservedStartAt,
+            LocalDateTime reservedEndAt,
+            PtSessionStatus sessionStatus
     ) {}
 }
