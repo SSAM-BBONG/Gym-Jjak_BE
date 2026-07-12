@@ -8,7 +8,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum PaymentResponseCode implements ResponseCode {
 
-    PAYMENT_PT_CREATED("PAYMENT_PT_CREATED", "PT 결제 요청이 생성되었습니다");
+    PAYMENT_PT_CREATED("PAYMENT_PT_CREATED", "PT 결제 요청이 생성되었습니다"),
+    WEBHOOK_RECEIVED("WEBHOOK_RECEIVED", "웹훅 처리 완료");
 
     private final String code;
     private final String message;

@@ -2,9 +2,12 @@ package com.ssambbong.gymjjak.payments.payment.application.service;
 
 import com.github.f4b6a3.tsid.TsidCreator;
 import com.ssambbong.gymjjak.payments.payment.application.command.CreatePtPaymentCommand;
+import com.ssambbong.gymjjak.payments.payment.application.command.ProcessWebhookCommand;
+import com.ssambbong.gymjjak.payments.payment.application.port.PortOnePaymentVerifyPort;
 import com.ssambbong.gymjjak.payments.payment.application.port.PtCoursePaymentQueryPort;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentDuplicateException;
+import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentNotFoundException;
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import com.ssambbong.gymjjak.payments.payment.domain.repository.PaymentRepository;
@@ -21,6 +24,7 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
     private final PaymentRepository paymentRepository;
     private final PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
+    private final PortOnePaymentVerifyPort portOnePaymentVerifyPort;
 
     @Override
     public PaymentInitResult createPtPayment(CreatePtPaymentCommand command) {
@@ -44,5 +48,54 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
         log.info("event=pt_payment_create_succeeded userId={} orderId={}", command.userId(), orderId);
         return new PaymentInitResult(orderId, info.price());
+    }
+
+    // 웹훅 수신
+    @Override
+    public void processWebhook(ProcessWebhookCommand command) {
+        log.info("event=webhook_received type={} orderId={}", command.type(), command.orderId());
+
+        Payment payment = paymentRepository.findByOrderId(command.orderId())
+                .orElseThrow(PaymentNotFoundException::new);
+
+        switch (command.type()) {
+            case "Transaction.Paid" -> {
+                if (payment.getStatus() != PaymentStatus.PENDING) {
+                    log.warn("event=webhook_skipped_duplicate type=Transaction.Paid orderId={} status={}",
+                            command.orderId(), payment.getStatus());
+                    return;
+                }
+                // PortOne API로 실제 결제 확인 (금액 위변조 방지)
+                PortOnePaymentVerifyPort.PortOnePaymentInfo info =
+                        portOnePaymentVerifyPort.getPaymentInfo(command.portonePaymentId());
+                if (info.amount() != payment.getAmount()) {
+                    log.warn("event=webhook_amount_mismatch orderId={} expected={} actual={}",
+                            command.orderId(), payment.getAmount(), info.amount());
+                    paymentRepository.update(payment.fail("결제 금액 불일치"));
+                    return;
+                }
+                paymentRepository.update(payment.pay(command.portonePaymentId()));
+                log.info("event=webhook_paid_succeeded orderId={}", command.orderId());
+            }
+            case "Transaction.Failed" -> {
+                if (payment.getStatus() != PaymentStatus.PENDING) {
+                    log.warn("event=webhook_skipped_duplicate type=Transaction.Failed orderId={} status={}",
+                            command.orderId(), payment.getStatus());
+                    return;
+                }
+                paymentRepository.update(payment.fail(null));
+                log.info("event=webhook_failed orderId={}", command.orderId());
+            }
+            case "Transaction.Cancelled" -> {
+                if (payment.getStatus() != PaymentStatus.PAID) {
+                    log.warn("event=webhook_skipped_duplicate type=Transaction.Cancelled orderId={} status={}",
+                            command.orderId(), payment.getStatus());
+                    return;
+                }
+                paymentRepository.update(payment.cancel());
+                log.info("event=webhook_cancelled orderId={}", command.orderId());
+            }
+            default -> log.warn("event=webhook_unknown_type type={}", command.type());
+        }
     }
 }

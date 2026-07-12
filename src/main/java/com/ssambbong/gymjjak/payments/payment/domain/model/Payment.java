@@ -66,4 +66,28 @@ public class Payment {
                 orderId, portonePaymentId, amount, status, productType,
                 paidAt, cancelledAt, failedAt, failReason);
     }
+
+    // PortOne 결제 확인 후 PAID로 전환
+    public Payment pay(String portonePaymentId) {
+        return new Payment(id, userId, ptCourseId, aiSubscriptionId,
+                orderId, portonePaymentId, amount,
+                PaymentStatus.PAID, productType,
+                LocalDateTime.now(), null, null, null);
+    }
+
+    // 결제 실패 처리
+    public Payment fail(String failReason) {
+        return new Payment(id, userId, ptCourseId, aiSubscriptionId,
+                orderId, portonePaymentId, amount,
+                PaymentStatus.FAILED, productType,
+                null, null, LocalDateTime.now(), failReason);
+    }
+
+    // 결제 취소 처리
+    public Payment cancel() {
+        return new Payment(id, userId, ptCourseId, aiSubscriptionId,
+                orderId, portonePaymentId, amount,
+                PaymentStatus.CANCELLED, productType,
+                paidAt, LocalDateTime.now(), null, null);
+    }
 }
