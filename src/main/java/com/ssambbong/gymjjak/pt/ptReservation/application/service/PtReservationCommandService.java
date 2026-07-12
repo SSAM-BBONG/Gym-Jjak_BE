@@ -238,6 +238,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 reservation.getUserId(), reservation.getPtCourseId());
     }
 
+    // 내 PT 세션 취소
     @Override
     public void cancelPtSession(CancelPtReservationCommand command) {
         if (command.userId() == null || command.ptReservationId() == null) {

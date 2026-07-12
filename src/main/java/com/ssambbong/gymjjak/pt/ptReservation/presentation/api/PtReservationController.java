@@ -163,6 +163,7 @@ public class PtReservationController {
         ));
     }
 
+    // 내 PT 세션 예약 목록 조회
     @GetMapping("/reservations/me/sessions")
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "내 PT 세션 목록 조회", description = "수강생이 본인의 모든 PT 세션(예약 단건) 목록을 조회한다.")
@@ -176,6 +177,7 @@ public class PtReservationController {
         ));
     }
 
+    // 내 PT 세션 예약 취소
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "PT 세션 개별 취소", description = "수강생이 본인의 PT 세션 1건을 취소한다.")
     @ApiResponses({

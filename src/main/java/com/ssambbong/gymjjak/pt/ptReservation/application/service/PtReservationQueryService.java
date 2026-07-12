@@ -110,6 +110,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         return ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
     }
 
+    // 내 PT 세션 목록 조회
     @Override
     public List<PtSessionView> findMySessions(Long userId) {
         log.debug("event=pt_session_list userId={}", userId);
