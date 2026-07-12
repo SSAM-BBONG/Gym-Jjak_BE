@@ -1,0 +1,2 @@
+ALTER TABLE subscriptions
+    MODIFY COLUMN status ENUM('ACTIVE', 'EXPIRED') NOT NULL;
