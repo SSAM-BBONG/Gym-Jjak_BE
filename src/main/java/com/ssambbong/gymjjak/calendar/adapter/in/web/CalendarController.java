@@ -6,7 +6,6 @@ import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarDayRespons
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarMonthResponse;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CalendarResponseCode;
 import com.ssambbong.gymjjak.calendar.adapter.in.web.response.CreateWorkoutDiaryResponse;
-import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.CalendarUsecase;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayResult;
@@ -40,11 +39,7 @@ public class CalendarController {
     ) {
         Long workoutDiaryId = workoutDiaryUsecase.createWorkoutDiary(
                 authUser.userId(),
-                new CreateWorkoutDiaryCommand(
-                        request.diaryDate(),
-                        request.title(),
-                        request.content()
-                )
+                request.toCommand()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)

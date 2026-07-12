@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public record CalendarMonthDiaryResult(
         LocalDate date,
-        String diaryTitle
+        Long workoutDiaryId,
+        String exercise
 ) {
 }

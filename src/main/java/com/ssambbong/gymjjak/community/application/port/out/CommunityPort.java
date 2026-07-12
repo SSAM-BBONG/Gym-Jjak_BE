@@ -15,6 +15,7 @@ public interface CommunityPort {
 
     Page<CommunityPostListResult> findCommunityPosts(
             CommunityPostType type,
+            String keyword,
             Pageable pageable
     );
 

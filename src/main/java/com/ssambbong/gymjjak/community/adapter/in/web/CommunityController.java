@@ -70,6 +70,8 @@ public class CommunityController {
             GlobalApiResponse<Page<CommunityPostListResponse>>> findCommunityPosts(
             @Parameter(description = "게시글 유형. 미입력 시 전체 게시글을 조회한다.", example = "FREE")
             @RequestParam(required = false) CommunityPostType type,
+            @Parameter(description = "게시글 제목 검색어", example = "운동")
+            @RequestParam(required = false) String keyword,
             @Parameter(description = "페이지 번호. 0부터 시작한다.", example = "0")
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @Parameter(description = "페이지 크기", example = "20")
@@ -84,6 +86,7 @@ public class CommunityController {
         Page<CommunityPostListResponse> response =
                 communityUseCase.findCommunityPosts(
                                 type,
+                                keyword,
                                 pageable
                         )
                         .map(CommunityPostListResponse::from);

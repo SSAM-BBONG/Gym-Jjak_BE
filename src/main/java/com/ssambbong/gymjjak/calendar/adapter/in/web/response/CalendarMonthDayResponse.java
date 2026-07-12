@@ -9,13 +9,13 @@ import java.time.LocalDate;
 public record CalendarMonthDayResponse(
         LocalDate date,
         Boolean pt,
-        String diaryTitle
+        String diarySummary
 ) {
     public static CalendarMonthDayResponse from(CalendarMonthDayResult result) {
         return new CalendarMonthDayResponse(
                 result.date(),
                 result.hasPt() ? Boolean.TRUE : null,
-                result.diaryTitle()
+                result.diarySummary()
         );
     }
 }
