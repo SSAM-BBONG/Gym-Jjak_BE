@@ -209,7 +209,7 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
              WHEN r.reserved_end_at < NOW() AND r.status != 'CANCELLED' THEN 1
              WHEN r.status = 'CANCELLED' AND DATE(r.cancelled_at) = DATE(r.reserved_start_at) THEN 1
              ELSE 0
-           END)                                                            AS completedCount,
+           END)                                                            AS progressCount,
                    pc.total_session_count                                              AS totalSessionCount
             FROM pt_reservations r
             JOIN users u ON r.user_id = u.user_id
