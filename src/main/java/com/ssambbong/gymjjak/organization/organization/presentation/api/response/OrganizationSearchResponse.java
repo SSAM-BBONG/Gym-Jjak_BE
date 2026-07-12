@@ -7,8 +7,7 @@ public record OrganizationSearchResponse(
         String businessName,
         String representativeName,
         String roadAddress,
-        String detailAddress,
-        String facilityPhone
+        String detailAddress
 ) {
     public static OrganizationSearchResponse from(OrganizationSearchResult result) {
         return new OrganizationSearchResponse(
@@ -16,8 +15,7 @@ public record OrganizationSearchResponse(
                 result.businessName(),
                 result.representativeName(),
                 result.roadAddress(),
-                result.detailAddress(),
-                result.facilityPhone()
+                result.detailAddress()
         );
     }
 }

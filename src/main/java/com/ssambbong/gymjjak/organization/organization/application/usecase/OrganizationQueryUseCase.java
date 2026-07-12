@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.organization.organization.application.query.Organiz
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchQuery;
 
 public interface OrganizationQueryUseCase {
 
@@ -22,5 +23,5 @@ public interface OrganizationQueryUseCase {
     OrganizationDetailResult findOrganizationDetail(Long organizationId);
 
     // 조직 검색 (사용자/트레이너용)
-    OrganizationSearchListResult searchOrganizations(String keyword, int page, int size);
+    OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query);
 }

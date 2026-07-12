@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.organization.organization.application.query.MyOrgan
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchResult;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
@@ -118,10 +119,10 @@ public class OrganizationAdaptor implements OrganizationRepository {
     }
 
     @Override
-    public OrganizationSearchListResult searchOrganizations(String keyword, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
+    public OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query) {
+        PageRequest pageRequest = PageRequest.of(query.page(), query.size());
         Page<OrganizationJpaEntity> result = springDataOrganizationRepository.searchByKeyword(
-                keyword, OrganizationStatus.ACTIVE, pageRequest);
+                query.keyword(), OrganizationStatus.ACTIVE, pageRequest);
         return new OrganizationSearchListResult(
                 result.getContent().stream()
                         .map(e -> new OrganizationSearchResult(
@@ -129,8 +130,7 @@ public class OrganizationAdaptor implements OrganizationRepository {
                                 e.getBusinessName(),
                                 e.getRepresentativeName(),
                                 e.getRoadAddress(),
-                                e.getDetailAddress(),
-                                e.getFacilityPhone()
+                                e.getDetailAddress()
                         ))
                         .toList(),
                 result.getNumber(),

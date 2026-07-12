@@ -5,6 +5,5 @@ public record OrganizationSearchResult(
         String businessName,
         String representativeName,
         String roadAddress,
-        String detailAddress,
-        String facilityPhone
+        String detailAddress
 ) {}

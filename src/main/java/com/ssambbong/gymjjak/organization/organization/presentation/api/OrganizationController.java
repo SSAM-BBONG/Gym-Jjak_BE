@@ -15,6 +15,7 @@ import com.ssambbong.gymjjak.organization.organization.presentation.api.mapper.O
 import com.ssambbong.gymjjak.organization.organization.presentation.api.request.OrganizationUpdateRequest;
 import com.ssambbong.gymjjak.organization.organization.presentation.api.response.*;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -160,7 +161,8 @@ public class OrganizationController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size
     ) {
-        OrganizationSearchListResult result = organizationQueryUseCase.searchOrganizations(keyword, page, size);
+        OrganizationSearchListResult result = organizationQueryUseCase.searchOrganizations(
+                new OrganizationSearchQuery(keyword, page, size));
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(OrganizationResponseCode.ORGANIZATION_SEARCH_FOUND,
                         OrganizationSearchListResponse.from(result))

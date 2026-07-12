@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.organization.organization.application.query.Organiz
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchQuery;
 import com.ssambbong.gymjjak.organization.organization.application.usecase.OrganizationQueryUseCase;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
@@ -77,9 +78,13 @@ public class OrganizationQueryService implements OrganizationQueryUseCase {
     }
 
     @Override
-    public OrganizationSearchListResult searchOrganizations(String keyword, int page, int size) {
-        String normalized = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
-        return organizationRepository.searchOrganizations(normalized, page, size);
+    public OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query) {
+        if (query.keyword() == null || query.keyword().isBlank()) {
+            return new OrganizationSearchListResult(List.of(), query.page(), query.size(), 0L, 0);
+        }
+        return organizationRepository.searchOrganizations(
+                new OrganizationSearchQuery(query.keyword().trim(), query.page(), query.size())
+        );
     }
 
     @Monitored(name = "gymjjak.org.query.duration", domain = "organization", action = "find_detail")

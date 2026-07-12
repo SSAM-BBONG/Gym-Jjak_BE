@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.organization.organization.application.query.MyOrgan
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchQuery;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 
@@ -45,5 +46,5 @@ public interface OrganizationRepository {
 
     int hardDeleteByIds(List<Long> ids);
 
-    OrganizationSearchListResult searchOrganizations(String keyword, int page, int size);
+    OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query);
 }
