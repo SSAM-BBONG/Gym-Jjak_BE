@@ -1,9 +1,9 @@
 package com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response;
 
-import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public record CancelPtReservationResponse(
         PtReservationStatus status,
@@ -12,7 +12,7 @@ public record CancelPtReservationResponse(
     public static CancelPtReservationResponse cancelled() {
         return new CancelPtReservationResponse(
                 PtReservationStatus.CANCELLED,
-                LocalDateTime.now()
+                LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
         );
     }
 }
