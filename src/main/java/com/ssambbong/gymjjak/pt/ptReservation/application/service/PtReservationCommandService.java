@@ -32,10 +32,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.List;
 
 
@@ -76,12 +74,12 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationInvalidException();
         }
 
-        // 예약 수 (취소 미포함) >= 총 회차 수 면 예약 불가
-        int nonCancelledCount = ptReservationRepository.countNonCancelledByUserIdAndPtCourseId(
+        // 소모된 세션 수 >= 총 회차 수면 예약 불가 (당일 취소 포함, 이전 취소 제외)
+        int consumedCount = ptReservationRepository.countConsumedByUserIdAndPtCourseId(
                 command.userId(), command.ptCourseId());
-        if (nonCancelledCount >= ptCourse.getTotalSessionCount()) {
+        if (consumedCount >= ptCourse.getTotalSessionCount()) {
             log.warn("event=pt_reservation_create_failed reason=limit_exceeded userId={} ptCourseId={} count={} total={}",
-                    command.userId(), command.ptCourseId(), nonCancelledCount, ptCourse.getTotalSessionCount());
+                    command.userId(), command.ptCourseId(), consumedCount, ptCourse.getTotalSessionCount());
             throw new PtReservationLimitExceededException();
         }
 
@@ -99,9 +97,9 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         }
 
         // 완료 처리 된 회차 수 >=1 이면 in_progress
-        int completedCount = ptReservationRepository.countCompletedByUserIdAndPtCourseId(
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
                 command.userId(), command.ptCourseId());
-        PtReservationStatus initialStatus = completedCount >= 1
+        PtReservationStatus initialStatus = progressCount >= 1
                 ? PtReservationStatus.IN_PROGRESS
                 : PtReservationStatus.RESERVED;
 
@@ -223,11 +221,9 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         Long reservationUserId = reservation.getUserId();
         LocalDateTime reservedStartAt = reservation.getReservedStartAt();
 
-        // 당일 취소 → 노쇼 처리 (횟수 차감), 이전 취소 → 정상 취소 (횟수 반환)
-        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        PtReservationStatus newStatus = reservedStartAt.toLocalDate().isEqual(today)
-                ? PtReservationStatus.COMPLETED
-                : PtReservationStatus.CANCELLED;
+        // 당일 취소(노쇼) = CANCELLED + cancelledAt 당일 → progressCount에 포함
+        // 이전 취소 = CANCELLED + cancelledAt 이전일 → progressCount 미포함 (횟수 반환)
+        PtReservationStatus newStatus = PtReservationStatus.CANCELLED;
 
         reservation.changeStatus(newStatus);
         ptReservationRepository.updateStatus(reservation);

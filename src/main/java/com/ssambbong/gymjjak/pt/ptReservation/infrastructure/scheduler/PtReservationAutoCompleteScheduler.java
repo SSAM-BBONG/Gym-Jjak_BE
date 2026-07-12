@@ -7,29 +7,23 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PtReservationAutoCompleteScheduler {
-
-    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
     private final SpringDataPtReservationRepository ptReservationRepository;
 
     @Transactional
     @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
     public void autoCompleteExpiredReservations() {
-        LocalDateTime now = LocalDateTime.now(SEOUL);
-        int completed = ptReservationRepository.bulkCompleteExpired(now);
+        int inProgress = ptReservationRepository.bulkUpdateToInProgress();
+        if (inProgress > 0) {
+            log.info("event=pt_auto_in_progress_succeeded count={}", inProgress);
+        }
+        int completed = ptReservationRepository.bulkCompleteAll();
         if (completed > 0) {
             log.info("event=pt_auto_complete_succeeded count={}", completed);
-            int inProgress = ptReservationRepository.bulkUpdateToInProgress();
-            if (inProgress > 0) {
-                log.info("event=pt_auto_in_progress_succeeded count={}", inProgress);
-            }
         }
     }
 }

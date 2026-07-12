@@ -15,7 +15,10 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     @Query("""
             SELECT COUNT(r) > 0 FROM PtReservationJpaEntity r
             WHERE r.ptCourseId = :ptCourseId
-            AND r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED
+            AND r.status IN (
+                com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED,
+                com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.IN_PROGRESS
+            )
             AND r.reservedStartAt < :reservedEndAt
             AND r.reservedEndAt > :reservedStartAt
             """)
@@ -109,7 +112,10 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
         WHERE r.ptCourseId = :ptCourseId
           AND r.reservedStartAt >= :from
           AND r.reservedStartAt < :to
-          AND r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED
+          AND r.status IN (
+              com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED,
+              com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.IN_PROGRESS
+          )
         """)
     List<LocalDateTime> findReservedStartAtsByPtCourseIdAndRange(
             @Param("ptCourseId") Long ptCourseId,
@@ -199,14 +205,18 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     @Query(value = """
             SELECT u.name                                                             AS userName,
                    MIN(r.created_at)                                                  AS enrolledAt,
-                   SUM(CASE WHEN r.status = 'COMPLETED' THEN 1 ELSE 0 END)           AS completedCount,
+                   SUM(CASE
+             WHEN r.reserved_end_at < NOW() AND r.status != 'CANCELLED' THEN 1
+             WHEN r.status = 'CANCELLED' AND DATE(r.cancelled_at) = DATE(r.reserved_start_at) THEN 1
+             ELSE 0
+           END)                                                            AS completedCount,
                    pc.total_session_count                                              AS totalSessionCount
             FROM pt_reservations r
             JOIN users u ON r.user_id = u.user_id
             JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
             WHERE r.pt_course_id = :ptCourseId
               AND r.organization_id = :organizationId
-              AND r.status != 'CANCELLED'
+              AND NOT (r.status = 'CANCELLED' AND DATE(r.cancelled_at) != DATE(r.reserved_start_at))
             GROUP BY r.user_id, u.name, pc.total_session_count
             ORDER BY MIN(r.created_at) ASC
             """, nativeQuery = true)
@@ -214,24 +224,26 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("ptCourseId") Long ptCourseId,
             @Param("organizationId") Long organizationId);
 
-    // 유저+코스 기준 비취소 예약 수 (RESERVED + COMPLETED)
-    int countByUserIdAndPtCourseIdAndStatusNot(Long userId, Long ptCourseId, PtReservationStatus status);
+    // 유저+코스 기준 세션 한도 소모 수 (당일 취소 포함, 이전 취소만 제외)
+    @Query(value = """
+        SELECT COUNT(*) FROM pt_reservations
+        WHERE user_id = :userId AND pt_course_id = :ptCourseId
+          AND NOT (status = 'CANCELLED' AND DATE(cancelled_at) != DATE(reserved_start_at))
+        """, nativeQuery = true)
+    int countConsumedByUserIdAndPtCourseId(@Param("userId") Long userId, @Param("ptCourseId") Long ptCourseId);
 
-    // 유저+코스 기준 특정 상태 예약 수
-    int countByUserIdAndPtCourseIdAndStatus(Long userId, Long ptCourseId, PtReservationStatus status);
+    // 유저+코스 기준 진행 회차 수 (endAt 지난 비취소 + 당일 취소)
+    @Query(value = """
+        SELECT COUNT(*) FROM pt_reservations
+        WHERE user_id = :userId AND pt_course_id = :ptCourseId
+          AND (
+            (reserved_end_at < NOW() AND status != 'CANCELLED')
+            OR (status = 'CANCELLED' AND DATE(cancelled_at) = DATE(reserved_start_at))
+          )
+        """, nativeQuery = true)
+    int countProgressByUserIdAndPtCourseId(@Param("userId") Long userId, @Param("ptCourseId") Long ptCourseId);
 
-    // reservedEndAt이 지난 RESERVED 예약 일괄 COMPLETED 처리
-    @Modifying
-    @Query("""
-        UPDATE PtReservationJpaEntity r
-        SET r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.COMPLETED,
-            r.completedAt = :now
-        WHERE r.reservedEndAt <= :now
-          AND r.status = com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus.RESERVED
-        """)
-    int bulkCompleteExpired(@Param("now") LocalDateTime now);
-
-    // 완료된 세션이 1개 이상인 코스의 RESERVED 예약을 IN_PROGRESS로 일괄 전환
+    // 진행 회차 >= 1인 코스의 RESERVED 예약을 IN_PROGRESS로 일괄 전환
     @Modifying
     @Query(value = """
         UPDATE pt_reservations r
@@ -241,10 +253,32 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
               SELECT 1 FROM pt_reservations r2
               WHERE r2.user_id = r.user_id
                 AND r2.pt_course_id = r.pt_course_id
-                AND r2.status = 'COMPLETED'
+                AND (
+                  (r2.reserved_end_at <= NOW() AND r2.status != 'CANCELLED')
+                  OR (r2.status = 'CANCELLED' AND DATE(r2.cancelled_at) = DATE(r2.reserved_start_at))
+                )
           )
         """, nativeQuery = true)
     int bulkUpdateToInProgress();
+
+    // 진행 회차 = totalSessionCount인 코스의 IN_PROGRESS 예약을 COMPLETED로 일괄 전환
+    @Modifying
+    @Query(value = """
+        UPDATE pt_reservations r
+        JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
+        SET r.status = 'COMPLETED'
+        WHERE r.status = 'IN_PROGRESS'
+          AND (
+            SELECT COUNT(*) FROM pt_reservations r2
+            WHERE r2.user_id = r.user_id
+              AND r2.pt_course_id = r.pt_course_id
+              AND (
+                (r2.reserved_end_at <= NOW() AND r2.status != 'CANCELLED')
+                OR (r2.status = 'CANCELLED' AND DATE(r2.cancelled_at) = DATE(r2.reserved_start_at))
+              )
+          ) >= pc.total_session_count
+        """, nativeQuery = true)
+    int bulkCompleteAll();
 
     // 리마인더 발송 대상 조회 — 지정 시간 범위 내 시작하는 RESERVED 상태 예약
     @Query("""

@@ -83,7 +83,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 .map(c -> new CurriculumView(c.id(), c.sessionNo(), c.title(), feedbackIdMap.get(c.id())))
                 .toList();
 
-        int progressCount = ptReservationRepository.countCompletedByUserIdAndPtCourseId(
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
                 reservation.getUserId(), reservation.getPtCourseId());
 
         log.info("event=pt_reservation_detail_succeeded ptReservationId={}", ptReservationId);
@@ -101,7 +101,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
     @Override
     public int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
-        return ptReservationRepository.countCompletedByUserIdAndPtCourseId(userId, ptCourseId);
+        return ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
     }
 
     // AdminDashboard : 월별 예약된 pt 수 조회
@@ -182,7 +182,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         // feedbacks에서 가장 최근 피드백 날짜 조회
         LocalDate lastPtDate = feedbackQueryPort.findLastFeedbackDate(reservation.getId());
 
-        int progressCount = ptReservationRepository.countCompletedByUserIdAndPtCourseId(
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
                 reservation.getUserId(), reservation.getPtCourseId());
 
         // 위 + PtReservation 자체 데이터 합쳐 View 생성

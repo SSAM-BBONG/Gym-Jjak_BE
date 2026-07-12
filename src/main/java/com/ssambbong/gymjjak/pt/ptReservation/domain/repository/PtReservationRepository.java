@@ -34,11 +34,11 @@ public interface PtReservationRepository {
     // 특정 상태 예약 수 집계 (통계용)
     long countByStatus(PtReservationStatus status);
 
-    // 유저+코스 기준 비취소 예약 수 (RESERVED + COMPLETED)
-    int countNonCancelledByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+    // 유저+코스 기준 세션 한도 소모 수 (당일 취소 포함, 이전 취소 제외)
+    int countConsumedByUserIdAndPtCourseId(Long userId, Long ptCourseId);
 
-    // 유저+코스 기준 완료 회차 수
-    int countCompletedByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+    // 유저+코스 기준 진행 회차 수 (endAt 지난 비취소 + 당일 취소)
+    int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId);
 
     // 특정 강습의 기간 내 RESERVED 예약 시작 시각 목록 (가용 날짜/시간 슬롯 계산용)
     List<LocalDateTime> findReservedStartAtsByPtCourseId(Long ptCourseId, LocalDateTime from, LocalDateTime to);
