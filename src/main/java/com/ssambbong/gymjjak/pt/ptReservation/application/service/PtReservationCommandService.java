@@ -202,7 +202,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     }
 
     @Override
-    public PtReservation cancelPtReservation(CancelPtReservationCommand command) {
+    public void cancelPtReservation(CancelPtReservationCommand command) {
         // controller 외 진입점(batch, event handler 등) 방어
         if (command.userId() == null || command.ptReservationId() == null) {
             throw new PtReservationInvalidException();
@@ -225,23 +225,17 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
-        Long reservationUserId = reservation.getUserId();
-        LocalDateTime reservedStartAt = reservation.getReservedStartAt();
-
-        // 당일 취소(노쇼) = CANCELLED + cancelledAt 당일 → progressCount에 포함
-        // 이전 취소 = CANCELLED + cancelledAt 이전일 → progressCount 미포함 (횟수 반환)
-        PtReservationStatus newStatus = PtReservationStatus.CANCELLED;
-
-        reservation.changeStatus(newStatus);
-        ptReservationRepository.updateStatus(reservation);
+        // PT 코스 전체 취소 (COMPLETED 제외 전 세션 일괄 CANCELLED)
+        ptReservationRepository.bulkCancelByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
 
         evictMonthAfterCommit(
-                reservationUserId,
-                reservedStartAt
+                reservation.getUserId(),
+                reservation.getReservedStartAt()
         );
 
-        log.info("event=pt_reservation_cancel_succeeded ptReservationId={}", command.ptReservationId());
-        return reservation;
+        log.info("event=pt_reservation_cancel_succeeded userId={} ptCourseId={}",
+                reservation.getUserId(), reservation.getPtCourseId());
     }
 
     private void validateSchedule(Long ptCourseId, LocalDateTime reservedStartAt, LocalDateTime reservedEndAt) {

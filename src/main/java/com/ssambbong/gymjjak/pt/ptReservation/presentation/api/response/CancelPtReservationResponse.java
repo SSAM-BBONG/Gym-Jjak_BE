@@ -9,11 +9,10 @@ public record CancelPtReservationResponse(
         PtReservationStatus status,
         LocalDateTime cancelledAt
 ) {
-    // 도메인 객체로부터 응답 생성
-    public static CancelPtReservationResponse from(PtReservation reservation) {
+    public static CancelPtReservationResponse cancelled() {
         return new CancelPtReservationResponse(
-                reservation.getStatus(),
-                reservation.getCancelledAt()
+                PtReservationStatus.CANCELLED,
+                LocalDateTime.now()
         );
     }
 }

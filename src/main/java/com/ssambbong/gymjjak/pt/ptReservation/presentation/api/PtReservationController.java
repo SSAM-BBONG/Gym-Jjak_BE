@@ -154,12 +154,12 @@ public class PtReservationController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("reservationId") Long ptReservationId
     ) {
-        PtReservation reservation = ptReservationCommandUseCase.cancelPtReservation(
+        ptReservationCommandUseCase.cancelPtReservation(
                 new CancelPtReservationCommand(authUser.userId(), ptReservationId)
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtReservationResponseCode.PT_RESERVATION_CANCELLED,
-                CancelPtReservationResponse.from(reservation)
+                CancelPtReservationResponse.cancelled()
         ));
     }
 

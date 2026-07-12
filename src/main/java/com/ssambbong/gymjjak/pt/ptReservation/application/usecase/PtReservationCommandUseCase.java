@@ -13,6 +13,6 @@ public interface PtReservationCommandUseCase {
     // PT 예약 상태 변경 → 변경된 예약 도메인 객체 반환
     PtReservation changePtReservationStatus(ChangePtReservationStatusCommand command);
 
-    // PT 예약 취소 → 취소된 예약 도메인 객체 반환
-    PtReservation cancelPtReservation(CancelPtReservationCommand command);
+    // PT 코스 전체 취소
+    void cancelPtReservation(CancelPtReservationCommand command);
 }

@@ -70,6 +70,11 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
     }
 
     @Override
+    public int bulkCancelByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.bulkCancelByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
     public int bulkCompleteByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
         return repository.bulkCompleteByUserIdAndPtCourseId(userId, ptCourseId);
     }
