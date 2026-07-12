@@ -4,6 +4,7 @@ public record OrgStatsResult(
         long trainerCount,
         long totalUserCount,
         long currentUserCount,
+        long thisMonthRevenue,
         OrgTrendResult trend
 ) {
 }
