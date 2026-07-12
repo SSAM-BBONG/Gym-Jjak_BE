@@ -90,6 +90,7 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
                            o.detailAddress AS detailAddress
                     FROM OrganizationJpaEntity o
                     WHERE o.status = :status
+                      AND o.deletedAt IS NULL
                       AND (:keyword IS NULL
                            OR o.businessName LIKE CONCAT('%', :keyword, '%')
                            OR o.representativeName LIKE CONCAT('%', :keyword, '%'))
@@ -98,6 +99,7 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
             countQuery = """
                     SELECT COUNT(o) FROM OrganizationJpaEntity o
                     WHERE o.status = :status
+                      AND o.deletedAt IS NULL
                       AND (:keyword IS NULL
                            OR o.businessName LIKE CONCAT('%', :keyword, '%')
                            OR o.representativeName LIKE CONCAT('%', :keyword, '%'))
