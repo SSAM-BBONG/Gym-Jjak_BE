@@ -83,12 +83,17 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
 
     @Query(
             value = """
-                    SELECT o FROM OrganizationJpaEntity o
+                    SELECT o.organizationId AS organizationId,
+                           o.businessName AS businessName,
+                           o.representativeName AS representativeName,
+                           o.roadAddress AS roadAddress,
+                           o.detailAddress AS detailAddress
+                    FROM OrganizationJpaEntity o
                     WHERE o.status = :status
                       AND (:keyword IS NULL
                            OR o.businessName LIKE CONCAT('%', :keyword, '%')
                            OR o.representativeName LIKE CONCAT('%', :keyword, '%'))
-                    ORDER BY o.businessName ASC
+                    ORDER BY o.businessName ASC, o.organizationId ASC
                     """,
             countQuery = """
                     SELECT COUNT(o) FROM OrganizationJpaEntity o
@@ -98,9 +103,17 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
                            OR o.representativeName LIKE CONCAT('%', :keyword, '%'))
                     """
     )
-    Page<OrganizationJpaEntity> searchByKeyword(
+    Page<OrganizationSearchView> searchByKeyword(
             @Param("keyword") String keyword,
             @Param("status") OrganizationStatus status,
             Pageable pageable
     );
+
+    interface OrganizationSearchView {
+        Long getOrganizationId();
+        String getBusinessName();
+        String getRepresentativeName();
+        String getRoadAddress();
+        String getDetailAddress();
+    }
 }

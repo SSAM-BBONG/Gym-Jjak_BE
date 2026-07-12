@@ -77,6 +77,7 @@ public class OrganizationQueryService implements OrganizationQueryUseCase {
         );
     }
 
+    @Monitored(name = "gymjjak.org.query.duration", domain = "organization", action = "search")
     @Override
     public OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query) {
         if (query.keyword() == null || query.keyword().isBlank()) {
