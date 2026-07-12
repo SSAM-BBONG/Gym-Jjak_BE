@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.payments.payment.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedUpdatedEntity;
+import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 import jakarta.persistence.*;
@@ -91,5 +92,25 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
         this.status = PaymentStatus.FAILED;
         this.failedAt = LocalDateTime.now();
         this.failReason = failReason;
+    }
+
+    public static PaymentJpaEntity from(Payment domain) {
+        return new PaymentJpaEntity(
+                domain.getUserId(),
+                domain.getPtCourseId(),
+                domain.getAiSubscriptionId(),
+                domain.getOrderId(),
+                domain.getAmount(),
+                domain.getProductType()
+        );
+    }
+
+    public Payment toDomain() {
+        return Payment.restore(
+                id, userId, ptCourseId, aiSubscriptionId,
+                orderId, portonePaymentId, amount,
+                status, productType,
+                paidAt, cancelledAt, failedAt, failReason
+        );
     }
 }

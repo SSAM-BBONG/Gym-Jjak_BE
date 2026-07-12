@@ -56,10 +56,6 @@ public class SubscriptionJpaEntity extends BaseCreatedUpdatedEntity {
         this.expiredAt = expiredAt;
     }
 
-    public void cancel() {
-        this.status = SubscriptionStatus.CANCELLED;
-    }
-
     public void expire() {
         this.status = SubscriptionStatus.EXPIRED;
     }
