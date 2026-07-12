@@ -121,16 +121,16 @@ public class OrganizationAdaptor implements OrganizationRepository {
     @Override
     public OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query) {
         PageRequest pageRequest = PageRequest.of(query.page(), query.size());
-        Page<OrganizationJpaEntity> result = springDataOrganizationRepository.searchByKeyword(
+        Page<SpringDataOrganizationRepository.OrganizationSearchView> result = springDataOrganizationRepository.searchByKeyword(
                 query.keyword(), OrganizationStatus.ACTIVE, pageRequest);
         return new OrganizationSearchListResult(
                 result.getContent().stream()
-                        .map(e -> new OrganizationSearchResult(
-                                e.getOrganizationId(),
-                                e.getBusinessName(),
-                                e.getRepresentativeName(),
-                                e.getRoadAddress(),
-                                e.getDetailAddress()
+                        .map(v -> new OrganizationSearchResult(
+                                v.getOrganizationId(),
+                                v.getBusinessName(),
+                                v.getRepresentativeName(),
+                                v.getRoadAddress(),
+                                v.getDetailAddress()
                         ))
                         .toList(),
                 result.getNumber(),
