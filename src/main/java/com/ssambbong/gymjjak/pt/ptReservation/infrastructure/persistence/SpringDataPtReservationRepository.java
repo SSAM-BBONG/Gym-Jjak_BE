@@ -230,7 +230,7 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
         UPDATE pt_reservations
         SET status = 'CANCELLED', cancelled_at = NOW()
         WHERE user_id = :userId AND pt_course_id = :ptCourseId
-          AND status != 'COMPLETED'
+          AND status NOT IN ('CANCELLED', 'COMPLETED')
         """, nativeQuery = true)
     int bulkCancelByUserIdAndPtCourseId(@Param("userId") Long userId, @Param("ptCourseId") Long ptCourseId);
 
@@ -286,7 +286,7 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     @Query(value = """
         UPDATE pt_reservations r
         JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
-        SET r.status = 'COMPLETED'
+        SET r.status = 'COMPLETED', r.completed_at = NOW()
         WHERE r.status = 'IN_PROGRESS'
           AND (
             SELECT COUNT(*) FROM pt_reservations r2

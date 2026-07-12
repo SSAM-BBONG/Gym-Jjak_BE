@@ -229,6 +229,9 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         ptReservationRepository.bulkCancelByUserIdAndPtCourseId(
                 reservation.getUserId(), reservation.getPtCourseId());
 
+        eventPublisher.publishEvent(
+                new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
+
         evictMonthAfterCommit(
                 reservation.getUserId(),
                 reservation.getReservedStartAt()
