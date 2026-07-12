@@ -10,7 +10,8 @@ public enum PaymentResponseCode implements ResponseCode {
 
     PAYMENT_PT_CREATED("PAYMENT_PT_CREATED", "PT 결제 요청이 생성되었습니다"),
     WEBHOOK_RECEIVED("WEBHOOK_RECEIVED", "웹훅 처리 완료"),
-    PAYMENTS_FETCHED("PAYMENTS_FETCHED", "결제 내역 조회 성공");
+    PAYMENTS_FETCHED("PAYMENTS_FETCHED", "결제 내역 조회 성공"),
+    PT_PURCHASE_STATUS_FETCHED("PT_PURCHASE_STATUS_FETCHED", "PT 구매 상태 조회 성공");
 
     private final String code;
     private final String message;

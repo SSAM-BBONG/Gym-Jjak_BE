@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.payments.payment.application.port.PtCoursePaymentQu
 import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionPaymentQueryPort;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentQueryUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
+import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import com.ssambbong.gymjjak.payments.payment.domain.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,12 @@ public class PaymentQueryService implements PaymentQueryUseCase {
     private final PaymentRepository paymentRepository;
     private final PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
     private final SubscriptionPaymentQueryPort subscriptionPaymentQueryPort;
+
+    // PT 코스 구매 여부 조회 (PAID 상태 결제 존재 시 true)
+    @Override
+    public boolean isPtCoursePurchased(Long userId, Long ptCourseId) {
+        return paymentRepository.existsByUserIdAndPtCourseIdAndStatus(userId, ptCourseId, PaymentStatus.PAID);
+    }
 
     // 내 결제 내역 목록 조회 (최신순)
     @Override

@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.payments.payment.presentation.api.request.CreatePtP
 import com.ssambbong.gymjjak.payments.payment.presentation.api.response.CreatePtPaymentResponse;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.response.PaymentMyListResponse;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.response.PaymentResponseCode;
+import com.ssambbong.gymjjak.payments.payment.presentation.api.response.PtPaymentStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +37,7 @@ public class PaymentController {
     private final PaymentCommandUseCase paymentCommandUseCase;
     private final PaymentQueryUseCase paymentQueryUseCase;
 
+    // 내 결제 내역 목록 조회
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "내 결제 내역 목록 조회", description = "본인의 결제 내역을 최신순으로 조회한다.")
     @ApiResponses({
@@ -51,6 +54,26 @@ public class PaymentController {
                 PaymentMyListResponse.from(paymentQueryUseCase.findMyPayments(authUser.userId()))));
     }
 
+    // PT 상세 -> 구매 상태 조회
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "PT 구매 상태 조회", description = "특정 PT 코스에 대해 본인의 유효한 구매 여부를 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = PtPaymentStatusResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/pt-courses/{ptCourseId}/my-status")
+    public ResponseEntity<GlobalApiResponse<?>> getPtPurchaseStatus(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId
+    ) {
+        boolean isPurchased = paymentQueryUseCase.isPtCoursePurchased(authUser.userId(), ptCourseId);
+        return ResponseEntity.ok(GlobalApiResponse.ok(PaymentResponseCode.PT_PURCHASE_STATUS_FETCHED,
+                PtPaymentStatusResponse.of(isPurchased)));
+    }
+
+    // PT 결제 요청
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "PT 결제 요청", description = "PT 코스 결제를 시작한다. orderId와 금액을 반환하며, 프론트에서 PortOne SDK 호출 시 사용한다.")
     @ApiResponses({
