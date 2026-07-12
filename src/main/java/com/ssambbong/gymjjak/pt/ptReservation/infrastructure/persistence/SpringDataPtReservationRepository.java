@@ -224,6 +224,16 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             @Param("ptCourseId") Long ptCourseId,
             @Param("organizationId") Long organizationId);
 
+    // 트레이너가 수강생 전체 코스 완료 처리 (CANCELLED 제외 전 세션 일괄 COMPLETED)
+    @Modifying
+    @Query(value = """
+        UPDATE pt_reservations
+        SET status = 'COMPLETED', completed_at = NOW()
+        WHERE user_id = :userId AND pt_course_id = :ptCourseId
+          AND status != 'CANCELLED'
+        """, nativeQuery = true)
+    int bulkCompleteByUserIdAndPtCourseId(@Param("userId") Long userId, @Param("ptCourseId") Long ptCourseId);
+
     // 유저+코스 기준 세션 한도 소모 수 (당일 취소 포함, 이전 취소만 제외)
     @Query(value = """
         SELECT COUNT(*) FROM pt_reservations

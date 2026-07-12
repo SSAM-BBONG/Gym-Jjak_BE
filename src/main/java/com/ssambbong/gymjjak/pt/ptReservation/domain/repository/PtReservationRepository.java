@@ -34,6 +34,9 @@ public interface PtReservationRepository {
     // 특정 상태 예약 수 집계 (통계용)
     long countByStatus(PtReservationStatus status);
 
+    // 수강생 전체 코스 완료 처리
+    int bulkCompleteByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
     // 유저+코스 기준 세션 한도 소모 수 (당일 취소 포함, 이전 취소 제외)
     int countConsumedByUserIdAndPtCourseId(Long userId, Long ptCourseId);
 
