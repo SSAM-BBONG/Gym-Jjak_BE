@@ -34,26 +34,19 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     // status 지정 -> 필터
     List<PtReservationJpaEntity> findAllByUserIdAndStatusOrderByReservedStartAtDesc(Long userId, PtReservationStatus status);
 
-    // ptCourse 도메인 강습별 활성 예약 수 배치 집계 (N+1 방지)
+    // 강습별 현재 수강 중인 수강생 수 + 전체 수강생 수를 한 번에 배치 집계
     @Query("""
-            SELECT r.ptCourseId, COUNT(r)
+            SELECT r.ptCourseId,
+                   COUNT(DISTINCT CASE WHEN r.status IN :activeStatuses THEN r.userId END),
+                   COUNT(DISTINCT CASE WHEN r.status <> :cancelledStatus THEN r.userId END)
             FROM PtReservationJpaEntity r
             WHERE r.ptCourseId IN :ptCourseIds
-              AND r.status IN :statuses
             GROUP BY r.ptCourseId
             """)
-    List<Object[]> countActiveGroupByPtCourseId(
+    List<Object[]> countStudentsGroupByPtCourseId(
             @Param("ptCourseIds") List<Long> ptCourseIds,
-            @Param("statuses") List<PtReservationStatus> statuses);
-
-    // ptCourse 도메인 강습별 전체 예약 수 배치 집계 (N+1 방지)
-    @Query("""
-            SELECT r.ptCourseId, COUNT(r)
-            FROM PtReservationJpaEntity r
-            WHERE r.ptCourseId IN :ptCourseIds
-            GROUP BY r.ptCourseId
-            """)
-    List<Object[]> countTotalGroupByPtCourseId(@Param("ptCourseIds") List<Long> ptCourseIds);
+            @Param("activeStatuses") List<PtReservationStatus> activeStatuses,
+            @Param("cancelledStatus") PtReservationStatus cancelledStatus);
 
     // 강습별 수강생 목록 조회 (최신 예약일순)
     List<PtReservationJpaEntity> findAllByPtCourseIdOrderByReservedStartAtDesc(Long ptCourseId);

@@ -132,10 +132,10 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<PtCourse> courses = ptCourseRepository
                 .findAllByTrainerProfileId(trainerProfileId, status);
 
-        // 강습 ID 목록으로 예약 수를 한 번에 집계 (N+1 방지)
+        // 강습 ID 목록으로 수강생 수를 한 번에 집계 (N+1 방지, 단일 쿼리)
         List<Long> courseIds = courses.stream().map(PtCourse::getId).toList();
-        Map<Long, Integer> activeCounts = ptReservationCountQueryPort.countActiveByPtCourseIds(courseIds);
-        Map<Long, Integer> totalCounts = ptReservationCountQueryPort.countTotalByPtCourseIds(courseIds);
+        PtReservationCountQueryPort.StudentCounts counts =
+                ptReservationCountQueryPort.countStudentsByPtCourseIds(courseIds);
 
         List<MyPtCourseListView> result = courses.stream()
                 .map(course -> new MyPtCourseListView(
@@ -144,8 +144,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                         course.getTitle(),
                         trainerName,
                         course.getStatus(),
-                        activeCounts.getOrDefault(course.getId(), 0),
-                        totalCounts.getOrDefault(course.getId(), 0)
+                        counts.active().getOrDefault(course.getId(), 0),
+                        counts.total().getOrDefault(course.getId(), 0)
                 ))
                 .toList();
 

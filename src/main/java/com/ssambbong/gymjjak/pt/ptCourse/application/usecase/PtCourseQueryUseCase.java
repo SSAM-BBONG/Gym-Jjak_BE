@@ -100,8 +100,8 @@ public interface PtCourseQueryUseCase {
             String title,
             String trainerName,
             PtCourseStatus status,
-            int activeReservationCount,   // RESERVED + IN_PROGRESS 수
-            int totalReservationCount     // 전체 예약 수
+            int activeReservationCount,   // 현재 수강 중인 수강생 수
+            int totalReservationCount     // 전체 수강생 수 (취소 제외)
     ) {}
 
     // 강습별 수강생 목록 응답 (강습 제목 + 예약 목록)
