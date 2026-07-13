@@ -4,6 +4,8 @@ import com.ssambbong.gymjjak.calendar.application.port.out.CalendarExercisePort;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarExerciseSnapshot;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
+import com.ssambbong.gymjjak.exercise.domain.exception.ExerciseErrorCode;
+import com.ssambbong.gymjjak.exercise.domain.exception.ExerciseException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,7 +22,7 @@ public class CalendarExercisePersistenceAdapter implements CalendarExercisePort 
             PartType part
     ) {
         ExerciseJpaEntity exercise = exerciseJpaRepository.findByIdAndPart(exerciseId, part)
-                .orElseThrow(() -> new CalendarException(CalendarErrorCode.EXERCISE_NOT_FOUND));
+                .orElseThrow(() -> new ExerciseException(ExerciseErrorCode.EXERCISE_NOT_FOUND));
 
         return new CalendarExerciseSnapshot(
                 exercise.getId(),

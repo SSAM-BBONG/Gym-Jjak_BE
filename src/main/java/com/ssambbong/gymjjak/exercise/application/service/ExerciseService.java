@@ -1,16 +1,15 @@
 package com.ssambbong.gymjjak.exercise.application.service;
 
-import com.ssambbong.gymjjak.exercise.adapter.out.persistence.ExerciseJpaEntity;
-import com.ssambbong.gymjjak.exercise.adapter.out.persistence.ExerciseJpaRepository;
 import com.ssambbong.gymjjak.exercise.application.command.CreateExerciseCommand;
 import com.ssambbong.gymjjak.exercise.application.command.UpdateExerciseCommand;
 import com.ssambbong.gymjjak.exercise.application.port.in.ExerciseUseCase;
+import com.ssambbong.gymjjak.exercise.application.port.out.ExercisePort;
 import com.ssambbong.gymjjak.exercise.application.result.ExerciseResult;
 import com.ssambbong.gymjjak.exercise.domain.exception.ExerciseErrorCode;
 import com.ssambbong.gymjjak.exercise.domain.exception.ExerciseException;
+import com.ssambbong.gymjjak.exercise.domain.model.Exercise;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,30 +20,28 @@ import java.util.List;
 @Transactional
 public class ExerciseService implements ExerciseUseCase {
 
-    private final ExerciseJpaRepository exerciseJpaRepository;
+    private final ExercisePort exercisePort;
 
     @Override
     public Long createExercise(CreateExerciseCommand command) {
         String exerciseName = normalize(command.exerciseName());
         validateDuplicate(command.part(), exerciseName);
 
-        try {
-            ExerciseJpaEntity saved = exerciseJpaRepository.save(
-                    new ExerciseJpaEntity(command.part(), exerciseName)
-            );
-            return saved.getId();
-        } catch (DataIntegrityViolationException ex) {
-            throw new ExerciseException(ExerciseErrorCode.EXERCISE_DUPLICATED);
-        }
+        return exercisePort.saveExercise(
+                Exercise.create(
+                        command.part(),
+                        exerciseName
+                )
+        );
     }
 
     @Override
     public void updateExercise(Long exerciseId, UpdateExerciseCommand command) {
-        ExerciseJpaEntity exercise = exerciseJpaRepository.findById(exerciseId)
+        Exercise exercise = exercisePort.findExerciseById(exerciseId)
                 .orElseThrow(() -> new ExerciseException(ExerciseErrorCode.EXERCISE_NOT_FOUND));
 
         String exerciseName = normalize(command.exerciseName());
-        if (exerciseJpaRepository.existsByPartAndExerciseNameAndIdNot(
+        if (exercisePort.existsByPartAndExerciseNameAndIdNot(
                 exercise.getPart(),
                 exerciseName,
                 exerciseId
@@ -52,27 +49,23 @@ public class ExerciseService implements ExerciseUseCase {
             throw new ExerciseException(ExerciseErrorCode.EXERCISE_DUPLICATED);
         }
 
-        try {
-            exercise.updateExerciseName(exerciseName);
-        } catch (DataIntegrityViolationException ex) {
-            throw new ExerciseException(ExerciseErrorCode.EXERCISE_DUPLICATED);
-        }
+        exercisePort.updateExerciseName(exerciseId, exerciseName);
     }
 
     @Override
     public void deleteExercise(Long exerciseId) {
-        ExerciseJpaEntity exercise = exerciseJpaRepository.findById(exerciseId)
+        Exercise exercise = exercisePort.findExerciseById(exerciseId)
                 .orElseThrow(() -> new ExerciseException(ExerciseErrorCode.EXERCISE_NOT_FOUND));
 
-        exerciseJpaRepository.delete(exercise);
+        exercisePort.deleteExercise(exercise);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ExerciseResult> findExercises(PartType part, String keyword) {
-        List<ExerciseJpaEntity> exercises = isBlank(keyword)
-                ? exerciseJpaRepository.findByPartOrderByExerciseNameAsc(part)
-                : exerciseJpaRepository.findByPartAndExerciseNameContainingIgnoreCaseOrderByExerciseNameAsc(
+        List<Exercise> exercises = isBlank(keyword)
+                ? exercisePort.findExercisesByPart(part)
+                : exercisePort.findExercisesByPartAndKeyword(
                         part,
                         keyword.trim()
                 );
@@ -83,16 +76,16 @@ public class ExerciseService implements ExerciseUseCase {
     }
 
     private void validateDuplicate(PartType part, String exerciseName) {
-        if (exerciseJpaRepository.existsByPartAndExerciseName(part, exerciseName)) {
+        if (exercisePort.existsByPartAndExerciseName(part, exerciseName)) {
             throw new ExerciseException(ExerciseErrorCode.EXERCISE_DUPLICATED);
         }
     }
 
-    private ExerciseResult toResult(ExerciseJpaEntity entity) {
+    private ExerciseResult toResult(Exercise exercise) {
         return new ExerciseResult(
-                entity.getId(),
-                entity.getPart(),
-                entity.getExerciseName()
+                exercise.getId(),
+                exercise.getPart(),
+                exercise.getExerciseName()
         );
     }
 
