@@ -8,13 +8,17 @@ import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.in.UserCommandUseCase;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
+import com.ssambbong.gymjjak.user.application.port.out.UserCacheEvictionPort;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
 import com.ssambbong.gymjjak.user.domain.model.*;
 import com.ssambbong.gymjjak.user.domain.policy.UserPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +32,7 @@ public class UserCommandService implements UserCommandUseCase {
     private final UserPort userPort;
     private final TokenPort tokenPort;
     private final BlacklistPort blacklistPort;
+    private final UserCacheEvictionPort userCacheEvictionPort;
 
     @Override
     public void registerUser(RegisterUserCommand command) {
@@ -156,6 +161,8 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @Cacheable(cacheNames = "userProfile", key = "#userId", sync = true)
+    @Transactional(readOnly = true)
     public UserProfileResult findMyProfileInfo(Long userId) {
         log.debug("event=user_findProfile_start userId={}", userId);
         User user = userPort.findById(userId)
@@ -184,6 +191,7 @@ public class UserCommandService implements UserCommandUseCase {
                 LocalDateTime.now()
         );
         userPort.save(user);
+        evictUserProfileAndUsernameAfterCommit(command.userId());
         log.info("event=user_updateProfile_succeed userId={}", command.userId());
 
     }
@@ -201,6 +209,7 @@ public class UserCommandService implements UserCommandUseCase {
         userPort.withdraw(userId, LocalDateTime.now());
 
         tokenPort.deleteRefreshToken(user.getId());
+        evictUserProfileAndUsernameAfterCommit(userId);
 
         log.info("event=user_withdrawUser_succeed userId={}", userId);
     }
@@ -221,6 +230,7 @@ public class UserCommandService implements UserCommandUseCase {
         if (command.status() == UserStatus.ACTIVE) {
             user.changeStatus(UserStatus.ACTIVE);
             userPort.updateStatus(user.getId(), UserStatus.ACTIVE);
+            evictUserProfileAfterCommit(user.getId());
             return;
         }
         BlacklistType blacklistType = toBlacklistType(command.status());
@@ -239,6 +249,7 @@ public class UserCommandService implements UserCommandUseCase {
 
         user.changeStatus(command.status());
         userPort.updateStatus(user.getId(), user.getStatus());
+        evictUserProfileAfterCommit(user.getId());
 
         log.info("event=user_statusUpdate_succeed userId={} status={}", command.userId(), command.status());
     }
@@ -447,12 +458,40 @@ public class UserCommandService implements UserCommandUseCase {
         );
 
         userPort.save(user);
+        evictUserProfileAndUsernameAfterCommit(command.userId());
     }
 
     @Override
+    @Cacheable(cacheNames = "userUsernameNickname", key = "#userId", sync = true)
     @Transactional(readOnly = true)
     public UserUsernameAndNicknameResult findUsernameAndNickname(Long userId) {
 
         return userPort.findUsernameAndNickname(userId);
+    }
+
+    private void evictUserProfileAfterCommit(Long userId) {
+        evictAfterCommit(() -> userCacheEvictionPort.evictUserProfile(userId));
+    }
+
+    private void evictUserProfileAndUsernameAfterCommit(Long userId) {
+        evictAfterCommit(() -> {
+            userCacheEvictionPort.evictUserProfile(userId);
+            userCacheEvictionPort.evictUsernameAndNickname(userId);
+        });
+    }
+
+    private void evictAfterCommit(Runnable eviction) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eviction.run();
+                        }
+                    }
+            );
+            return;
+        }
+        eviction.run();
     }
 }
