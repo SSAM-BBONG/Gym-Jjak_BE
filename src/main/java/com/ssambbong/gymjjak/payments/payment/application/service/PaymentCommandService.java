@@ -15,18 +15,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class PaymentCommandService implements PaymentCommandUseCase {
 
     private final PaymentRepository paymentRepository;
     private final PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
     private final PortOnePaymentVerifyPort portOnePaymentVerifyPort;
+    private final TransactionTemplate transactionTemplate;
 
     @Override
+    @Transactional
     public PaymentInitResult createPtPayment(CreatePtPaymentCommand command) {
         log.debug("event=pt_payment_create userId={} ptCourseId={}", command.userId(), command.ptCourseId());
 
@@ -41,7 +43,7 @@ public class PaymentCommandService implements PaymentCommandUseCase {
         PtCoursePaymentQueryPort.PtCoursePaymentInfo info =
                 ptCoursePaymentQueryPort.findPtCoursePaymentInfo(command.ptCourseId());
 
-        // "PT-" 접두사로 PT 결제 건 식별, TSID로 고유성 보장 (PortOne merchant_uid로 사용)
+        // "PT-" 접두사로 PT 결제 건 식별, TSID로 고유성 보장 (PortOne paymentId로 사용)
         String orderId = "PT-" + TsidCreator.getTsid().toString();
 
         paymentRepository.save(Payment.createForPt(command.userId(), command.ptCourseId(), orderId, info.price()));
@@ -51,51 +53,67 @@ public class PaymentCommandService implements PaymentCommandUseCase {
     }
 
     // 웹훅 수신
+    // Transaction.Paid는 PortOne API를 트랜잭션 밖에서 먼저 호출하여 DB 커넥션 점유 시간을 최소화한다
     @Override
     public void processWebhook(ProcessWebhookCommand command) {
         log.info("event=webhook_received type={} orderId={}", command.type(), command.orderId());
 
-        Payment payment = paymentRepository.findByOrderId(command.orderId())
-                .orElseThrow(PaymentNotFoundException::new);
-
-        switch (command.type()) {
-            case "Transaction.Paid" -> {
-                if (payment.getStatus() != PaymentStatus.PENDING) {
-                    log.warn("event=webhook_skipped_duplicate type=Transaction.Paid orderId={} status={}",
-                            command.orderId(), payment.getStatus());
-                    return;
-                }
-                // PortOne API로 실제 결제 확인 (금액 위변조 방지)
-                PortOnePaymentVerifyPort.PortOnePaymentInfo info =
-                        portOnePaymentVerifyPort.getPaymentInfo(command.portonePaymentId());
-                if (info.amount() != payment.getAmount()) {
-                    log.warn("event=webhook_amount_mismatch orderId={} expected={} actual={}",
-                            command.orderId(), payment.getAmount(), info.amount());
-                    paymentRepository.update(payment.fail("결제 금액 불일치"));
-                    return;
-                }
-                paymentRepository.update(payment.pay(command.portonePaymentId()));
-                log.info("event=webhook_paid_succeeded orderId={}", command.orderId());
-            }
-            case "Transaction.Failed" -> {
-                if (payment.getStatus() != PaymentStatus.PENDING) {
-                    log.warn("event=webhook_skipped_duplicate type=Transaction.Failed orderId={} status={}",
-                            command.orderId(), payment.getStatus());
-                    return;
-                }
-                paymentRepository.update(payment.fail(null));
-                log.info("event=webhook_failed orderId={}", command.orderId());
-            }
-            case "Transaction.Cancelled" -> {
-                if (payment.getStatus() != PaymentStatus.PAID) {
-                    log.warn("event=webhook_skipped_duplicate type=Transaction.Cancelled orderId={} status={}",
-                            command.orderId(), payment.getStatus());
-                    return;
-                }
-                paymentRepository.update(payment.cancel());
-                log.info("event=webhook_cancelled orderId={}", command.orderId());
-            }
-            default -> log.warn("event=webhook_unknown_type type={}", command.type());
+        // PortOne API 호출 (트랜잭션 밖 — 외부 HTTP 호출이 DB 커넥션을 점유하지 않도록 분리)
+        PortOnePaymentVerifyPort.PortOnePaymentInfo portOneInfo = null;
+        if ("Transaction.Paid".equals(command.type())) {
+            portOneInfo = portOnePaymentVerifyPort.getPaymentInfo(command.portonePaymentId());
         }
+
+        final PortOnePaymentVerifyPort.PortOnePaymentInfo finalInfo = portOneInfo;
+
+        // DB 조회 + 갱신만 트랜잭션으로 묶음
+        transactionTemplate.execute(status -> {
+            Payment payment = paymentRepository.findByOrderId(command.orderId())
+                    .orElseThrow(PaymentNotFoundException::new);
+
+            switch (command.type()) {
+                case "Transaction.Paid" -> {
+                    if (payment.getStatus() != PaymentStatus.PENDING) {
+                        log.warn("event=webhook_skipped_duplicate type=Transaction.Paid orderId={} status={}",
+                                command.orderId(), payment.getStatus());
+                        return null;
+                    }
+                    if (!"PAID".equals(finalInfo.status())) {
+                        log.warn("event=webhook_status_mismatch orderId={} portoneStatus={}",
+                                command.orderId(), finalInfo.status());
+                        paymentRepository.update(payment.fail("PortOne 결제 상태 불일치"));
+                        return null;
+                    }
+                    if (finalInfo.amount() != payment.getAmount()) {
+                        log.warn("event=webhook_amount_mismatch orderId={} expected={} actual={}",
+                                command.orderId(), payment.getAmount(), finalInfo.amount());
+                        paymentRepository.update(payment.fail("결제 금액 불일치"));
+                        return null;
+                    }
+                    paymentRepository.update(payment.pay(command.portonePaymentId()));
+                    log.info("event=webhook_paid_succeeded orderId={}", command.orderId());
+                }
+                case "Transaction.Failed" -> {
+                    if (payment.getStatus() != PaymentStatus.PENDING) {
+                        log.warn("event=webhook_skipped_duplicate type=Transaction.Failed orderId={} status={}",
+                                command.orderId(), payment.getStatus());
+                        return null;
+                    }
+                    paymentRepository.update(payment.fail(null));
+                    log.info("event=webhook_failed orderId={}", command.orderId());
+                }
+                case "Transaction.Cancelled" -> {
+                    if (payment.getStatus() != PaymentStatus.PAID) {
+                        log.warn("event=webhook_skipped_duplicate type=Transaction.Cancelled orderId={} status={}",
+                                command.orderId(), payment.getStatus());
+                        return null;
+                    }
+                    paymentRepository.update(payment.cancel());
+                    log.info("event=webhook_cancelled orderId={}", command.orderId());
+                }
+                default -> log.warn("event=webhook_unknown_type type={}", command.type());
+            }
+            return null;
+        });
     }
 }

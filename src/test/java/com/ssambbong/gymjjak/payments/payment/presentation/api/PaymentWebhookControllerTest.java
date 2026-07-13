@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.payments.payment.presentation.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ssambbong.gymjjak.global.application.auth.port.in.AuthenticateAccessTokenUseCase;
+import com.ssambbong.gymjjak.global.presentation.security.JwtAuthenticationConverter;
 import com.ssambbong.gymjjak.payments.payment.application.command.ProcessWebhookCommand;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentNotFoundException;
@@ -8,10 +10,9 @@ import com.ssambbong.gymjjak.payments.payment.presentation.api.request.WebhookPa
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -21,13 +22,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(PaymentWebhookController.class)
 class PaymentWebhookControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @MockBean  private PaymentCommandUseCase paymentCommandUseCase;
+
+    @MockitoBean private PaymentCommandUseCase paymentCommandUseCase;
+    @MockitoBean private AuthenticateAccessTokenUseCase authenticateAccessTokenUseCase;
+    @MockitoBean private JwtAuthenticationConverter jwtAuthenticationConverter;
 
     private static final String URL = "/api/payments/webhook";
 

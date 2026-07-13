@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentQueryUs
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import com.ssambbong.gymjjak.payments.payment.domain.repository.PaymentRepository;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,10 +52,17 @@ public class PaymentQueryService implements PaymentQueryUseCase {
     }
 
     // PT면 코스명, 구독이면 플랜 타입 (MONTHLY / YEARLY)
+    // PT 코스가 삭제된 경우 한 건 실패로 전체 목록이 깨지지 않도록 UNKNOWN으로 fallback
     private String resolveItemName(Payment payment) {
         return switch (payment.getProductType()) {
-            case PT -> ptCoursePaymentQueryPort
-                    .findPtCoursePaymentInfo(payment.getPtCourseId()).title();
+            case PT -> {
+                try {
+                    yield ptCoursePaymentQueryPort.findPtCoursePaymentInfo(payment.getPtCourseId()).title();
+                } catch (PtCourseNotFoundException e) {
+                    log.warn("event=pt_course_not_found ptCourseId={}", payment.getPtCourseId());
+                    yield "UNKNOWN";
+                }
+            }
             case SUBSCRIPTIONS -> subscriptionPaymentQueryPort
                     .findPlanTypeName(payment.getAiSubscriptionId())
                     .orElse("UNKNOWN");
