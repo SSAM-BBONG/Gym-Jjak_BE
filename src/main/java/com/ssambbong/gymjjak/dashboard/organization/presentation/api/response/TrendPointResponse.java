@@ -6,6 +6,6 @@ import java.time.LocalDate;
 
 public record TrendPointResponse(LocalDate date, long count) {
     public static TrendPointResponse from(TrendPoint point) {
-        return new TrendPointResponse(point.date(), point.count());
+        return new TrendPointResponse(point.date(), point.value());
     }
 }

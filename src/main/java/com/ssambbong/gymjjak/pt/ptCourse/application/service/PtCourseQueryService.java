@@ -17,7 +17,6 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotF
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
-import com.ssambbong.gymjjak.part.application.usecase.PartQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 @Slf4j
 @Service
@@ -44,7 +44,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final PtReservationRepository ptReservationRepository;
     private final UserNicknameQueryPort userNicknameQueryPort;
     private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
-    private final PartQueryUseCase partQueryUseCase;
     private final ReviewQueryPort reviewQueryPort;
     private final FileUrlUseCase fileUrlUseCase;
 
@@ -53,8 +52,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     @Monitored(name = "gymjjak.pt.course.query.duration", domain = "pt_course", action = "find_all")
     public List<PtCourseListView> findAllPtCourses() {
         log.debug("event=pt_courses_find_all");
-
-        Map<Long, String> partMap = buildPartMap();
 
         List<PtCourse> courses = ptCourseRepository.findAllVisible();
         if (courses.isEmpty()) return List.of();
@@ -74,8 +71,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             c.getTitle(),
                             resolveThumbnailUrl(c.getThumbnailFileId()),
                             c.getPrice(),
-                            c.getPartId(),
-                            partMap.getOrDefault(c.getPartId(), null),
+                            c.getPart(),
                             trainer != null ? trainer.trainerName() : null,
                             org != null ? org.organizationId() : null,
                             org != null ? org.businessName() : null,
@@ -185,7 +181,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<PtReservation> reservations = ptReservationRepository.findAllByPtCourseId(ptCourseId);
 
         // userId 목록으로 닉네임 한 번에 조회 (N+1 방지)
-        List<Long> userIds = reservations.stream().map(PtReservation::getUserId).toList();
+        List<Long> userIds = reservations.stream().map(PtReservation::getUserId).distinct().toList();
         Map<Long, String> nicknameMap = userNicknameQueryPort.findNicknamesByUserIds(userIds);
 
         // 예약 ID 목록으로 마지막 피드백 날짜 한 번에 조회 (N+1 방지)
@@ -193,15 +189,35 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         Map<Long, LocalDate> lastFeedbackDateMap =
                 courseReservationFeedbackQueryPort.findLastFeedbackDatesByReservationIds(reservationIds);
 
-        List<CourseReservationView> reservationViews = reservations.stream()
-                .map(r -> new CourseReservationView(
-                        r.getId(),
-                        nicknameMap.getOrDefault(r.getUserId(), null),
-                        r.getStatus(),
-                        lastFeedbackDateMap.getOrDefault(r.getId(), null), // 피드백 없으면 null
-                        r.getProgressCount(),
-                        r.getTotalSessionCount()
-                ))
+        // 수강생 1명당 1줄 — 세션별 row를 userId 기준으로 집계
+        Map<Long, List<PtReservation>> byUser = reservations.stream()
+                .collect(Collectors.groupingBy(PtReservation::getUserId, LinkedHashMap::new, Collectors.toList()));
+
+        List<CourseReservationView> reservationViews = byUser.entrySet().stream()
+                .map(entry -> {
+                    Long studentUserId = entry.getKey();
+                    List<PtReservation> studentSessions = entry.getValue();
+                    PtReservation rep = studentSessions.get(0);
+
+                    // 해당 수강생의 세션 중 가장 최근 피드백 날짜
+                    LocalDate lastPtDate = studentSessions.stream()
+                            .map(r -> lastFeedbackDateMap.get(r.getId()))
+                            .filter(Objects::nonNull)
+                            .max(Comparator.naturalOrder())
+                            .orElse(null);
+
+                    int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
+                            studentUserId, rep.getPtCourseId());
+
+                    return new CourseReservationView(
+                            rep.getId(),
+                            nicknameMap.getOrDefault(studentUserId, null),
+                            rep.getStatus(),
+                            lastPtDate,
+                            progressCount,
+                            rep.getTotalSessionCount()
+                    );
+                })
                 .toList();
 
         log.info("event=pt_course_reservations_find_succeeded ptCourseId={}, count={}",
@@ -250,12 +266,15 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         log.info("event=pt_reservation_detail_find_succeeded ptReservationId={}", ptReservationId);
 
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
+
         return new ReservationDetailView(
                 studentProfile.nickname(),
                 studentProfile.email(),
                 studentProfile.phone(),
                 reservation.getStatus(),
-                reservation.getProgressCount(),
+                progressCount,
                 reservation.getTotalSessionCount(),
                 ptCourse.getTitle()
         );
@@ -293,8 +312,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     @Override
     public List<PopularCourseView> findPopular() {
         log.debug("event=pt_courses_popular_find");
-
-        Map<Long, String> partMap = buildPartMap();
 
         // 예약 수 기준 인기 PT 강습을 먼저 조회한다.
         List<PtCourse> popularCourses = ptCourseRepository.findPopular(4);
@@ -352,8 +369,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             ptCourse.getTitle(),
                             ptCourse.getPrice(),
                             resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
-                            ptCourse.getPartId(),
-                            partMap.getOrDefault(ptCourse.getPartId(), null),
+                            ptCourse.getPart(),
                             trainer != null ? trainer.trainerName() : null,
                             organization != null ? organization.roadAddress() : null
                     );
@@ -362,15 +378,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         log.info("event=pt_courses_popular_find_succeeded count={}", result.size());
         return result;
-    }
-
-    // partId -> partName 매핑
-    private Map<Long, String> buildPartMap() {
-        return partQueryUseCase.handle().stream()
-                .collect(Collectors.toMap(
-                        PartQueryUseCase.PartView::partId,
-                        PartQueryUseCase.PartView::name
-                ));
     }
 
     // PT_THUMBNAIL은 public 파일 → requesterId 없이 URL 반환, 없으면 null

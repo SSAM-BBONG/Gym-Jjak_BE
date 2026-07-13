@@ -101,8 +101,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         }
 
         log.info(
-                "event=pt_course_create_started, userId={}, partId={}, price={}, curriculumCount={}, scheduleCount={}",
-                command.userId(), command.partId(), command.price(),
+                "event=pt_course_create_started, userId={}, part={}, price={}, curriculumCount={}, scheduleCount={}",
+                command.userId(), command.part(), command.price(),
                 curriculumCount, scheduleCount
         );
 
@@ -114,7 +114,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         PtCourse ptCourse = PtCourse.create(
                 organizationId,
                 trainerProfileId,
-                command.partId(),
+                command.part(),
                 thumbnailFileId,
                 command.title(),
                 command.description(),
@@ -179,7 +179,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         // 강습 필드 수정
         ptCourse.update(
-                command.partId(),
+                command.part(),
                 thumbnailFileId,
                 command.title(),
                 command.description(),

@@ -17,7 +17,6 @@ public class PtReservationPersistenceMapper {
                 entity.getReservedEndAt(),
                 entity.getCancelledAt(),
                 entity.getCompletedAt(),
-                entity.getProgressCount(),
                 entity.getTotalSessionCount(),
                 entity.getStatus()
         );

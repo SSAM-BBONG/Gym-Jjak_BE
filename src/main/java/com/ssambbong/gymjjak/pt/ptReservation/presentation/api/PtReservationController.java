@@ -126,9 +126,11 @@ public class PtReservationController {
     ) {
         PtReservation reservation = ptReservationCommandUseCase.changePtReservationStatus(
                 new ChangePtReservationStatusCommand(authUser.userId(), reservationId, request.status()));
+        int progressCount = ptReservationQueryUseCase.countProgressByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
         ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
                 reservation.getStatus(),
-                reservation.getProgressCount(),
+                progressCount,
                 reservation.getTotalSessionCount()
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(PtReservationResponseCode.PT_RESERVATION_STATUS_UPDATED, response));
@@ -152,12 +154,53 @@ public class PtReservationController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("reservationId") Long ptReservationId
     ) {
-        PtReservation reservation = ptReservationCommandUseCase.cancelPtReservation(
+        ptReservationCommandUseCase.cancelPtReservation(
                 new CancelPtReservationCommand(authUser.userId(), ptReservationId)
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtReservationResponseCode.PT_RESERVATION_CANCELLED,
-                CancelPtReservationResponse.from(reservation)
+                CancelPtReservationResponse.cancelled()
+        ));
+    }
+
+    // 내 PT 세션 예약 목록 조회
+    @GetMapping("/reservations/me/sessions")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "내 PT 세션 목록 조회", description = "수강생이 본인의 모든 PT 세션(예약 단건) 목록을 조회한다.")
+    public ResponseEntity<GlobalApiResponse<PtSessionsResponse>> findMySessions(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        var views = ptReservationQueryUseCase.findMySessions(authUser.userId());
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtReservationResponseCode.PT_SESSIONS_FETCHED,
+                PtSessionsResponse.from(views)
+        ));
+    }
+
+    // 내 PT 세션 예약 취소
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "PT 세션 개별 취소", description = "수강생이 본인의 PT 세션 1건을 취소한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "취소 성공",
+                    content = @Content(schema = @Schema(implementation = CancelPtReservationResponse.class))),
+            @ApiResponse(responseCode = "403", description = "본인 예약 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "취소 불가 상태 (COMPLETED / CANCELLED)",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/reservations/me/sessions/{reservationId}/cancel")
+    public ResponseEntity<GlobalApiResponse<CancelPtReservationResponse>> cancelPtSession(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable("reservationId") Long ptReservationId
+    ) {
+        ptReservationCommandUseCase.cancelPtSession(
+                new CancelPtReservationCommand(authUser.userId(), ptReservationId)
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtReservationResponseCode.PT_SESSION_CANCELLED,
+                CancelPtReservationResponse.cancelled()
         ));
     }
 

@@ -17,6 +17,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationC
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationLimitExceededException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationScheduleMismatchException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
@@ -34,6 +35,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+
 
 @Slf4j
 @Service
@@ -72,8 +74,18 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationInvalidException();
         }
 
+        // 소모된 세션 수 >= 총 회차 수면 예약 불가 (당일 취소 포함, 이전 취소 제외)
+        int consumedCount = ptReservationRepository.countConsumedByUserIdAndPtCourseId(
+                command.userId(), command.ptCourseId());
+        if (consumedCount >= ptCourse.getTotalSessionCount()) {
+            log.warn("event=pt_reservation_create_failed reason=limit_exceeded userId={} ptCourseId={} count={} total={}",
+                    command.userId(), command.ptCourseId(), consumedCount, ptCourse.getTotalSessionCount());
+            throw new PtReservationLimitExceededException();
+        }
+
         validateSchedule(ptCourse.getId(), command.reservedStartAt(), command.reservedEndAt());
 
+        // 중복 예약 검증
         if (ptReservationRepository.existsByPtCourseIdAndTimeOverlap(
                 command.ptCourseId(),
                 command.reservedStartAt(),
@@ -84,6 +96,13 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationDuplicateException();
         }
 
+        // 완료 처리 된 회차 수 >=1 이면 in_progress
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
+                command.userId(), command.ptCourseId());
+        PtReservationStatus initialStatus = progressCount >= 1
+                ? PtReservationStatus.IN_PROGRESS
+                : PtReservationStatus.RESERVED;
+
         PtReservation ptReservation = PtReservation.create(
                 command.userId(),
                 command.ptCourseId(),
@@ -91,7 +110,8 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 ptCourse.getTrainerProfileId(),
                 command.reservedStartAt(),
                 command.reservedEndAt(),
-                ptCourse.getTotalSessionCount()
+                ptCourse.getTotalSessionCount(),
+                initialStatus
         );
 
         PtReservation saved = ptReservationRepository.save(ptReservation);
@@ -151,9 +171,16 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         Long reservationUserId = reservation.getUserId();
         LocalDateTime reservedStartAt = reservation.getReservedStartAt();
 
-        // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
-        reservation.changeStatus(command.status());
-        ptReservationRepository.updateStatus(reservation);
+        // COMPLETED는 수강생의 전체 세션 일괄 완료 처리
+        if (command.status() == PtReservationStatus.COMPLETED) {
+            ptReservationRepository.bulkCompleteByUserIdAndPtCourseId(
+                    reservation.getUserId(), reservation.getPtCourseId());
+            reservation.changeStatus(command.status());
+        } else {
+            // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
+            reservation.changeStatus(command.status());
+            ptReservationRepository.updateStatus(reservation);
+        }
 
         // 예약 취소 시 알림 발송
         if (command.status() == PtReservationStatus.CANCELLED) {
@@ -175,7 +202,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     }
 
     @Override
-    public PtReservation cancelPtReservation(CancelPtReservationCommand command) {
+    public void cancelPtReservation(CancelPtReservationCommand command) {
         // controller 외 진입점(batch, event handler 등) 방어
         if (command.userId() == null || command.ptReservationId() == null) {
             throw new PtReservationInvalidException();
@@ -198,20 +225,54 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
-        Long reservationUserId = reservation.getUserId();
-        LocalDateTime reservedStartAt = reservation.getReservedStartAt();
+        // PT 코스 전체 취소 (COMPLETED 제외 전 세션 일괄 CANCELLED)
+        ptReservationRepository.bulkCancelByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
 
-        // 상태 변경 — 종결 상태(COMPLETED/CANCELLED)이면 도메인에서 예외 발생, cancelledAt 자동 설정
+        eventPublisher.publishEvent(
+                new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
+
+        evictMonthAfterCommit(
+                reservation.getUserId(),
+                reservation.getReservedStartAt()
+        );
+
+        log.info("event=pt_reservation_cancel_succeeded userId={} ptCourseId={}",
+                reservation.getUserId(), reservation.getPtCourseId());
+    }
+
+    // 내 PT 세션 취소
+    @Override
+    public void cancelPtSession(CancelPtReservationCommand command) {
+        if (command.userId() == null || command.ptReservationId() == null) {
+            throw new PtReservationInvalidException();
+        }
+        log.debug("event=pt_session_cancel_started userId={} ptReservationId={}",
+                command.userId(), command.ptReservationId());
+
+        PtReservation reservation = ptReservationRepository.findById(command.ptReservationId())
+                .orElseThrow(() -> {
+                    log.warn("event=pt_session_cancel_failed reason=not_found ptReservationId={}",
+                            command.ptReservationId());
+                    return new PtReservationNotFoundException();
+                });
+
+        if (!reservation.getUserId().equals(command.userId())) {
+            log.warn("event=pt_session_cancel_failed reason=forbidden userId={} ptReservationId={}",
+                    command.userId(), command.ptReservationId());
+            throw new PtReservationForbiddenException();
+        }
+
+        // CANCELLED / COMPLETED 이면 도메인에서 PtReservationStatusInvalidException 발생
         reservation.changeStatus(PtReservationStatus.CANCELLED);
         ptReservationRepository.updateStatus(reservation);
 
-        evictMonthAfterCommit(
-                reservationUserId,
-                reservedStartAt
-        );
+        eventPublisher.publishEvent(
+                new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
 
-        log.info("event=pt_reservation_cancel_succeeded ptReservationId={}", command.ptReservationId());
-        return reservation;
+        evictMonthAfterCommit(reservation.getUserId(), reservation.getReservedStartAt());
+
+        log.info("event=pt_session_cancel_succeeded ptReservationId={}", reservation.getId());
     }
 
     private void validateSchedule(Long ptCourseId, LocalDateTime reservedStartAt, LocalDateTime reservedEndAt) {

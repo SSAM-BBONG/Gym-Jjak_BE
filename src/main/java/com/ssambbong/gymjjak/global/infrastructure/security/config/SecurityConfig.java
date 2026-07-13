@@ -155,6 +155,8 @@ public class SecurityConfig {
 
                         // 조직 API
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/detail").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/search")
+                        .hasAnyAuthority("USER", "TRAINER")
                         .requestMatchers("/api/organizations/**")
                         .hasAnyAuthority("ORGANIZATION", "ADMIN")
 

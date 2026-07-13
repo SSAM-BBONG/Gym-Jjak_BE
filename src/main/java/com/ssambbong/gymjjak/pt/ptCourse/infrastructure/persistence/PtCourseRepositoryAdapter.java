@@ -47,7 +47,7 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
                 .orElseThrow(PtCourseNotFoundException::new);
 
         entity.updateFields(
-                ptCourse.getPartId(),
+                ptCourse.getPart(),
                 ptCourse.getThumbnailFileId(),
                 ptCourse.getTitle(),
                 ptCourse.getDescription(),

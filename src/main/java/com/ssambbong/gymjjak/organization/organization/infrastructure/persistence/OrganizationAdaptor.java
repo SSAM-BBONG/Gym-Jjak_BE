@@ -4,6 +4,9 @@ import com.ssambbong.gymjjak.organization.organization.application.query.Organiz
 import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchQuery;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchResult;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
@@ -113,6 +116,28 @@ public class OrganizationAdaptor implements OrganizationRepository {
     public int hardDeleteByIds(List<Long> ids) {
         if (ids.isEmpty()) return 0;
         return springDataOrganizationRepository.hardDeleteByIds(ids);
+    }
+
+    @Override
+    public OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query) {
+        PageRequest pageRequest = PageRequest.of(query.page(), query.size());
+        Page<SpringDataOrganizationRepository.OrganizationSearchView> result = springDataOrganizationRepository.searchByKeyword(
+                query.keyword(), OrganizationStatus.ACTIVE, pageRequest);
+        return new OrganizationSearchListResult(
+                result.getContent().stream()
+                        .map(v -> new OrganizationSearchResult(
+                                v.getOrganizationId(),
+                                v.getBusinessName(),
+                                v.getRepresentativeName(),
+                                v.getRoadAddress(),
+                                v.getDetailAddress()
+                        ))
+                        .toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
     }
 
     @Override

@@ -3,7 +3,10 @@ package com.ssambbong.gymjjak.calendar.application.service;
 import com.ssambbong.gymjjak.calendar.application.port.in.CalendarUsecase;
 import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPortToPtReservation;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
-import com.ssambbong.gymjjak.calendar.application.result.*;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarDayPtResult;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarDayResult;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthResult;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import lombok.RequiredArgsConstructor;
@@ -13,11 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 @Slf4j
 @Service
@@ -49,18 +48,18 @@ public class CalendarService implements CalendarUsecase {
                         date
                 );
 
-        CalendarDayDiaryResult diary =
-                workoutDiaryPort.findDiaryByUserIdAndDate(
+        List<CalendarDayDiaryResult> diaries =
+                workoutDiaryPort.findDiariesByUserIdAndDate(
                         userId,
                         date
-                ).orElse(null);
+                );
 
         log.info("event=calendarDay_find_succeed userId={}", userId);
 
         return new CalendarDayResult(
                 date,
                 pts,
-                diary
+                diaries
         );
     }
 
@@ -111,33 +110,6 @@ public class CalendarService implements CalendarUsecase {
 
         if (month < 1 || month > 12) {
             throw new CalendarException(CalendarErrorCode.INVALID_MONTH);
-        }
-    }
-
-    private static class CalendarMonthDayAccumulator {
-
-        private final LocalDate date;
-        private boolean hasPt;
-        private String diaryTitle;
-
-        private CalendarMonthDayAccumulator(LocalDate date) {
-            this.date = date;
-        }
-
-        private void markPt() {
-            this.hasPt = true;
-        }
-
-        private void setDiaryTitle(String diaryTitle) {
-            this.diaryTitle = diaryTitle;
-        }
-
-        private CalendarMonthDayResult toResult() {
-            return new CalendarMonthDayResult(
-                    date,
-                    hasPt,
-                    diaryTitle
-            );
         }
     }
 }

@@ -6,6 +6,7 @@ public record OrgStatsResponse(
         long trainerCount,
         long totalUserCount,
         long currentUserCount,
+        long thisMonthRevenue,
         OrgTrendResponse trend
 ) {
     public static OrgStatsResponse from(OrgStatsResult result) {
@@ -13,6 +14,7 @@ public record OrgStatsResponse(
                 result.trainerCount(),
                 result.totalUserCount(),
                 result.currentUserCount(),
+                result.thisMonthRevenue(),
                 OrgTrendResponse.from(result.trend())
         );
     }

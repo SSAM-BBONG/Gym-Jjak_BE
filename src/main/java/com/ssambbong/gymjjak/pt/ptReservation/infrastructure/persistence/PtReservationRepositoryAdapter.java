@@ -29,7 +29,6 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 ptReservation.getTrainerProfileId(),
                 ptReservation.getReservedStartAt(),
                 ptReservation.getReservedEndAt(),
-                ptReservation.getProgressCount(),
                 ptReservation.getTotalSessionCount(),
                 ptReservation.getStatus()
         );
@@ -68,6 +67,26 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 .stream()
                 .map(mapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public int bulkCancelByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.bulkCancelByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
+    public int bulkCompleteByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.bulkCompleteByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
+    public int countConsumedByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.countConsumedByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
+    public int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
     }
 
     // 진행 중인 PT 수

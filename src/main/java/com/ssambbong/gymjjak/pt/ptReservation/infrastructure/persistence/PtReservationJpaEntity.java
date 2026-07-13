@@ -48,10 +48,6 @@ public class PtReservationJpaEntity extends BaseLifecycleTimeEntity {
     @Column(name = "reserved_end_at", nullable = false)
     private LocalDateTime reservedEndAt;
 
-    // 완료된 회차 수. 생성 시 0
-    @Column(name = "progress_count", nullable = false)
-    private int progressCount;
-
     // PT 강습 전체 회차 수
     @Column(name = "total_session_count", nullable = false)
     private int totalSessionCount;
@@ -69,7 +65,6 @@ public class PtReservationJpaEntity extends BaseLifecycleTimeEntity {
             Long trainerProfileId,
             LocalDateTime reservedStartAt,
             LocalDateTime reservedEndAt,
-            int progressCount,
             int totalSessionCount,
             PtReservationStatus status
     ) {
@@ -79,7 +74,6 @@ public class PtReservationJpaEntity extends BaseLifecycleTimeEntity {
         this.trainerProfileId = trainerProfileId;
         this.reservedStartAt = reservedStartAt;
         this.reservedEndAt = reservedEndAt;
-        this.progressCount = progressCount;
         this.totalSessionCount = totalSessionCount;
         this.status = status;
     }
