@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.payments.payment.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -7,8 +8,18 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEntity, Long> {
+
+    // 웹훅 수신 시 orderId로 결제 건 조회
+    Optional<PaymentJpaEntity> findByOrderId(String orderId);
+
+    // 내 결제 내역 목록 조회 (최신순)
+    List<PaymentJpaEntity> findAllByUserIdOrderByIdDesc(Long userId);
+
+    // PT 코스 중복 결제 검증
+    boolean existsByUserIdAndPtCourseIdAndStatus(Long userId, Long ptCourseId, PaymentStatus status);
 
     // [dashboard] 조직 이번 달 매출
     @Query(value = """

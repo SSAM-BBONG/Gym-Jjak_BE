@@ -114,6 +114,13 @@ clova:
     invoke-url: "${CLOVA_OCR_INVOKE_URL}"
     secret-key: "${CLOVA_OCR_SECRET_KEY}"
 
+portone:
+  store-id: ${PORTONE_STORE_ID}
+  api-key: ${PORTONE_API_KEY}
+  api-secret: ${PORTONE_API_SECRET}
+  channel-key: ${PORTONE_CHANNEL_KEY}
+  webhook-secret: ${PORTONE_WEBHOOK_SECRET}
+
 server:
   tomcat:
     mbeanregistry:

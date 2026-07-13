@@ -267,17 +267,14 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     @Modifying
     @Query(value = """
         UPDATE pt_reservations r
+        JOIN (
+            SELECT DISTINCT r2.user_id, r2.pt_course_id
+            FROM pt_reservations r2
+            WHERE (r2.reserved_end_at <= NOW() AND r2.status != 'CANCELLED')
+               OR (r2.status = 'CANCELLED' AND DATE(r2.cancelled_at) = DATE(r2.reserved_start_at))
+        ) sub ON r.user_id = sub.user_id AND r.pt_course_id = sub.pt_course_id
         SET r.status = 'IN_PROGRESS'
         WHERE r.status = 'RESERVED'
-          AND EXISTS (
-              SELECT 1 FROM pt_reservations r2
-              WHERE r2.user_id = r.user_id
-                AND r2.pt_course_id = r.pt_course_id
-                AND (
-                  (r2.reserved_end_at <= NOW() AND r2.status != 'CANCELLED')
-                  OR (r2.status = 'CANCELLED' AND DATE(r2.cancelled_at) = DATE(r2.reserved_start_at))
-                )
-          )
         """, nativeQuery = true)
     int bulkUpdateToInProgress();
 
