@@ -11,8 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,11 +25,17 @@ class InbodyCommandServiceTest {
 
     private InbodyRepository inbodyRepository;
     private InbodyCommandService inbodyCommandService;
+    private static final Clock TEST_CLOCK = Clock.fixed(
+            Instant.parse("2026-07-13T00:00:00Z"),
+            ZoneId.of("Asia/Seoul")
+    );
 
     @BeforeEach
     void setUp() {
         inbodyRepository = mock(InbodyRepository.class);
-        inbodyCommandService = new InbodyCommandService(inbodyRepository);
+        inbodyCommandService = new InbodyCommandService(
+                inbodyRepository,
+                TEST_CLOCK  );
     }
 
     @Test
@@ -74,7 +79,9 @@ class InbodyCommandServiceTest {
     @Test
     @DisplayName("미래 측정일의 인바디 기록은 생성할 수 없다")
     void createInbody_fail_futureMeasuredDate() {
-        CreateInbodyCommand command = createCommand(LocalDate.now().plusDays(1));
+        CreateInbodyCommand command = createCommand(
+                LocalDate.now(TEST_CLOCK).plusDays(1)
+        );
 
         assertThatThrownBy(() -> inbodyCommandService.createInbody(command))
                 .isInstanceOf(FutureMeasuredDateException.class);
