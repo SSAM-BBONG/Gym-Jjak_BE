@@ -17,10 +17,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.Set;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentCommandService implements PaymentCommandUseCase {
+
+    private static final Set<String> SUPPORTED_WEBHOOK_TYPES =
+            Set.of("Transaction.Paid", "Transaction.Failed", "Transaction.Cancelled");
 
     private final PaymentRepository paymentRepository;
     private final PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
@@ -53,14 +58,28 @@ public class PaymentCommandService implements PaymentCommandUseCase {
     }
 
     // 웹훅 수신
-    // Transaction.Paid는 PortOne API를 트랜잭션 밖에서 먼저 호출하여 DB 커넥션 점유 시간을 최소화한다
+    // Transaction.Paid는 중복 체크 후 PortOne API 호출, DB 갱신만 짧은 트랜잭션으로 처리
     @Override
     public void processWebhook(ProcessWebhookCommand command) {
         log.info("event=webhook_received type={} orderId={}", command.type(), command.orderId());
 
-        // PortOne API 호출 (트랜잭션 밖 — 외부 HTTP 호출이 DB 커넥션을 점유하지 않도록 분리)
+        // 지원하지 않는 타입은 DB 조회 없이 즉시 무시
+        if (!SUPPORTED_WEBHOOK_TYPES.contains(command.type())) {
+            log.warn("event=webhook_unknown_type type={}", command.type());
+            return;
+        }
+
+        // Transaction.Paid: 이미 처리된 결제는 PortOne 외부 호출 없이 종료
         PortOnePaymentVerifyPort.PortOnePaymentInfo portOneInfo = null;
         if ("Transaction.Paid".equals(command.type())) {
+            Payment preCheck = paymentRepository.findByOrderId(command.orderId())
+                    .orElseThrow(PaymentNotFoundException::new);
+            if (preCheck.getStatus() != PaymentStatus.PENDING) {
+                log.warn("event=webhook_skipped_duplicate type=Transaction.Paid orderId={} status={}",
+                        command.orderId(), preCheck.getStatus());
+                return;
+            }
+            // PENDING 확인 후에만 PortOne API 호출 (트랜잭션 밖 — DB 커넥션 점유 방지)
             portOneInfo = portOnePaymentVerifyPort.getPaymentInfo(command.portonePaymentId());
         }
 
@@ -73,6 +92,7 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
             switch (command.type()) {
                 case "Transaction.Paid" -> {
+                    // pre-check 이후 상태 변경 방어
                     if (payment.getStatus() != PaymentStatus.PENDING) {
                         log.warn("event=webhook_skipped_duplicate type=Transaction.Paid orderId={} status={}",
                                 command.orderId(), payment.getStatus());
@@ -110,7 +130,6 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                     paymentRepository.update(payment.cancel());
                     log.info("event=webhook_cancelled orderId={}", command.orderId());
                 }
-                default -> log.warn("event=webhook_unknown_type type={}", command.type());
             }
             return null;
         });
