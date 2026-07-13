@@ -98,10 +98,17 @@ public class Inbody {
             BigDecimal bodyFatPercentage,
             BigDecimal skeletalMuscleMass
     ) {
-        this.height = requirePositive(height, "height");
-        this.weight = requirePositive(weight, "weight");
-        this.bodyFatPercentage = validateOptionalNonNegative(bodyFatPercentage, "bodyFatPercentage");
-        this.skeletalMuscleMass = validateOptionalNonNegative(skeletalMuscleMass, "skeletalMuscleMass");
+        BigDecimal validatedHeight = requirePositive(height, "height");
+        BigDecimal validatedWeight = requirePositive(weight, "weight");
+        BigDecimal validatedBodyFatPercentage =
+                validateOptionalNonNegative(bodyFatPercentage, "bodyFatPercentage");
+        BigDecimal validatedSkeletalMuscleMass =
+                validateOptionalNonNegative(skeletalMuscleMass, "skeletalMuscleMass");
+
+        this.height = validatedHeight;
+        this.weight = validatedWeight;
+        this.bodyFatPercentage = validatedBodyFatPercentage;
+        this.skeletalMuscleMass = validatedSkeletalMuscleMass;
     }
 
     private static Long requireUserId(Long userId) {
@@ -118,13 +125,17 @@ public class Inbody {
         return measuredDate;
     }
 
+    // 도메인 검증 메서드
     private static BigDecimal requirePositive(BigDecimal value, String fieldName) {
+
+        // 필수 값 검증
         if (value == null) {
             if ("height".equals(fieldName)) {
                 throw new InbodyRequiredFieldException(InbodyErrorCode.HEIGHT_REQUIRED);
             }
             throw new InbodyRequiredFieldException(InbodyErrorCode.WEIGHT_REQUIRED);
         }
+        // 최솟값 검증
         if (value.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidInbodyValueException(fieldName);
         }

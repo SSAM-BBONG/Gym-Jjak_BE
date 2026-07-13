@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 
 @Slf4j
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 public class InbodyCommandService implements InbodyCommandUseCase {
 
     private final InbodyRepository inbodyRepository;
+    private final Clock clock;
 
     @Monitored(
             name = "gymjjak.inbody.command.duration",
@@ -68,7 +70,7 @@ public class InbodyCommandService implements InbodyCommandUseCase {
         if (command.measuredDate() == null) {
             throw new InbodyRequiredFieldException(InbodyErrorCode.MEASURED_DATE_REQUIRED);
         }
-        if (command.measuredDate().isAfter(LocalDate.now())) {
+        if (command.measuredDate().isAfter(LocalDate.now(clock))) {
             throw new FutureMeasuredDateException(command.measuredDate());
         }
         // 당일 중복 등록 검증
