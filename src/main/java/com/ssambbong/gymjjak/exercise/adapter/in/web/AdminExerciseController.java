@@ -44,7 +44,7 @@ public class AdminExerciseController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{exerciseId}")
-    @Operation(summary = "운동 종목 수정", description = "관리자가 운동 종목의 부위와 이름을 수정합니다.")
+    @Operation(summary = "운동 종목 수정", description = "관리자가 운동 종목의 이름을 수정합니다.")
     public ResponseEntity<GlobalApiResponse<Void>> updateExercise(
             @PathVariable Long exerciseId,
             @Valid @RequestBody UpdateExerciseRequest request

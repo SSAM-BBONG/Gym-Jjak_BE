@@ -93,7 +93,10 @@ public class CommunityService implements CommunityUseCase {
         if (keyword == null || keyword.isBlank()) {
             return null;
         }
-        return keyword.trim();
+        return keyword.trim()
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     @Override
