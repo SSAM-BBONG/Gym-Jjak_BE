@@ -78,16 +78,15 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                                 command.orderId(), payment.getStatus());
                         return null;
                     }
+                    // 검증 불일치는 상태 변경 없이 거절 — FAILED 확정 시 이후 정상 웹훅이 무시됨
                     if (!"PAID".equals(finalInfo.status())) {
                         log.warn("event=webhook_status_mismatch orderId={} portoneStatus={}",
                                 command.orderId(), finalInfo.status());
-                        paymentRepository.update(payment.fail("PortOne 결제 상태 불일치"));
                         return null;
                     }
                     if (finalInfo.amount() != payment.getAmount()) {
                         log.warn("event=webhook_amount_mismatch orderId={} expected={} actual={}",
                                 command.orderId(), payment.getAmount(), finalInfo.amount());
-                        paymentRepository.update(payment.fail("결제 금액 불일치"));
                         return null;
                     }
                     paymentRepository.update(payment.pay(command.portonePaymentId()));
