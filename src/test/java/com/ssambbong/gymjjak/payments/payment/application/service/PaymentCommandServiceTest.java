@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 import com.ssambbong.gymjjak.payments.payment.domain.repository.PaymentRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Optional;
 
@@ -28,9 +30,19 @@ class PaymentCommandServiceTest {
     @Mock private PaymentRepository paymentRepository;
     @Mock private PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
     @Mock private PortOnePaymentVerifyPort portOnePaymentVerifyPort;
+    @Mock private TransactionTemplate transactionTemplate;
 
     @InjectMocks
     private PaymentCommandService paymentCommandService;
+
+    @BeforeEach
+    void setUp() {
+        // unknownType/alreadyPaid/orderNotFound 테스트는 execute() 호출 전에 return하므로 lenient 사용
+        lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            org.springframework.transaction.support.TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(mock(org.springframework.transaction.TransactionStatus.class));
+        });
+    }
 
     private static final String ORDER_ID = "PT-TEST0001";
     private static final String PORTONE_PAYMENT_ID = "portone-abc";
@@ -91,8 +103,8 @@ class PaymentCommandServiceTest {
     }
 
     @Test
-    @DisplayName("Transaction.Paid — 금액 불일치 시 FAILED로 전환된다")
-    void processWebhook_paid_amountMismatch_fails() {
+    @DisplayName("Transaction.Paid — 금액 불일치 시 상태 변경 없이 무시된다")
+    void processWebhook_paid_amountMismatch_ignored() {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(pendingPayment()));
         when(portOnePaymentVerifyPort.getPaymentInfo(PORTONE_PAYMENT_ID))
                 .thenReturn(new PortOnePaymentVerifyPort.PortOnePaymentInfo("PAID", 100));
@@ -100,10 +112,7 @@ class PaymentCommandServiceTest {
         paymentCommandService.processWebhook(
                 new ProcessWebhookCommand("Transaction.Paid", PORTONE_PAYMENT_ID, ORDER_ID));
 
-        ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
-        verify(paymentRepository).update(captor.capture());
-        assertEquals(PaymentStatus.FAILED, captor.getValue().getStatus());
-        assertEquals("결제 금액 불일치", captor.getValue().getFailReason());
+        verify(paymentRepository, never()).update(any());
     }
 
     @Test
@@ -199,11 +208,10 @@ class PaymentCommandServiceTest {
     @Test
     @DisplayName("알 수 없는 웹훅 타입은 무시된다")
     void processWebhook_unknownType_ignored() {
-        when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(pendingPayment()));
-
         paymentCommandService.processWebhook(
                 new ProcessWebhookCommand("Transaction.Unknown", PORTONE_PAYMENT_ID, ORDER_ID));
 
+        verify(paymentRepository, never()).findByOrderId(any());
         verify(paymentRepository, never()).update(any());
     }
 }
