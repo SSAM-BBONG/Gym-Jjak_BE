@@ -45,7 +45,6 @@ class PtCourseQueryServiceTest {
     @Mock private PtReservationCountQueryPort ptReservationCountQueryPort;
     @Mock private PtReservationRepository ptReservationRepository;
     @Mock private UserNicknameQueryPort userNicknameQueryPort;
-    @Mock private CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
     @Mock private ReviewQueryPort reviewQueryPort;
     @Mock private FileUrlUseCase fileUrlUseCase;
 

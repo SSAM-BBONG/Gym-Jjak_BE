@@ -237,10 +237,13 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         PtCourseQueryPort.PtCourseInfo courseInfo =
                 ptCourseQueryPort.findPtCourseInfo(rep.getPtCourseId());
 
-        // 해당 코스의 세션 중 가장 최근 피드백 날짜
+        // sessionStatus=COMPLETED(예약 종료 시각이 지난 회차)인 것 중 가장 최근 reservedEndAt
+        LocalDateTime now = LocalDateTime.now();
         LocalDate lastPtDate = sessions.stream()
-                .map(r -> feedbackQueryPort.findLastFeedbackDate(r.getId()))
-                .filter(Objects::nonNull)
+                .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
+                .filter(r -> r.getStatus() == PtReservationStatus.COMPLETED
+                        || r.getReservedEndAt().isBefore(now))
+                .map(r -> r.getReservedEndAt().toLocalDate())
                 .max(Comparator.naturalOrder())
                 .orElse(null);
 
