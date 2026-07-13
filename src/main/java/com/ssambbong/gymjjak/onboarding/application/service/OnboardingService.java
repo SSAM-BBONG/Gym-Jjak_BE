@@ -16,6 +16,8 @@ import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class OnboardingService implements OnboardingUsecase {
     private final UserPortFromOnboarding userPortFromOnboarding;
 
     @Override
+    @CacheEvict(cacheNames = "myOnboarding", key = "#command.userId()")
     public void register(RegisterOnboardingCommand command) {
         log.debug("event=onboarding_register_start userId={}", command.userId());
 
@@ -90,6 +93,7 @@ public class OnboardingService implements OnboardingUsecase {
     }
 
     @Override
+    @Cacheable(cacheNames = "myOnboarding", key = "#userId", sync = true)
     public MyOnboardingResult getMyOnboarding(Long userId) {
         MyOnboardingView view = onboardingPort.findMyOnboardingByUserId(userId)
                 .orElseThrow(() -> new OnboardingException(OnboardingErrorCode.ONBOARDING_NOT_FOUND));
@@ -115,6 +119,7 @@ public class OnboardingService implements OnboardingUsecase {
     }
 
     @Override
+    @CacheEvict(cacheNames = "myOnboarding", key = "#command.userId()")
     public void updateOnboarding(UpdateOnboardingCommand command) {
         log.debug("event=onboarding_update_start userId={}", command.userId());
 

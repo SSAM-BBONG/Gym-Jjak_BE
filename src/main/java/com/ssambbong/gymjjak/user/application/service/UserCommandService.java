@@ -13,6 +13,9 @@ import com.ssambbong.gymjjak.user.domain.model.*;
 import com.ssambbong.gymjjak.user.domain.policy.UserPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -156,6 +159,7 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @Cacheable(cacheNames = "userProfile", key = "#userId", sync = true)
     public UserProfileResult findMyProfileInfo(Long userId) {
         log.debug("event=user_findProfile_start userId={}", userId);
         User user = userPort.findById(userId)
@@ -169,6 +173,10 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "userProfile", key = "#command.userId()"),
+            @CacheEvict(cacheNames = "userUsernameNickname", key = "#command.userId()")
+    })
     public void updateProfile(UpdateProfileCommand command) {
         log.debug("event=user_updateProfile_start userId={}", command.userId());
         User user = userPort.findById(command.userId())
@@ -189,6 +197,10 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "userProfile", key = "#userId"),
+            @CacheEvict(cacheNames = "userUsernameNickname", key = "#userId")
+    })
     public void withdrawUser(Long userId) {
         log.debug("event=user_withdrawUser_start userId={}", userId);
 
@@ -206,6 +218,7 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @CacheEvict(cacheNames = "userProfile", key = "#command.userId()")
     public void updateUserStatus(UpdateUserStatusCommand command) {
         log.debug("event=user_statusUpdate_start userId={} status={}", command.userId(), command.status());
 
@@ -418,6 +431,10 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "userProfile", key = "#command.userId()"),
+            @CacheEvict(cacheNames = "userUsernameNickname", key = "#command.userId()")
+    })
     public void completeSocialSignup(CompleteSocialSignupCommand command) {
 
         String nickname = normalize(command.nickname());
@@ -450,6 +467,7 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
+    @Cacheable(cacheNames = "userUsernameNickname", key = "#userId", sync = true)
     @Transactional(readOnly = true)
     public UserUsernameAndNicknameResult findUsernameAndNickname(Long userId) {
 
