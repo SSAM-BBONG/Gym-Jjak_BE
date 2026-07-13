@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.onboarding.application.command.RegisterOnboardingCo
 import com.ssambbong.gymjjak.onboarding.application.command.UpdateOnboardingCommand;
 import com.ssambbong.gymjjak.onboarding.application.port.in.OnboardingUsecase;
 import com.ssambbong.gymjjak.onboarding.application.port.out.MyOnboardingView;
+import com.ssambbong.gymjjak.onboarding.application.port.out.OnboardingCacheEvictionPort;
 import com.ssambbong.gymjjak.onboarding.application.port.out.OnboardingPort;
 import com.ssambbong.gymjjak.onboarding.application.port.out.UserPortFromOnboarding;
 import com.ssambbong.gymjjak.onboarding.application.result.MyOnboardingResult;
@@ -16,10 +17,11 @@ import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -29,9 +31,9 @@ public class OnboardingService implements OnboardingUsecase {
 
     private final OnboardingPort onboardingPort;
     private final UserPortFromOnboarding userPortFromOnboarding;
+    private final OnboardingCacheEvictionPort onboardingCacheEvictionPort;
 
     @Override
-    @CacheEvict(cacheNames = "myOnboarding", key = "#command.userId()")
     public void register(RegisterOnboardingCommand command) {
         log.debug("event=onboarding_register_start userId={}", command.userId());
 
@@ -89,10 +91,12 @@ public class OnboardingService implements OnboardingUsecase {
                 onboardingId);
 
         userPortFromOnboarding.completeOnboarding(command.userId());
+        evictMyOnboardingAfterCommit(command.userId());
         log.info("event=onboardingCompleted_update_done userId={}", command.userId());
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(cacheNames = "myOnboarding", key = "#userId", sync = true)
     public MyOnboardingResult getMyOnboarding(Long userId) {
         MyOnboardingView view = onboardingPort.findMyOnboardingByUserId(userId)
@@ -119,7 +123,6 @@ public class OnboardingService implements OnboardingUsecase {
     }
 
     @Override
-    @CacheEvict(cacheNames = "myOnboarding", key = "#command.userId()")
     public void updateOnboarding(UpdateOnboardingCommand command) {
         log.debug("event=onboarding_update_start userId={}", command.userId());
 
@@ -175,6 +178,26 @@ public class OnboardingService implements OnboardingUsecase {
                 command.userId(),
                 onboardingId,
                 regionId);
+        evictMyOnboardingAfterCommit(command.userId());
 
+    }
+
+    private void evictMyOnboardingAfterCommit(Long userId) {
+        evictAfterCommit(() -> onboardingCacheEvictionPort.evictMyOnboarding(userId));
+    }
+
+    private void evictAfterCommit(Runnable eviction) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eviction.run();
+                        }
+                    }
+            );
+            return;
+        }
+        eviction.run();
     }
 }
