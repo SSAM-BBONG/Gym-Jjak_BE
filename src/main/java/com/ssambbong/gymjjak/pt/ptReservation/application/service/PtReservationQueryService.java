@@ -249,16 +249,26 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
         int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
                 userId, rep.getPtCourseId());
+        int totalSessionCount = rep.getTotalSessionCount();
+
+        PtReservationStatus derivedStatus;
+        if (progressCount == 0) {
+            derivedStatus = PtReservationStatus.RESERVED;
+        } else if (progressCount >= totalSessionCount) {
+            derivedStatus = PtReservationStatus.COMPLETED;
+        } else {
+            derivedStatus = PtReservationStatus.IN_PROGRESS;
+        }
 
         return new MyPtReservationView(
                 rep.getId(),
                 resolveThumbnailUrl(courseInfo.thumbnailFileId()),
                 courseInfo.title(),
                 courseInfo.trainerName(),
-                rep.getStatus(),
+                derivedStatus,
                 lastPtDate,
                 progressCount,
-                rep.getTotalSessionCount()
+                totalSessionCount
         );
     }
 }

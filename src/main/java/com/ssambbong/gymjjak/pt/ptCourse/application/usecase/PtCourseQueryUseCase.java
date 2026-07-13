@@ -115,7 +115,7 @@ public interface PtCourseQueryUseCase {
             Long ptReservationId,
             String nickname,
             PtReservationStatus status,
-            LocalDate lastPtDate,      // 가장 최근 피드백 날짜, 없으면 null
+            LocalDate lastPtDate,      // 가장 최근 완료 회차의 종료일, 없으면 null
             int progressCount,
             int totalSessionCount
     ) {}

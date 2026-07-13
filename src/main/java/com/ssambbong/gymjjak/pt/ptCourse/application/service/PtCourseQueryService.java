@@ -205,14 +205,24 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
                     int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
                             studentUserId, rep.getPtCourseId());
+                    int totalSessionCount = rep.getTotalSessionCount();
+
+                    PtReservationStatus derivedStatus;
+                    if (progressCount == 0) {
+                        derivedStatus = PtReservationStatus.RESERVED;
+                    } else if (progressCount >= totalSessionCount) {
+                        derivedStatus = PtReservationStatus.COMPLETED;
+                    } else {
+                        derivedStatus = PtReservationStatus.IN_PROGRESS;
+                    }
 
                     return new CourseReservationView(
                             rep.getId(),
                             nicknameMap.getOrDefault(studentUserId, null),
-                            rep.getStatus(),
+                            derivedStatus,
                             lastPtDate,
                             progressCount,
-                            rep.getTotalSessionCount()
+                            totalSessionCount
                     );
                 })
                 .toList();

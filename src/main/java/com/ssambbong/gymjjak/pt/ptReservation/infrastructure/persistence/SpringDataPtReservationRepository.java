@@ -272,21 +272,21 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     int bulkUpdateToInProgress();
 
     // 진행 회차 = totalSessionCount인 코스의 IN_PROGRESS 예약을 COMPLETED로 일괄 전환
+    // MySQL은 UPDATE 대상 테이블을 서브쿼리에서 직접 참조 불가 → 집계를 파생 테이블 JOIN으로 우회
     @Modifying
     @Query(value = """
         UPDATE pt_reservations r
         JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
+        JOIN (
+            SELECT r2.user_id, r2.pt_course_id, COUNT(*) AS done_count
+            FROM pt_reservations r2
+            WHERE (r2.reserved_end_at <= NOW() AND r2.status != 'CANCELLED')
+               OR (r2.status = 'CANCELLED' AND DATE(r2.cancelled_at) = DATE(r2.reserved_start_at))
+            GROUP BY r2.user_id, r2.pt_course_id
+        ) counts ON counts.user_id = r.user_id AND counts.pt_course_id = r.pt_course_id
         SET r.status = 'COMPLETED', r.completed_at = NOW()
         WHERE r.status = 'IN_PROGRESS'
-          AND (
-            SELECT COUNT(*) FROM pt_reservations r2
-            WHERE r2.user_id = r.user_id
-              AND r2.pt_course_id = r.pt_course_id
-              AND (
-                (r2.reserved_end_at <= NOW() AND r2.status != 'CANCELLED')
-                OR (r2.status = 'CANCELLED' AND DATE(r2.cancelled_at) = DATE(r2.reserved_start_at))
-              )
-          ) >= pc.total_session_count
+          AND counts.done_count >= pc.total_session_count
         """, nativeQuery = true)
     int bulkCompleteAll();
 
