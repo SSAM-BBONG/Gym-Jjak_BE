@@ -8,15 +8,23 @@ import com.ssambbong.gymjjak.exercise.adapter.in.web.response.ExerciseResponseCo
 import com.ssambbong.gymjjak.exercise.application.port.in.ExerciseUseCase;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.PartTypeNameMapper;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -29,7 +37,7 @@ public class AdminExerciseController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    @Operation(summary = "운동 종목 등록", description = "관리자가 부위별 운동 종목을 등록합니다.")
+    @Operation(summary = "Create exercise", description = "Admin creates an exercise.")
     public ResponseEntity<GlobalApiResponse<CreateExerciseResponse>> createExercise(
             @Valid @RequestBody CreateExerciseRequest request
     ) {
@@ -44,7 +52,7 @@ public class AdminExerciseController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{exerciseId}")
-    @Operation(summary = "운동 종목 수정", description = "관리자가 운동 종목의 이름을 수정합니다.")
+    @Operation(summary = "Update exercise", description = "Admin updates an exercise name.")
     public ResponseEntity<GlobalApiResponse<Void>> updateExercise(
             @PathVariable Long exerciseId,
             @Valid @RequestBody UpdateExerciseRequest request
@@ -58,7 +66,7 @@ public class AdminExerciseController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{exerciseId}")
-    @Operation(summary = "운동 종목 삭제", description = "관리자가 운동 종목을 삭제합니다.")
+    @Operation(summary = "Delete exercise", description = "Admin deletes an exercise.")
     public ResponseEntity<GlobalApiResponse<Void>> deleteExercise(
             @PathVariable Long exerciseId
     ) {
@@ -71,13 +79,17 @@ public class AdminExerciseController {
 
     @Validated
     @GetMapping
-    @Operation(summary = "부위별 운동 종목 조회", description = "선택한 부위에 등록된 운동 종목을 검색합니다.")
+    @Operation(summary = "Find exercises", description = "Find exercises by optional part and keyword.")
     public ResponseEntity<GlobalApiResponse<List<ExerciseResponse>>> findExercises(
-            @RequestParam @NotBlank(message = "운동 부위는 필수입니다.") String part,
+            @RequestParam(required = false) String part,
             @RequestParam(required = false) String keyword
     ) {
+        PartType partType = isBlank(part)
+                ? null
+                : PartTypeNameMapper.fromKoreanName(part);
+
         List<ExerciseResponse> response = exerciseUseCase
-                .findExercises(PartTypeNameMapper.fromKoreanName(part), keyword)
+                .findExercises(partType, keyword)
                 .stream()
                 .map(ExerciseResponse::from)
                 .toList();
@@ -88,5 +100,9 @@ public class AdminExerciseController {
                         response
                 )
         );
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

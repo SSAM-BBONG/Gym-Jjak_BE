@@ -82,6 +82,23 @@ public class ExercisePersistenceAdapter implements ExercisePort {
     }
 
     @Override
+    public List<Exercise> findAllExercises() {
+        return exerciseJpaRepository.findAllByOrderByPartAscExerciseNameAsc()
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Exercise> findExercisesByKeyword(String keyword) {
+        return exerciseJpaRepository
+                .findByExerciseNameContainingIgnoreCaseOrderByPartAscExerciseNameAsc(keyword)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<Exercise> findExercisesByPart(PartType part) {
         return exerciseJpaRepository.findByPartOrderByExerciseNameAsc(part)
                 .stream()
@@ -107,7 +124,8 @@ public class ExercisePersistenceAdapter implements ExercisePort {
         return Exercise.reconstruct(
                 entity.getId(),
                 entity.getPart(),
-                entity.getExerciseName()
+                entity.getExerciseName(),
+                entity.getCreatedAt()
         );
     }
 }
