@@ -1,6 +1,12 @@
 version: "3.8"
 
 services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: gymjjak-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
   mysql:
     image: mysql:8.0
     container_name: gymjjak-mysql
