@@ -17,35 +17,26 @@ public class PtReservationCountQueryAdapter implements PtReservationCountQueryPo
 
     private final SpringDataPtReservationRepository ptReservationRepository;
 
-    @Override
-    public Map<Long, Integer> countActiveByPtCourseIds(List<Long> ptCourseIds) {
-        if (ptCourseIds.isEmpty()) return Map.of();
-
-        List<Object[]> rows = ptReservationRepository.countActiveGroupByPtCourseId(
-                ptCourseIds,
-                List.of(PtReservationStatus.RESERVED, PtReservationStatus.IN_PROGRESS)
-        );
-
-        // 예약이 없는 강습도 0으로 초기화
-        Map<Long, Integer> result = new HashMap<>();
-        ptCourseIds.forEach(id -> result.put(id, 0));
-        rows.forEach(row ->
-                result.put(((Number) row[0]).longValue(), Math.toIntExact(((Number) row[1]).longValue()))
-        );
-        return result;
-    }
+    private static final List<PtReservationStatus> ACTIVE_STATUSES =
+            List.of(PtReservationStatus.RESERVED, PtReservationStatus.IN_PROGRESS);
 
     @Override
-    public Map<Long, Integer> countTotalByPtCourseIds(List<Long> ptCourseIds) {
-        if (ptCourseIds.isEmpty()) return Map.of();
+    public StudentCounts countStudentsByPtCourseIds(List<Long> ptCourseIds) {
+        if (ptCourseIds.isEmpty()) return new StudentCounts(Map.of(), Map.of());
 
-        List<Object[]> rows = ptReservationRepository.countTotalGroupByPtCourseId(ptCourseIds);
+        List<Object[]> rows = ptReservationRepository.countStudentsGroupByPtCourseId(
+                ptCourseIds, ACTIVE_STATUSES, PtReservationStatus.CANCELLED);
 
-        Map<Long, Integer> result = new HashMap<>();
-        ptCourseIds.forEach(id -> result.put(id, 0));
-        rows.forEach(row ->
-                result.put(((Number) row[0]).longValue(), Math.toIntExact(((Number) row[1]).longValue()))
-        );
-        return result;
+        Map<Long, Integer> active = new HashMap<>();
+        Map<Long, Integer> total = new HashMap<>();
+        ptCourseIds.forEach(id -> { active.put(id, 0); total.put(id, 0); });
+
+        rows.forEach(row -> {
+            long courseId = ((Number) row[0]).longValue();
+            active.put(courseId, Math.toIntExact(((Number) row[1]).longValue()));
+            total.put(courseId, Math.toIntExact(((Number) row[2]).longValue()));
+        });
+
+        return new StudentCounts(active, total);
     }
 }
