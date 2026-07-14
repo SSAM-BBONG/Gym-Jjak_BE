@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.port.*;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
@@ -13,7 +14,6 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
-import com.ssambbong.gymjjak.part.application.usecase.PartQueryUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,8 +45,6 @@ class PtCourseQueryServiceTest {
     @Mock private PtReservationCountQueryPort ptReservationCountQueryPort;
     @Mock private PtReservationRepository ptReservationRepository;
     @Mock private UserNicknameQueryPort userNicknameQueryPort;
-    @Mock private CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
-    @Mock private PartQueryUseCase partQueryUseCase;
     @Mock private ReviewQueryPort reviewQueryPort;
     @Mock private FileUrlUseCase fileUrlUseCase;
 
@@ -57,15 +55,13 @@ class PtCourseQueryServiceTest {
 
     private PtCourse stubPtCourse(Long id, PtCourseStatus status) {
         return PtCourse.restore(
-                id, 1L, 1L, 1L, null,
+                id, 1L, 1L, PartType.CHEST, null,
                 "맞춤 PT", "PT 소개글", 300000, 8,
                 status, null, null
         );
     }
 
     private void stubCategoryAndEnrich() {
-        when(partQueryUseCase.handle()).thenReturn(List.of());
-
         when(organizationQueryPort.findAllByIds(any())).thenReturn(
                 Map.of(1L, new OrganizationQueryPort.OrganizationInfo(
                         1L, "짐짝피트니스", "서울 강남구", 37.5007, 127.0365,

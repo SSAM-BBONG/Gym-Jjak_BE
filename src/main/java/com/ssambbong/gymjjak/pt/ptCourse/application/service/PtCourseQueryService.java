@@ -26,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 @Slf4j
 @Service
@@ -41,7 +43,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final PtReservationCountQueryPort ptReservationCountQueryPort;
     private final PtReservationRepository ptReservationRepository;
     private final UserNicknameQueryPort userNicknameQueryPort;
-    private final CourseReservationFeedbackQueryPort courseReservationFeedbackQueryPort;
     private final ReviewQueryPort reviewQueryPort;
     private final FileUrlUseCase fileUrlUseCase;
 
@@ -130,10 +131,10 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<PtCourse> courses = ptCourseRepository
                 .findAllByTrainerProfileId(trainerProfileId, status);
 
-        // 강습 ID 목록으로 예약 수를 한 번에 집계 (N+1 방지)
+        // 강습 ID 목록으로 수강생 수를 한 번에 집계 (N+1 방지, 단일 쿼리)
         List<Long> courseIds = courses.stream().map(PtCourse::getId).toList();
-        Map<Long, Integer> activeCounts = ptReservationCountQueryPort.countActiveByPtCourseIds(courseIds);
-        Map<Long, Integer> totalCounts = ptReservationCountQueryPort.countTotalByPtCourseIds(courseIds);
+        PtReservationCountQueryPort.StudentCounts counts =
+                ptReservationCountQueryPort.countStudentsByPtCourseIds(courseIds);
 
         List<MyPtCourseListView> result = courses.stream()
                 .map(course -> new MyPtCourseListView(
@@ -142,8 +143,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                         course.getTitle(),
                         trainerName,
                         course.getStatus(),
-                        activeCounts.getOrDefault(course.getId(), 0),
-                        totalCounts.getOrDefault(course.getId(), 0)
+                        counts.active().getOrDefault(course.getId(), 0),
+                        counts.total().getOrDefault(course.getId(), 0)
                 ))
                 .toList();
 
@@ -179,23 +180,56 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         List<PtReservation> reservations = ptReservationRepository.findAllByPtCourseId(ptCourseId);
 
         // userId 목록으로 닉네임 한 번에 조회 (N+1 방지)
-        List<Long> userIds = reservations.stream().map(PtReservation::getUserId).toList();
+        List<Long> userIds = reservations.stream().map(PtReservation::getUserId).distinct().toList();
         Map<Long, String> nicknameMap = userNicknameQueryPort.findNicknamesByUserIds(userIds);
 
-        // 예약 ID 목록으로 마지막 피드백 날짜 한 번에 조회 (N+1 방지)
-        List<Long> reservationIds = reservations.stream().map(PtReservation::getId).toList();
-        Map<Long, LocalDate> lastFeedbackDateMap =
-                courseReservationFeedbackQueryPort.findLastFeedbackDatesByReservationIds(reservationIds);
+        // 수강생 1명당 1줄 — 세션별 row를 userId 기준으로 집계
+        LocalDateTime now = LocalDateTime.now();
+        Map<Long, List<PtReservation>> byUser = reservations.stream()
+                .collect(Collectors.groupingBy(PtReservation::getUserId, LinkedHashMap::new, Collectors.toList()));
 
-        List<CourseReservationView> reservationViews = reservations.stream()
-                .map(r -> new CourseReservationView(
-                        r.getId(),
-                        nicknameMap.getOrDefault(r.getUserId(), null),
-                        r.getStatus(),
-                        lastFeedbackDateMap.getOrDefault(r.getId(), null), // 피드백 없으면 null
-                        r.getProgressCount(),
-                        r.getTotalSessionCount()
-                ))
+        List<CourseReservationView> reservationViews = byUser.entrySet().stream()
+                .map(entry -> {
+                    Long studentUserId = entry.getKey();
+                    List<PtReservation> studentSessions = entry.getValue();
+                    PtReservation rep = studentSessions.get(0);
+
+                    // sessionStatus=COMPLETED(예약 종료 시각이 지난 회차)인 것 중 가장 최근 reservedEndAt
+                    LocalDate lastPtDate = studentSessions.stream()
+                            .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
+                            .filter(r -> r.getStatus() == PtReservationStatus.COMPLETED
+                                    || r.getReservedEndAt().isBefore(now))
+                            .map(r -> r.getReservedEndAt().toLocalDate())
+                            .max(Comparator.naturalOrder())
+                            .orElse(null);
+
+                    int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
+                            studentUserId, rep.getPtCourseId());
+                    int totalSessionCount = rep.getTotalSessionCount();
+
+                    boolean allCancelled = studentSessions.stream()
+                            .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+
+                    PtReservationStatus derivedStatus;
+                    if (allCancelled) {
+                        derivedStatus = PtReservationStatus.CANCELLED;
+                    } else if (progressCount == 0) {
+                        derivedStatus = PtReservationStatus.RESERVED;
+                    } else if (progressCount >= totalSessionCount) {
+                        derivedStatus = PtReservationStatus.COMPLETED;
+                    } else {
+                        derivedStatus = PtReservationStatus.IN_PROGRESS;
+                    }
+
+                    return new CourseReservationView(
+                            rep.getId(),
+                            nicknameMap.getOrDefault(studentUserId, null),
+                            derivedStatus,
+                            lastPtDate,
+                            progressCount,
+                            totalSessionCount
+                    );
+                })
                 .toList();
 
         log.info("event=pt_course_reservations_find_succeeded ptCourseId={}, count={}",
@@ -244,12 +278,15 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         log.info("event=pt_reservation_detail_find_succeeded ptReservationId={}", ptReservationId);
 
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
+
         return new ReservationDetailView(
                 studentProfile.nickname(),
                 studentProfile.email(),
                 studentProfile.phone(),
                 reservation.getStatus(),
-                reservation.getProgressCount(),
+                progressCount,
                 reservation.getTotalSessionCount(),
                 ptCourse.getTitle()
         );

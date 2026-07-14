@@ -11,6 +11,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForb
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -40,10 +40,16 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
     public List<MyPtReservationView> findMyReservations(Long userId, PtReservationStatus status) {
         log.debug("event=pt_reservation_list userId={}, status={}", userId, status);
 
-        List<PtReservation> reservations = ptReservationRepository.findAllByUserId(userId, status);
+        // 전체 세션 조회 후 코스별로 집계 (1코스 1카드)
+        List<PtReservation> reservations = ptReservationRepository.findAllByUserId(userId, null);
 
-        List<MyPtReservationView> result = reservations.stream()
-                .map(this::toView)
+        // ptCourseId 기준으로 집계, 최신 예약순 유지 (LinkedHashMap)
+        Map<Long, List<PtReservation>> byCourse = reservations.stream()
+                .collect(Collectors.groupingBy(PtReservation::getPtCourseId, LinkedHashMap::new, Collectors.toList()));
+
+        List<MyPtReservationView> result = byCourse.values().stream()
+                .map(sessions -> toView(userId, sessions))
+                .filter(view -> status == null || view.status() == status)
                 .toList();
 
         log.info("event=pt_reservation_list_succeeded userId={}, count={}", userId, result.size());
@@ -83,17 +89,73 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 .map(c -> new CurriculumView(c.id(), c.sessionNo(), c.title(), feedbackIdMap.get(c.id())))
                 .toList();
 
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
+
         log.info("event=pt_reservation_detail_succeeded ptReservationId={}", ptReservationId);
         return new PtReservationDetailView(
                 resolveThumbnailUrl(courseInfo.thumbnailFileId()),
                 courseInfo.title(),
                 courseInfo.trainerName(),
                 reservation.getStatus(),
-                reservation.getProgressCount(),
+                progressCount,
                 reservation.getTotalSessionCount(),
                 curriculumViews
         );
 
+    }
+
+    @Override
+    public int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    // 내 PT 세션 목록 조회
+    @Override
+    public List<PtSessionView> findMySessions(Long userId) {
+        log.debug("event=pt_session_list userId={}", userId);
+
+        List<PtReservation> sessions = ptReservationRepository.findAllByUserId(userId, null);
+
+        // distinct ptCourseId별 코스 정보 1회씩만 조회
+        List<Long> distinctCourseIds = sessions.stream()
+                .map(PtReservation::getPtCourseId)
+                .distinct()
+                .toList();
+
+        Map<Long, PtCourseQueryPort.PtCourseInfo> courseInfoMap = distinctCourseIds.stream()
+                .collect(Collectors.toMap(
+                        id -> id,
+                        ptCourseQueryPort::findPtCourseInfo
+                ));
+
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        List<PtSessionView> result = sessions.stream()
+                .map(r -> {
+                    PtCourseQueryPort.PtCourseInfo info = courseInfoMap.get(r.getPtCourseId());
+                    return new PtSessionView(
+                            r.getId(),
+                            r.getPtCourseId(),
+                            info.title(),
+                            info.trainerName(),
+                            r.getReservedStartAt(),
+                            r.getReservedEndAt(),
+                            computeSessionStatus(r, now)
+                    );
+                })
+                .toList();
+
+        log.info("event=pt_session_list_succeeded userId={} count={}", userId, result.size());
+        return result;
+    }
+
+    private PtSessionStatus computeSessionStatus(PtReservation r, LocalDateTime now) {
+        if (r.getStatus() == PtReservationStatus.CANCELLED) return PtSessionStatus.CANCELLED;
+        if (r.getStatus() == PtReservationStatus.COMPLETED || r.getReservedEndAt().isBefore(now)) {
+            return PtSessionStatus.COMPLETED;
+        }
+        return PtSessionStatus.RESERVED;
     }
 
     // AdminDashboard : 월별 예약된 pt 수 조회
@@ -165,25 +227,53 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         }
     }
 
-    private MyPtReservationView toView(PtReservation reservation) {
+    private MyPtReservationView toView(Long userId, List<PtReservation> sessions) {
+        // CANCELLED 제외한 세션 중 대표 선택, 전부 취소됐으면 첫 번째 사용
+        PtReservation rep = sessions.stream()
+                .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
+                .findFirst()
+                .orElse(sessions.get(0));
 
-        // pt_courses에서 title, thumbnailFileId, trainerName 조회
         PtCourseQueryPort.PtCourseInfo courseInfo =
-                ptCourseQueryPort.findPtCourseInfo(reservation.getPtCourseId());
+                ptCourseQueryPort.findPtCourseInfo(rep.getPtCourseId());
 
-        // feedbacks에서 가장 최근 피드백 날짜 조회
-        LocalDate lastPtDate = feedbackQueryPort.findLastFeedbackDate(reservation.getId());
+        // sessionStatus=COMPLETED(예약 종료 시각이 지난 회차)인 것 중 가장 최근 reservedEndAt
+        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDate lastPtDate = sessions.stream()
+                .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
+                .filter(r -> r.getStatus() == PtReservationStatus.COMPLETED
+                        || r.getReservedEndAt().isBefore(now))
+                .map(r -> r.getReservedEndAt().toLocalDate())
+                .max(Comparator.naturalOrder())
+                .orElse(null);
 
-        // 위 + PtReservation 자체 데이터 합쳐 View 생성
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
+                userId, rep.getPtCourseId());
+        int totalSessionCount = rep.getTotalSessionCount();
+
+        boolean allCancelled = sessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+
+        PtReservationStatus derivedStatus;
+        if (allCancelled) {
+            derivedStatus = PtReservationStatus.CANCELLED;
+        } else if (progressCount == 0) {
+            derivedStatus = PtReservationStatus.RESERVED;
+        } else if (progressCount >= totalSessionCount) {
+            derivedStatus = PtReservationStatus.COMPLETED;
+        } else {
+            derivedStatus = PtReservationStatus.IN_PROGRESS;
+        }
+
         return new MyPtReservationView(
-                reservation.getId(),              // ptReservationId
+                rep.getId(),
                 resolveThumbnailUrl(courseInfo.thumbnailFileId()),
-                courseInfo.title(),               // pt_courses
-                courseInfo.trainerName(),         // trainer_profiles (via adapter)
-                reservation.getStatus(),        // pt_reservations 자기 컬럼
-                lastPtDate,                      // feedbacks (현재 null)
-                reservation.getProgressCount(), // pt_reservations 자기 컬럼
-                reservation.getTotalSessionCount() // pt_reservations 자기 컬럼
+                courseInfo.title(),
+                courseInfo.trainerName(),
+                derivedStatus,
+                lastPtDate,
+                progressCount,
+                totalSessionCount
         );
     }
 }

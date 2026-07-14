@@ -2,12 +2,14 @@ package com.ssambbong.gymjjak.dashboard.organization.presentation;
 
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtClientResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgPtCourseResult;
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgSalesResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgStatsResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.query.TrainerClientResult;
 import com.ssambbong.gymjjak.dashboard.organization.application.usecase.OrganizationDashboardUseCase;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.DashboardResponseCode;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgPtClientResponse;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgPtCourseResponse;
+import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgSalesResponse;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.OrgStatsResponse;
 import com.ssambbong.gymjjak.dashboard.organization.presentation.api.response.TrainerClientResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
@@ -56,6 +58,28 @@ public class OrganizationDashboardController {
         OrgStatsResult result = organizationDashboardUseCase.getStats(authUser.userId());
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(DashboardResponseCode.ORG_STATS_FOUND, OrgStatsResponse.from(result))
+        );
+    }
+
+    @PreAuthorize("hasAuthority('ORGANIZATION')")
+    @Operation(summary = "매출 관리 조회", description = "누적 매출, 이번 달 매출, 전월 대비 증감률, 월별 매출 현황, 트레이너별 매출을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = OrgSalesResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "조직을 찾을 수 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/sales")
+    public ResponseEntity<GlobalApiResponse<OrgSalesResponse>> getSales(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        OrgSalesResult result = organizationDashboardUseCase.getSales(authUser.userId());
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(DashboardResponseCode.ORG_SALES_FOUND, OrgSalesResponse.from(result))
         );
     }
 

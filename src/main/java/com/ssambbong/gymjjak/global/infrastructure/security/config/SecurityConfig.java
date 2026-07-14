@@ -155,6 +155,8 @@ public class SecurityConfig {
 
                         // 조직 API
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/detail").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/search")
+                        .hasAnyAuthority("USER", "TRAINER")
                         .requestMatchers("/api/organizations/**")
                         .hasAnyAuthority("ORGANIZATION", "ADMIN")
 
@@ -176,6 +178,9 @@ public class SecurityConfig {
                         // Community API
                         .requestMatchers("/api/community/**")
                         .permitAll()
+
+                        // 결제 웹훅 (PortOne 서버에서 호출)
+                        .requestMatchers(HttpMethod.POST, "/api/payments/webhook").permitAll()
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()

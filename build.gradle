@@ -65,6 +65,8 @@ dependencies {
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     // spring retry 의존성 추가
     implementation 'org.springframework.retry:spring-retry'
+    // PortOne V2 서버 SDK
+    implementation 'io.portone:server-sdk:0.24.0'
     // flyway 의존성 추가
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-mysql'

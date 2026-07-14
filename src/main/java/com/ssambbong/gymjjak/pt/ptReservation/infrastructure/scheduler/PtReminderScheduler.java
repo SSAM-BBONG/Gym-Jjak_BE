@@ -22,7 +22,7 @@ public class PtReminderScheduler {
     private final SpringDataPtReservationRepository ptReservationRepository;
     private final NotificationEventProcessor notificationEventProcessor;
 
-    @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
     public void sendPtReminders() {
         LocalDateTime now = LocalDateTime.now(SEOUL);
         LocalDateTime from = now.plusHours(1);
