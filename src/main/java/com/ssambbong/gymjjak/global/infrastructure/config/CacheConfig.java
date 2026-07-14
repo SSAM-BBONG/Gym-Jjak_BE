@@ -17,6 +17,11 @@ public class CacheConfig {
     private static final String PT_MAIN_STATS_CACHE = "ptMainStats";
     private static final String PT_MAIN_POPULAR_CACHE = "ptMainPopular";
     private static final String PT_COURSE_LIST = "ptCourseList";
+    private static final String EXERCISE_LIST_CACHE = "exerciseList";
+    private static final String EXERCISE_SNAPSHOT_CACHE = "exerciseSnapshot";
+    private static final String MY_ONBOARDING_CACHE = "myOnboarding";
+    private static final String USER_PROFILE_CACHE = "userProfile";
+    private static final String USER_USERNAME_NICKNAME_CACHE = "userUsernameNickname";
 
     @Bean
     public CacheManager cacheManager() {
@@ -56,6 +61,51 @@ public class CacheConfig {
                 PT_COURSE_LIST,
                 Caffeine.newBuilder()
                         .maximumSize(1_000)
+                        .expireAfterWrite(Duration.ofMinutes(30))
+                        .recordStats()
+                        .build()
+        );
+
+        cacheManager.registerCustomCache(
+                EXERCISE_LIST_CACHE,
+                Caffeine.newBuilder()
+                        .maximumSize(1_000)
+                        .expireAfterWrite(Duration.ofHours(1))
+                        .recordStats()
+                        .build()
+        );
+
+        cacheManager.registerCustomCache(
+                EXERCISE_SNAPSHOT_CACHE,
+                Caffeine.newBuilder()
+                        .maximumSize(5_000)
+                        .expireAfterWrite(Duration.ofHours(1))
+                        .recordStats()
+                        .build()
+        );
+
+        cacheManager.registerCustomCache(
+                MY_ONBOARDING_CACHE,
+                Caffeine.newBuilder()
+                        .maximumSize(10_000)
+                        .expireAfterWrite(Duration.ofMinutes(30))
+                        .recordStats()
+                        .build()
+        );
+
+        cacheManager.registerCustomCache(
+                USER_PROFILE_CACHE,
+                Caffeine.newBuilder()
+                        .maximumSize(10_000)
+                        .expireAfterWrite(Duration.ofMinutes(10))
+                        .recordStats()
+                        .build()
+        );
+
+        cacheManager.registerCustomCache(
+                USER_USERNAME_NICKNAME_CACHE,
+                Caffeine.newBuilder()
+                        .maximumSize(10_000)
                         .expireAfterWrite(Duration.ofMinutes(30))
                         .recordStats()
                         .build()

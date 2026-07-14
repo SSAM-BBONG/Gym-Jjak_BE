@@ -237,25 +237,43 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         PtCourseQueryPort.PtCourseInfo courseInfo =
                 ptCourseQueryPort.findPtCourseInfo(rep.getPtCourseId());
 
-        // 해당 코스의 세션 중 가장 최근 피드백 날짜
+        // sessionStatus=COMPLETED(예약 종료 시각이 지난 회차)인 것 중 가장 최근 reservedEndAt
+        LocalDateTime now = LocalDateTime.now(clock);
         LocalDate lastPtDate = sessions.stream()
-                .map(r -> feedbackQueryPort.findLastFeedbackDate(r.getId()))
-                .filter(Objects::nonNull)
+                .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
+                .filter(r -> r.getStatus() == PtReservationStatus.COMPLETED
+                        || r.getReservedEndAt().isBefore(now))
+                .map(r -> r.getReservedEndAt().toLocalDate())
                 .max(Comparator.naturalOrder())
                 .orElse(null);
 
         int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
                 userId, rep.getPtCourseId());
+        int totalSessionCount = rep.getTotalSessionCount();
+
+        boolean allCancelled = sessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+
+        PtReservationStatus derivedStatus;
+        if (allCancelled) {
+            derivedStatus = PtReservationStatus.CANCELLED;
+        } else if (progressCount == 0) {
+            derivedStatus = PtReservationStatus.RESERVED;
+        } else if (progressCount >= totalSessionCount) {
+            derivedStatus = PtReservationStatus.COMPLETED;
+        } else {
+            derivedStatus = PtReservationStatus.IN_PROGRESS;
+        }
 
         return new MyPtReservationView(
                 rep.getId(),
                 resolveThumbnailUrl(courseInfo.thumbnailFileId()),
                 courseInfo.title(),
                 courseInfo.trainerName(),
-                rep.getStatus(),
+                derivedStatus,
                 lastPtDate,
                 progressCount,
-                rep.getTotalSessionCount()
+                totalSessionCount
         );
     }
 }

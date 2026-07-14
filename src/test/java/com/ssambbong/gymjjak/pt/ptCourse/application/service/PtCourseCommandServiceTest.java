@@ -399,8 +399,8 @@ class PtCourseCommandServiceTest {
 
         when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existingPtCourse()));
         when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
-        when(ptReservationCountQueryPort.countActiveByPtCourseIds(List.of(1L)))
-                .thenReturn(Map.of(1L, 3)); // 활성 수강생 3명
+        when(ptReservationCountQueryPort.countStudentsByPtCourseIds(List.of(1L)))
+                .thenReturn(new PtReservationCountQueryPort.StudentCounts(Map.of(1L, 3), Map.of(1L, 3)));
 
         // when & then
         assertThrows(CurriculumUpdateNotAllowedException.class,
@@ -426,8 +426,8 @@ class PtCourseCommandServiceTest {
 
         when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existingPtCourse()));
         when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
-        when(ptReservationCountQueryPort.countActiveByPtCourseIds(List.of(1L)))
-                .thenReturn(Map.of(1L, 0));
+        when(ptReservationCountQueryPort.countStudentsByPtCourseIds(List.of(1L)))
+                .thenReturn(new PtReservationCountQueryPort.StudentCounts(Map.of(1L, 0), Map.of(1L, 0)));
 
         // when & then
         assertThrows(PtCourseRequestInvalidException.class,
