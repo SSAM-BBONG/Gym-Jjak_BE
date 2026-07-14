@@ -1,12 +1,14 @@
 package com.ssambbong.gymjjak.chat;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
+import com.ssambbong.gymjjak.chat.application.port.ChatMetricsPort;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.chat.application.service.ChatRoomService;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoom;
 import com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus;
 import com.ssambbong.gymjjak.chat.domain.repository.ChatRoomRepository;
 import com.ssambbong.gymjjak.chat.exception.*;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +33,8 @@ class ChatRoomServiceTest {
 
     @Mock private ChatRoomRepository chatRoomRepository;
     @Mock private TrainerQueryPort trainerQueryPort;
+    @Mock private FileUrlUseCase fileUrlUseCase;
+    @Mock private ChatMetricsPort chatMetricsPort;
 
     @InjectMocks
     private ChatRoomService chatRoomService;

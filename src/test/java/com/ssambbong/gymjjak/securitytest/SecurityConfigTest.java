@@ -59,7 +59,7 @@ class SecurityConfigTest {
                 "USER"
         );
 
-        mockMvc.perform(get("/api/admin/test")
+        mockMvc.perform(get("/api/reportgroup/test")
                         .header("Authorization", "Bearer " + token))
                 .andDo(print())
                 .andExpect(status().isForbidden());
@@ -74,7 +74,7 @@ class SecurityConfigTest {
                 "ADMIN"
         );
 
-        mockMvc.perform(get("/api/admin/test")
+        mockMvc.perform(get("/api/reportgroup/test")
                         .header("Authorization", "Bearer " + token))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -88,7 +88,7 @@ class SecurityConfigTest {
             return "user access";
         }
 
-        @GetMapping("/api/admin/test")
+        @GetMapping("/api/reportgroup/test")
         public String adminTest() {
             return "admin access";
         }

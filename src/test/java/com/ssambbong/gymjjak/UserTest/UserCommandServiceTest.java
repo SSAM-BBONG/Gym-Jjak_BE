@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.UserTest;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
 import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
+import com.ssambbong.gymjjak.user.application.port.out.UserCacheEvictionPort;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
@@ -10,38 +11,47 @@ import com.ssambbong.gymjjak.user.application.service.UserCommandService;
 import com.ssambbong.gymjjak.user.domain.model.User;
 import com.ssambbong.gymjjak.user.domain.model.UserRole;
 import com.ssambbong.gymjjak.user.domain.model.UserStatus;
-import com.ssambbong.gymjjak.user.domain.policy.UserPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-
-import java.time.Instant;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class UserCommandServiceTest {
 
-    private TokenPort tokenPort;
+    @Mock
     private UserPort userPort;
+
+    @Mock
+    private TokenPort tokenPort;
+
+    @Mock
     private BlacklistPort blacklistPort;
-    private UserPolicy userPolicy;
+
+    @Mock
+    private UserCacheEvictionPort userCacheEvictionPort;
+
     private UserCommandService userCommandService;
 
     @BeforeEach
     void setUp() {
-        userPort = mock(UserPort.class);
-        tokenPort = mock(TokenPort.class);
-        userPolicy = mock(UserPolicy.class);
-
         userCommandService = new UserCommandService(
                 userPort,
                 tokenPort,
-                blacklistPort
+                blacklistPort,
+                userCacheEvictionPort
         );
     }
+
+
+
 
     @Test
     @DisplayName("회원가입에 성공한다")
@@ -84,8 +94,8 @@ class UserCommandServiceTest {
         assertThat(savedUser.getPhone()).isEqualTo("010-1111-2222");
         assertThat(savedUser.getRole()).isEqualTo(UserRole.USER);
         assertThat(savedUser.getStatus()).isEqualTo(UserStatus.ACTIVE);
-        assertThat(savedUser.getCreatedAt()).isEqualTo(Instant.parse("2026-05-27T00:00:00Z"));
-        assertThat(savedUser.getUpdatedAt()).isEqualTo(Instant.parse("2026-05-27T00:00:00Z"));
+        assertThat(savedUser.getCreatedAt()).isNull();
+        assertThat(savedUser.getUpdatedAt()).isNull();
         assertThat(savedUser.getLastLoginAt()).isNull();
         assertThat(savedUser.getDeletedAt()).isNull();
 
