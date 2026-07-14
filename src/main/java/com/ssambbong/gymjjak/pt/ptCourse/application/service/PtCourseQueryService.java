@@ -207,8 +207,13 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             studentUserId, rep.getPtCourseId());
                     int totalSessionCount = rep.getTotalSessionCount();
 
+                    boolean allCancelled = studentSessions.stream()
+                            .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+
                     PtReservationStatus derivedStatus;
-                    if (progressCount == 0) {
+                    if (allCancelled) {
+                        derivedStatus = PtReservationStatus.CANCELLED;
+                    } else if (progressCount == 0) {
                         derivedStatus = PtReservationStatus.RESERVED;
                     } else if (progressCount >= totalSessionCount) {
                         derivedStatus = PtReservationStatus.COMPLETED;
