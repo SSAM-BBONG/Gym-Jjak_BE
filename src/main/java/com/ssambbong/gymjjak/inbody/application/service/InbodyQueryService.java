@@ -26,11 +26,11 @@ public class InbodyQueryService implements InbodyQueryUseCase {
 
     // page 사이즈
     private static final int PAGE_SIZE = 2;
-    // 변화율 퍼센티지
+    // 변화량 계산 시 사용할 소수점 스케일
     private static final int MEASUREMENT_CHANGE_SCALE = 2;
     // 소수점 첫째 자리
-    private static final int BMI_SCALE = 1;
-    // 변화율 둘째 자리
+    private static final int BMI_CHANGE_SCALE = 1;
+
     private final InbodyRepository inbodyRepository;
 
     @Override
@@ -81,12 +81,12 @@ public class InbodyQueryService implements InbodyQueryUseCase {
     }
 
     private InbodyItemResult toInbodyItemResult(Inbody inbody, Inbody previousInbody) {
-        BigDecimal bmi = calculateBmi(inbody.getHeight(), inbody.getWeight());
+        BigDecimal bmi = inbody.calculateBmi();
         BmiStatus bmiStatus = BmiStatus.from(bmi);
 
         BigDecimal previousBmi = previousInbody == null
                 ? null
-                : calculateBmi(previousInbody.getHeight(), previousInbody.getWeight());
+                : previousInbody.calculateBmi();
 
         return new InbodyItemResult(
                 inbody.getId(),
@@ -109,15 +109,8 @@ public class InbodyQueryService implements InbodyQueryUseCase {
                         getBodyFatPercentage(previousInbody),
                         MEASUREMENT_CHANGE_SCALE
                 ),
-                calculateChange(bmi, previousBmi, BMI_SCALE)
+                calculateChange(bmi, previousBmi, BMI_CHANGE_SCALE)
         );
-    }
-
-    // bmi 계산
-    private BigDecimal calculateBmi(BigDecimal height, BigDecimal weight) {
-        BigDecimal heightInMeter = height.movePointLeft(2);
-
-        return weight.divide(heightInMeter.pow(2), BMI_SCALE, RoundingMode.HALF_UP);
     }
 
     // 절대 변화량 계산
