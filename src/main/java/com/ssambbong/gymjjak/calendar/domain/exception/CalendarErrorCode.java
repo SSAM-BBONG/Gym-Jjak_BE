@@ -32,7 +32,8 @@ public enum CalendarErrorCode implements ErrorCode {
     DATE_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_002", "날짜는 필수입니다."),
     YEAR_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_003", "연도는 필수입니다."),
     MONTH_REQUIRED(HttpStatus.BAD_REQUEST, "CALENDAR_400_004", "월은 필수입니다."),
-    INVALID_MONTH(HttpStatus.BAD_REQUEST, "CALENDAR_400_005", "월은 1부터 12 사이여야 합니다.");
+    INVALID_MONTH(HttpStatus.BAD_REQUEST, "CALENDAR_400_005", "월은 1부터 12 사이여야 합니다."),
+    CALENDAR_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CALENDAR_403_001", "캘린더를 조회할 권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

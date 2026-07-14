@@ -1,6 +1,5 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence;
 
-import com.ssambbong.gymjjak.pt.ptReservation.application.result.PtCalendarDayResult;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -58,45 +57,6 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
 
     // 취소된 예약 수 (cancelledAt IS NOT NULL)
     long countByCancelledAtIsNotNull();
-
-    @Query("""
-    select new com.ssambbong.gymjjak.pt.ptReservation.application.result.PtCalendarDayResult(
-        r.ptCourseId,
-        c.title,
-        r.reservedStartAt
-    )
-    from PtReservationJpaEntity r
-    join PtCourseJpaEntity c on c.id = r.ptCourseId
-    where r.userId = :userId
-      and r.reservedStartAt >= :startAt
-      and r.reservedStartAt < :endAt
-      and r.status <> :cancelledStatus
-      and r.cancelledAt is null
-    order by r.reservedStartAt asc
-""")
-    List<PtCalendarDayResult> findCalendarDayPtsByUserIdAndDate(
-            @Param("userId") Long userId,
-            @Param("startAt") LocalDateTime startAt,
-            @Param("endAt") LocalDateTime endAt,
-            @Param("cancelledStatus") PtReservationStatus cancelledStatus
-    );
-
-    @Query("""
-    select r.reservedStartAt
-    from PtReservationJpaEntity r
-    where r.userId = :userId
-      and r.reservedStartAt >= :startAt
-      and r.reservedStartAt < :endAt
-      and r.status <> :cancelledStatus
-      and r.cancelledAt is null
-    order by r.reservedStartAt asc
-""")
-    List<LocalDateTime> findReservedStartAtsByUserIdAndPeriod(
-            @Param("userId") Long userId,
-            @Param("startAt") LocalDateTime startAt,
-            @Param("endAt") LocalDateTime endAt,
-            @Param("cancelledStatus") PtReservationStatus cancelledStatus
-    );
 
     // 가용 날짜/시간 슬롯 계산용 — 강습의 기간 내 RESERVED 예약 시작 시각 목록
     @Query("""

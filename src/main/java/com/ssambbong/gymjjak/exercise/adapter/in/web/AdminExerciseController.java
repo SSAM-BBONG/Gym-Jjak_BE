@@ -37,7 +37,7 @@ public class AdminExerciseController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    @Operation(summary = "Create exercise", description = "Admin creates an exercise.")
+    @Operation(summary = "운동 종목 등록", description = "관리자가 운동 종목 등록")
     public ResponseEntity<GlobalApiResponse<CreateExerciseResponse>> createExercise(
             @Valid @RequestBody CreateExerciseRequest request
     ) {
@@ -52,7 +52,7 @@ public class AdminExerciseController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{exerciseId}")
-    @Operation(summary = "Update exercise", description = "Admin updates an exercise name.")
+    @Operation(summary = "운동 종목 수정", description = "관리자가 운동 종목 이름 수정")
     public ResponseEntity<GlobalApiResponse<Void>> updateExercise(
             @PathVariable Long exerciseId,
             @Valid @RequestBody UpdateExerciseRequest request
@@ -66,7 +66,7 @@ public class AdminExerciseController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{exerciseId}")
-    @Operation(summary = "Delete exercise", description = "Admin deletes an exercise.")
+    @Operation(summary = "운동 종목 삭제", description = "관리자가 운동 종목을 삭제")
     public ResponseEntity<GlobalApiResponse<Void>> deleteExercise(
             @PathVariable Long exerciseId
     ) {

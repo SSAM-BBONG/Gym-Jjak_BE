@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.calendar.application.service;
 
 import com.ssambbong.gymjjak.calendar.application.port.in.CalendarUsecase;
-import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPortToPtReservation;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPtReservationPort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayPtResult;
@@ -11,7 +11,6 @@ import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,38 +22,37 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CalendarService implements CalendarUsecase {
 
-    private final CalendarPortToPtReservation calendarPortToPtReservation;
+    private final CalendarPtReservationPort calendarPtReservationPort;
     private final WorkoutDiaryPort workoutDiaryPort;
     private final CalendarMonthReader calendarMonthReader;
 
     @Override
     @Transactional(readOnly = true)
     public CalendarDayResult findCalendarDay(
-            Long userId,
+            Long requesterUserId,
+            Long targetUserId,
             LocalDate date
     ) {
-        if (userId == null) {
-            throw new CalendarException(CalendarErrorCode.USER_ID_REQUIRED);
-        }
-
         if (date == null) {
             throw new CalendarException(CalendarErrorCode.DATE_REQUIRED);
         }
 
-        log.debug("event=calendarDay_find_start userId={}", userId);
+        validateCalendarAccess(requesterUserId, targetUserId);
+
+        log.debug("event=calendarDay_find_start userId={}", targetUserId);
         List<CalendarDayPtResult> pts =
-                calendarPortToPtReservation.findPtsByUserIdAndDate(
-                        userId,
+                calendarPtReservationPort.findPtsByUserIdAndDate(
+                        targetUserId,
                         date
                 );
 
         List<CalendarDayDiaryResult> diaries =
                 workoutDiaryPort.findDiariesByUserIdAndDate(
-                        userId,
+                        targetUserId,
                         date
                 );
 
-        log.info("event=calendarDay_find_succeed userId={}", userId);
+        log.info("event=calendarDay_find_succeed userId={}", targetUserId);
 
         return new CalendarDayResult(
                 date,
@@ -63,29 +61,27 @@ public class CalendarService implements CalendarUsecase {
         );
     }
 
-    @Cacheable(
-            cacheNames = "calendarMonth",
-            key = "'user:' + #userId + ':year:' + #year + ':month:' + #month",
-            sync = true
-    )
     @Override
+    @Transactional(readOnly = true)
     public CalendarMonthResult findCalendarMonth(
-            Long userId,
+            Long requesterUserId,
+            Long targetUserId,
             Integer year,
             Integer month
     ) {
 
-        validateMonthRequest(userId, year, month);
+        validateMonthRequest(targetUserId, year, month);
+        validateCalendarAccess(requesterUserId, targetUserId);
 
         log.info(
-                "event=calendar_month_cache_miss userId={} year={} month={}",
-                userId,
+                "event=calendar_month_find_start userId={} year={} month={}",
+                targetUserId,
                 year,
                 month
         );
 
         return calendarMonthReader.findCalendarMonth(
-                userId,
+                targetUserId,
                 year,
                 month
         );
@@ -110,6 +106,28 @@ public class CalendarService implements CalendarUsecase {
 
         if (month < 1 || month > 12) {
             throw new CalendarException(CalendarErrorCode.INVALID_MONTH);
+        }
+    }
+
+    private void validateCalendarAccess(
+            Long requesterUserId,
+            Long targetUserId
+    ) {
+        if (requesterUserId == null || targetUserId == null) {
+            throw new CalendarException(CalendarErrorCode.USER_ID_REQUIRED);
+        }
+
+        if (requesterUserId.equals(targetUserId)) {
+            return;
+        }
+
+        boolean accessible = calendarPtReservationPort.existsActivePtRelationWithTrainer(
+                targetUserId,
+                requesterUserId
+        );
+
+        if (!accessible) {
+            throw new CalendarException(CalendarErrorCode.CALENDAR_ACCESS_DENIED);
         }
     }
 }
