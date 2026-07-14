@@ -1,103 +1,130 @@
 package com.ssambbong.gymjjak.inbody.application.service;
 
-import com.ssambbong.gymjjak.inbody.application.command.CreateInbodyCommand;
-import com.ssambbong.gymjjak.inbody.application.result.CreateInbodyResult;
-import com.ssambbong.gymjjak.inbody.domain.exception.DuplicateInbodyMeasuredDateException;
-import com.ssambbong.gymjjak.inbody.domain.exception.FutureMeasuredDateException;
+import com.ssambbong.gymjjak.inbody.application.query.GetInbodyListQuery;
+import com.ssambbong.gymjjak.inbody.application.result.InbodyItemResult;
+import com.ssambbong.gymjjak.inbody.application.result.InbodyListResult;
+import com.ssambbong.gymjjak.inbody.domain.model.BmiStatus;
 import com.ssambbong.gymjjak.inbody.domain.model.Inbody;
 import com.ssambbong.gymjjak.inbody.domain.repository.InbodyRepository;
+import com.ssambbong.gymjjak.inbody.domain.repository.InbodySlice;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
-import java.time.*;
+import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class InbodyCommandServiceTest {
+class InbodyQueryServiceTest {
+
+    private static final Long USER_ID = 1L;
 
     private InbodyRepository inbodyRepository;
-    private InbodyCommandService inbodyCommandService;
-    private static final Clock TEST_CLOCK = Clock.fixed(
-            Instant.parse("2026-07-13T00:00:00Z"),
-            ZoneId.of("Asia/Seoul")
-    );
+    private InbodyQueryService inbodyQueryService;
 
     @BeforeEach
     void setUp() {
-        inbodyRepository = mock(InbodyRepository.class);
-        inbodyCommandService = new InbodyCommandService(
-                inbodyRepository,
-                TEST_CLOCK  );
+        inbodyRepository = Mockito.mock(InbodyRepository.class);
+        inbodyQueryService = new InbodyQueryService(inbodyRepository);
     }
 
     @Test
-    @DisplayName("인바디 기록을 생성하면 생성된 인바디 ID를 반환한다")
-    void createInbody_success() {
-        CreateInbodyCommand command = createCommand(LocalDate.of(2026, 7, 13));
-        Inbody savedInbody = Inbody.reconstruct(
-                1L,
-                command.userId(),
-                command.measuredDate(),
-                command.height(),
-                command.weight(),
-                command.bodyFatPercentage(),
-                command.skeletalMuscleMass(),
-                LocalDateTime.of(2026, 7, 13, 10, 0),
-                LocalDateTime.of(2026, 7, 13, 10, 0)
+    void getInbodyList_success_latestInbodyIncludesChanges() {
+        Inbody latestInbody = createInbody(
+                2L, LocalDate.of(2026, 7, 14),
+                "170.00", "70.00", "15.00", "30.00"
         );
-        when(inbodyRepository.existsByUserIdAndMeasuredDate(command.userId(), command.measuredDate()))
-                .thenReturn(false);
-        when(inbodyRepository.save(any(Inbody.class))).thenReturn(savedInbody);
-
-        CreateInbodyResult result = inbodyCommandService.createInbody(command);
-
-        assertThat(result.inbodyId()).isEqualTo(1L);
-        verify(inbodyRepository).save(any(Inbody.class));
-    }
-
-    @Test
-    @DisplayName("동일한 측정일의 인바디 기록이 있으면 생성에 실패한다")
-    void createInbody_fail_duplicateMeasuredDate() {
-        CreateInbodyCommand command = createCommand(LocalDate.of(2026, 7, 13));
-        when(inbodyRepository.existsByUserIdAndMeasuredDate(command.userId(), command.measuredDate()))
-                .thenReturn(true);
-
-        assertThatThrownBy(() -> inbodyCommandService.createInbody(command))
-                .isInstanceOf(DuplicateInbodyMeasuredDateException.class);
-
-        verify(inbodyRepository, never()).save(any(Inbody.class));
-    }
-
-    @Test
-    @DisplayName("미래 측정일의 인바디 기록은 생성할 수 없다")
-    void createInbody_fail_futureMeasuredDate() {
-        CreateInbodyCommand command = createCommand(
-                LocalDate.now(TEST_CLOCK).plusDays(1)
+        Inbody previousInbody = createInbody(
+                1L, LocalDate.of(2026, 7, 1),
+                "170.00", "68.00", "16.00", "29.00"
         );
 
-        assertThatThrownBy(() -> inbodyCommandService.createInbody(command))
-                .isInstanceOf(FutureMeasuredDateException.class);
+        // 최신 2개와 더 보기 가능 여부 반환
+        when(inbodyRepository.findInbodySlice(USER_ID, null, null, 2))
+                .thenReturn(new InbodySlice(
+                        List.of(latestInbody, previousInbody),
+                        true
+                ));
 
-        verify(inbodyRepository, never()).existsByUserIdAndMeasuredDate(any(), any());
-        verify(inbodyRepository, never()).save(any(Inbody.class));
+        InbodyListResult result = inbodyQueryService.getInbodyList(
+                new GetInbodyListQuery(USER_ID, null, null)
+        );
+
+        InbodyItemResult latestResult = result.inbodies().get(0);
+        InbodyItemResult previousResult = result.inbodies().get(1);
+
+        assertThat(result.inbodies()).hasSize(2);
+        assertThat(result.hasNext()).isTrue();
+        assertThat(result.nextMeasuredDate()).isEqualTo(LocalDate.of(2026, 7, 1));
+        assertThat(result.nextInbodyId()).isEqualTo(1L);
+
+        assertThat(latestResult.bmi()).isEqualByComparingTo("24.2");
+        assertThat(latestResult.bmiStatus()).isEqualTo(BmiStatus.OVERWEIGHT);
+        assertThat(latestResult.weightChange()).isEqualByComparingTo("2.00");
+        assertThat(latestResult.skeletalMuscleMassChange()).isEqualByComparingTo("1.00");
+        assertThat(latestResult.bodyFatPercentageChange()).isEqualByComparingTo("-1.00");
+        assertThat(latestResult.bmiChange()).isEqualByComparingTo("0.7");
+
+        // 직전 기록은 최신 기록의 비교 기준이므로 변화량을 내려주지 않음
+        assertThat(previousResult.weightChange()).isNull();
+        assertThat(previousResult.skeletalMuscleMassChange()).isNull();
+        assertThat(previousResult.bodyFatPercentageChange()).isNull();
+        assertThat(previousResult.bmiChange()).isNull();
+
+        verify(inbodyRepository).findInbodySlice(USER_ID, null, null, 2);
     }
 
-    private CreateInbodyCommand createCommand(LocalDate measuredDate) {
-        return new CreateInbodyCommand(
-                1L,
+    @Test
+    void getInbodyList_success_singleInbodyHasNoChanges() {
+        Inbody latestInbody = createInbody(
+                1L, LocalDate.of(2026, 7, 14),
+                "170.00", "70.00", "15.00", "30.00"
+        );
+
+        when(inbodyRepository.findInbodySlice(USER_ID, null, null, 2))
+                .thenReturn(new InbodySlice(List.of(latestInbody), false));
+
+        InbodyListResult result = inbodyQueryService.getInbodyList(
+                new GetInbodyListQuery(USER_ID, null, null)
+        );
+
+        assertThat(result.inbodies()).hasSize(1);
+
+        InbodyItemResult latestResult = result.inbodies().get(0);
+
+        assertThat(result.inbodies()).hasSize(1);
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.nextMeasuredDate()).isNull();
+        assertThat(result.nextInbodyId()).isNull();
+
+        assertThat(latestResult.weightChange()).isNull();
+        assertThat(latestResult.skeletalMuscleMassChange()).isNull();
+        assertThat(latestResult.bodyFatPercentageChange()).isNull();
+        assertThat(latestResult.bmiChange()).isNull();
+    }
+
+    private Inbody createInbody(
+            Long id,
+            LocalDate measuredDate,
+            String height,
+            String weight,
+            String bodyFatPercentage,
+            String skeletalMuscleMass
+    ) {
+        return Inbody.reconstruct(
+                id,
+                USER_ID,
                 measuredDate,
-                new BigDecimal("170.00"),
-                new BigDecimal("70.00"),
-                new BigDecimal("15.50"),
-                new BigDecimal("30.20")
+                new BigDecimal(height),
+                new BigDecimal(weight),
+                new BigDecimal(bodyFatPercentage),
+                new BigDecimal(skeletalMuscleMass),
+                null,
+                null
         );
     }
 }
