@@ -238,7 +238,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 ptCourseQueryPort.findPtCourseInfo(rep.getPtCourseId());
 
         // sessionStatus=COMPLETED(예약 종료 시각이 지난 회차)인 것 중 가장 최근 reservedEndAt
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         LocalDate lastPtDate = sessions.stream()
                 .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
                 .filter(r -> r.getStatus() == PtReservationStatus.COMPLETED
