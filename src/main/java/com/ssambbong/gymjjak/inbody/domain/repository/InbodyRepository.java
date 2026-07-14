@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.inbody.domain.repository;
 import com.ssambbong.gymjjak.inbody.domain.model.Inbody;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public interface InbodyRepository {
 
@@ -16,4 +17,6 @@ public interface InbodyRepository {
             Long inbodyId,
             int size
     );
+
+    Optional<Inbody> findByIdAndUserId(Long inbodyId, Long userId);
 }

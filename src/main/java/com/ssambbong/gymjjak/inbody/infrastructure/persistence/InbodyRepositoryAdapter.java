@@ -71,6 +71,12 @@ public class InbodyRepositoryAdapter implements InbodyRepository {
         return new InbodySlice(inbodies, hasNext);
     }
 
+    @Override
+    public Optional<Inbody> findByIdAndUserId(Long inbodyId, Long userId) {
+        return springDataInbodyRepository.findByIdAndUserId(inbodyId, userId)
+                .map(inbodyPersistenceMapper::toDomain);
+    }
+
     // 사용자별 측정일 유니크 제약 위반 여부 확인
     private boolean isDuplicateMeasuredDateConstraint(DataIntegrityViolationException exception) {
         return Optional.ofNullable(exception.getMostSpecificCause())
