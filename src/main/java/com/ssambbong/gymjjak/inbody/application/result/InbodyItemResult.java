@@ -1,11 +1,11 @@
-package com.ssambbong.gymjjak.inbody.presentation.api.response;
+package com.ssambbong.gymjjak.inbody.application.result;
 
 import com.ssambbong.gymjjak.inbody.domain.model.BmiStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record InbodyResponse(
+public record InbodyItemResult(
         Long inbodyId,
         LocalDate measuredDate,
         BigDecimal height,
@@ -15,6 +15,9 @@ public record InbodyResponse(
         BigDecimal bmi,
         BmiStatus bmiStatus,
         String bmiStatusDescription,
-        BigDecimal weightChangeRate
+        BigDecimal weightChange,
+        BigDecimal skeletalMuscleMassChange,
+        BigDecimal bodyFatPercentageChange,
+        BigDecimal bmiChange
 ) {
 }

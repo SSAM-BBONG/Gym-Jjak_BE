@@ -8,11 +8,14 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
 public class Inbody {
+
+    private static final int BMI_SCALE = 1;
 
     private final Long id;
     private final Long userId;
@@ -109,6 +112,15 @@ public class Inbody {
         this.weight = validatedWeight;
         this.bodyFatPercentage = validatedBodyFatPercentage;
         this.skeletalMuscleMass = validatedSkeletalMuscleMass;
+    }
+
+    // 키와 몸무게를 기준으로 BMI 계산
+    public BigDecimal calculateBmi() {
+        // bmi 계산 시, m 단위기 때문에서 소수점 왼쪽으로 2칸 이동
+        BigDecimal heightInMeter = height.movePointLeft(2);
+
+        // 몸무게 / 키 제곱, 소수점 1자리, 반올림
+        return weight.divide(heightInMeter.pow(2), BMI_SCALE, RoundingMode.HALF_UP);
     }
 
     private static Long requireUserId(Long userId) {
