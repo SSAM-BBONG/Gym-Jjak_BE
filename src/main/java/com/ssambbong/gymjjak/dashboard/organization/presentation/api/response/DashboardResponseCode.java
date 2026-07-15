@@ -6,7 +6,7 @@ public enum DashboardResponseCode implements ResponseCode {
 
     ORG_STATS_FOUND("DASH_200_STATS", "헬스장 통계 조회가 완료되었습니다."),
     ORG_SALES_FOUND("DASH_200_SALES", "매출 관리 조회가 완료되었습니다."),
-    TRAINER_CLIENTS_FOUND("DASH_200_TRAINER_CLIENTS", "트레이너별 수강생 목록 조회가 완료되었습니다."),
+    TRAINER_STATS_FOUND("DASH_200_TRAINER_STATS", "트레이너별 통계 조회가 완료되었습니다."),
     ORG_PT_COURSES_FOUND("DASH_200_PT_COURSES", "조직 PT 목록 조회가 완료되었습니다."),
     ORG_PT_CLIENTS_FOUND("DASH_200_PT_CLIENTS", "PT 수강생 목록 조회가 완료되었습니다.");
 

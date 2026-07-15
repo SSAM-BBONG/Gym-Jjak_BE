@@ -4,6 +4,6 @@ package com.ssambbong.gymjjak.organization.organizationTrainer.application.query
 public record TrainerClientSummary(
         Long trainerProfileId,
         String trainerName,
-        double averageRating,
-        long clientCount
+        long clientCount,
+        long ptCount
 ) {}
