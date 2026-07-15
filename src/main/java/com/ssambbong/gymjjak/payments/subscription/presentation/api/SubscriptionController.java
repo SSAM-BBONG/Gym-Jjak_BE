@@ -35,7 +35,7 @@ public class SubscriptionController {
                     content = @Content(schema = @Schema(implementation = SubscriptionPlansResponse.class)))
     })
     @GetMapping("/plans")
-    public ResponseEntity<GlobalApiResponse<?>> getPlans() {
+    public ResponseEntity<GlobalApiResponse<SubscriptionPlansResponse>> getPlans() {
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 SubscriptionResponseCode.SUBSCRIPTION_PLANS_FETCHED,
                 SubscriptionPlansResponse.from(subscriptionQueryUseCase.findPlans())
@@ -52,7 +52,7 @@ public class SubscriptionController {
                     content = @Content(schema = @Schema()))
     })
     @GetMapping("/me")
-    public ResponseEntity<GlobalApiResponse<?>> getMySubscription(
+    public ResponseEntity<GlobalApiResponse<SubscriptionMeResponse>> getMySubscription(
             @AuthenticationPrincipal AuthUser authUser
     ) {
         return ResponseEntity.ok(GlobalApiResponse.ok(
