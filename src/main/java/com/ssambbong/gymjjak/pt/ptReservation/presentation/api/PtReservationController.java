@@ -40,7 +40,7 @@ public class PtReservationController {
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "PT 예약", description = "사용자가 PT 강습을 예약한다.")
     @PostMapping("/pt-courses/{ptCourseId}/reservations")
-    public ResponseEntity<GlobalApiResponse<?>> createPtReservation(
+    public ResponseEntity<GlobalApiResponse<CreatePtReservationResponse>> createPtReservation(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long ptCourseId,                  // 예약할 PT 강습 ID
             @RequestBody @Valid CreatePtReservationRequest request

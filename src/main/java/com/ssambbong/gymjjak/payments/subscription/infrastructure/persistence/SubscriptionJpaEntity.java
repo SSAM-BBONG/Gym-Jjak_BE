@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.payments.subscription.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedUpdatedEntity;
+import com.ssambbong.gymjjak.payments.subscription.domain.model.Subscription;
 import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionPlanType;
 import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionStatus;
 import jakarta.persistence.*;
@@ -58,5 +59,9 @@ public class SubscriptionJpaEntity extends BaseCreatedUpdatedEntity {
 
     public void expire() {
         this.status = SubscriptionStatus.EXPIRED;
+    }
+
+    public Subscription toDomain() {
+        return Subscription.restore(id, userId, planType, price, status, startedAt, expiredAt);
     }
 }
