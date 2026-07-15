@@ -185,6 +185,9 @@ public class SecurityConfig {
                         // 구독 플랜 목록 조회 (비로그인 접근 가능)
                         .requestMatchers(HttpMethod.GET, "/api/subscriptions/plans").permitAll()
 
+                        // 내 구독 조회
+                        .requestMatchers(HttpMethod.GET, "/api/subscriptions/me").hasAnyAuthority("USER", "TRAINER")
+
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

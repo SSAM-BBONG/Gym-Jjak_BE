@@ -8,7 +8,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum SubscriptionResponseCode implements ResponseCode {
 
-    SUBSCRIPTION_PLANS_FETCHED("SUBSCRIPTION_PLANS_FETCHED", "구독 플랜 목록 조회 성공");
+    SUBSCRIPTION_PLANS_FETCHED("SUBSCRIPTION_PLANS_FETCHED", "구독 플랜 목록 조회 성공"),
+    SUBSCRIPTION_FETCHED("SUBSCRIPTION_FETCHED", "내 구독 조회 성공");
 
     private final String code;
     private final String message;
