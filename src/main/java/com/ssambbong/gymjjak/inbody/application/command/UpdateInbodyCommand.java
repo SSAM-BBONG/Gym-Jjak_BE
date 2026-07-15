@@ -8,6 +8,7 @@ public record UpdateInbodyCommand(
         BigDecimal height,
         BigDecimal weight,
         BigDecimal bodyFatPercentage,
-        BigDecimal skeletalMuscleMass
+        BigDecimal skeletalMuscleMass,
+        BigDecimal bmr
 ) {
 }

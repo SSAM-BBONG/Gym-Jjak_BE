@@ -73,7 +73,8 @@ public class InbodyController {
                 request.height(),
                 request.weight(),
                 request.bodyFatPercentage(),
-                request.skeletalMuscleMass()
+                request.skeletalMuscleMass(),
+                request.bmr()
         );
 
         CreateInbodyResult result = inbodyCommandUseCase.createInbody(command);
@@ -161,7 +162,8 @@ public class InbodyController {
                         request.height(),
                         request.weight(),
                         request.bodyFatPercentage(),
-                        request.skeletalMuscleMass()
+                        request.skeletalMuscleMass(),
+                        request.bmr()
                 ),
                 inbodyId
         );

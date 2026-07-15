@@ -48,7 +48,8 @@ public class InbodyCommandService implements InbodyCommandUseCase {
                 command.height(),
                 command.weight(),
                 command.bodyFatPercentage(),
-                command.skeletalMuscleMass()
+                command.skeletalMuscleMass(),
+                command.bmr()
         );
 
         Inbody savedInbody = inbodyRepository.save(inbody);
@@ -91,7 +92,8 @@ public class InbodyCommandService implements InbodyCommandUseCase {
                 command.height(),
                 command.weight(),
                 command.bodyFatPercentage(),
-                command.skeletalMuscleMass()
+                command.skeletalMuscleMass(),
+                command.bmr()
         );
 
         Inbody updatedInbody = inbodyRepository.save(inbody);

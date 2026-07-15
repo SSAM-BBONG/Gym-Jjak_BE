@@ -45,6 +45,9 @@ public class InbodyJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "skeletal_muscle_mass", precision = 5, scale = 2)
     private BigDecimal skeletalMuscleMass;
 
+    @Column(name = "bmr", precision = 6, scale = 2)
+    private BigDecimal bmr;
+
     @Builder
     private InbodyJpaEntity(
             Long id,
@@ -53,7 +56,8 @@ public class InbodyJpaEntity extends BaseCreatedUpdatedEntity {
             BigDecimal height,
             BigDecimal weight,
             BigDecimal bodyFatPercentage,
-            BigDecimal skeletalMuscleMass
+            BigDecimal skeletalMuscleMass,
+            BigDecimal bmr
     ) {
         this.id = id;
         this.userId = userId;
@@ -62,6 +66,7 @@ public class InbodyJpaEntity extends BaseCreatedUpdatedEntity {
         this.weight = weight;
         this.bodyFatPercentage = bodyFatPercentage;
         this.skeletalMuscleMass = skeletalMuscleMass;
+        this.bmr = bmr;
     }
 
     public void update(Inbody inbody) {
@@ -69,5 +74,6 @@ public class InbodyJpaEntity extends BaseCreatedUpdatedEntity {
         this.weight = inbody.getWeight();
         this.bodyFatPercentage = inbody.getBodyFatPercentage();
         this.skeletalMuscleMass = inbody.getSkeletalMuscleMass();
+        this.bmr = inbody.getBmr();
     }
 }

@@ -65,7 +65,8 @@ class InbodyRepositoryAdapterTest {
                 new BigDecimal("170.00"),
                 new BigDecimal("70.00"),
                 new BigDecimal("15.50"),
-                new BigDecimal("30.20")
+                new BigDecimal("30.20"),
+                new BigDecimal("1600.00")
         );
     }
 
