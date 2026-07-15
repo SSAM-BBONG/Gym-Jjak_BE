@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -22,17 +21,19 @@ public class SubscriptionQueryService implements SubscriptionQueryUseCase {
 
     private final SubscriptionRepository subscriptionRepository;
 
-    private static final Map<SubscriptionPlanType, Integer> PRICES = Map.of(
-            SubscriptionPlanType.MONTHLY, 7900,
-            SubscriptionPlanType.YEARLY, 79000
-    );
+    private static int priceOf(SubscriptionPlanType planType) {
+        return switch (planType) {
+            case MONTHLY -> 7900;
+            case YEARLY -> 79000;
+        };
+    }
 
     // 구독 플랜 조회
     @Override
     public List<PlanView> findPlans() {
         log.debug("event=subscription_plans_fetch");
         List<PlanView> plans = Arrays.stream(SubscriptionPlanType.values())
-                .map(plan -> new PlanView(plan, PRICES.get(plan)))
+                .map(plan -> new PlanView(plan, priceOf(plan)))
                 .toList();
         log.info("event=subscription_plans_fetch_succeeded count={}", plans.size());
         return plans;
