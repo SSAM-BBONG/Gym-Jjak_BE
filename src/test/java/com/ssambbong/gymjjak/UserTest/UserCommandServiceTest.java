@@ -1,4 +1,3 @@
-<<<<<<< feature-calendar
 package com.ssambbong.gymjjak.UserTest;
 
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
@@ -181,7 +180,6 @@ class UserCommandServiceTest {
         verify(userPort, never()).encode(anyString());
     }
 }
-=======
 //package com.ssambbong.gymjjak.UserTest;
 //
 //import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
@@ -354,4 +352,3 @@ class UserCommandServiceTest {
 //        verify(userPort, never()).encode(anyString());
 //    }
 //}
->>>>>>> develop

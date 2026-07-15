@@ -28,6 +28,15 @@ public record UpdateInbodyRequest(
         @Schema(description = "골격근량(kg)", example = "30.20")
         @DecimalMin(value = "0.00", message = "골격근량은 0 이상이어야 합니다.")
         @Digits(integer = 3, fraction = 2, message = "골격근량은 정수 3자리, 소수 2자리까지 입력할 수 있습니다.")
-        BigDecimal skeletalMuscleMass
+        BigDecimal skeletalMuscleMass,
+
+        @Schema(description = "기초대사량(kcal)", example = "1600.00")
+        @DecimalMin(value = "0.00", message = "기초대사량은 0 이상이어야 합니다.")
+        @Digits(
+                integer = 4,
+                fraction = 2,
+                message = "기초대사량은 정수 4자리, 소수 2자리까지 입력할 수 있습니다."
+        )
+        BigDecimal bmr
 ) {
 }
