@@ -47,7 +47,7 @@ public class PaymentController {
                     content = @Content(schema = @Schema()))
     })
     @GetMapping("/me")
-    public ResponseEntity<GlobalApiResponse<?>> getMyPayments(
+    public ResponseEntity<GlobalApiResponse<PaymentMyListResponse>> getMyPayments(
             @AuthenticationPrincipal AuthUser authUser
     ) {
         return ResponseEntity.ok(GlobalApiResponse.ok(PaymentResponseCode.PAYMENTS_FETCHED,
@@ -64,7 +64,7 @@ public class PaymentController {
                     content = @Content(schema = @Schema()))
     })
     @GetMapping("/pt-courses/{ptCourseId}/my-status")
-    public ResponseEntity<GlobalApiResponse<?>> getPtPurchaseStatus(
+    public ResponseEntity<GlobalApiResponse<PtPaymentStatusResponse>> getPtPurchaseStatus(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long ptCourseId
     ) {
@@ -89,7 +89,7 @@ public class PaymentController {
                     content = @Content(schema = @Schema()))
     })
     @PostMapping("/pt")
-    public ResponseEntity<GlobalApiResponse<?>> createPtPayment(
+    public ResponseEntity<GlobalApiResponse<CreatePtPaymentResponse>> createPtPayment(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody @Valid CreatePtPaymentRequest request
     ) {
