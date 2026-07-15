@@ -7,6 +7,7 @@ import java.util.Locale;
 public final class ExerciseCacheKeys {
 
     private static final String ALL_KEYWORD = "__all__";
+    private static final String ALL_PART = "__all__";
 
     private ExerciseCacheKeys() {
     }
@@ -16,7 +17,7 @@ public final class ExerciseCacheKeys {
             String keyword
     ) {
         return "part:%s:keyword:%s".formatted(
-                part.name(),
+                part == null ? ALL_PART : part.name(),
                 normalizeKeyword(keyword)
         );
     }

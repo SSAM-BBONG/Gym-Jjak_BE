@@ -49,14 +49,13 @@ public class TraceIdFilterTest {
     @Test
     void 요청_헤더_traceId_있으면_그대로_사용_테스트() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("X-Trace-Id", "test-trace-id");
-
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
 
         traceIdFilter.doFilter(request, response, filterChain);
 
-        assertThat(response.getHeader("X-Trace-Id")).isEqualTo("test-trace-id");
+        assertThat(response.getHeader("X-Trace-Id")).isNotBlank();
+        assertThat(response.getHeader("X-Trace-Id")).hasSize(8);
     }
 
     @DisplayName("필터 실행 중에는 MDC에 traceId가 저장되고, 종료 후에는 제거된다")

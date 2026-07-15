@@ -8,12 +8,14 @@ import java.time.LocalDate;
 public interface CalendarUsecase {
 
     CalendarDayResult findCalendarDay(
-            Long userId,
+            Long requesterUserId,
+            Long targetUserId,
             LocalDate date
     );
 
     CalendarMonthResult findCalendarMonth(
-            Long userId,
+            Long requesterUserId,
+            Long targetUserId,
             Integer year,
             Integer month
     );

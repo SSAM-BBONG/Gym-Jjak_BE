@@ -30,6 +30,10 @@ public interface ExercisePort {
             Long exerciseId
     );
 
+    List<Exercise> findAllExercises();
+
+    List<Exercise> findExercisesByKeyword(String keyword);
+
     List<Exercise> findExercisesByPart(PartType part);
 
     List<Exercise> findExercisesByPartAndKeyword(

@@ -83,12 +83,20 @@ public class ExerciseService implements ExerciseUseCase {
     )
     @Transactional(readOnly = true)
     public List<ExerciseResult> findExercises(PartType part, String keyword) {
-        List<Exercise> exercises = isBlank(keyword)
-                ? exercisePort.findExercisesByPart(part)
-                : exercisePort.findExercisesByPartAndKeyword(
-                        part,
-                        keyword.trim()
-                );
+        List<Exercise> exercises;
+
+        if (part == null && isBlank(keyword)) {
+            exercises = exercisePort.findAllExercises();
+        } else if (part == null) {
+            exercises = exercisePort.findExercisesByKeyword(keyword.trim());
+        } else if (isBlank(keyword)) {
+            exercises = exercisePort.findExercisesByPart(part);
+        } else {
+            exercises = exercisePort.findExercisesByPartAndKeyword(
+                    part,
+                    keyword.trim()
+            );
+        }
 
         return exercises.stream()
                 .map(this::toResult)
@@ -105,7 +113,8 @@ public class ExerciseService implements ExerciseUseCase {
         return new ExerciseResult(
                 exercise.getId(),
                 exercise.getPart(),
-                exercise.getExerciseName()
+                exercise.getExerciseName(),
+                exercise.getCreatedAt()
         );
     }
 

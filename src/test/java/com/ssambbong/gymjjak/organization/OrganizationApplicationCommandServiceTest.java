@@ -1,9 +1,13 @@
 package com.ssambbong.gymjjak.organization;
 
+import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.OrganizationApplicationCreateCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.OrgApplicationMetricsPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserCreationPort;
+import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserLoginIdValidationPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.service.OrganizationApplicationCommandService;
 import com.ssambbong.gymjjak.organization.organizationApplication.domain.repository.OrganizationApplicationRepository;
 import com.ssambbong.gymjjak.organization.organization.application.port.OrganizationMetricsPort;
@@ -16,9 +20,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,9 +35,12 @@ class OrganizationApplicationCommandServiceTest {
 
     @Mock private OrganizationApplicationRepository organizationApplicationRepository;
     @Mock private OrganizationRepository organizationRepository;
+    @Mock private FileUseCase fileUseCase;
     @Mock private UserCreationPort userCreationPort;
+    @Mock private UserLoginIdValidationPort userLoginIdValidationPort;
     @Mock private OrgApplicationMetricsPort orgApplicationMetricsPort;
     @Mock private OrganizationMetricsPort organizationMetricsPort;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private OrganizationApplicationCommandService organizationApplicationCommandService;
@@ -65,6 +74,8 @@ class OrganizationApplicationCommandServiceTest {
                 .thenReturn(false);
         when(organizationApplicationRepository.existsByRequestedLoginId(command.requestedLoginId()))
                 .thenReturn(false);
+        when(fileUseCase.registerFiles(any()))
+                .thenReturn(List.of(new FileRegistrationResult(10L, FileType.BUSINESS_LICENSE)));
         when(organizationApplicationRepository.save(any()))
                 .thenReturn(1L);
 
