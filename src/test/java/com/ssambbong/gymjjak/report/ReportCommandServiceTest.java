@@ -2,10 +2,14 @@ package com.ssambbong.gymjjak.report;
 
 import com.ssambbong.gymjjak.report.application.command.ApproveReportCommand;
 import com.ssambbong.gymjjak.report.application.command.RejectReportCommand;
+import com.ssambbong.gymjjak.report.application.port.ReportSanctionTargetPort;
+import com.ssambbong.gymjjak.report.application.port.user.UserQueryPort;
 import com.ssambbong.gymjjak.report.application.service.ReportGroupCommandService;
 import com.ssambbong.gymjjak.report.domain.model.*;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
+import com.ssambbong.gymjjak.report.infrastructure.metrics.ReportGroupMetric;
+import com.ssambbong.gymjjak.report.infrastructure.metrics.ReportMetric;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +36,18 @@ public class ReportCommandServiceTest {
 
     @Mock
     private ReportGroupRepository reportGroupRepository;
+
+    @Mock
+    private ReportSanctionTargetPort reportSanctionTargetPort;
+
+    @Mock
+    private UserQueryPort userQueryPort;
+
+    @Mock
+    private ReportGroupMetric reportGroupMetric;
+
+    @Mock
+    private ReportMetric reportMetric;
 
     @InjectMocks
     private ReportGroupCommandService reportCommandService;

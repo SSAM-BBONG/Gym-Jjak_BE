@@ -67,21 +67,24 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
             """, nativeQuery = true)
     long countAccumulatedMembersByOrganizationId(@Param("organizationId") Long organizationId);
 
-    // [dashboard] 트레이너별 누적 수강생 수 (CANCELLED 제외 DISTINCT user_id), 수강생 수 내림차순 정렬
+    // [dashboard] 트레이너별 누적 수강생 수 + PT 강습 수 (CANCELLED 제외 DISTINCT user_id), 수강생 수 내림차순 정렬
     @Query(value = """
-            SELECT ot.trainer_profile_id AS trainerProfileId,
-                   tp.trainer_name       AS trainerName,
-                   tp.average_rating     AS averageRating,
-                   COUNT(DISTINCT pr.user_id) AS clientCount
+            SELECT ot.trainer_profile_id                  AS trainerProfileId,
+                   tp.trainer_name                        AS trainerName,
+                   COUNT(DISTINCT pr.user_id)             AS clientCount,
+                   COUNT(DISTINCT pc.pt_course_id)        AS ptCount
             FROM organization_trainers ot
             JOIN trainer_profiles tp ON ot.trainer_profile_id = tp.trainer_profile_id
             LEFT JOIN pt_reservations pr ON pr.trainer_profile_id = ot.trainer_profile_id
                 AND pr.organization_id = :organizationId
                 AND pr.status != 'CANCELLED'
+            LEFT JOIN pt_courses pc ON pc.trainer_profile_id = ot.trainer_profile_id
+                AND pc.organization_id = :organizationId
+                AND pc.deleted_at IS NULL
             WHERE ot.organization_id = :organizationId
               AND ot.removed_at IS NULL
               AND tp.deleted_at IS NULL
-            GROUP BY ot.trainer_profile_id, tp.trainer_name, tp.average_rating
+            GROUP BY ot.trainer_profile_id, tp.trainer_name
             ORDER BY clientCount DESC
             """, nativeQuery = true)
     List<TrainerClientRow> findTrainerClientsByOrganizationId(@Param("organizationId") Long organizationId);

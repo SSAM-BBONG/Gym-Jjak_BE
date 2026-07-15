@@ -95,6 +95,7 @@ public class InbodyQueryService implements InbodyQueryUseCase {
                 inbody.getWeight(),
                 inbody.getBodyFatPercentage(),
                 inbody.getSkeletalMuscleMass(),
+                inbody.getBmr(),
                 bmi,
                 bmiStatus,
                 bmiStatus.getDescription(),

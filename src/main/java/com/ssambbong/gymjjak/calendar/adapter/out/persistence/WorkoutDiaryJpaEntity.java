@@ -42,6 +42,9 @@ public class WorkoutDiaryJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "part", nullable = false, length = 30)
     private PartType part;
 
+    @Column(name = "exercise_id")
+    private Long exerciseId;
+
     @Column(name = "exercise", nullable = false, length = 100)
     private String exercise;
 
@@ -60,22 +63,26 @@ public class WorkoutDiaryJpaEntity extends BaseCreatedUpdatedEntity {
             Long userId,
             LocalDate diaryDate,
             PartType part,
+            Long exerciseId,
             String exercise,
             List<WorkoutDiarySetJpaEntity> sets
     ) {
         this.userId = userId;
         this.diaryDate = diaryDate;
         this.part = part;
+        this.exerciseId = exerciseId;
         this.exercise = exercise;
         replaceSets(sets);
     }
 
     public void update(
             PartType part,
+            Long exerciseId,
             String exercise,
             List<WorkoutDiarySetJpaEntity> sets
     ) {
         this.part = part;
+        this.exerciseId = exerciseId;
         this.exercise = exercise;
         replaceSets(sets);
     }

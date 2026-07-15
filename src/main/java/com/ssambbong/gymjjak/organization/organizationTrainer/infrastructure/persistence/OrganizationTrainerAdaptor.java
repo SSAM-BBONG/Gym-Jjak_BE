@@ -128,8 +128,8 @@ public class OrganizationTrainerAdaptor implements OrganizationTrainerRepository
                 .map(r -> new TrainerClientSummary(
                         r.getTrainerProfileId(),
                         r.getTrainerName(),
-                        r.getAverageRating(),
-                        r.getClientCount()
+                        r.getClientCount(),
+                        r.getPtCount()
                 ))
                 .toList();
     }

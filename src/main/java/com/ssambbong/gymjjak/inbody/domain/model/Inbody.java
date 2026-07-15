@@ -24,6 +24,7 @@ public class Inbody {
     private BigDecimal weight;
     private BigDecimal bodyFatPercentage;
     private BigDecimal skeletalMuscleMass;
+    private BigDecimal bmr;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
@@ -36,6 +37,7 @@ public class Inbody {
             BigDecimal weight,
             BigDecimal bodyFatPercentage,
             BigDecimal skeletalMuscleMass,
+            BigDecimal bmr,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
@@ -46,6 +48,7 @@ public class Inbody {
         this.weight = requirePositive(weight, "weight");
         this.bodyFatPercentage = validateOptionalNonNegative(bodyFatPercentage, "bodyFatPercentage");
         this.skeletalMuscleMass = validateOptionalNonNegative(skeletalMuscleMass, "skeletalMuscleMass");
+        this.bmr = validateOptionalNonNegative(bmr, "bmr");
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -56,7 +59,8 @@ public class Inbody {
             BigDecimal height,
             BigDecimal weight,
             BigDecimal bodyFatPercentage,
-            BigDecimal skeletalMuscleMass
+            BigDecimal skeletalMuscleMass,
+            BigDecimal bmr
     ) {
         return new Inbody(
                 null,
@@ -66,6 +70,7 @@ public class Inbody {
                 weight,
                 bodyFatPercentage,
                 skeletalMuscleMass,
+                bmr,
                 null,
                 null
         );
@@ -79,6 +84,7 @@ public class Inbody {
             BigDecimal weight,
             BigDecimal bodyFatPercentage,
             BigDecimal skeletalMuscleMass,
+            BigDecimal bmr,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
@@ -90,6 +96,7 @@ public class Inbody {
                 weight,
                 bodyFatPercentage,
                 skeletalMuscleMass,
+                bmr,
                 createdAt,
                 updatedAt
         );
@@ -99,7 +106,8 @@ public class Inbody {
             BigDecimal height,
             BigDecimal weight,
             BigDecimal bodyFatPercentage,
-            BigDecimal skeletalMuscleMass
+            BigDecimal skeletalMuscleMass,
+            BigDecimal bmr
     ) {
         BigDecimal validatedHeight = requirePositive(height, "height");
         BigDecimal validatedWeight = requirePositive(weight, "weight");
@@ -107,11 +115,13 @@ public class Inbody {
                 validateOptionalNonNegative(bodyFatPercentage, "bodyFatPercentage");
         BigDecimal validatedSkeletalMuscleMass =
                 validateOptionalNonNegative(skeletalMuscleMass, "skeletalMuscleMass");
+        BigDecimal validatedBmr = validateOptionalNonNegative(bmr, "bmr");
 
         this.height = validatedHeight;
         this.weight = validatedWeight;
         this.bodyFatPercentage = validatedBodyFatPercentage;
         this.skeletalMuscleMass = validatedSkeletalMuscleMass;
+        this.bmr = validatedBmr;
     }
 
     // 키와 몸무게를 기준으로 BMI 계산
@@ -154,6 +164,7 @@ public class Inbody {
         return value;
     }
 
+    // 음수 검증
     private static BigDecimal validateOptionalNonNegative(BigDecimal value, String fieldName) {
         if (value != null && value.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidInbodyValueException(fieldName);

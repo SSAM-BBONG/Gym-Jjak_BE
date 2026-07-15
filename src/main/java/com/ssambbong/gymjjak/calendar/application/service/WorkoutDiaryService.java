@@ -45,6 +45,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 userId,
                 command.diaryDate(),
                 command.part(),
+                command.exerciseId(),
                 exercise.exerciseName(),
                 toDomainSets(command.sets())
         );
@@ -71,6 +72,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
                 userId,
                 diaryDate,
                 command.part(),
+                command.exerciseId(),
                 exercise.exerciseName(),
                 toDomainSets(command.sets())
         );
@@ -78,6 +80,7 @@ public class WorkoutDiaryService implements WorkoutDiaryUsecase {
         workoutDiaryPort.updateWorkoutDiary(
                 userId,
                 workoutDiaryId,
+                workoutDiary.getExerciseId(),
                 workoutDiary.getPart(),
                 workoutDiary.getExercise(),
                 workoutDiary.getSets()

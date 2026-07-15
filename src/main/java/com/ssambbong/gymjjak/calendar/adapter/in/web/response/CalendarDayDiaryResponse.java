@@ -8,6 +8,7 @@ import java.util.List;
 
 public record CalendarDayDiaryResponse(
         Long workoutDiaryId,
+        Long exerciseId,
         String exercise,
         LocalDate date,
         String part,
@@ -16,6 +17,7 @@ public record CalendarDayDiaryResponse(
     public static CalendarDayDiaryResponse from(CalendarDayDiaryResult result) {
         return new CalendarDayDiaryResponse(
                 result.workoutDiaryId(),
+                result.exerciseId(),
                 result.exercise(),
                 result.date(),
                 PartTypeNameMapper.toKoreanName(result.part()),

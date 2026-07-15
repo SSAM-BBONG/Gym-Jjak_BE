@@ -4,6 +4,8 @@ import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.RejectTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationTrainerPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationNotFoundException;
@@ -11,6 +13,7 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.Trainer
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
+import com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.metrics.TrainerApplicationMetric;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
@@ -45,7 +49,19 @@ public class TrainerApplicationCommandServiceTest {
     private TrainerApplicationUserPort trainerApplicationUserPort;
 
     @Mock
+    private TrainerApplicationOrganizationPort trainerApplicationOrganizationPort;
+
+    @Mock
     private ApprovedTrainerProfilePort approvedTrainerProfilePort;
+
+    @Mock
+    private TrainerApplicationOrganizationTrainerPort trainerApplicationOrganizationTrainerPort;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private TrainerApplicationMetric trainerApplicationMetric;
 
     @InjectMocks
     private TrainerApplicationCommandService service;
@@ -54,6 +70,7 @@ public class TrainerApplicationCommandServiceTest {
         return TrainerApplication.builder()
                 .trainerApplicationId(1L)
                 .userId(10L)
+                .organizationId(1L)
                 .profileFileId(100L)
                 .certificateFileId(200L)
                 .qualifications(List.of("생활스포츠지도사 2급"))
@@ -76,6 +93,8 @@ public class TrainerApplicationCommandServiceTest {
 
         when(trainerApplicationRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(pendingApplication()));
+        when(trainerApplicationOrganizationPort.findOrganizationIdByAccountId(99L))
+                .thenReturn(1L);
 
         // when
         service.rejectTrainerApplication(command);
@@ -110,6 +129,8 @@ public class TrainerApplicationCommandServiceTest {
 
         when(trainerApplicationRepository.findByIdForUpdate(999L))
                 .thenReturn(Optional.empty());
+        when(trainerApplicationOrganizationPort.findOrganizationIdByAccountId(99L))
+                .thenReturn(1L);
 
         // when & then
         assertThatThrownBy(() ->
@@ -127,6 +148,7 @@ public class TrainerApplicationCommandServiceTest {
                 TrainerApplication.builder()
                         .trainerApplicationId(1L)
                         .userId(10L)
+                        .organizationId(1L)
                         .certificateFileId(200L)
                         .qualifications(List.of())
                         .awardHistories(List.of())
@@ -144,6 +166,8 @@ public class TrainerApplicationCommandServiceTest {
 
         when(trainerApplicationRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(approvedApplication));
+        when(trainerApplicationOrganizationPort.findOrganizationIdByAccountId(99L))
+                .thenReturn(1L);
 
         // when & then
         assertThatThrownBy(() ->

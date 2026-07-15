@@ -4,6 +4,6 @@ package com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.pe
 public interface TrainerClientRow {
     Long getTrainerProfileId();
     String getTrainerName();
-    Double getAverageRating();
     Long getClientCount();
+    Long getPtCount();
 }

@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface CalendarPortToPtReservation {
+public interface CalendarPtReservationPort {
 
     List<CalendarDayPtResult> findPtsByUserIdAndDate(
             Long userId,
@@ -18,5 +18,10 @@ public interface CalendarPortToPtReservation {
             Long userId,
             LocalDateTime startAt,
             LocalDateTime endAt
+    );
+
+    boolean existsActivePtRelationWithTrainer(
+            Long targetUserId,
+            Long trainerUserId
     );
 }

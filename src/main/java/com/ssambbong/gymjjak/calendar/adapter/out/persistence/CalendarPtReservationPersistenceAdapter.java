@@ -1,11 +1,8 @@
-package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.adapter;
+package com.ssambbong.gymjjak.calendar.adapter.out.persistence;
 
-import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPortToPtReservation;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPtReservationPort;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarDayPtResult;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthPtResult;
-import com.ssambbong.gymjjak.pt.ptReservation.application.result.PtCalendarDayResult;
-import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
-import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.SpringDataPtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +12,9 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class CalendarPtReservationAdapter implements CalendarPortToPtReservation {
+public class CalendarPtReservationPersistenceAdapter implements CalendarPtReservationPort {
 
-    private final SpringDataPtReservationRepository springDataPtReservationRepository;
+    private final CalendarPtReservationJpaRepository calendarPtReservationJpaRepository;
 
     @Override
     public List<CalendarDayPtResult> findPtsByUserIdAndDate(
@@ -27,11 +24,10 @@ public class CalendarPtReservationAdapter implements CalendarPortToPtReservation
         LocalDateTime startAt = date.atStartOfDay();
         LocalDateTime endAt = date.plusDays(1).atStartOfDay();
 
-        return springDataPtReservationRepository.findCalendarDayPtsByUserIdAndDate(
+        return calendarPtReservationJpaRepository.findCalendarDayPtsByUserIdAndDate(
                         userId,
                         startAt,
-                        endAt,
-                        PtReservationStatus.CANCELLED
+                        endAt
                 )
                 .stream()
                 .map(this::toCalendarDayPtResult)
@@ -44,11 +40,10 @@ public class CalendarPtReservationAdapter implements CalendarPortToPtReservation
             LocalDateTime startAt,
             LocalDateTime endAt
     ) {
-        return springDataPtReservationRepository.findReservedStartAtsByUserIdAndPeriod(
+        return calendarPtReservationJpaRepository.findReservedStartAtsByUserIdAndPeriod(
                         userId,
                         startAt,
-                        endAt,
-                        PtReservationStatus.CANCELLED
+                        endAt
                 )
                 .stream()
                 .map(LocalDateTime::toLocalDate)
@@ -57,15 +52,24 @@ public class CalendarPtReservationAdapter implements CalendarPortToPtReservation
                 .toList();
     }
 
-    private CalendarDayPtResult toCalendarDayPtResult(
-            PtCalendarDayResult result
+    @Override
+    public boolean existsActivePtRelationWithTrainer(
+            Long targetUserId,
+            Long trainerUserId
     ) {
-        return new CalendarDayPtResult(
-                result.reservedStartAt().toLocalDate(),
-                result.ptTitle(),
-                result.ptCourseId()
+        return calendarPtReservationJpaRepository.existsActivePtRelationWithTrainer(
+                targetUserId,
+                trainerUserId
         );
     }
 
-
+    private CalendarDayPtResult toCalendarDayPtResult(
+            CalendarPtReservationJpaRepository.CalendarDayPtRow row
+    ) {
+        return new CalendarDayPtResult(
+                row.getReservedStartAt().toLocalDate(),
+                row.getTitle(),
+                row.getPtId()
+        );
+    }
 }

@@ -109,7 +109,7 @@ public class OrganizationDashboardController {
     }
 
     @PreAuthorize("hasAuthority('ORGANIZATION')")
-    @Operation(summary = "트레이너별 수강생 목록 조회", description = "조직 소속 트레이너 목록을 누적 수강생 수 내림차순으로 조회합니다.")
+    @Operation(summary = "트레이너별 통계 조회", description = "조직 소속 트레이너 목록을 누적 수강생 수 내림차순으로 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = TrainerClientResponse.class))),
@@ -129,7 +129,7 @@ public class OrganizationDashboardController {
                 .map(TrainerClientResponse::from)
                 .toList();
         return ResponseEntity.ok(
-                GlobalApiResponse.ok(DashboardResponseCode.TRAINER_CLIENTS_FOUND, response)
+                GlobalApiResponse.ok(DashboardResponseCode.TRAINER_STATS_FOUND, response)
         );
     }
 

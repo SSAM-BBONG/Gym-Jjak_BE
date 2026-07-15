@@ -8,7 +8,7 @@ public record OrgSalesResponse(
         long totalRevenue,
         long thisMonthRevenue,
         double monthOverMonthRate,
-        List<RevenuePointResponse> monthlyRevenue,
+        OrgRevenueTrendResponse revenueTrend,
         List<TrainerSalesResponse> trainerSales
 ) {
     public static OrgSalesResponse from(OrgSalesResult result) {
@@ -16,7 +16,7 @@ public record OrgSalesResponse(
                 result.totalRevenue(),
                 result.thisMonthRevenue(),
                 result.monthOverMonthRate(),
-                result.monthlyRevenue().stream().map(RevenuePointResponse::from).toList(),
+                OrgRevenueTrendResponse.from(result.revenueTrend()),
                 result.trainerSales().stream().map(TrainerSalesResponse::from).toList()
         );
     }

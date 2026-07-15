@@ -12,6 +12,7 @@ public record InbodyItemResult(
         BigDecimal weight,
         BigDecimal bodyFatPercentage,
         BigDecimal skeletalMuscleMass,
+        BigDecimal bmr,
         BigDecimal bmi,
         BmiStatus bmiStatus,
         String bmiStatusDescription,

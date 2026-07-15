@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.calendar.application.service;
 
-import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPortToPtReservation;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPtReservationPort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthDayResult;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthDiaryResult;
@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthPtResult;
 import com.ssambbong.gymjjak.calendar.application.result.CalendarMonthResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,9 +25,14 @@ import java.util.TreeMap;
 @Transactional(readOnly = true)
 public class CalendarMonthReader {
 
-    private final CalendarPortToPtReservation calendarPortToPtReservation;
+    private final CalendarPtReservationPort calendarPtReservationPort;
     private final WorkoutDiaryPort workoutDiaryPort;
 
+    @Cacheable(
+            cacheNames = "calendarMonth",
+            key = "T(com.ssambbong.gymjjak.global.infrastructure.cache.CalendarCacheKeys).month(#userId, #year, #month)",
+            sync = true
+    )
     public CalendarMonthResult findCalendarMonth(
             Long userId,
             Integer year,
@@ -40,10 +46,10 @@ public class CalendarMonthReader {
         LocalDateTime startAt = startDate.atStartOfDay();
         LocalDateTime endAt = endDate.atStartOfDay();
 
-        log.debug("event=calendarMonth_find_start userId={}", userId);
+        log.debug("event=calendarMonth(nocache)_find_start userId={}", userId);
 
         List<CalendarMonthPtResult> pts =
-                calendarPortToPtReservation.findPtDatesByUserIdAndPeriod(
+                calendarPtReservationPort.findPtDatesByUserIdAndPeriod(
                         userId,
                         startAt,
                         endAt
@@ -123,7 +129,7 @@ public class CalendarMonthReader {
             if (diaryCount == 1) {
                 return representativeExercise;
             }
-            return representativeExercise + " 외 " + (diaryCount - 1) + "개";
+            return representativeExercise + " \uC678 " + (diaryCount - 1) + "\uAC1C";
         }
     }
 }
