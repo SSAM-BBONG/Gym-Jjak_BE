@@ -7,6 +7,7 @@ import java.util.List;
 
 public record CalendarDayDiaryResult(
         Long workoutDiaryId,
+        Long exerciseId,
         String exercise,
         LocalDate date,
         PartType part,

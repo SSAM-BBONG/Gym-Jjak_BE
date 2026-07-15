@@ -40,6 +40,7 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
                 workoutDiary.getUserId(),
                 workoutDiary.getDiaryDate(),
                 workoutDiary.getPart(),
+                workoutDiary.getExerciseId(),
                 workoutDiary.getExercise(),
                 toSetEntities(workoutDiary.getSets())
         );
@@ -53,6 +54,7 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
     public void updateWorkoutDiary(
             Long userId,
             Long workoutDiaryId,
+            Long exerciseId,
             PartType part,
             String exercise,
             List<WorkoutDiarySet> sets
@@ -66,7 +68,7 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
         workoutDiarySetJpaRepository.deleteByWorkoutDiaryId(workoutDiaryId);
         workoutDiarySetJpaRepository.flush();
 
-        workoutDiary.update(part, exercise, toSetEntities(sets));
+        workoutDiary.update(part, exerciseId, exercise, toSetEntities(sets));
     }
 
     @Override
@@ -134,6 +136,7 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
     private CalendarDayDiaryResult toCalendarDayDiaryResult(WorkoutDiaryJpaEntity entity) {
         return new CalendarDayDiaryResult(
                 entity.getId(),
+                entity.getExerciseId(),
                 entity.getExercise(),
                 entity.getDiaryDate(),
                 entity.getPart(),
