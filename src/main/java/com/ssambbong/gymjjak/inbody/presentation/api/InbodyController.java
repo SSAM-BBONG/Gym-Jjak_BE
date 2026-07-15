@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.inbody.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.inbody.application.command.CreateInbodyCommand;
+import com.ssambbong.gymjjak.inbody.application.command.DeleteInbodyCommand;
 import com.ssambbong.gymjjak.inbody.application.command.UpdateInbodyCommand;
 import com.ssambbong.gymjjak.inbody.application.query.GetInbodyListQuery;
 import com.ssambbong.gymjjak.inbody.application.result.CreateInbodyResult;
@@ -72,7 +73,8 @@ public class InbodyController {
                 request.height(),
                 request.weight(),
                 request.bodyFatPercentage(),
-                request.skeletalMuscleMass()
+                request.skeletalMuscleMass(),
+                request.bmr()
         );
 
         CreateInbodyResult result = inbodyCommandUseCase.createInbody(command);
@@ -122,6 +124,31 @@ public class InbodyController {
         );
     }
 
+    @Operation(
+            summary = "인바디 기록 수정",
+            description = """
+                로그인한 사용자가 본인의 인바디 기록을 수정합니다.
+                측정일은 변경할 수 없으며, 생성 당일인 기록만 수정할 수 있습니다.
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "인바디 기록 수정 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 인바디 수치 또는 생성 당일이 아닌 기록"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "인바디 기록을 찾을 수 없음"
+            )
+    })
     @PreAuthorize("isAuthenticated()")
     @PatchMapping("/{inbodyId}")
     public ResponseEntity<GlobalApiResponse<Long>> updateInbody(
@@ -135,7 +162,8 @@ public class InbodyController {
                         request.height(),
                         request.weight(),
                         request.bodyFatPercentage(),
-                        request.skeletalMuscleMass()
+                        request.skeletalMuscleMass(),
+                        request.bmr()
                 ),
                 inbodyId
         );
@@ -144,6 +172,32 @@ public class InbodyController {
                 GlobalApiResponse.created(
                         InbodyResponseCode.INBODY_UPDATE,
                         inbodyId
+                )
+        );
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "인바디 기록 삭제",
+            description = "로그인한 사용자가 본인의 인바디 기록을 삭제합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "인바디 기록 삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "인바디 기록을 찾을 수 없음")
+    })
+    @DeleteMapping("/{inbodyId}")
+    public ResponseEntity<GlobalApiResponse<Void>> deleteInbody(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long inbodyId
+    ) {
+        inbodyCommandUseCase.deleteInbody(
+                new DeleteInbodyCommand(authUser.userId(), inbodyId)
+        );
+
+        return ResponseEntity.status(200).body(
+                GlobalApiResponse.ok(
+                        InbodyResponseCode.INBODY_DELETED
                 )
         );
     }

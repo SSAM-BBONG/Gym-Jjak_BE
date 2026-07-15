@@ -6,6 +6,6 @@ public record OrgSalesResult(
         long totalRevenue,
         long thisMonthRevenue,
         double monthOverMonthRate,
-        List<TrendPoint> monthlyRevenue,
+        OrgRevenueTrendResult revenueTrend,
         List<TrainerSalesResult> trainerSales
 ) {}

@@ -5,15 +5,15 @@ import com.ssambbong.gymjjak.dashboard.organization.application.query.TrainerCli
 public record TrainerClientResponse(
         Long trainerProfileId,
         String trainerName,
-        double averageRating,
-        long clientCount
+        long clientCount,
+        long ptCount
 ) {
     public static TrainerClientResponse from(TrainerClientResult result) {
         return new TrainerClientResponse(
                 result.trainerProfileId(),
                 result.trainerName(),
-                result.averageRating(),
-                result.clientCount()
+                result.clientCount(),
+                result.ptCount()
         );
     }
 }

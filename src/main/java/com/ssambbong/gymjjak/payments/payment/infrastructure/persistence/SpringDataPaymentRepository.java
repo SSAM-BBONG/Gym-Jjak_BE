@@ -49,6 +49,24 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
             """, nativeQuery = true)
     long sumTotalRevenueByOrganizationId(@Param("organizationId") Long organizationId);
 
+    // [dashboard] 조직 주별 매출 (월요일 기준, 최근 1년)
+    @Query(value = """
+            SELECT DATE(DATE_SUB(p.paid_at, INTERVAL WEEKDAY(p.paid_at) DAY)) AS date,
+                   COALESCE(SUM(p.amount), 0)                                  AS amount
+            FROM payments p
+            JOIN pt_courses pc ON p.pt_course_id = pc.pt_course_id
+            WHERE pc.organization_id = :organizationId
+              AND pc.deleted_at IS NULL
+              AND p.status = 'PAID'
+              AND p.paid_at >= :startDate
+            GROUP BY date
+            ORDER BY date ASC
+            """, nativeQuery = true)
+    List<MonthlyRevenueRow> findWeeklyRevenueByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate
+    );
+
     // [dashboard] 조직 월별 매출 (최근 N개월)
     @Query(value = """
             SELECT DATE_FORMAT(p.paid_at, '%Y-%m-01') AS date,
@@ -63,6 +81,42 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
             ORDER BY date ASC
             """, nativeQuery = true)
     List<MonthlyRevenueRow> findMonthlyRevenueByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate
+    );
+
+    // [dashboard] 조직 3개월별 매출 (분기 기준, 최근 3년)
+    @Query(value = """
+            SELECT DATE(CONCAT(YEAR(p.paid_at), '-', LPAD((QUARTER(p.paid_at) - 1) * 3 + 1, 2, '0'), '-01')) AS date,
+                   COALESCE(SUM(p.amount), 0)                                                                  AS amount
+            FROM payments p
+            JOIN pt_courses pc ON p.pt_course_id = pc.pt_course_id
+            WHERE pc.organization_id = :organizationId
+              AND pc.deleted_at IS NULL
+              AND p.status = 'PAID'
+              AND p.paid_at >= :startDate
+            GROUP BY date
+            ORDER BY date ASC
+            """, nativeQuery = true)
+    List<MonthlyRevenueRow> findThreeMonthlyRevenueByOrganizationId(
+            @Param("organizationId") Long organizationId,
+            @Param("startDate") LocalDateTime startDate
+    );
+
+    // [dashboard] 조직 6개월별 매출 (1월/7월 기준, 최근 3년)
+    @Query(value = """
+            SELECT DATE(CONCAT(YEAR(p.paid_at), '-', IF(MONTH(p.paid_at) <= 6, '01', '07'), '-01')) AS date,
+                   COALESCE(SUM(p.amount), 0)                                                        AS amount
+            FROM payments p
+            JOIN pt_courses pc ON p.pt_course_id = pc.pt_course_id
+            WHERE pc.organization_id = :organizationId
+              AND pc.deleted_at IS NULL
+              AND p.status = 'PAID'
+              AND p.paid_at >= :startDate
+            GROUP BY date
+            ORDER BY date ASC
+            """, nativeQuery = true)
+    List<MonthlyRevenueRow> findSixMonthlyRevenueByOrganizationId(
             @Param("organizationId") Long organizationId,
             @Param("startDate") LocalDateTime startDate
     );

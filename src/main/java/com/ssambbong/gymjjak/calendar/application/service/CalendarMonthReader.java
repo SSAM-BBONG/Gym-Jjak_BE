@@ -46,7 +46,7 @@ public class CalendarMonthReader {
         LocalDateTime startAt = startDate.atStartOfDay();
         LocalDateTime endAt = endDate.atStartOfDay();
 
-        log.debug("event=calendarMonth_find_start userId={}", userId);
+        log.debug("event=calendarMonth(nocache)_find_start userId={}", userId);
 
         List<CalendarMonthPtResult> pts =
                 calendarPtReservationPort.findPtDatesByUserIdAndPeriod(

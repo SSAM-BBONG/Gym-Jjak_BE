@@ -36,11 +36,11 @@ class InbodyQueryServiceTest {
     void getInbodyList_success_latestInbodyIncludesChanges() {
         Inbody latestInbody = createInbody(
                 2L, LocalDate.of(2026, 7, 14),
-                "170.00", "70.00", "15.00", "30.00"
+                "170.00", "70.00", "15.00", "30.00", "1600.00"
         );
         Inbody previousInbody = createInbody(
                 1L, LocalDate.of(2026, 7, 1),
-                "170.00", "68.00", "16.00", "29.00"
+                "170.00", "68.00", "16.00", "29.00", "1500.00"
         );
 
         // 최신 2개와 더 보기 가능 여부 반환
@@ -63,6 +63,7 @@ class InbodyQueryServiceTest {
         assertThat(result.nextInbodyId()).isEqualTo(1L);
 
         assertThat(latestResult.bmi()).isEqualByComparingTo("24.2");
+        assertThat(latestResult.bmr()).isEqualByComparingTo("1600.00");
         assertThat(latestResult.bmiStatus()).isEqualTo(BmiStatus.OVERWEIGHT);
         assertThat(latestResult.weightChange()).isEqualByComparingTo("2.00");
         assertThat(latestResult.skeletalMuscleMassChange()).isEqualByComparingTo("1.00");
@@ -74,6 +75,7 @@ class InbodyQueryServiceTest {
         assertThat(previousResult.skeletalMuscleMassChange()).isNull();
         assertThat(previousResult.bodyFatPercentageChange()).isNull();
         assertThat(previousResult.bmiChange()).isNull();
+        assertThat(previousResult.bmr()).isEqualByComparingTo("1500.00");
 
         verify(inbodyRepository).findInbodySlice(USER_ID, null, null, 2);
     }
@@ -82,7 +84,7 @@ class InbodyQueryServiceTest {
     void getInbodyList_success_singleInbodyHasNoChanges() {
         Inbody latestInbody = createInbody(
                 1L, LocalDate.of(2026, 7, 14),
-                "170.00", "70.00", "15.00", "30.00"
+                "170.00", "70.00", "15.00", "30.00", "1600.00"
         );
 
         when(inbodyRepository.findInbodySlice(USER_ID, null, null, 2))
@@ -113,7 +115,8 @@ class InbodyQueryServiceTest {
             String height,
             String weight,
             String bodyFatPercentage,
-            String skeletalMuscleMass
+            String skeletalMuscleMass,
+            String bmr
     ) {
         return Inbody.reconstruct(
                 id,
@@ -123,6 +126,7 @@ class InbodyQueryServiceTest {
                 new BigDecimal(weight),
                 new BigDecimal(bodyFatPercentage),
                 new BigDecimal(skeletalMuscleMass),
+                new BigDecimal(bmr),
                 null,
                 null
         );

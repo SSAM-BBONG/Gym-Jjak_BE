@@ -9,6 +9,7 @@ public record CreateInbodyCommand(
         BigDecimal height,
         BigDecimal weight,
         BigDecimal bodyFatPercentage,
-        BigDecimal skeletalMuscleMass
+        BigDecimal skeletalMuscleMass,
+        BigDecimal bmr
 ) {
 }
