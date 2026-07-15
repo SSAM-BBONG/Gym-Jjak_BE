@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface SpringDataInbodyRepository extends JpaRepository<InbodyJpaEntity, Long> {
 
@@ -29,4 +30,7 @@ public interface SpringDataInbodyRepository extends JpaRepository<InbodyJpaEntit
             @Param("inbodyId") Long inbodyId,
             Pageable pageable
     );
+
+
+    Optional<InbodyJpaEntity> findByIdAndUserId(Long inbodyId, Long userId);
 }

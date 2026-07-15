@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.inbody.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.inbody.application.command.CreateInbodyCommand;
+import com.ssambbong.gymjjak.inbody.application.command.UpdateInbodyCommand;
 import com.ssambbong.gymjjak.inbody.application.query.GetInbodyListQuery;
 import com.ssambbong.gymjjak.inbody.application.result.CreateInbodyResult;
 import com.ssambbong.gymjjak.inbody.application.result.InbodyListResult;
@@ -11,6 +12,7 @@ import com.ssambbong.gymjjak.inbody.application.usecase.InbodyQueryUseCase;
 import com.ssambbong.gymjjak.inbody.presentation.api.mapper.InbodyResponseMapper;
 import com.ssambbong.gymjjak.inbody.presentation.api.request.CreateInbodyRequest;
 import com.ssambbong.gymjjak.inbody.presentation.api.request.GetInbodyListRequest;
+import com.ssambbong.gymjjak.inbody.presentation.api.request.UpdateInbodyRequest;
 import com.ssambbong.gymjjak.inbody.presentation.api.response.CreateInbodyResponse;
 import com.ssambbong.gymjjak.inbody.presentation.api.response.InbodyListResponse;
 import com.ssambbong.gymjjak.inbody.presentation.api.response.InbodyResponseCode;
@@ -117,6 +119,32 @@ public class InbodyController {
                     InbodyResponseCode.INBODY_LIST_FETCHED,
                     inbodyResponseMapper.toInbodyListResponse(result)
             )
+        );
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/{inbodyId}")
+    public ResponseEntity<GlobalApiResponse<Long>> updateInbody(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long inbodyId,
+            @Valid @RequestBody UpdateInbodyRequest request
+    ) {
+        inbodyCommandUseCase.updateInbody(
+                new UpdateInbodyCommand(
+                        authUser.userId(),
+                        request.height(),
+                        request.weight(),
+                        request.bodyFatPercentage(),
+                        request.skeletalMuscleMass()
+                ),
+                inbodyId
+        );
+
+        return ResponseEntity.status(201).body(
+                GlobalApiResponse.created(
+                        InbodyResponseCode.INBODY_UPDATE,
+                        inbodyId
+                )
         );
     }
 }

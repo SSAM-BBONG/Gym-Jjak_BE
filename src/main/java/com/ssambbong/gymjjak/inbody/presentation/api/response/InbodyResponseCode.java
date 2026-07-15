@@ -15,6 +15,10 @@ public enum InbodyResponseCode implements ResponseCode {
     INBODY_CREATED(
             "INBODY_201_1",
             "인바디 기록이 등록되었습니다."
+    ),
+    INBODY_UPDATE(
+            "INBODY_201_2",
+            "인바디 수정이 완료되었습니다."
     );
 
     private final String code;
