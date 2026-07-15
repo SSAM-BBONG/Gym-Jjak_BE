@@ -17,6 +17,9 @@ public class SubscriptionPaymentQueryAdapter implements SubscriptionPaymentQuery
     // 구독 플랜 타입 조회
     @Override
     public Optional<String> findPlanTypeName(Long aiSubscriptionId) {
+        if (aiSubscriptionId == null) {
+            return Optional.empty();
+        }
         return springDataSubscriptionRepository.findById(aiSubscriptionId)
                 .map(entity -> entity.getPlanType().name());
     }

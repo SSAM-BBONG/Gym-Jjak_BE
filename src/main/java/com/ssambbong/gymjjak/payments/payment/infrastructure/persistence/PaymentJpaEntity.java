@@ -83,6 +83,13 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
         this.paidAt = LocalDateTime.now();
     }
 
+    public void markPaid(String portonePaymentId, Long subscriptionId) {
+        this.portonePaymentId = portonePaymentId;
+        this.aiSubscriptionId = subscriptionId;
+        this.status = PaymentStatus.PAID;
+        this.paidAt = LocalDateTime.now();
+    }
+
     public void markCancelled() {
         this.status = PaymentStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();

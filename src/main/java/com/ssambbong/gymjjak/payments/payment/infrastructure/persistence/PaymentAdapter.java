@@ -45,7 +45,13 @@ public class PaymentAdapter implements PaymentRepository {
     public void update(Payment payment) {
         springDataPaymentRepository.findById(payment.getId()).ifPresent(entity -> {
             switch (payment.getStatus()) {
-                case PAID -> entity.markPaid(payment.getPortonePaymentId());
+                case PAID -> {
+                    if (payment.getAiSubscriptionId() != null) {
+                        entity.markPaid(payment.getPortonePaymentId(), payment.getAiSubscriptionId());
+                    } else {
+                        entity.markPaid(payment.getPortonePaymentId());
+                    }
+                }
                 case CANCELLED -> entity.markCancelled();
                 case FAILED -> entity.markFailed(payment.getFailReason());
                 default -> {}

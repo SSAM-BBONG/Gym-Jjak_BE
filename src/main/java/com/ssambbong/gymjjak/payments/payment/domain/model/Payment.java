@@ -67,9 +67,17 @@ public class Payment {
                 paidAt, cancelledAt, failedAt, failReason);
     }
 
-    // PortOne 결제 확인 후 PAID로 전환
+    // PortOne 결제 확인 후 PAID로 전환 (PT)
     public Payment pay(String portonePaymentId) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
+                orderId, portonePaymentId, amount,
+                PaymentStatus.PAID, productType,
+                LocalDateTime.now(), null, null, null);
+    }
+
+    // PortOne 결제 확인 후 PAID로 전환 + 생성된 구독 ID 연결 (구독)
+    public Payment paySubscription(String portonePaymentId, Long subscriptionId) {
+        return new Payment(id, userId, ptCourseId, subscriptionId,
                 orderId, portonePaymentId, amount,
                 PaymentStatus.PAID, productType,
                 LocalDateTime.now(), null, null, null);

@@ -6,7 +6,9 @@ import com.ssambbong.gymjjak.payments.payment.application.command.CreateSubscrip
 import com.ssambbong.gymjjak.payments.payment.application.command.ProcessWebhookCommand;
 import com.ssambbong.gymjjak.payments.payment.application.port.PortOnePaymentVerifyPort;
 import com.ssambbong.gymjjak.payments.payment.application.port.PtCoursePaymentQueryPort;
+import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionCreatePort;
 import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionPaymentQueryPort;
+import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentDuplicateException;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentNotFoundException;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Slf4j
@@ -34,8 +37,14 @@ public class PaymentCommandService implements PaymentCommandUseCase {
     private final PaymentRepository paymentRepository;
     private final PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
     private final SubscriptionPaymentQueryPort subscriptionPaymentQueryPort;
+    private final SubscriptionCreatePort subscriptionCreatePort;
     private final PortOnePaymentVerifyPort portOnePaymentVerifyPort;
     private final TransactionTemplate transactionTemplate;
+
+    // orderId 형식: SUB-{MONTHLY|YEARLY}-{TSID}
+    private static SubscriptionPlanType parsePlanTypeFromOrderId(String orderId) {
+        return SubscriptionPlanType.valueOf(orderId.split("-")[1]);
+    }
 
     private static int priceOf(SubscriptionPlanType planType) {
         return switch (planType) {
@@ -82,8 +91,8 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
         int amount = priceOf(command.planType());
 
-        // "SUB-" 접두사로 구독 결제 건 식별
-        String orderId = "SUB-" + TsidCreator.getTsid().toString();
+        // "SUB-{planType}-" 접두사로 구독 결제 건 식별 및 planType 인코딩 (웹훅 파싱용)
+        String orderId = "SUB-" + command.planType().name() + "-" + TsidCreator.getTsid().toString();
 
         paymentRepository.save(Payment.createForSubscription(command.userId(), orderId, amount));
 
@@ -144,7 +153,20 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                                 command.orderId(), payment.getAmount(), finalInfo.amount());
                         return null;
                     }
-                    paymentRepository.update(payment.pay(command.portonePaymentId()));
+                    if (payment.getProductType() == ProductType.SUBSCRIPTIONS) {
+                        SubscriptionPlanType planType = parsePlanTypeFromOrderId(payment.getOrderId());
+                        LocalDateTime startedAt = LocalDateTime.now();
+                        LocalDateTime expiredAt = switch (planType) {
+                            case MONTHLY -> startedAt.plusMonths(1);
+                            case YEARLY -> startedAt.plusYears(1);
+                        };
+                        Long subscriptionId = subscriptionCreatePort.create(
+                                payment.getUserId(), planType, payment.getAmount(), startedAt, expiredAt);
+                        paymentRepository.update(payment.paySubscription(command.portonePaymentId(), subscriptionId));
+                        log.info("event=webhook_subscription_created orderId={} subscriptionId={}", command.orderId(), subscriptionId);
+                    } else {
+                        paymentRepository.update(payment.pay(command.portonePaymentId()));
+                    }
                     log.info("event=webhook_paid_succeeded orderId={}", command.orderId());
                 }
                 case "Transaction.Failed" -> {

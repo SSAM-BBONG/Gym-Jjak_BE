@@ -8,7 +8,7 @@ public record CreateSubscriptionPaymentResponse(
         @Schema(description = "서버 생성 주문번호. PortOne V2 SDK 호출 시 paymentId로 사용", example = "SUB-05YJQK1Z0GY4R")
         String orderId,
 
-        @Schema(description = "결제 금액. PortOne SDK 호출 시 amount로 사용", example = "7900")
+        @Schema(description = "결제 금액. PortOne SDK 호출 시 amount로 사용", example = "4900")
         int amount
 ) {
     public static CreateSubscriptionPaymentResponse from(PaymentCommandUseCase.PaymentInitResult result) {
