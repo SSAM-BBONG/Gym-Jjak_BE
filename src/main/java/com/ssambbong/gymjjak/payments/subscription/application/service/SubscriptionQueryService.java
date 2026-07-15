@@ -23,8 +23,8 @@ public class SubscriptionQueryService implements SubscriptionQueryUseCase {
 
     private static int priceOf(SubscriptionPlanType planType) {
         return switch (planType) {
-            case MONTHLY -> 7900;
-            case YEARLY -> 79000;
+            case MONTHLY -> 4900;
+            case YEARLY -> 49000;
         };
     }
 

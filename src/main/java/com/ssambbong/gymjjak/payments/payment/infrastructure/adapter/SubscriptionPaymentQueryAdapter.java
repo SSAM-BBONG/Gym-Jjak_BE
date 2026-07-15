@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.payments.payment.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionPaymentQueryPort;
+import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionStatus;
 import com.ssambbong.gymjjak.payments.subscription.infrastructure.persistence.SpringDataSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,5 +19,11 @@ public class SubscriptionPaymentQueryAdapter implements SubscriptionPaymentQuery
     public Optional<String> findPlanTypeName(Long aiSubscriptionId) {
         return springDataSubscriptionRepository.findById(aiSubscriptionId)
                 .map(entity -> entity.getPlanType().name());
+    }
+
+    // 활성 구독 존재 여부
+    @Override
+    public boolean existsActiveByUserId(Long userId) {
+        return springDataSubscriptionRepository.existsByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE);
     }
 }

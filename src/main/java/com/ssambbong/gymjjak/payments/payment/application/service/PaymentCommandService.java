@@ -2,15 +2,19 @@ package com.ssambbong.gymjjak.payments.payment.application.service;
 
 import com.github.f4b6a3.tsid.TsidCreator;
 import com.ssambbong.gymjjak.payments.payment.application.command.CreatePtPaymentCommand;
+import com.ssambbong.gymjjak.payments.payment.application.command.CreateSubscriptionPaymentCommand;
 import com.ssambbong.gymjjak.payments.payment.application.command.ProcessWebhookCommand;
 import com.ssambbong.gymjjak.payments.payment.application.port.PortOnePaymentVerifyPort;
 import com.ssambbong.gymjjak.payments.payment.application.port.PtCoursePaymentQueryPort;
+import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionPaymentQueryPort;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentDuplicateException;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentNotFoundException;
+import com.ssambbong.gymjjak.payments.payment.domain.exception.SubscriptionDuplicateException;
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import com.ssambbong.gymjjak.payments.payment.domain.repository.PaymentRepository;
+import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionPlanType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,8 +33,16 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
     private final PaymentRepository paymentRepository;
     private final PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
+    private final SubscriptionPaymentQueryPort subscriptionPaymentQueryPort;
     private final PortOnePaymentVerifyPort portOnePaymentVerifyPort;
     private final TransactionTemplate transactionTemplate;
+
+    private static int priceOf(SubscriptionPlanType planType) {
+        return switch (planType) {
+            case MONTHLY -> 4900;
+            case YEARLY -> 49000;
+        };
+    }
 
     @Override
     @Transactional
@@ -55,6 +67,29 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
         log.info("event=pt_payment_create_succeeded userId={} orderId={}", command.userId(), orderId);
         return new PaymentInitResult(orderId, info.price());
+    }
+
+    @Override
+    @Transactional
+    public PaymentInitResult createSubscriptionPayment(CreateSubscriptionPaymentCommand command) {
+        log.debug("event=subscription_payment_create userId={} planType={}", command.userId(), command.planType());
+
+        // 활성 구독 중복 검증
+        if (subscriptionPaymentQueryPort.existsActiveByUserId(command.userId())) {
+            log.warn("event=subscription_payment_create_failed reason=duplicate userId={}", command.userId());
+            throw new SubscriptionDuplicateException();
+        }
+
+        int amount = priceOf(command.planType());
+
+        // "SUB-" 접두사로 구독 결제 건 식별
+        String orderId = "SUB-" + TsidCreator.getTsid().toString();
+
+        paymentRepository.save(Payment.createForSubscription(command.userId(), orderId, amount));
+
+        log.info("event=subscription_payment_create_succeeded userId={} orderId={} planType={}",
+                command.userId(), orderId, command.planType());
+        return new PaymentInitResult(orderId, amount);
     }
 
     // 웹훅 수신
