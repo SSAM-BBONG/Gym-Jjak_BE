@@ -14,6 +14,12 @@ public interface ExerciseJpaRepository extends JpaRepository<ExerciseJpaEntity, 
 
     Optional<ExerciseJpaEntity> findByIdAndPart(Long id, PartType part);
 
+    List<ExerciseJpaEntity> findAllByOrderByPartAscExerciseNameAsc();
+
+    List<ExerciseJpaEntity> findByExerciseNameContainingIgnoreCaseOrderByPartAscExerciseNameAsc(
+            String keyword
+    );
+
     List<ExerciseJpaEntity> findByPartOrderByExerciseNameAsc(PartType part);
 
     List<ExerciseJpaEntity> findByPartAndExerciseNameContainingIgnoreCaseOrderByExerciseNameAsc(

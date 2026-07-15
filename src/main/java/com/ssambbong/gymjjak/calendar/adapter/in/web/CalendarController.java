@@ -88,12 +88,14 @@ public class CalendarController {
     @Operation(summary = "캘린더 일별 조회", description = "캘린더를 일별로 조회한다.")
     public ResponseEntity<GlobalApiResponse<CalendarDayResponse>> findCalendarDay(
             @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(required = false) Long targetUserId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate date
     ) {
         CalendarDayResult result = calendarUsecase.findCalendarDay(
                 authUser.userId(),
+                resolveTargetUserId(authUser.userId(), targetUserId),
                 date
         );
 
@@ -109,11 +111,13 @@ public class CalendarController {
     @Operation(summary = "캘린더 월별 조회", description = "캘린더를 월별로 조회한다.")
     public ResponseEntity<GlobalApiResponse<CalendarMonthResponse>> findCalendarMonth(
             @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(required = false) Long targetUserId,
             @RequestParam Integer year,
             @RequestParam Integer month
     ) {
         CalendarMonthResult result = calendarUsecase.findCalendarMonth(
                 authUser.userId(),
+                resolveTargetUserId(authUser.userId(), targetUserId),
                 year,
                 month
         );
@@ -126,5 +130,8 @@ public class CalendarController {
         );
     }
 
+    private Long resolveTargetUserId(Long requesterUserId, Long targetUserId) {
+        return targetUserId == null ? requesterUserId : targetUserId;
+    }
 
 }

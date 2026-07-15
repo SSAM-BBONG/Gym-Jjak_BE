@@ -164,8 +164,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         // 커리큘럼 변경 시 활성 수강생 0명 확인 (빈 리스트 = 전체 삭제도 변경에 해당)
         if (command.curriculums() != null) {
             int activeCount = ptReservationCountQueryPort
-                    .countActiveByPtCourseIds(List.of(command.ptCourseId()))
-                    .getOrDefault(command.ptCourseId(), 0);
+                    .countStudentsByPtCourseIds(List.of(command.ptCourseId()))
+                    .active().getOrDefault(command.ptCourseId(), 0);
             if (activeCount > 0) {
                 log.warn("event=pt_course_update_failed reason=curriculum_update_not_allowed ptCourseId={}, activeCount={}", command.ptCourseId(), activeCount);
                 throw new CurriculumUpdateNotAllowedException();
@@ -339,9 +339,9 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         }
 
         // 활성 예약 존재 시 삭제 거부
-        int activeCount = ptReservationCountQueryPort.countActiveByPtCourseIds(
-                List.of(command.ptCourseId()))
-                .getOrDefault(command.ptCourseId(), 0);
+        int activeCount = ptReservationCountQueryPort
+                .countStudentsByPtCourseIds(List.of(command.ptCourseId()))
+                .active().getOrDefault(command.ptCourseId(), 0);
         if (activeCount > 0) {
             log.warn("event=pt_course_delete_failed reason=has_active_reservation ptCourseId={} activeCount={}", command.ptCourseId(), activeCount);
             throw new PtCourseHasActiveReservationException();
