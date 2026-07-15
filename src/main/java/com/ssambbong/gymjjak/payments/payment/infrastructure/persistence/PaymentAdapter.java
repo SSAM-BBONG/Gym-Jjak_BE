@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.payments.payment.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
+import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 import com.ssambbong.gymjjak.payments.payment.domain.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -38,6 +39,12 @@ public class PaymentAdapter implements PaymentRepository {
     @Override
     public boolean existsByUserIdAndPtCourseIdAndStatus(Long userId, Long ptCourseId, PaymentStatus status) {
         return springDataPaymentRepository.existsByUserIdAndPtCourseIdAndStatus(userId, ptCourseId, status);
+    }
+
+    // 구독 결제 PENDING 중복 검증
+    @Override
+    public boolean existsByUserIdAndProductTypeAndStatus(Long userId, ProductType productType, PaymentStatus status) {
+        return springDataPaymentRepository.existsByUserIdAndProductTypeAndStatus(userId, productType, status);
     }
 
     // 웹훅 처리 후 결제 상태 갱신 (dirty checking으로 자동 UPDATE)

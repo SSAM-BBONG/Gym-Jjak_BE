@@ -6,23 +6,11 @@ import com.ssambbong.gymjjak.payments.subscription.infrastructure.persistence.Sp
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Component
 @RequiredArgsConstructor
 public class SubscriptionPaymentQueryAdapter implements SubscriptionPaymentQueryPort {
 
     private final SpringDataSubscriptionRepository springDataSubscriptionRepository;
-
-    // 구독 플랜 타입 조회
-    @Override
-    public Optional<String> findPlanTypeName(Long aiSubscriptionId) {
-        if (aiSubscriptionId == null) {
-            return Optional.empty();
-        }
-        return springDataSubscriptionRepository.findById(aiSubscriptionId)
-                .map(entity -> entity.getPlanType().name());
-    }
 
     // 활성 구독 존재 여부
     @Override

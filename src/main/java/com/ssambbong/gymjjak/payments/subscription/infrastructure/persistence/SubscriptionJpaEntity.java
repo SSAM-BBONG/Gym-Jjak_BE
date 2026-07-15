@@ -30,7 +30,7 @@ public class SubscriptionJpaEntity extends BaseCreatedUpdatedEntity {
     private SubscriptionPlanType planType;
 
     @Column(name = "price", nullable = false)
-    private long price;
+    private int price;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -45,7 +45,7 @@ public class SubscriptionJpaEntity extends BaseCreatedUpdatedEntity {
     public SubscriptionJpaEntity(
             Long userId,
             SubscriptionPlanType planType,
-            long price,
+            int price,
             LocalDateTime startedAt,
             LocalDateTime expiredAt
     ) {

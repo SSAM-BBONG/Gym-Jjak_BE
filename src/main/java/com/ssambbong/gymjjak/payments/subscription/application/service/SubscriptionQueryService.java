@@ -1,9 +1,9 @@
 package com.ssambbong.gymjjak.payments.subscription.application.service;
 
-import com.ssambbong.gymjjak.payments.subscription.domain.repository.SubscriptionRepository;
 import com.ssambbong.gymjjak.payments.subscription.application.usecase.SubscriptionQueryUseCase;
 import com.ssambbong.gymjjak.payments.subscription.domain.model.Subscription;
 import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionPlanType;
+import com.ssambbong.gymjjak.payments.subscription.domain.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,19 +21,12 @@ public class SubscriptionQueryService implements SubscriptionQueryUseCase {
 
     private final SubscriptionRepository subscriptionRepository;
 
-    private static int priceOf(SubscriptionPlanType planType) {
-        return switch (planType) {
-            case MONTHLY -> 4900;
-            case YEARLY -> 49000;
-        };
-    }
-
     // 구독 플랜 조회
     @Override
     public List<PlanView> findPlans() {
         log.debug("event=subscription_plans_fetch");
         List<PlanView> plans = Arrays.stream(SubscriptionPlanType.values())
-                .map(plan -> new PlanView(plan, priceOf(plan)))
+                .map(plan -> new PlanView(plan, plan.price()))
                 .toList();
         log.info("event=subscription_plans_fetch_succeeded count={}", plans.size());
         return plans;

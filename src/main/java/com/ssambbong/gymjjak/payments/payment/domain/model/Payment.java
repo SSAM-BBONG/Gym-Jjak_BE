@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.payments.payment.domain.model;
 
+import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionPlanType;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class Payment {
     private final String orderId;
     private final String portonePaymentId;
     private final int amount;
+    private final SubscriptionPlanType planType;
     private final PaymentStatus status;
     private final ProductType productType;
     private final LocalDateTime paidAt;
@@ -24,7 +26,7 @@ public class Payment {
     private Payment(
             Long id, Long userId, Long ptCourseId, Long aiSubscriptionId,
             String orderId, String portonePaymentId, int amount,
-            PaymentStatus status, ProductType productType,
+            SubscriptionPlanType planType, PaymentStatus status, ProductType productType,
             LocalDateTime paidAt, LocalDateTime cancelledAt,
             LocalDateTime failedAt, String failReason
     ) {
@@ -35,6 +37,7 @@ public class Payment {
         this.orderId = orderId;
         this.portonePaymentId = portonePaymentId;
         this.amount = amount;
+        this.planType = planType;
         this.status = status;
         this.productType = productType;
         this.paidAt = paidAt;
@@ -45,25 +48,25 @@ public class Payment {
 
     public static Payment createForPt(Long userId, Long ptCourseId, String orderId, int amount) {
         return new Payment(null, userId, ptCourseId, null, orderId, null,
-                amount, PaymentStatus.PENDING, ProductType.PT,
+                amount, null, PaymentStatus.PENDING, ProductType.PT,
                 null, null, null, null);
     }
 
-    public static Payment createForSubscription(Long userId, String orderId, int amount) {
+    public static Payment createForSubscription(Long userId, String orderId, int amount, SubscriptionPlanType planType) {
         return new Payment(null, userId, null, null, orderId, null,
-                amount, PaymentStatus.PENDING, ProductType.SUBSCRIPTIONS,
+                amount, planType, PaymentStatus.PENDING, ProductType.SUBSCRIPTIONS,
                 null, null, null, null);
     }
 
     public static Payment restore(
             Long id, Long userId, Long ptCourseId, Long aiSubscriptionId,
             String orderId, String portonePaymentId, int amount,
-            PaymentStatus status, ProductType productType,
+            SubscriptionPlanType planType, PaymentStatus status, ProductType productType,
             LocalDateTime paidAt, LocalDateTime cancelledAt,
             LocalDateTime failedAt, String failReason
     ) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
-                orderId, portonePaymentId, amount, status, productType,
+                orderId, portonePaymentId, amount, planType, status, productType,
                 paidAt, cancelledAt, failedAt, failReason);
     }
 
@@ -71,7 +74,7 @@ public class Payment {
     public Payment pay(String portonePaymentId) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
                 orderId, portonePaymentId, amount,
-                PaymentStatus.PAID, productType,
+                planType, PaymentStatus.PAID, productType,
                 LocalDateTime.now(), null, null, null);
     }
 
@@ -79,7 +82,7 @@ public class Payment {
     public Payment paySubscription(String portonePaymentId, Long subscriptionId) {
         return new Payment(id, userId, ptCourseId, subscriptionId,
                 orderId, portonePaymentId, amount,
-                PaymentStatus.PAID, productType,
+                planType, PaymentStatus.PAID, productType,
                 LocalDateTime.now(), null, null, null);
     }
 
@@ -87,7 +90,7 @@ public class Payment {
     public Payment fail(String failReason) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
                 orderId, portonePaymentId, amount,
-                PaymentStatus.FAILED, productType,
+                planType, PaymentStatus.FAILED, productType,
                 null, null, LocalDateTime.now(), failReason);
     }
 
@@ -95,7 +98,7 @@ public class Payment {
     public Payment cancel() {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
                 orderId, portonePaymentId, amount,
-                PaymentStatus.CANCELLED, productType,
+                planType, PaymentStatus.CANCELLED, productType,
                 paidAt, LocalDateTime.now(), null, null);
     }
 }

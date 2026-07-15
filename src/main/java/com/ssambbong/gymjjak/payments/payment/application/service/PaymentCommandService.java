@@ -12,6 +12,7 @@ import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentDuplicateException;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentNotFoundException;
+import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentTargetNotFoundException;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.SubscriptionDuplicateException;
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
@@ -41,18 +42,6 @@ public class PaymentCommandService implements PaymentCommandUseCase {
     private final PortOnePaymentVerifyPort portOnePaymentVerifyPort;
     private final TransactionTemplate transactionTemplate;
 
-    // orderId 형식: SUB-{MONTHLY|YEARLY}-{TSID}
-    private static SubscriptionPlanType parsePlanTypeFromOrderId(String orderId) {
-        return SubscriptionPlanType.valueOf(orderId.split("-")[1]);
-    }
-
-    private static int priceOf(SubscriptionPlanType planType) {
-        return switch (planType) {
-            case MONTHLY -> 4900;
-            case YEARLY -> 49000;
-        };
-    }
-
     @Override
     @Transactional
     public PaymentInitResult createPtPayment(CreatePtPaymentCommand command) {
@@ -67,7 +56,8 @@ public class PaymentCommandService implements PaymentCommandUseCase {
         }
 
         PtCoursePaymentQueryPort.PtCoursePaymentInfo info =
-                ptCoursePaymentQueryPort.findPtCoursePaymentInfo(command.ptCourseId());
+                ptCoursePaymentQueryPort.findPtCoursePaymentInfo(command.ptCourseId())
+                        .orElseThrow(PaymentTargetNotFoundException::new);
 
         // "PT-" 접두사로 PT 결제 건 식별, TSID로 고유성 보장 (PortOne paymentId로 사용)
         String orderId = "PT-" + TsidCreator.getTsid().toString();
@@ -83,18 +73,19 @@ public class PaymentCommandService implements PaymentCommandUseCase {
     public PaymentInitResult createSubscriptionPayment(CreateSubscriptionPaymentCommand command) {
         log.debug("event=subscription_payment_create userId={} planType={}", command.userId(), command.planType());
 
-        // 활성 구독 중복 검증
-        if (subscriptionPaymentQueryPort.existsActiveByUserId(command.userId())) {
+        // 활성 구독 중복 검증 (ACTIVE 구독 또는 PENDING 구독 결제 존재 시 차단)
+        if (subscriptionPaymentQueryPort.existsActiveByUserId(command.userId())
+                || paymentRepository.existsByUserIdAndProductTypeAndStatus(
+                        command.userId(), ProductType.SUBSCRIPTIONS, PaymentStatus.PENDING)) {
             log.warn("event=subscription_payment_create_failed reason=duplicate userId={}", command.userId());
             throw new SubscriptionDuplicateException();
         }
 
-        int amount = priceOf(command.planType());
+        int amount = command.planType().price();
 
-        // "SUB-{planType}-" 접두사로 구독 결제 건 식별 및 planType 인코딩 (웹훅 파싱용)
-        String orderId = "SUB-" + command.planType().name() + "-" + TsidCreator.getTsid().toString();
+        String orderId = "SUB-" + TsidCreator.getTsid().toString();
 
-        paymentRepository.save(Payment.createForSubscription(command.userId(), orderId, amount));
+        paymentRepository.save(Payment.createForSubscription(command.userId(), orderId, amount, command.planType()));
 
         log.info("event=subscription_payment_create_succeeded userId={} orderId={} planType={}",
                 command.userId(), orderId, command.planType());
@@ -154,12 +145,9 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                         return null;
                     }
                     if (payment.getProductType() == ProductType.SUBSCRIPTIONS) {
-                        SubscriptionPlanType planType = parsePlanTypeFromOrderId(payment.getOrderId());
+                        SubscriptionPlanType planType = payment.getPlanType();
                         LocalDateTime startedAt = LocalDateTime.now();
-                        LocalDateTime expiredAt = switch (planType) {
-                            case MONTHLY -> startedAt.plusMonths(1);
-                            case YEARLY -> startedAt.plusYears(1);
-                        };
+                        LocalDateTime expiredAt = planType.expiresAt(startedAt);
                         Long subscriptionId = subscriptionCreatePort.create(
                                 payment.getUserId(), planType, payment.getAmount(), startedAt, expiredAt);
                         paymentRepository.update(payment.paySubscription(command.portonePaymentId(), subscriptionId));
