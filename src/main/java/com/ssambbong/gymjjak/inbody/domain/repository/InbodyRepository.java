@@ -19,4 +19,6 @@ public interface InbodyRepository {
     );
 
     Optional<Inbody> findByIdAndUserId(Long inbodyId, Long userId);
+
+    void deleteById(Long inbodyId);
 }

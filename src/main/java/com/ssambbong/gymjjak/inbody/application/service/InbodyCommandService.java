@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.inbody.application.service;
 import com.ssambbong.gymjjak.global.domain.common.exception.CommonErrorCode;
 import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import com.ssambbong.gymjjak.inbody.application.command.CreateInbodyCommand;
+import com.ssambbong.gymjjak.inbody.application.command.DeleteInbodyCommand;
 import com.ssambbong.gymjjak.inbody.application.command.UpdateInbodyCommand;
 import com.ssambbong.gymjjak.inbody.application.result.CreateInbodyResult;
 import com.ssambbong.gymjjak.inbody.application.usecase.InbodyCommandUseCase;
@@ -77,7 +78,7 @@ public class InbodyCommandService implements InbodyCommandUseCase {
         );
 
         // command 검증
-        validateUpdateCommand(command, inbodyId);
+        validateUserAndInbodyId(command.userId(), inbodyId);
 
         // 본인 인바디 검증
         Inbody inbody = getOwnedInbody(inbodyId, command.userId());
@@ -102,12 +103,40 @@ public class InbodyCommandService implements InbodyCommandUseCase {
         );
     }
 
-    private void validateUpdateCommand(UpdateInbodyCommand command, Long inbodyId) {
+    @Monitored(
+            name = "gymjjak.inbody.command.duration",
+            domain = "inbody",
+            action = "delete"
+    )
+    @Override
+    public void deleteInbody(DeleteInbodyCommand command) {
+
+        log.info(
+                "event=inbody_delete_started userId={}, inbodyId={}",
+                command.userId(),
+                command.inbodyId()
+        );
+
+        validateUserAndInbodyId(command.userId(), command.inbodyId());
+
+        // 본인 인바디 기록 조회 및 검증
+        Inbody inbody = getOwnedInbody(command.inbodyId(), command.userId());
+
+        inbodyRepository.deleteById(inbody.getId());
+
+        log.info(
+                "event=inbody_delete_completed userId={}, inbodyId={}",
+                inbody.getUserId(),
+                inbody.getId()
+        );
+    }
+
+    private void validateUserAndInbodyId(Long userId, Long inbodyId) {
         if (inbodyId == null) {
             throw new InbodyRequiredFieldException(InbodyErrorCode.INBODY_ID_REQUIRED);
         }
 
-        if (command.userId() == null) {
+        if (userId == null) {
             throw new InbodyRequiredFieldException(InbodyErrorCode.USER_ID_REQUIRED);
         }
     }

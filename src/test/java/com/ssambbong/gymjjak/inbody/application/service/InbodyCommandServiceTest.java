@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.inbody.application.service;
 
 import com.ssambbong.gymjjak.inbody.application.command.UpdateInbodyCommand;
+import com.ssambbong.gymjjak.inbody.application.command.DeleteInbodyCommand;
 import com.ssambbong.gymjjak.inbody.domain.exception.InbodyNotFoundException;
 import com.ssambbong.gymjjak.inbody.domain.exception.InbodyUpdateNotAllowedException;
 import com.ssambbong.gymjjak.inbody.domain.exception.InvalidInbodyValueException;
@@ -24,7 +25,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class InbodyCommandServiceUpdateTest {
+class InbodyCommandServiceTest {
 
     private static final Long USER_ID = 1L;
     private static final Long INBODY_ID = 10L;
@@ -101,6 +102,29 @@ class InbodyCommandServiceUpdateTest {
 
         assertThat(inbody.getHeight()).isEqualByComparingTo("170.00");
         verify(inbodyRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void deleteInbody_success_deletesOwnedInbody() {
+        Inbody inbody = createInbody(LocalDateTime.of(2026, 7, 15, 9, 0));
+        when(inbodyRepository.findByIdAndUserId(INBODY_ID, USER_ID))
+                .thenReturn(Optional.of(inbody));
+
+        inbodyCommandService.deleteInbody(new DeleteInbodyCommand(USER_ID, INBODY_ID));
+
+        verify(inbodyRepository).deleteById(INBODY_ID);
+    }
+
+    @Test
+    void deleteInbody_throwsException_whenInbodyDoesNotBelongToUser() {
+        when(inbodyRepository.findByIdAndUserId(INBODY_ID, USER_ID))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> inbodyCommandService.deleteInbody(
+                new DeleteInbodyCommand(USER_ID, INBODY_ID)
+        )).isInstanceOf(InbodyNotFoundException.class);
+
+        verify(inbodyRepository, never()).deleteById(INBODY_ID);
     }
 
     private UpdateInbodyCommand updateCommand(
