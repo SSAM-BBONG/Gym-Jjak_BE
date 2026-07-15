@@ -16,6 +16,7 @@ public interface WorkoutDiaryPort {
     void updateWorkoutDiary(
             Long userId,
             Long workoutDiaryId,
+            Long exerciseId,
             PartType part,
             String exercise,
             List<WorkoutDiarySet> sets

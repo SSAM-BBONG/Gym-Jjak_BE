@@ -13,6 +13,7 @@ public class WorkoutDiary {
 
     private final Long id;
     private final Long userId;
+    private final Long exerciseId;
     private final PartType part;
     private final String exercise;
     private final LocalDate diaryDate;
@@ -23,6 +24,7 @@ public class WorkoutDiary {
             Long userId,
             LocalDate diaryDate,
             PartType part,
+            Long exerciseId,
             String exercise,
             List<WorkoutDiarySet> sets
     ) {
@@ -30,6 +32,7 @@ public class WorkoutDiary {
         this.userId = validateUserId(userId);
         this.diaryDate = validateDiaryDate(diaryDate);
         this.part = validatePart(part);
+        this.exerciseId = validateExerciseId(exerciseId);
         this.exercise = validateExercise(exercise);
         this.sets = validateSets(sets);
     }
@@ -38,10 +41,11 @@ public class WorkoutDiary {
             Long userId,
             LocalDate diaryDate,
             PartType part,
+            Long exerciseId,
             String exercise,
             List<WorkoutDiarySet> sets
     ) {
-        return new WorkoutDiary(null, userId, diaryDate, part, exercise, sets);
+        return new WorkoutDiary(null, userId, diaryDate, part, exerciseId, exercise, sets);
     }
 
     private static Long validateUserId(Long userId) {
@@ -56,6 +60,13 @@ public class WorkoutDiary {
             throw new CalendarException(CalendarErrorCode.PART_REQUIRED);
         }
         return part;
+    }
+
+    private static Long validateExerciseId(Long exerciseId) {
+        if (exerciseId == null) {
+            throw new CalendarException(CalendarErrorCode.EXERCISE_REQUIRED);
+        }
+        return exerciseId;
     }
 
     private static String validateExercise(String exercise) {
@@ -92,6 +103,7 @@ public class WorkoutDiary {
 
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
+    public Long getExerciseId() { return exerciseId; }
     public PartType getPart() { return part; }
     public String getExercise() { return exercise; }
     public LocalDate getDiaryDate() { return diaryDate; }
