@@ -5,7 +5,7 @@ import com.ssambbong.gymjjak.organization.organization.domain.model.Organization
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
 import com.ssambbong.gymjjak.organization.organization.infrastructure.persistence.SpringDataOrganizationRepository;
-import com.ssambbong.gymjjak.organization.organizationTrainer.infrastructure.persistence.SpringDataOrganizationTrainerRepository;
+import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationPort;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class OrganizationQueryPortAdapter implements OrganizationQueryPort, Trai
 
     private final OrganizationRepository organizationRepository;
     private final SpringDataOrganizationRepository springDataOrganizationRepository;
-    private final SpringDataOrganizationTrainerRepository springDataOrganizationTrainerRepository;
+    private final OrganizationTrainerRepository organizationTrainerRepository;
 
     @Override
     public OrganizationInfo findById(Long organizationId) {
@@ -58,11 +58,11 @@ public class OrganizationQueryPortAdapter implements OrganizationQueryPort, Trai
                 ));
     }
 
+    // 트레이너가 선택한 조직에 실제로 소속되어 있는지 검증
     @Override
-    public Long findOrganizationIdByTrainerProfileId(Long trainerProfileId) {
-        return springDataOrganizationTrainerRepository.findByTrainerProfileIdAndRemovedAtIsNull(trainerProfileId)
-                .map(e -> e.getOrganizationId())
-                .orElseThrow(() -> new OrganizationNotFoundException());
+    public boolean isTrainerBelongsToOrganization(Long trainerProfileId, Long organizationId) {
+        return organizationTrainerRepository
+                .existsActiveByOrganizationIdAndTrainerProfileId(organizationId, trainerProfileId);
     }
 
     @Override

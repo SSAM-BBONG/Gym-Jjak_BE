@@ -157,6 +157,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/detail").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/organizations/search")
                         .hasAnyAuthority("USER", "TRAINER")
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/trainer/my-organizations")
+                        .hasAuthority("TRAINER")
                         .requestMatchers("/api/organizations/**")
                         .hasAnyAuthority("ORGANIZATION", "ADMIN")
 
