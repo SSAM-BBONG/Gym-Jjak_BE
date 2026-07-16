@@ -40,7 +40,7 @@ public interface SpringDataCommunityRepository
                         ON l.community_post_id = cp.community_post_id
                     WHERE cp.deleted_at IS NULL
                       AND (:type IS NULL OR cp.type = :type)
-                      AND (:keyword IS NULL OR cp.title LIKE CONCAT('%', :keyword, '%') ESCAPE '\\')
+                      AND (:keyword IS NULL OR cp.title LIKE CONCAT('%', :keyword, '%'))
                     GROUP BY
                         cp.community_post_id,
                         cp.type,
