@@ -2,21 +2,29 @@ package com.ssambbong.gymjjak.payments.payment.application.service;
 
 import com.github.f4b6a3.tsid.TsidCreator;
 import com.ssambbong.gymjjak.payments.payment.application.command.CreatePtPaymentCommand;
+import com.ssambbong.gymjjak.payments.payment.application.command.CreateSubscriptionPaymentCommand;
 import com.ssambbong.gymjjak.payments.payment.application.command.ProcessWebhookCommand;
 import com.ssambbong.gymjjak.payments.payment.application.port.PortOnePaymentVerifyPort;
 import com.ssambbong.gymjjak.payments.payment.application.port.PtCoursePaymentQueryPort;
+import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionCreatePort;
+import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionPaymentQueryPort;
+import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentDuplicateException;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentNotFoundException;
+import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentTargetNotFoundException;
+import com.ssambbong.gymjjak.payments.payment.domain.exception.SubscriptionDuplicateException;
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import com.ssambbong.gymjjak.payments.payment.domain.repository.PaymentRepository;
+import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionPlanType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Slf4j
@@ -29,6 +37,8 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
     private final PaymentRepository paymentRepository;
     private final PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
+    private final SubscriptionPaymentQueryPort subscriptionPaymentQueryPort;
+    private final SubscriptionCreatePort subscriptionCreatePort;
     private final PortOnePaymentVerifyPort portOnePaymentVerifyPort;
     private final TransactionTemplate transactionTemplate;
 
@@ -46,7 +56,8 @@ public class PaymentCommandService implements PaymentCommandUseCase {
         }
 
         PtCoursePaymentQueryPort.PtCoursePaymentInfo info =
-                ptCoursePaymentQueryPort.findPtCoursePaymentInfo(command.ptCourseId());
+                ptCoursePaymentQueryPort.findPtCoursePaymentInfo(command.ptCourseId())
+                        .orElseThrow(PaymentTargetNotFoundException::new);
 
         // "PT-" 접두사로 PT 결제 건 식별, TSID로 고유성 보장 (PortOne paymentId로 사용)
         String orderId = "PT-" + TsidCreator.getTsid().toString();
@@ -55,6 +66,30 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
         log.info("event=pt_payment_create_succeeded userId={} orderId={}", command.userId(), orderId);
         return new PaymentInitResult(orderId, info.price());
+    }
+
+    @Override
+    @Transactional
+    public PaymentInitResult createSubscriptionPayment(CreateSubscriptionPaymentCommand command) {
+        log.debug("event=subscription_payment_create userId={} planType={}", command.userId(), command.planType());
+
+        // 활성 구독 중복 검증 (ACTIVE 구독 또는 PENDING 구독 결제 존재 시 차단)
+        if (subscriptionPaymentQueryPort.existsActiveByUserId(command.userId())
+                || paymentRepository.existsByUserIdAndProductTypeAndStatus(
+                        command.userId(), ProductType.SUBSCRIPTIONS, PaymentStatus.PENDING)) {
+            log.warn("event=subscription_payment_create_failed reason=duplicate userId={}", command.userId());
+            throw new SubscriptionDuplicateException();
+        }
+
+        int amount = command.planType().price();
+
+        String orderId = "SUB-" + TsidCreator.getTsid().toString();
+
+        paymentRepository.save(Payment.createForSubscription(command.userId(), orderId, amount, command.planType()));
+
+        log.info("event=subscription_payment_create_succeeded userId={} orderId={} planType={}",
+                command.userId(), orderId, command.planType());
+        return new PaymentInitResult(orderId, amount);
     }
 
     // 웹훅 수신
@@ -109,7 +144,17 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                                 command.orderId(), payment.getAmount(), finalInfo.amount());
                         return null;
                     }
-                    paymentRepository.update(payment.pay(command.portonePaymentId()));
+                    if (payment.getProductType() == ProductType.SUBSCRIPTIONS) {
+                        SubscriptionPlanType planType = payment.getPlanType();
+                        LocalDateTime startedAt = LocalDateTime.now();
+                        LocalDateTime expiredAt = planType.expiresAt(startedAt);
+                        Long subscriptionId = subscriptionCreatePort.create(
+                                payment.getUserId(), planType, payment.getAmount(), startedAt, expiredAt);
+                        paymentRepository.update(payment.paySubscription(command.portonePaymentId(), subscriptionId));
+                        log.info("event=webhook_subscription_created orderId={} subscriptionId={}", command.orderId(), subscriptionId);
+                    } else {
+                        paymentRepository.update(payment.pay(command.portonePaymentId()));
+                    }
                     log.info("event=webhook_paid_succeeded orderId={}", command.orderId());
                 }
                 case "Transaction.Failed" -> {

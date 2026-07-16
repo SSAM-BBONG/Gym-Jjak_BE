@@ -3,10 +3,13 @@ package com.ssambbong.gymjjak.payments.payment.presentation.api;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.payments.payment.application.command.CreatePtPaymentCommand;
+import com.ssambbong.gymjjak.payments.payment.application.command.CreateSubscriptionPaymentCommand;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentQueryUseCase;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.request.CreatePtPaymentRequest;
+import com.ssambbong.gymjjak.payments.payment.presentation.api.request.CreateSubscriptionPaymentRequest;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.response.CreatePtPaymentResponse;
+import com.ssambbong.gymjjak.payments.payment.presentation.api.response.CreateSubscriptionPaymentResponse;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.response.PaymentMyListResponse;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.response.PaymentResponseCode;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.response.PtPaymentStatusResponse;
@@ -99,5 +102,31 @@ public class PaymentController {
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(PaymentResponseCode.PAYMENT_PT_CREATED,
                         CreatePtPaymentResponse.from(result)));
+    }
+
+    // 구독 결제 요청
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "구독 결제 요청", description = "구독 결제를 시작한다. orderId와 금액을 반환하며, 프론트에서 PortOne SDK 호출 시 사용한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "결제 요청 생성 성공",
+                    content = @Content(schema = @Schema(implementation = CreateSubscriptionPaymentResponse.class))),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 planType",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "이미 활성 구독 존재",
+                    content = @Content(schema = @Schema()))
+    })
+    @PostMapping("/subscriptions")
+    public ResponseEntity<GlobalApiResponse<CreateSubscriptionPaymentResponse>> createSubscriptionPayment(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody @Valid CreateSubscriptionPaymentRequest request
+    ) {
+        PaymentCommandUseCase.PaymentInitResult result = paymentCommandUseCase.createSubscriptionPayment(
+                new CreateSubscriptionPaymentCommand(authUser.userId(), request.planType()));
+
+        return ResponseEntity.status(201)
+                .body(GlobalApiResponse.created(PaymentResponseCode.PAYMENT_SUBSCRIPTION_CREATED,
+                        CreateSubscriptionPaymentResponse.from(result)));
     }
 }
