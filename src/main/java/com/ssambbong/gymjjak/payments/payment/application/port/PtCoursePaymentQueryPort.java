@@ -1,8 +1,10 @@
 package com.ssambbong.gymjjak.payments.payment.application.port;
 
+import java.util.Optional;
+
 public interface PtCoursePaymentQueryPort {
 
-    PtCoursePaymentInfo findPtCoursePaymentInfo(Long ptCourseId);
+    Optional<PtCoursePaymentInfo> findPtCoursePaymentInfo(Long ptCourseId);
 
     record PtCoursePaymentInfo(String title, int price) {}
 }

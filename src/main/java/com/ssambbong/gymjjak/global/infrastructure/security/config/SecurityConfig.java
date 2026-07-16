@@ -188,6 +188,9 @@ public class SecurityConfig {
                         // 내 구독 조회
                         .requestMatchers(HttpMethod.GET, "/api/subscriptions/me").hasAnyAuthority("USER", "TRAINER")
 
+                        // 구독 결제 요청
+                        .requestMatchers(HttpMethod.POST, "/api/payments/subscriptions").hasAnyAuthority("USER", "TRAINER")
+
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
