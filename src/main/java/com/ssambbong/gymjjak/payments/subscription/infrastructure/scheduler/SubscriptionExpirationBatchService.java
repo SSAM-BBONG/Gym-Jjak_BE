@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,33 +27,29 @@ public class SubscriptionExpirationBatchService {
                 batchSize,
                 Sort.by(Sort.Order.asc("userId"), Sort.Order.asc("id"))
         );
-        var candidates = subscriptionRepository.findByStatusAndExpiredAtLessThanEqual(
+        var candidates = subscriptionRepository.findExpirationCandidates(
                 SubscriptionStatus.ACTIVE, now, pageable);
 
-        int expiredCount = 0;
-        int unpaidUserCount = 0;
-
-        for (var candidate : candidates.getContent()) {
-            // 모든 구독 상태 변경은 사용자 행을 먼저 잠가 동일 사용자의 처리를 직렬화한다.
-            var user = userRepository.findByIdForUpdate(candidate.getUserId()).orElse(null);
-            var subscription = subscriptionRepository.findByIdForUpdate(candidate.getId()).orElse(null);
-            if (user == null || subscription == null
-                    || subscription.getStatus() != SubscriptionStatus.ACTIVE
-                    || subscription.getExpiredAt().isAfter(now)) {
-                continue;
-            }
-
-            subscription.expire();
-            expiredCount++;
-
-            boolean hasAnotherActiveSubscription = subscriptionRepository
-                    .existsByUserIdAndStatusAndExpiredAtAfter(
-                            subscription.getUserId(), SubscriptionStatus.ACTIVE, now);
-            if (!hasAnotherActiveSubscription) {
-                user.markAsUnpaid();
-                unpaidUserCount++;
-            }
+        if (candidates.isEmpty()) {
+            return new SubscriptionExpirationBatchResult(0, 0, 0);
         }
+
+        List<Long> subscriptionIds = candidates.getContent().stream()
+                .map(SpringDataSubscriptionRepository.ExpirationCandidate::getSubscriptionId)
+                .toList();
+        List<Long> userIds = candidates.getContent().stream()
+                .map(SpringDataSubscriptionRepository.ExpirationCandidate::getUserId)
+                .distinct()
+                .sorted()
+                .toList();
+
+        // 건별 잠금 대신 대상 사용자를 한 번에 잠가 결제 웹훅과의 동시성을 제어한다.
+        userRepository.findAllByIdForUpdate(userIds);
+
+        // 구독 만료와 사용자 권한 회수를 각각 벌크 쿼리로 처리해 N+1 조회를 제거한다.
+        int expiredCount = subscriptionRepository.expireAll(
+                subscriptionIds, SubscriptionStatus.ACTIVE, SubscriptionStatus.EXPIRED, now);
+        int unpaidUserCount = userRepository.markUnpaidWithoutActiveSubscription(userIds, now);
 
         return new SubscriptionExpirationBatchResult(
                 candidates.getNumberOfElements(), expiredCount, unpaidUserCount);

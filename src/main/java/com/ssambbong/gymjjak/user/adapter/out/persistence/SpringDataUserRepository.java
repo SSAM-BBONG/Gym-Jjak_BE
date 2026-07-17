@@ -18,6 +18,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Collection;
 import jakarta.persistence.LockModeType;
 
 public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
@@ -26,6 +27,36 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from UserJpaEntity u where u.id = :userId")
     Optional<UserJpaEntity> findByIdForUpdate(@Param("userId") Long userId);
+
+    // 교착상태 가능성을 줄이기 위해 사용자 ID 오름차순으로 한 번에 잠근다.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select u
+            from UserJpaEntity u
+            where u.id in :userIds
+            order by u.id asc
+            """)
+    List<UserJpaEntity> findAllByIdForUpdate(@Param("userIds") Collection<Long> userIds);
+
+    // 아직 유효한 구독이 없는 사용자만 한 번의 쿼리로 무료 상태로 전환한다.
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            update users u
+            set u.is_paid = false
+            where u.user_id in (:userIds)
+              and u.is_paid = true
+              and not exists (
+                  select 1
+                  from subscriptions s
+                  where s.user_id = u.user_id
+                    and s.status = 'ACTIVE'
+                    and s.expired_at > :now
+              )
+            """, nativeQuery = true)
+    int markUnpaidWithoutActiveSubscription(
+            @Param("userIds") Collection<Long> userIds,
+            @Param("now") LocalDateTime now
+    );
 
     boolean existsByUsername(String username);
 
