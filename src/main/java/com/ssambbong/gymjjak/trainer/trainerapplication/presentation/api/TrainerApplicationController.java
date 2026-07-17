@@ -18,6 +18,7 @@ import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataR
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.CreateTrainerApplicationResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationDetailResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationResponseCode;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.UpdateTrainerApplicationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -29,6 +30,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Trainer_Application", description = "트레이너 신청 api")
 @Slf4j
@@ -59,7 +62,8 @@ public class TrainerApplicationController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody @Valid CreateTrainerApplicationRequest request
             ) {
-        Long trainerApplicationId = trainerApplicationCommandUseCase.createTrainerApplication(
+        List<Long> trainerApplicationIds = trainerApplicationCommandUseCase
+                .createTrainerApplication(
                 new CreateTrainerApplicationCommand(
                         authUser.userId(),
                         request.organizationIds(),
@@ -74,7 +78,7 @@ public class TrainerApplicationController {
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_CREATED,
-                        new CreateTrainerApplicationResponse(trainerApplicationId)
+                        new CreateTrainerApplicationResponse(trainerApplicationIds)
                 ));
     }
 
@@ -107,7 +111,7 @@ public class TrainerApplicationController {
             @ApiResponse(responseCode = "409", description = "PENDING 상태가 아니어서 수정할 수 없음")
     })
     @PreAuthorize("hasAuthority('USER')")
-    public ResponseEntity<GlobalApiResponse<CreateTrainerApplicationResponse>> updateTrainerApplication(
+    public ResponseEntity<GlobalApiResponse<UpdateTrainerApplicationResponse>> updateTrainerApplication(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long trainerApplicationId,
             @RequestBody @Valid UpdateTrainerApplicationRequest request
@@ -127,7 +131,7 @@ public class TrainerApplicationController {
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
                        TrainerApplicationResponseCode.TRAINER_APPLICATION_UPDATED,
-                       new CreateTrainerApplicationResponse(updatedTrainerApplicationId)
+                       new UpdateTrainerApplicationResponse(updatedTrainerApplicationId)
                 ));
     }
 

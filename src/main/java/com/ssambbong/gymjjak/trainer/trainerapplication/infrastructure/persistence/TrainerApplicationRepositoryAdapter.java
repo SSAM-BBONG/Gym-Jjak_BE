@@ -84,12 +84,17 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
 
     // 중복 신청 검증
     @Override
-    public boolean existsDuplicateBlockingApplicationByUserId(Long userId) {
-        return springDataTrainerApplicationRepository.existsByUserIdAndStatusIn(
-                userId,
-                TrainerApplicationStatus.getDuplicateBlockingStatuses()
-        );
+    public boolean existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+            Long userId, List<Long> organizationIds
+    ) {
+        return springDataTrainerApplicationRepository
+                .existsByUserIdAndOrganizationIdInAndStatusIn(
+                        userId,
+                        organizationIds,
+                        TrainerApplicationStatus.getDuplicateBlockingStatuses()
+                );
     }
+
 
     @Override
     public Optional<TrainerApplication> findByIdForUpdate(Long trainerApplicationId) {

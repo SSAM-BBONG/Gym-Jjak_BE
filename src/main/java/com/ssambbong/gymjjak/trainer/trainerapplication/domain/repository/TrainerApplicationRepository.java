@@ -15,7 +15,10 @@ public interface TrainerApplicationRepository {
 
     Optional<TrainerApplication> findById(Long trainerApplicationId);
 
-    boolean existsDuplicateBlockingApplicationByUserId(Long userId);
+    boolean existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+            Long userId,
+            List<Long> organizationIds
+    );
 
     Optional<TrainerApplication> findByIdForUpdate(Long trainerApplicationId);
 

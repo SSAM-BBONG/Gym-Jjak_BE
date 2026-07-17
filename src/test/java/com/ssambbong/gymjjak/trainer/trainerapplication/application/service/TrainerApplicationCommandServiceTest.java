@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.Tra
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationTrainerPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.DuplicateTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationNotFoundException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationStatusConflictException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
@@ -104,6 +105,40 @@ public class TrainerApplicationCommandServiceTest {
                 .existsActiveOrganizationById(2L);
         verify(trainerApplicationOrganizationPort, never())
                 .existsActiveOrganizationById(3L);
+        verifyNoInteractions(fileUseCase, ocrUseCase);
+        verify(trainerApplicationRepository, never()).save(any());
+        verify(trainerApplicationRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("요청 조직 중 진행 중인 신청이 하나라도 있으면 파일 등록 전에 신청을 거절한다")
+    void createTrainerApplication_fail_whenAnyOrganizationHasBlockingApplication() {
+        // given
+        List<Long> organizationIds = List.of(1L, 2L, 3L);
+        CreateTrainerApplicationCommand command =
+                createTrainerApplicationCommand(organizationIds);
+
+        organizationIds.forEach(organizationId ->
+                when(trainerApplicationOrganizationPort
+                        .existsActiveOrganizationById(organizationId))
+                        .thenReturn(true)
+        );
+        when(trainerApplicationRepository
+                .existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+                        10L,
+                        organizationIds
+                ))
+                .thenReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> service.createTrainerApplication(command))
+                .isInstanceOf(DuplicateTrainerApplicationException.class);
+
+        verify(trainerApplicationRepository)
+                .existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+                        10L,
+                        organizationIds
+                );
         verifyNoInteractions(fileUseCase, ocrUseCase);
         verify(trainerApplicationRepository, never()).save(any());
         verify(trainerApplicationRepository, never()).saveAll(anyList());

@@ -12,17 +12,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface SpringDataTrainerApplicationRepository extends JpaRepository<TrainerApplicationJpaEntity, Long> {
 
-    // 이미 대기중 / 승인된 신청서 존재 여부 확인
-    boolean existsByUserIdAndStatusIn(
-            Long userId,
-            Collection<TrainerApplicationStatus> statuses
-    );
-
-    Optional<TrainerApplicationJpaEntity> findTopByUserIdOrderByCreatedAtDescTrainerApplicationIdDesc(Long userId);
+    Optional<TrainerApplicationJpaEntity
+            > findTopByUserIdOrderByCreatedAtDescTrainerApplicationIdDesc(Long userId);
 
     // 조직별 트레이너 신청 목록 조회 기능
     @Query(
@@ -108,4 +104,10 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
     );
 
     long countByStatus(TrainerApplicationStatus status);
+
+    boolean existsByUserIdAndOrganizationIdInAndStatusIn(
+            Long userId,
+            List<Long> organizationIds,
+            List<TrainerApplicationStatus> statuses
+    );
 }
