@@ -11,6 +11,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQuer
 import com.ssambbong.gymjjak.pt.ptCourse.application.service.PtCourseCommandService;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseTrainerNotInOrganizationException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseRequestInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
@@ -56,7 +57,7 @@ class PtCourseCommandServiceTest {
     private CreatePtCourseCommand defaultCommand(String title, String description, int price,
                                                   List<CreatePtCourseCommand.CurriculumData> curriculums) {
         return new CreatePtCourseCommand(
-                1L, PartType.CHEST,
+                1L, 1L, PartType.CHEST,
                 title, description, price,
                 null,
                 curriculums,
@@ -76,7 +77,7 @@ class PtCourseCommandServiceTest {
         CreatePtCourseCommand command = defaultCommand("체계적인 가슴 집중 PT", "가슴 근육 발달에 특화된 12주 프로그램", 50000, curriculums);
 
         when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
-        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
+        when(organizationQueryPort.isTrainerBelongsToOrganization(1L, 1L)).thenReturn(true);
 
         PtCourse savedPtCourse = PtCourse.restore(
                 1L, 1L, 1L, PartType.CHEST, 1L,
@@ -109,7 +110,7 @@ class PtCourseCommandServiceTest {
         );
 
         when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
-        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
+        when(organizationQueryPort.isTrainerBelongsToOrganization(1L, 1L)).thenReturn(true);
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
@@ -129,7 +130,7 @@ class PtCourseCommandServiceTest {
         );
 
         when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
-        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
+        when(organizationQueryPort.isTrainerBelongsToOrganization(1L, 1L)).thenReturn(true);
 
         // when & then
         assertThrows(PtCourseInvalidException.class,
@@ -182,7 +183,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, PartType.CHEST, "PT 강습 제목", "설명", 50000, null,
+                1L, 1L, PartType.CHEST, "PT 강습 제목", "설명", 50000, null,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 List.of() // 빈 스케줄
         );
@@ -205,7 +206,7 @@ class PtCourseCommandServiceTest {
                 new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")
         );
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, PartType.CHEST, "PT 강습 제목", "설명", 50000, null,
+                1L, 1L, PartType.CHEST, "PT 강습 제목", "설명", 50000, null,
                 curriculums,
                 List.of(
                         new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"),
@@ -228,7 +229,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, PartType.CHEST, "PT 강습 제목", "설명", 50000, null,
+                1L, 1L, PartType.CHEST, "PT 강습 제목", "설명", 50000, null,
                 null,
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
@@ -250,13 +251,13 @@ class PtCourseCommandServiceTest {
         UploadedFileMetadataCommand thumbnailFile =
                 new UploadedFileMetadataCommand("file-key", "thumb.jpg", "image/jpeg", 1024L);
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, PartType.CHEST, "제목", "설명", 50000, thumbnailFile,
+                1L, 1L, PartType.CHEST, "제목", "설명", 50000, thumbnailFile,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
 
         when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
-        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
+        when(organizationQueryPort.isTrainerBelongsToOrganization(1L, 1L)).thenReturn(true);
         when(fileUseCase.registerFiles(any()))
                 .thenReturn(List.of(new FileRegistrationResult(99L, FileType.PT_THUMBNAIL)));
 
@@ -283,13 +284,13 @@ class PtCourseCommandServiceTest {
         UploadedFileMetadataCommand thumbnailFile =
                 new UploadedFileMetadataCommand("file-key", "thumb.jpg", "image/jpeg", 1024L);
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, PartType.CHEST, "제목", "설명", 50000, thumbnailFile,
+                1L, 1L, PartType.CHEST, "제목", "설명", 50000, thumbnailFile,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 List.of(new CreatePtCourseCommand.ScheduleData("MONDAY", "10:00", "11:00"))
         );
 
         when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
-        when(organizationQueryPort.findOrganizationIdByTrainerProfileId(1L)).thenReturn(1L);
+        when(organizationQueryPort.isTrainerBelongsToOrganization(1L, 1L)).thenReturn(true);
         when(fileUseCase.registerFiles(any())).thenReturn(List.of());
 
         // when & then
@@ -305,7 +306,7 @@ class PtCourseCommandServiceTest {
 
         // given
         CreatePtCourseCommand command = new CreatePtCourseCommand(
-                1L, PartType.CHEST, "PT 강습 제목", "설명", 50000, null,
+                1L, 1L, PartType.CHEST, "PT 강습 제목", "설명", 50000, null,
                 List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명")),
                 null
         );
@@ -317,6 +318,26 @@ class PtCourseCommandServiceTest {
         verify(ptCourseRepository, never()).save(any());
         verify(ptCurriculumRepository, never()).saveAll(any());
         verify(ptCourseScheduleRepository, never()).saveAll(any());
+    }
+
+    @Test
+    @DisplayName("트레이너가 선택한 조직에 소속되지 않으면 PtCourseTrainerNotInOrganizationException이 발생한다")
+    void createPtCourse_notBelongToOrganization_throwsException() {
+
+        // given
+        CreatePtCourseCommand command = defaultCommand(
+                "PT 강습 제목", "설명", 50000,
+                List.of(new CreatePtCourseCommand.CurriculumData(1, "회차 제목", "회차 설명"))
+        );
+
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
+        when(organizationQueryPort.isTrainerBelongsToOrganization(1L, 1L)).thenReturn(false);
+
+        // when & then
+        assertThrows(PtCourseTrainerNotInOrganizationException.class,
+                () -> ptCourseCommandService.createPtCourse(command));
+
+        verify(ptCourseRepository, never()).save(any());
     }
 
     // ===== updatePtCourse =====

@@ -6,7 +6,8 @@ public enum OrganizationTrainerResponseCode implements ResponseCode {
 
     ORGANIZATION_TRAINER_LIST_FOUND("ORG_OT_200_L", "소속 트레이너 목록 조회가 완료되었습니다."),
     ORGANIZATION_TRAINER_ADDED("ORG_OT_201", "소속 트레이너 등록이 완료되었습니다."),
-    ORGANIZATION_TRAINER_REMOVED("ORG_OT_200_D", "소속 트레이너 삭제가 완료되었습니다.");
+    ORGANIZATION_TRAINER_REMOVED("ORG_OT_200_D", "소속 트레이너 삭제가 완료되었습니다."),
+    MY_ORGANIZATIONS_FETCHED("ORG_OT_200_MY_ORGS", "소속 조직 목록 조회 성공");
 
     private final String code;
     private final String message;

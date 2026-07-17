@@ -5,6 +5,7 @@ import java.util.List;
 
 public record CreatePtCourseCommand(
         Long userId,
+        Long organizationId,
         PartType part,
         String title,
         String description,
