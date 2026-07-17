@@ -9,4 +9,7 @@ public interface SpringDataSubscriptionRepository extends JpaRepository<Subscrip
 
     // 활성 구독 조회
     Optional<SubscriptionJpaEntity> findByUserIdAndStatus(Long userId, SubscriptionStatus status);
+
+    // 활성 구독 존재 여부
+    boolean existsByUserIdAndStatus(Long userId, SubscriptionStatus status);
 }

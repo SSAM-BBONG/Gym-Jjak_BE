@@ -41,7 +41,11 @@ public record CreatePtCourseRequest(
 
         @Schema(description = "수업 시간 목록")
         @NotEmpty
-        List<ScheduleRequest> schedules
+        List<ScheduleRequest> schedules,
+
+        @Schema(description = "소속 조직 ID", example = "1")
+        @NotNull
+        Long organizationId
 
 ) {
     public record CurriculumRequest(

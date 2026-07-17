@@ -10,14 +10,14 @@ public class Subscription {
     private final Long id;
     private final Long userId;
     private final SubscriptionPlanType planType;
-    private final long price;
+    private final int price;
     private final SubscriptionStatus status;
     private final LocalDateTime startedAt;
     private final LocalDateTime expiredAt;
 
     private Subscription(
             Long id, Long userId,
-            SubscriptionPlanType planType, long price,
+            SubscriptionPlanType planType, int price,
             SubscriptionStatus status,
             LocalDateTime startedAt, LocalDateTime expiredAt
     ) {
@@ -32,7 +32,7 @@ public class Subscription {
 
     public static Subscription restore(
             Long id, Long userId,
-            SubscriptionPlanType planType, long price,
+            SubscriptionPlanType planType, int price,
             SubscriptionStatus status,
             LocalDateTime startedAt, LocalDateTime expiredAt
     ) {

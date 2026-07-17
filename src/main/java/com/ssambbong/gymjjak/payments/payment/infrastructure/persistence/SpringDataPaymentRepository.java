@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.payments.payment.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
+import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +21,9 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
 
     // PT 코스 중복 결제 검증
     boolean existsByUserIdAndPtCourseIdAndStatus(Long userId, Long ptCourseId, PaymentStatus status);
+
+    // 구독 결제 PENDING 중복 검증
+    boolean existsByUserIdAndProductTypeAndStatus(Long userId, ProductType productType, PaymentStatus status);
 
     // [admin dashboard] 월별 pt,구독권 결제 금액 집계
     @Query(value = """

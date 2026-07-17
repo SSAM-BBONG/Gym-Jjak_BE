@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.payments.payment.domain.repository;
 
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
+import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,9 @@ public interface PaymentRepository {
 
     // PT 코스 중복 결제 검증 (동일 유저 + 동일 코스 + PAID 존재 여부)
     boolean existsByUserIdAndPtCourseIdAndStatus(Long userId, Long ptCourseId, PaymentStatus status);
+
+    // 구독 결제 PENDING 중복 검증
+    boolean existsByUserIdAndProductTypeAndStatus(Long userId, ProductType productType, PaymentStatus status);
 
     // 웹훅 처리 후 결제 상태 갱신 (PAID / CANCELLED / FAILED)
     void update(Payment payment);

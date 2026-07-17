@@ -14,6 +14,9 @@ import java.util.Optional;
 
 public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaEntity, Long> {
 
+    // 결제 포트용 — soft-delete 필터링 포함
+    Optional<PtCourseJpaEntity> findByIdAndDeletedAtIsNull(Long id);
+
     // [dashboard] 조직 소속 PT 목록 + 현재 수강생 수 집계 (트레이너 이름순)
     @Query(value = """
             SELECT pc.pt_course_id        AS ptCourseId,

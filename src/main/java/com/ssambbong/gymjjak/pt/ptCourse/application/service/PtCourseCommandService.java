@@ -15,6 +15,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseC
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseCannotDeleteException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseTrainerNotInOrganizationException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseHasActiveReservationException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
@@ -107,7 +108,12 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         );
 
         Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
-        Long organizationId = organizationQueryPort.findOrganizationIdByTrainerProfileId(trainerProfileId);
+        // 소속된 조직
+        Long organizationId = command.organizationId();
+        // 진짜 소속되어 있는지 검증
+        if (!organizationQueryPort.isTrainerBelongsToOrganization(trainerProfileId, organizationId)) {
+            throw new PtCourseTrainerNotInOrganizationException();
+        }
 
         Long thumbnailFileId = registerThumbnailFile(command.userId(), command.thumbnailFile());
 
