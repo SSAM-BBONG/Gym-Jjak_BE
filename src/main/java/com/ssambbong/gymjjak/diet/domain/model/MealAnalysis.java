@@ -46,12 +46,28 @@ public class MealAnalysis {
                 .build();
     }
 
-    // 식단 수정 규칙을 도메인 안에서 일관되게 관리한다.
-    public void update(MealType mealType, LocalDateTime mealTime, String menu, Long kcal, Long fileId) {
-        this.mealType = mealType;
-        this.mealTime = mealTime;
-        this.menu = menu;
-        this.kcal = kcal;
-        this.fileId = fileId;
+    // 요청에 포함된 값만 변경하고, 선택 필드는 명시적인 null로 제거할 수 있다.
+    public void update(
+            MealType mealType, boolean mealTypePresent,
+            LocalDateTime mealTime, boolean mealTimePresent,
+            String menu, boolean menuPresent,
+            Long kcal, boolean kcalPresent,
+            Long fileId, boolean fileIdPresent
+    ) {
+        if (mealTypePresent) {
+            this.mealType = mealType;
+        }
+        if (mealTimePresent) {
+            this.mealTime = mealTime;
+        }
+        if (menuPresent) {
+            this.menu = menu;
+        }
+        if (kcalPresent) {
+            this.kcal = kcal;
+        }
+        if (fileIdPresent) {
+            this.fileId = fileId;
+        }
     }
 }

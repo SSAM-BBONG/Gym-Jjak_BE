@@ -1,10 +1,16 @@
 package com.ssambbong.gymjjak.diet.adapter.in.web;
 
 import com.ssambbong.gymjjak.diet.adapter.in.web.request.MealAnalysisRequest;
+import com.ssambbong.gymjjak.diet.adapter.in.web.request.UpdateMealAnalysisRequest;
 import com.ssambbong.gymjjak.diet.adapter.in.web.response.*;
 import com.ssambbong.gymjjak.diet.application.command.MealAnalysisCommand;
+import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.in.MealAnalysisUseCase;
+import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
+import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
+import com.ssambbong.gymjjak.diet.domain.exception.InvalidMealUpdateException;
+import com.ssambbong.gymjjak.diet.domain.model.MealType;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,9 +22,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -82,16 +85,15 @@ public class MealAnalysisController {
             @Parameter(description = "페이지당 조회 개수(최대 100)", example = "20")
             @RequestParam(defaultValue = "20") int size) {
         int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        PageRequest pageable = PageRequest.of(Math.max(page, 0), safeSize,
-                Sort.by(Sort.Order.desc("mealTime"), Sort.Order.desc("id")));
-        Page<MealAnalysisResponse> results = mealAnalysisUseCase.getList(authUser.userId(), pageable)
+        MealPageQuery query = new MealPageQuery(authUser.userId(), Math.max(page, 0), safeSize);
+        MealPageResult<MealAnalysisResponse> results = mealAnalysisUseCase.getList(query)
                 .map(this::toResponse);
         return ResponseEntity.ok(GlobalApiResponse.ok(MealAnalysisResponseCode.MEAL_LIST_FETCHED,
                 MealAnalysisPageResponse.from(results)));
     }
 
     @PatchMapping("/{mealId}")
-    @Operation(summary = "식단 수정", description = "로그인한 사용자가 본인 소유의 식단을 수정합니다.")
+    @Operation(summary = "식단 부분 수정", description = "로그인한 사용자가 본인 소유 식단에서 요청에 포함한 필드만 수정합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "식단 수정 성공",
                     content = @Content(schema = @Schema(implementation = MealAnalysisResponse.class))),
@@ -103,8 +105,11 @@ public class MealAnalysisController {
             @AuthenticationPrincipal AuthUser authUser,
             @Parameter(description = "수정할 식단 ID", example = "1", required = true)
             @PathVariable Long mealId,
-            @Valid @RequestBody MealAnalysisRequest request) {
-        MealAnalysisResult result = mealAnalysisUseCase.update(mealId, toCommand(authUser.userId(), request));
+            @Valid @RequestBody UpdateMealAnalysisRequest request) {
+        MealAnalysisResult result = mealAnalysisUseCase.update(
+                mealId,
+                toUpdateCommand(authUser.userId(), request)
+        );
         return ResponseEntity.ok(GlobalApiResponse.ok(MealAnalysisResponseCode.MEAL_UPDATED, toResponse(result)));
     }
 
@@ -126,6 +131,34 @@ public class MealAnalysisController {
     private MealAnalysisCommand toCommand(Long userId, MealAnalysisRequest request) {
         return new MealAnalysisCommand(userId, mealTypeMapper.toEnum(request.mealType()), request.mealTime(),
                 request.menu().trim(), request.kcal(), request.fileId());
+    }
+
+    private UpdateMealAnalysisCommand toUpdateCommand(Long userId, UpdateMealAnalysisRequest request) {
+        if (!request.hasAnyField()
+                || (request.isMealTypePresent() && request.getMealType() == null)
+                || (request.isMealTimePresent() && request.getMealTime() == null)
+                || (request.isMenuPresent() && (request.getMenu() == null || request.getMenu().isBlank()))) {
+            throw new InvalidMealUpdateException();
+        }
+
+        MealType mealType = request.isMealTypePresent()
+                ? mealTypeMapper.toEnum(request.getMealType())
+                : null;
+        String menu = request.isMenuPresent() ? request.getMenu().trim() : null;
+
+        return new UpdateMealAnalysisCommand(
+                userId,
+                mealType,
+                request.isMealTypePresent(),
+                request.getMealTime(),
+                request.isMealTimePresent(),
+                menu,
+                request.isMenuPresent(),
+                request.getKcal(),
+                request.isKcalPresent(),
+                request.getFileId(),
+                request.isFileIdPresent()
+        );
     }
 
     private MealAnalysisResponse toResponse(MealAnalysisResult result) {

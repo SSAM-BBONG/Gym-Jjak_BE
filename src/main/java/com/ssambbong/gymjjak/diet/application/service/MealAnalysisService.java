@@ -1,14 +1,15 @@
 package com.ssambbong.gymjjak.diet.application.service;
 
 import com.ssambbong.gymjjak.diet.application.command.MealAnalysisCommand;
+import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.in.MealAnalysisUseCase;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
+import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
+import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAnalysisNotFoundException;
 import com.ssambbong.gymjjak.diet.domain.model.MealAnalysis;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,23 +35,31 @@ public class MealAnalysisService implements MealAnalysisUseCase {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<MealAnalysisResult> getList(Long userId, Pageable pageable) {
-        return mealAnalysisPort.findAllByUserId(userId, pageable).map(MealAnalysisResult::from);
+    public MealPageResult<MealAnalysisResult> getList(MealPageQuery query) {
+        return mealAnalysisPort.findAllByUserId(query).map(MealAnalysisResult::from);
     }
 
     @Transactional
     @Override
-    public MealAnalysisResult update(Long mealId, MealAnalysisCommand command) {
+    public MealAnalysisResult update(Long mealId, UpdateMealAnalysisCommand command) {
         MealAnalysis meal = getOwnedMeal(command.userId(), mealId);
-        meal.update(command.mealType(), command.mealTime(), command.menu(), command.kcal(), command.fileId());
+        meal.update(
+                command.mealType(), command.mealTypePresent(),
+                command.mealTime(), command.mealTimePresent(),
+                command.menu(), command.menuPresent(),
+                command.kcal(), command.kcalPresent(),
+                command.fileId(), command.fileIdPresent()
+        );
         return MealAnalysisResult.from(mealAnalysisPort.save(meal));
     }
 
     @Transactional
     @Override
     public void delete(Long userId, Long mealId) {
-        MealAnalysis meal = getOwnedMeal(userId, mealId);
-        mealAnalysisPort.deleteById(meal.getId());
+        int deletedCount = mealAnalysisPort.deleteByIdAndUserId(mealId, userId);
+        if (deletedCount == 0) {
+            throw new MealAnalysisNotFoundException(mealId);
+        }
     }
 
     private MealAnalysis getOwnedMeal(Long userId, Long mealId) {

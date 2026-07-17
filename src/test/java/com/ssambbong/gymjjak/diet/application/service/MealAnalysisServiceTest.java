@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.diet.application.service;
 
 import com.ssambbong.gymjjak.diet.application.command.MealAnalysisCommand;
+import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAnalysisNotFoundException;
@@ -53,7 +54,14 @@ class MealAnalysisServiceTest {
         given(repository.save(ownedMeal)).willReturn(ownedMeal);
 
         MealAnalysisResult result = service.update(1L,
-                new MealAnalysisCommand(10L, MealType.LUNCH, newTime, "샐러드", 300L, 20L));
+                new UpdateMealAnalysisCommand(
+                        10L,
+                        MealType.LUNCH, true,
+                        newTime, true,
+                        "샐러드", true,
+                        300L, true,
+                        20L, true
+                ));
 
         assertThat(result.mealType()).isEqualTo(MealType.LUNCH);
         assertThat(result.menu()).isEqualTo("샐러드");
@@ -70,13 +78,11 @@ class MealAnalysisServiceTest {
 
     @Test
     void 본인_소유_식단을_삭제한다() {
-        MealAnalysis ownedMeal = meal(1L, 10L, MealType.SNACK,
-                LocalDateTime.of(2026, 7, 18, 15, 0), "견과류", null, null);
-        given(repository.findByIdAndUserId(1L, 10L)).willReturn(Optional.of(ownedMeal));
+        given(repository.deleteByIdAndUserId(1L, 10L)).willReturn(1);
 
         service.delete(10L, 1L);
 
-        verify(repository).deleteById(1L);
+        verify(repository).deleteByIdAndUserId(1L, 10L);
     }
 
     private MealAnalysis meal(Long id, Long userId, MealType mealType, LocalDateTime mealTime,

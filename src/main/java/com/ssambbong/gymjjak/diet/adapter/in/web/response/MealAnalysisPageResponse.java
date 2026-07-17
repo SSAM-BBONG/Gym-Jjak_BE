@@ -1,6 +1,6 @@
 package com.ssambbong.gymjjak.diet.adapter.in.web.response;
 
-import org.springframework.data.domain.Page;
+import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
@@ -20,8 +20,8 @@ public record MealAnalysisPageResponse(
         @Schema(description = "다음 페이지 존재 여부", example = "true")
         boolean hasNext
 ) {
-    public static MealAnalysisPageResponse from(Page<MealAnalysisResponse> page) {
-        return new MealAnalysisPageResponse(page.getContent(), page.getNumber(), page.getSize(),
-                page.getTotalElements(), page.getTotalPages(), page.hasNext());
+    public static MealAnalysisPageResponse from(MealPageResult<MealAnalysisResponse> page) {
+        return new MealAnalysisPageResponse(page.content(), page.page(), page.size(),
+                page.totalElements(), page.totalPages(), page.hasNext());
     }
 }
