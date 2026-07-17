@@ -71,34 +71,34 @@ public class Payment {
     }
 
     // PortOne 결제 확인 후 PAID로 전환 (PT)
-    public Payment pay(String portonePaymentId) {
+    public Payment pay(String portonePaymentId, LocalDateTime paidAt) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
                 orderId, portonePaymentId, amount,
                 planType, PaymentStatus.PAID, productType,
-                LocalDateTime.now(), null, null, null);
+                paidAt, null, null, null);
     }
 
     // PortOne 결제 확인 후 PAID로 전환 + 생성된 구독 ID 연결 (구독)
-    public Payment paySubscription(String portonePaymentId, Long subscriptionId) {
+    public Payment paySubscription(String portonePaymentId, Long subscriptionId, LocalDateTime paidAt) {
         return new Payment(id, userId, ptCourseId, subscriptionId,
                 orderId, portonePaymentId, amount,
                 planType, PaymentStatus.PAID, productType,
-                LocalDateTime.now(), null, null, null);
+                paidAt, null, null, null);
     }
 
     // 결제 실패 처리
-    public Payment fail(String failReason) {
+    public Payment fail(String failReason, LocalDateTime failedAt) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
                 orderId, portonePaymentId, amount,
                 planType, PaymentStatus.FAILED, productType,
-                null, null, LocalDateTime.now(), failReason);
+                null, null, failedAt, failReason);
     }
 
     // 결제 취소 처리
-    public Payment cancel() {
+    public Payment cancel(LocalDateTime cancelledAt) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
                 orderId, portonePaymentId, amount,
                 planType, PaymentStatus.CANCELLED, productType,
-                paidAt, LocalDateTime.now(), null, null);
+                paidAt, cancelledAt, null, null);
     }
 }

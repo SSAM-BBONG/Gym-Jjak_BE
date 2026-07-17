@@ -12,5 +12,5 @@ public interface SubscriptionRepository {
               LocalDateTime startedAt, LocalDateTime expiredAt);
 
     // 활성 구독 조회
-    Optional<Subscription> findActiveByUserId(Long userId);
+    Optional<Subscription> findActiveByUserId(Long userId, LocalDateTime now);
 }

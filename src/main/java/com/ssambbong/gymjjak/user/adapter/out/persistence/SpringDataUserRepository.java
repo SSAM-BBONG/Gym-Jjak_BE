@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,8 +18,14 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import jakarta.persistence.LockModeType;
 
 public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
+
+    // 구독 상태를 변경하는 모든 흐름은 동일한 사용자 행을 잠금 기준으로 사용한다.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from UserJpaEntity u where u.id = :userId")
+    Optional<UserJpaEntity> findByIdForUpdate(@Param("userId") Long userId);
 
     boolean existsByUsername(String username);
 
