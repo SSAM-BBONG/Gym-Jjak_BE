@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 public interface PaymentRepository {
 
@@ -26,4 +27,6 @@ public interface PaymentRepository {
 
     // 웹훅 처리 후 결제 상태 갱신 (PAID / CANCELLED / FAILED)
     void update(Payment payment);
+
+    int expireStalePendingSubscriptions(Long userId, LocalDateTime threshold, LocalDateTime failedAt);
 }

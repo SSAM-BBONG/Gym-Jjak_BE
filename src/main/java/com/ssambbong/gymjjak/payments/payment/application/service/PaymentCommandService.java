@@ -8,6 +8,8 @@ import com.ssambbong.gymjjak.payments.payment.application.port.PortOnePaymentVer
 import com.ssambbong.gymjjak.payments.payment.application.port.PtCoursePaymentQueryPort;
 import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionCreatePort;
 import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionPaymentQueryPort;
+import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionLifecyclePort;
+import com.ssambbong.gymjjak.payments.payment.application.port.SubscriptionUserPort;
 import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentDuplicateException;
@@ -25,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Set;
 
 @Slf4j
@@ -34,13 +38,17 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
     private static final Set<String> SUPPORTED_WEBHOOK_TYPES =
             Set.of("Transaction.Paid", "Transaction.Failed", "Transaction.Cancelled");
+    private static final Duration PENDING_PAYMENT_TTL = Duration.ofMinutes(30);
 
     private final PaymentRepository paymentRepository;
     private final PtCoursePaymentQueryPort ptCoursePaymentQueryPort;
     private final SubscriptionPaymentQueryPort subscriptionPaymentQueryPort;
     private final SubscriptionCreatePort subscriptionCreatePort;
+    private final SubscriptionLifecyclePort subscriptionLifecyclePort;
+    private final SubscriptionUserPort subscriptionUserPort;
     private final PortOnePaymentVerifyPort portOnePaymentVerifyPort;
     private final TransactionTemplate transactionTemplate;
+    private final Clock clock;
 
     @Override
     @Transactional
@@ -73,8 +81,16 @@ public class PaymentCommandService implements PaymentCommandUseCase {
     public PaymentInitResult createSubscriptionPayment(CreateSubscriptionPaymentCommand command) {
         log.debug("event=subscription_payment_create userId={} planType={}", command.userId(), command.planType());
 
+        // 같은 사용자의 동시 결제 요청은 사용자 행 잠금으로 직렬화한다.
+        subscriptionUserPort.lockById(command.userId());
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        // 결제창 이탈로 남은 오래된 PENDING 결제는 실패 처리한다.
+        paymentRepository.expireStalePendingSubscriptions(
+                command.userId(), now.minus(PENDING_PAYMENT_TTL), now);
+
         // 활성 구독 중복 검증 (ACTIVE 구독 또는 PENDING 구독 결제 존재 시 차단)
-        if (subscriptionPaymentQueryPort.existsActiveByUserId(command.userId())
+        if (subscriptionPaymentQueryPort.existsActiveByUserId(command.userId(), now)
                 || paymentRepository.existsByUserIdAndProductTypeAndStatus(
                         command.userId(), ProductType.SUBSCRIPTIONS, PaymentStatus.PENDING)) {
             log.warn("event=subscription_payment_create_failed reason=duplicate userId={}", command.userId());
@@ -104,14 +120,15 @@ public class PaymentCommandService implements PaymentCommandUseCase {
             return;
         }
 
+        Payment initialPayment = paymentRepository.findByOrderId(command.orderId())
+                .orElseThrow(PaymentNotFoundException::new);
+
         // Transaction.Paid: 이미 처리된 결제는 PortOne 외부 호출 없이 종료
         PortOnePaymentVerifyPort.PortOnePaymentInfo portOneInfo = null;
         if ("Transaction.Paid".equals(command.type())) {
-            Payment preCheck = paymentRepository.findByOrderId(command.orderId())
-                    .orElseThrow(PaymentNotFoundException::new);
-            if (preCheck.getStatus() != PaymentStatus.PENDING) {
+            if (initialPayment.getStatus() != PaymentStatus.PENDING) {
                 log.warn("event=webhook_skipped_duplicate type=Transaction.Paid orderId={} status={}",
-                        command.orderId(), preCheck.getStatus());
+                        command.orderId(), initialPayment.getStatus());
                 return;
             }
             // PENDING 확인 후에만 PortOne API 호출 (트랜잭션 밖 — DB 커넥션 점유 방지)
@@ -122,6 +139,10 @@ public class PaymentCommandService implements PaymentCommandUseCase {
 
         // DB 조회 + 갱신만 트랜잭션으로 묶음
         transactionTemplate.execute(status -> {
+            if (initialPayment.getProductType() == ProductType.SUBSCRIPTIONS) {
+                // 구독 웹훅은 사용자 행을 먼저 잠근 뒤 결제 상태를 다시 읽는다.
+                subscriptionUserPort.lockById(initialPayment.getUserId());
+            }
             Payment payment = paymentRepository.findByOrderId(command.orderId())
                     .orElseThrow(PaymentNotFoundException::new);
 
@@ -145,15 +166,18 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                         return null;
                     }
                     if (payment.getProductType() == ProductType.SUBSCRIPTIONS) {
+                        // 구독 생성과 사용자 권한 변경을 동일한 사용자 잠금 안에서 처리한다.
                         SubscriptionPlanType planType = payment.getPlanType();
-                        LocalDateTime startedAt = LocalDateTime.now();
+                        LocalDateTime startedAt = LocalDateTime.now(clock);
                         LocalDateTime expiredAt = planType.expiresAt(startedAt);
                         Long subscriptionId = subscriptionCreatePort.create(
                                 payment.getUserId(), planType, payment.getAmount(), startedAt, expiredAt);
-                        paymentRepository.update(payment.paySubscription(command.portonePaymentId(), subscriptionId));
+                        paymentRepository.update(payment.paySubscription(
+                                command.portonePaymentId(), subscriptionId, startedAt));
+                        subscriptionUserPort.markAsPaid(payment.getUserId());
                         log.info("event=webhook_subscription_created orderId={} subscriptionId={}", command.orderId(), subscriptionId);
                     } else {
-                        paymentRepository.update(payment.pay(command.portonePaymentId()));
+                        paymentRepository.update(payment.pay(command.portonePaymentId(), LocalDateTime.now(clock)));
                     }
                     log.info("event=webhook_paid_succeeded orderId={}", command.orderId());
                 }
@@ -163,7 +187,7 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                                 command.orderId(), payment.getStatus());
                         return null;
                     }
-                    paymentRepository.update(payment.fail(null));
+                    paymentRepository.update(payment.fail(null, LocalDateTime.now(clock)));
                     log.info("event=webhook_failed orderId={}", command.orderId());
                 }
                 case "Transaction.Cancelled" -> {
@@ -172,7 +196,18 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                                 command.orderId(), payment.getStatus());
                         return null;
                     }
-                    paymentRepository.update(payment.cancel());
+                    LocalDateTime cancelledAt = LocalDateTime.now(clock);
+                    if (payment.getProductType() == ProductType.SUBSCRIPTIONS
+                            && payment.getAiSubscriptionId() != null) {
+                        // 환불된 구독은 별도 CANCELLED 상태 없이 EXPIRED로 종료한다.
+                        subscriptionLifecyclePort.expire(payment.getAiSubscriptionId());
+                        paymentRepository.update(payment.cancel(cancelledAt));
+                        if (!subscriptionPaymentQueryPort.existsActiveByUserId(payment.getUserId(), cancelledAt)) {
+                            subscriptionUserPort.markAsUnpaid(payment.getUserId());
+                        }
+                    } else {
+                        paymentRepository.update(payment.cancel(cancelledAt));
+                    }
                     log.info("event=webhook_cancelled orderId={}", command.orderId());
                 }
             }

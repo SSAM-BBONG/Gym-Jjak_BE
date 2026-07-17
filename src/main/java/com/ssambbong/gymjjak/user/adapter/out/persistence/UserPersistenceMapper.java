@@ -26,6 +26,7 @@ public interface UserPersistenceMapper {
                 entity.getRole(),
                 entity.getStatus(),
                 entity.isOnboardingCompleted(),
+                entity.isPaid(),
                 entity.getSocialProvider(),
                 entity.getSocialId(),
                 entity.getLastLoginAt(),
