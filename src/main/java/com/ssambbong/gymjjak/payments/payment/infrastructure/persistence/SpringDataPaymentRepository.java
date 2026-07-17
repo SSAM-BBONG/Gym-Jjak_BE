@@ -25,6 +25,13 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
     // 구독 결제 PENDING 중복 검증
     boolean existsByUserIdAndProductTypeAndStatus(Long userId, ProductType productType, PaymentStatus status);
 
+    List<PaymentJpaEntity> findAllByUserIdAndProductTypeAndStatusAndCreatedAtBefore(
+            Long userId,
+            ProductType productType,
+            PaymentStatus status,
+            LocalDateTime threshold
+    );
+
     // [admin dashboard] 월별 pt,구독권 결제 금액 집계
     @Query(value = """
         SELECT DATE(CONCAT(
@@ -61,7 +68,6 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
         // AS subscriptionPaymentAmount
         Long getSubscriptionPaymentAmount();
     }
-
     // [dashboard] 조직 이번 달 매출
     @Query(value = """
             SELECT COALESCE(SUM(p.amount), 0)

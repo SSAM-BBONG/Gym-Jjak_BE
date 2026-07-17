@@ -84,27 +84,27 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
         this.status = PaymentStatus.PENDING;
     }
 
-    public void markPaid(String portonePaymentId) {
+    public void markPaid(String portonePaymentId, LocalDateTime paidAt) {
         this.portonePaymentId = portonePaymentId;
         this.status = PaymentStatus.PAID;
-        this.paidAt = LocalDateTime.now();
+        this.paidAt = paidAt;
     }
 
-    public void markPaid(String portonePaymentId, Long subscriptionId) {
+    public void markPaid(String portonePaymentId, Long subscriptionId, LocalDateTime paidAt) {
         this.portonePaymentId = portonePaymentId;
         this.aiSubscriptionId = subscriptionId;
         this.status = PaymentStatus.PAID;
-        this.paidAt = LocalDateTime.now();
+        this.paidAt = paidAt;
     }
 
-    public void markCancelled() {
+    public void markCancelled(LocalDateTime cancelledAt) {
         this.status = PaymentStatus.CANCELLED;
-        this.cancelledAt = LocalDateTime.now();
+        this.cancelledAt = cancelledAt;
     }
 
-    public void markFailed(String failReason) {
+    public void markFailed(String failReason, LocalDateTime failedAt) {
         this.status = PaymentStatus.FAILED;
-        this.failedAt = LocalDateTime.now();
+        this.failedAt = failedAt;
         this.failReason = failReason;
     }
 

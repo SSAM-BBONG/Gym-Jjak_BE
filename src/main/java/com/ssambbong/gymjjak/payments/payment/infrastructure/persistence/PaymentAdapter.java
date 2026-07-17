@@ -54,15 +54,25 @@ public class PaymentAdapter implements PaymentRepository {
             switch (payment.getStatus()) {
                 case PAID -> {
                     if (payment.getAiSubscriptionId() != null) {
-                        entity.markPaid(payment.getPortonePaymentId(), payment.getAiSubscriptionId());
+                        entity.markPaid(payment.getPortonePaymentId(), payment.getAiSubscriptionId(), payment.getPaidAt());
                     } else {
-                        entity.markPaid(payment.getPortonePaymentId());
+                        entity.markPaid(payment.getPortonePaymentId(), payment.getPaidAt());
                     }
                 }
-                case CANCELLED -> entity.markCancelled();
-                case FAILED -> entity.markFailed(payment.getFailReason());
+                case CANCELLED -> entity.markCancelled(payment.getCancelledAt());
+                case FAILED -> entity.markFailed(payment.getFailReason(), payment.getFailedAt());
                 default -> {}
             }
         });
+    }
+
+    @Override
+    public int expireStalePendingSubscriptions(Long userId, java.time.LocalDateTime threshold,
+                                               java.time.LocalDateTime failedAt) {
+        List<PaymentJpaEntity> stalePayments = springDataPaymentRepository
+                .findAllByUserIdAndProductTypeAndStatusAndCreatedAtBefore(
+                        userId, ProductType.SUBSCRIPTIONS, PaymentStatus.PENDING, threshold);
+        stalePayments.forEach(payment -> payment.markFailed("PAYMENT_SESSION_EXPIRED", failedAt));
+        return stalePayments.size();
     }
 }
