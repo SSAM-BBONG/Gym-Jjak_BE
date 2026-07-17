@@ -242,3 +242,9 @@ src/main/resources/db/performance-seed.sql
 
 # k6 load test files
 /k6/
+
+# 도메인별 로컬 작업 지침 및 기술 문서
+/src/main/java/**/AGENTS.md
+/src/main/java/**/CLAUDE.md
+/src/main/java/**/docs/*.md
+/src/main/java/**/docs/**/*.md

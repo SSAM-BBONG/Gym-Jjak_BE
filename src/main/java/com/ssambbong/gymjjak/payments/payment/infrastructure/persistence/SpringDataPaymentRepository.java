@@ -25,6 +25,43 @@ public interface SpringDataPaymentRepository extends JpaRepository<PaymentJpaEnt
     // 구독 결제 PENDING 중복 검증
     boolean existsByUserIdAndProductTypeAndStatus(Long userId, ProductType productType, PaymentStatus status);
 
+    // [admin dashboard] 월별 pt,구독권 결제 금액 집계
+    @Query(value = """
+        SELECT DATE(CONCAT(
+                    YEAR(p.paid_at),
+                    '-',
+                    LPAD(MONTH(p.paid_at), 2, '0'),
+                    '-01'
+               )) AS month,
+               COALESCE(SUM(CASE
+                   WHEN p.product_type = 'PT' THEN p.amount
+                   ELSE 0
+               END), 0) AS ptPaymentAmount,
+               COALESCE(SUM(CASE
+                   WHEN p.product_type = 'SUBSCRIPTIONS' THEN p.amount
+                   ELSE 0
+               END), 0) AS subscriptionPaymentAmount
+        FROM payments p
+        WHERE p.status = 'PAID'
+          AND p.paid_at >= :startDate
+          AND p.paid_at < :endDate
+        GROUP BY YEAR(p.paid_at), MONTH(p.paid_at)
+        ORDER BY month ASC
+        """, nativeQuery = true)
+    List<AdminMonthlyRevenueRow> findAdminMonthlyPaymentRevenues(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    interface AdminMonthlyRevenueRow {
+        // As Month
+        LocalDate getMonth();
+        // AS ptPaymentAmount
+        Long getPtPaymentAmount();
+        // AS subscriptionPaymentAmount
+        Long getSubscriptionPaymentAmount();
+    }
+
     // [dashboard] 조직 이번 달 매출
     @Query(value = """
             SELECT COALESCE(SUM(p.amount), 0)
