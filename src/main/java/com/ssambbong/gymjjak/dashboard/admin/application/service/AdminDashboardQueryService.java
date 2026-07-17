@@ -1,8 +1,8 @@
 package com.ssambbong.gymjjak.dashboard.admin.application.service;
 
-import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminContentStatisticsResult;
-import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminMemberStatisticsResult;
-import com.ssambbong.gymjjak.dashboard.admin.application.query.MonthlyUserSignupResult;
+import com.ssambbong.gymjjak.dashboard.admin.application.port.AdminRevenueQueryPort;
+import com.ssambbong.gymjjak.dashboard.admin.application.port.MonthlyPaymentRevenue;
+import com.ssambbong.gymjjak.dashboard.admin.application.query.*;
 import com.ssambbong.gymjjak.dashboard.admin.application.usecase.AdminDashboardQueryUseCase;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 import com.ssambbong.gymjjak.organization.organization.infrastructure.persistence.SpringDataOrganizationRepository;
@@ -19,11 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -35,6 +38,12 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
 
     // 현재 월 포함 최근 6개월
     private static final int MONTH_RANGE = 6;
+
+    // PT 수수료율 10%
+    private static final BigDecimal PT_COMMISSION_RATE = new BigDecimal("0.10");
+
+    // payment 테이블 조회 Port
+    private final AdminRevenueQueryPort adminRevenueQueryPort;
 
     private final SpringDataUserRepository userRepository;
     private final SpringDataTrainerProfileRepository trainerProfileRepository;
@@ -103,6 +112,87 @@ public class AdminDashboardQueryService implements AdminDashboardQueryUseCase {
                 .blindedPtCourseCount(blindedPtCourseCount)
                 .pendingReportGroupCount(pendingReportGroupCount)
                 .build();
+    }
+
+    @Override
+    public AdminRevenueStatisticsResult findRevenueStatistics() {
+        log.info("event=admin_dashboard_find_revenue_statistics_started");
+
+        // YearMonth : 연 - 월
+        YearMonth currentMonth = YearMonth.now(clock);
+        YearMonth startMonth = currentMonth.minusMonths(MONTH_RANGE - 1);
+
+        // 시작 : 월 1일 0시 부터 시작
+        LocalDateTime startDate = startMonth.atDay(1).atStartOfDay();
+        // 종료 : 다음 달 1일 0시
+        LocalDateTime endDate = currentMonth.plusMonths(1)
+                .atDay(1)
+                .atStartOfDay();
+
+        // 월별 매출 집계 결과 Map으로 변환
+        Map<YearMonth, MonthlyPaymentRevenue> revenueByMonth =
+                // payment 테이블에서 월별 금액 집계해서 반환
+                adminRevenueQueryPort.findMonthlyPaymentRevenue(startDate, endDate)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                // LocalDate -> YearMonth 변환, key로 사용
+                                revenue-> YearMonth.from(revenue.month()),
+                                // 받은 객체 수정 없이 Map의 value로 사용
+                                Function.identity()
+                        ));
+
+        // 원본 데이터 조회 값 -> Result 형태로 변환 단계
+        List<MonthlyRevenueResult> monthlyRevenues = IntStream.range(0, MONTH_RANGE)
+                // 6개월 생성
+                .mapToObj(startMonth::plusMonths)
+                // 월별 데이터 생성 내부 메서드 호출
+                .map(month -> toMonthlyRevenueResult(
+                        month,
+                        // 위 객체에서 월 추출
+                        revenueByMonth.get(month)
+                ))
+                .toList();
+
+        log.info(
+                "event=admin_dashboard_find_revenue_statistics_succeeded, startMonth={}, endMonth={}",
+                startMonth,
+                currentMonth
+        );
+
+        return new AdminRevenueStatisticsResult(monthlyRevenues);
+    }
+
+    // 월별 매출 금액을 관리자 매출 통계로 변환하는 내부 메서드
+    private MonthlyRevenueResult toMonthlyRevenueResult(
+            YearMonth month,
+            MonthlyPaymentRevenue monthlyPaymentRevenue
+    ) {
+        // pt 매출
+        long ptPaymentAmount = monthlyPaymentRevenue == null ? 0L : monthlyPaymentRevenue.ptPaymentAmount();
+
+        // 구독권 매출
+        long subscriptionRevenue = monthlyPaymentRevenue == null ? 0L : monthlyPaymentRevenue.subscriptionPaymentAmount();
+
+        // 짐짝의 pt 수수료 매출 계산
+        long ptCommissionRevenue = calculatePtCommission(ptPaymentAmount);
+
+        return MonthlyRevenueResult.builder()
+                .month(month.toString())
+                .ptCommissionRevenue(ptCommissionRevenue)
+                .subscriptionRevenue(subscriptionRevenue)
+                .totalRevenue(ptCommissionRevenue + subscriptionRevenue)
+                .build();
+
+    }
+
+    // 월별 PT 총매출에 수수료 적용 메서드
+    private long calculatePtCommission(long ptPaymentAmount) {
+        return BigDecimal.valueOf(ptPaymentAmount)
+                // 10% 수수료 구하기
+                .multiply(PT_COMMISSION_RATE)
+                // 소수점 없이 반올림
+                .setScale(0, RoundingMode.HALF_UP)
+                .longValueExact();
     }
 
     private List<MonthlyUserSignupResult> findRecentMonthlyUserSignups() {

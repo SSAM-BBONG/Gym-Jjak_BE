@@ -16,6 +16,11 @@ public enum AdminDashboardResponseCode implements ResponseCode {
     ADMIN_CONTENT_STATISTICS_FOUND(
             "ADMIN_DASHBOARD_200_3",
             "관리자 대시보드 콘텐츠 현황 조회에 성공했습니다."
+    ),
+
+    ADMIN_REVENUE_STATISTICS_FOUND(
+            "ADMIN_DASHBOARD_200_4",
+            "관리자 대시보드 매출 통계 조회에 성공했습니다."
     );
 
     private final String code;
