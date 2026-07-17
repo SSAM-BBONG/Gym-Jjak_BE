@@ -2,7 +2,9 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.application.service;
 
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.RejectTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationTrainerPort;
@@ -78,6 +80,52 @@ public class TrainerApplicationCommandServiceTest {
                 .introduction("트레이너 신청입니다.")
                 .status(TrainerApplicationStatus.PENDING)
                 .build();
+    }
+
+    @Test
+    @DisplayName("신청 대상 조직 중 하나라도 비활성이면 파일 등록 전에 신청을 거절한다")
+    void createTrainerApplication_fail_whenAnyOrganizationIsInactive() {
+        // given
+        CreateTrainerApplicationCommand command =
+                createTrainerApplicationCommand(List.of(1L, 2L, 3L));
+
+        when(trainerApplicationOrganizationPort.existsActiveOrganizationById(1L))
+                .thenReturn(true);
+        when(trainerApplicationOrganizationPort.existsActiveOrganizationById(2L))
+                .thenReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> service.createTrainerApplication(command))
+                .isInstanceOf(InvalidTrainerApplicationException.class);
+
+        verify(trainerApplicationOrganizationPort)
+                .existsActiveOrganizationById(1L);
+        verify(trainerApplicationOrganizationPort)
+                .existsActiveOrganizationById(2L);
+        verify(trainerApplicationOrganizationPort, never())
+                .existsActiveOrganizationById(3L);
+        verifyNoInteractions(fileUseCase, ocrUseCase);
+        verify(trainerApplicationRepository, never()).save(any());
+        verify(trainerApplicationRepository, never()).saveAll(anyList());
+    }
+
+    private CreateTrainerApplicationCommand createTrainerApplicationCommand(
+            List<Long> organizationIds
+    ) {
+        return new CreateTrainerApplicationCommand(
+                10L,
+                organizationIds,
+                null,
+                new UploadedFileMetadataCommand(
+                        "trainer-applications/certificate.png",
+                        "certificate.png",
+                        "image/png",
+                        1024L
+                ),
+                List.of(),
+                List.of(),
+                "트레이너 신청입니다."
+        );
     }
 
     @Test

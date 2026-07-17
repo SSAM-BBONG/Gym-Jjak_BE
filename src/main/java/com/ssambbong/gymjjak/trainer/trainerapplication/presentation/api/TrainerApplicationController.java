@@ -62,7 +62,7 @@ public class TrainerApplicationController {
         Long trainerApplicationId = trainerApplicationCommandUseCase.createTrainerApplication(
                 new CreateTrainerApplicationCommand(
                         authUser.userId(),
-                        request.organizationId(),
+                        request.organizationIds(),
                         toCommand(request.profileImageFile()),
                         toCommand(request.certificateFile()),
                         request.qualifications(),

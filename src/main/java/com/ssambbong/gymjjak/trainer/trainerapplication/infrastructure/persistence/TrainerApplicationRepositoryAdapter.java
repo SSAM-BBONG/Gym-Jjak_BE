@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -36,6 +37,29 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
                 // 409 conflict로 예외 처리
                 throw new DuplicateTrainerApplicationException(
                         trainerApplication.getUserId(),
+                        exception
+                );
+            }
+            throw exception;
+        }
+    }
+
+    @Override
+    public List<TrainerApplication> saveAll(List<TrainerApplication> trainerApplications) {
+        try {
+            List<TrainerApplicationJpaEntity> entities =
+                    trainerApplications.stream()
+                            .map(trainerApplicationPersistenceMapper::toEntity)
+                            .toList();
+
+            return springDataTrainerApplicationRepository.saveAll(entities)
+                    .stream()
+                    .map(trainerApplicationPersistenceMapper::toDomain)
+                    .toList();
+        } catch (DataIntegrityViolationException exception) {
+            if (isDuplicateBlockingUserConstraint(exception)) {
+                throw new DuplicateTrainerApplicationException(
+                        trainerApplications.get(0).getUserId(),
                         exception
                 );
             }

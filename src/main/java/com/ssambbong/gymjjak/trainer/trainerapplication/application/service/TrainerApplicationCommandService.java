@@ -67,8 +67,8 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
         // 필수값 검증
         validateRequiredCommand(command);
-        // 신청 대상 조직 검증
-        validateReceivableOrganization(command.organizationId());
+        // 신청 대상 조직 List 검증
+        validateReceivableOrganizations(command.organizationIds());
         // 중복 신청 검증
         validateDuplicateApplication(command.applicantUserId());
 
@@ -136,15 +136,18 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         // 중복 신청 검사 : TOCTOU 방지를 위해 저장 직전에 중복 검증을 한 번 더 함
         validateDuplicateApplication(command.applicantUserId());
 
-        TrainerApplication trainerApplication = TrainerApplication.create(
-                command.applicantUserId(),
-                command.organizationId(),
-                registeredFiles.profileImageFileId(),
-                registeredFiles.certificateFileId(),
-                command.qualifications(),
-                command.awardHistories(),
-                command.introduction()
-        );
+        List<TrainerApplication> trainerApplications =
+                command.organizationIds().stream()
+                        .map(organizationId -> TrainerApplication.create(
+                                command.applicantUserId(),
+                                organizationId,
+                                registeredFiles.profileImageFileId(),
+                                registeredFiles.certificateFileId(),
+                                command.qualifications(),
+                                command.awardHistories(),
+                                command.introduction()
+                        ))
+                        .toList();
 
         // 메트릭 추가
         Timer.Sample dbSaveTimer =
@@ -154,16 +157,20 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
         try {
             // DB에 저장
-            TrainerApplication savedTrainerApplication =
-                    trainerApplicationRepository.save(trainerApplication);
+            List<TrainerApplication> savedTrainerApplications =
+                    trainerApplicationRepository.saveAll(trainerApplications);
 
             log.info(
-                    "event=trainer_application_create_succeeded, trainerApplicationId={}, applicantUserId={}",
-                    savedTrainerApplication.getTrainerApplicationId(),
-                    savedTrainerApplication.getUserId()
+                    "event=trainer_applications_create_succeeded, applicantUserId={}, organizationCount={}, trainerApplicationIds={}",
+                    command.applicantUserId(),
+                    savedTrainerApplications.size(),
+                    savedTrainerApplications.stream()
+                            .map(TrainerApplication::getTrainerApplicationId)
+                            .toList()
             );
 
-            return savedTrainerApplication.getTrainerApplicationId();
+            // 응답 DTO를 다건 ID로 바꾸기 전까지의 임시 호환 반환값
+            return savedTrainerApplications.get(0).getTrainerApplicationId();
 
         } catch (RuntimeException exception) {
             outcome = trainerApplicationMetric.failure();
@@ -743,6 +750,15 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
         if (command.introduction() == null || command.introduction().isBlank()) {
             throw new InvalidTrainerApplicationException("introduction은 필수입니다.");
+        }
+    }
+
+    // 신청 조직 List -> 단일로 변환
+    private void validateReceivableOrganizations(
+            List<Long> organizationIds
+    ) {
+        for (Long organizationId : organizationIds) {
+            validateReceivableOrganization(organizationId);
         }
     }
 
