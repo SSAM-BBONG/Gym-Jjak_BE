@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.payments.payment.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.payments.payment.application.port.PortOnePaymentVerifyPort;
-import com.ssambbong.gymjjak.payments.payment.infrastructure.adapter.PortOneApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;

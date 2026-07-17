@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.global.infrastructure.presentation.BaseCreatedUpdat
 import com.ssambbong.gymjjak.payments.payment.domain.model.Payment;
 import com.ssambbong.gymjjak.payments.payment.domain.model.PaymentStatus;
 import com.ssambbong.gymjjak.payments.payment.domain.model.ProductType;
+import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionPlanType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,6 +42,10 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
     private int amount;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "plan_type", length = 20)
+    private SubscriptionPlanType planType;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private PaymentStatus status;
 
@@ -66,6 +71,7 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
             Long aiSubscriptionId,
             String orderId,
             int amount,
+            SubscriptionPlanType planType,
             ProductType productType
     ) {
         this.userId = userId;
@@ -73,12 +79,20 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
         this.aiSubscriptionId = aiSubscriptionId;
         this.orderId = orderId;
         this.amount = amount;
+        this.planType = planType;
         this.productType = productType;
         this.status = PaymentStatus.PENDING;
     }
 
     public void markPaid(String portonePaymentId) {
         this.portonePaymentId = portonePaymentId;
+        this.status = PaymentStatus.PAID;
+        this.paidAt = LocalDateTime.now();
+    }
+
+    public void markPaid(String portonePaymentId, Long subscriptionId) {
+        this.portonePaymentId = portonePaymentId;
+        this.aiSubscriptionId = subscriptionId;
         this.status = PaymentStatus.PAID;
         this.paidAt = LocalDateTime.now();
     }
@@ -101,6 +115,7 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
                 domain.getAiSubscriptionId(),
                 domain.getOrderId(),
                 domain.getAmount(),
+                domain.getPlanType(),
                 domain.getProductType()
         );
     }
@@ -109,7 +124,7 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
         return Payment.restore(
                 id, userId, ptCourseId, aiSubscriptionId,
                 orderId, portonePaymentId, amount,
-                status, productType,
+                planType, status, productType,
                 paidAt, cancelledAt, failedAt, failReason
         );
     }

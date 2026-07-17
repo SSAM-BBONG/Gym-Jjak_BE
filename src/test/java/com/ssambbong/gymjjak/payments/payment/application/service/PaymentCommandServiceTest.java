@@ -52,7 +52,7 @@ class PaymentCommandServiceTest {
         return Payment.restore(
                 1L, 1L, 1L, null,
                 ORDER_ID, null, AMOUNT,
-                PaymentStatus.PENDING, ProductType.PT,
+                null, PaymentStatus.PENDING, ProductType.PT,
                 null, null, null, null
         );
     }
@@ -61,7 +61,7 @@ class PaymentCommandServiceTest {
         return Payment.restore(
                 1L, 1L, 1L, null,
                 ORDER_ID, PORTONE_PAYMENT_ID, AMOUNT,
-                PaymentStatus.PAID, ProductType.PT,
+                null, PaymentStatus.PAID, ProductType.PT,
                 null, null, null, null
         );
     }
@@ -70,7 +70,7 @@ class PaymentCommandServiceTest {
         return Payment.restore(
                 1L, 1L, 1L, null,
                 ORDER_ID, null, AMOUNT,
-                PaymentStatus.FAILED, ProductType.PT,
+                null, PaymentStatus.FAILED, ProductType.PT,
                 null, null, null, null
         );
     }
@@ -79,7 +79,7 @@ class PaymentCommandServiceTest {
         return Payment.restore(
                 1L, 1L, 1L, null,
                 ORDER_ID, PORTONE_PAYMENT_ID, AMOUNT,
-                PaymentStatus.CANCELLED, ProductType.PT,
+                null, PaymentStatus.CANCELLED, ProductType.PT,
                 null, null, null, null
         );
     }
