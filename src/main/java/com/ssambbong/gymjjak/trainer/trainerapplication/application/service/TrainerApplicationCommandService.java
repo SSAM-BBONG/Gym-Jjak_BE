@@ -764,14 +764,10 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     private void validateReceivableOrganizations(
             List<Long> organizationIds
     ) {
-        for (Long organizationId : organizationIds) {
-            validateReceivableOrganization(organizationId);
-        }
-    }
+        long activeOrganizationCount = trainerApplicationOrganizationPort
+                .countActiveOrganizationsByIds(organizationIds);
 
-    // 신청 대상 조직 검증 기능
-    private void validateReceivableOrganization(Long organizationId) {
-        if (!trainerApplicationOrganizationPort.existsActiveOrganizationById(organizationId)) {
+        if (activeOrganizationCount != organizationIds.size()) {
             throw new InvalidTrainerApplicationException(
                     "신청 가능한 조직이 존재하지 않습니다."
             );

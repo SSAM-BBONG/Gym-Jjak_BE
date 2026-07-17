@@ -33,7 +33,7 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
 
             return trainerApplicationPersistenceMapper.toDomain(savedEntity);
         } catch (DataIntegrityViolationException exception) {
-            if (isDuplicateBlockingUserConstraint(exception)) {
+            if (isDuplicateBlockingOrganizationConstraint(exception)) {
                 // 409 conflict로 예외 처리
                 throw new DuplicateTrainerApplicationException(
                         trainerApplication.getUserId(),
@@ -57,7 +57,7 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
                     .map(trainerApplicationPersistenceMapper::toDomain)
                     .toList();
         } catch (DataIntegrityViolationException exception) {
-            if (isDuplicateBlockingUserConstraint(exception)) {
+            if (isDuplicateBlockingOrganizationConstraint(exception)) {
                 throw new DuplicateTrainerApplicationException(
                         trainerApplications.get(0).getUserId(),
                         exception
@@ -68,12 +68,12 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
     }
 
     // DB 제약 위반 에러 중, 우리가 만든 유니크 index 때문에 발생한 에러인지 확인하는 메서드
-    private boolean isDuplicateBlockingUserConstraint(DataIntegrityViolationException exception) {
+    private boolean isDuplicateBlockingOrganizationConstraint(DataIntegrityViolationException exception) {
         String message = exception.getMostSpecificCause().getMessage();
 
         return message != null
                 // 에러 메시지 중 아래 index 문자열이 있으면 true
-                && message.contains("uk_trainer_applications_duplicate_blocking_user");
+                && message.contains("uk_trainer_applications_duplicate_blocking_organization");
     }
 
     @Override

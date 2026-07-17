@@ -90,21 +90,16 @@ public class TrainerApplicationCommandServiceTest {
         CreateTrainerApplicationCommand command =
                 createTrainerApplicationCommand(List.of(1L, 2L, 3L));
 
-        when(trainerApplicationOrganizationPort.existsActiveOrganizationById(1L))
-                .thenReturn(true);
-        when(trainerApplicationOrganizationPort.existsActiveOrganizationById(2L))
-                .thenReturn(false);
+        when(trainerApplicationOrganizationPort
+                .countActiveOrganizationsByIds(List.of(1L, 2L, 3L)))
+                .thenReturn(2L);
 
         // when & then
         assertThatThrownBy(() -> service.createTrainerApplication(command))
                 .isInstanceOf(InvalidTrainerApplicationException.class);
 
         verify(trainerApplicationOrganizationPort)
-                .existsActiveOrganizationById(1L);
-        verify(trainerApplicationOrganizationPort)
-                .existsActiveOrganizationById(2L);
-        verify(trainerApplicationOrganizationPort, never())
-                .existsActiveOrganizationById(3L);
+                .countActiveOrganizationsByIds(List.of(1L, 2L, 3L));
         verifyNoInteractions(fileUseCase, ocrUseCase);
         verify(trainerApplicationRepository, never()).save(any());
         verify(trainerApplicationRepository, never()).saveAll(anyList());
@@ -118,11 +113,9 @@ public class TrainerApplicationCommandServiceTest {
         CreateTrainerApplicationCommand command =
                 createTrainerApplicationCommand(organizationIds);
 
-        organizationIds.forEach(organizationId ->
-                when(trainerApplicationOrganizationPort
-                        .existsActiveOrganizationById(organizationId))
-                        .thenReturn(true)
-        );
+        when(trainerApplicationOrganizationPort
+                .countActiveOrganizationsByIds(organizationIds))
+                .thenReturn((long) organizationIds.size());
         when(trainerApplicationRepository
                 .existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
                         10L,

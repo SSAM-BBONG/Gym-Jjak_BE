@@ -25,6 +25,11 @@ public interface SpringDataOrganizationRepository extends JpaRepository<Organiza
             OrganizationStatus status
     );
 
+    long countByOrganizationIdInAndStatus(
+            List<Long> organizationIds,
+            OrganizationStatus status
+    );
+
     // 활성화상태의 조직 계정 조회
     @Query("""
             SELECT o.organizationId
