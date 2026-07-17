@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,7 +33,7 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
 
             return trainerApplicationPersistenceMapper.toDomain(savedEntity);
         } catch (DataIntegrityViolationException exception) {
-            if (isDuplicateBlockingUserConstraint(exception)) {
+            if (isDuplicateBlockingOrganizationConstraint(exception)) {
                 // 409 conflict로 예외 처리
                 throw new DuplicateTrainerApplicationException(
                         trainerApplication.getUserId(),
@@ -43,13 +44,36 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
         }
     }
 
+    @Override
+    public List<TrainerApplication> saveAll(List<TrainerApplication> trainerApplications) {
+        try {
+            List<TrainerApplicationJpaEntity> entities =
+                    trainerApplications.stream()
+                            .map(trainerApplicationPersistenceMapper::toEntity)
+                            .toList();
+
+            return springDataTrainerApplicationRepository.saveAll(entities)
+                    .stream()
+                    .map(trainerApplicationPersistenceMapper::toDomain)
+                    .toList();
+        } catch (DataIntegrityViolationException exception) {
+            if (isDuplicateBlockingOrganizationConstraint(exception)) {
+                throw new DuplicateTrainerApplicationException(
+                        trainerApplications.get(0).getUserId(),
+                        exception
+                );
+            }
+            throw exception;
+        }
+    }
+
     // DB 제약 위반 에러 중, 우리가 만든 유니크 index 때문에 발생한 에러인지 확인하는 메서드
-    private boolean isDuplicateBlockingUserConstraint(DataIntegrityViolationException exception) {
+    private boolean isDuplicateBlockingOrganizationConstraint(DataIntegrityViolationException exception) {
         String message = exception.getMostSpecificCause().getMessage();
 
         return message != null
                 // 에러 메시지 중 아래 index 문자열이 있으면 true
-                && message.contains("uk_trainer_applications_duplicate_blocking_user");
+                && message.contains("uk_trainer_applications_duplicate_blocking_organization");
     }
 
     @Override
@@ -60,12 +84,17 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
 
     // 중복 신청 검증
     @Override
-    public boolean existsDuplicateBlockingApplicationByUserId(Long userId) {
-        return springDataTrainerApplicationRepository.existsByUserIdAndStatusIn(
-                userId,
-                TrainerApplicationStatus.getDuplicateBlockingStatuses()
-        );
+    public boolean existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+            Long userId, List<Long> organizationIds
+    ) {
+        return springDataTrainerApplicationRepository
+                .existsByUserIdAndOrganizationIdInAndStatusIn(
+                        userId,
+                        organizationIds,
+                        TrainerApplicationStatus.getDuplicateBlockingStatuses()
+                );
     }
+
 
     @Override
     public Optional<TrainerApplication> findByIdForUpdate(Long trainerApplicationId) {

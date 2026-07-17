@@ -73,9 +73,9 @@ public class OrganizationQueryPortAdapter implements OrganizationQueryPort, Trai
     // 활성 조직 존재 여부 확인 기능
     // organizationId 기준 ACTIVE 상태 확인 메서드
     @Override
-    public boolean existsActiveOrganizationById(Long organizationId) {
-        return organizationRepository.existsByOrganizationIdAndStatus(
-                organizationId,
+    public long countActiveOrganizationsByIds(List<Long> organizationIds) {
+        return springDataOrganizationRepository.countByOrganizationIdInAndStatus(
+                organizationIds,
                 OrganizationStatus.ACTIVE
         );
     }

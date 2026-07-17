@@ -248,3 +248,4 @@ src/main/resources/db/performance-seed.sql
 /src/main/java/**/CLAUDE.md
 /src/main/java/**/docs/*.md
 /src/main/java/**/docs/**/*.md
+/docs/superpowers/
