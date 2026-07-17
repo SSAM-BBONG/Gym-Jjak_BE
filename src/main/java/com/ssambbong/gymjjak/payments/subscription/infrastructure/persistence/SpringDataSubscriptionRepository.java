@@ -5,7 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 import java.time.LocalDateTime;
-import java.util.List;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,6 +30,9 @@ public interface SpringDataSubscriptionRepository extends JpaRepository<Subscrip
     boolean existsByUserIdAndStatusAndExpiredAtAfter(
             Long userId, SubscriptionStatus status, LocalDateTime now);
 
-    List<SubscriptionJpaEntity> findAllByStatusAndExpiredAtLessThanEqualOrderByUserIdAsc(
-            SubscriptionStatus status, LocalDateTime now);
+    Slice<SubscriptionJpaEntity> findByStatusAndExpiredAtLessThanEqual(
+            SubscriptionStatus status,
+            LocalDateTime now,
+            Pageable pageable
+    );
 }
