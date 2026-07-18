@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Getter
 @Entity
@@ -40,6 +41,16 @@ public class MealAnalysisJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "kcal")
     private Long kcal;
 
+    // migration의 DECIMAL(8, 2) 정의와 동일한 정밀도로 영양성분을 저장한다.
+    @Column(name = "carbohydrate_g", precision = 8, scale = 2)
+    private BigDecimal carbohydrate;
+
+    @Column(name = "protein_g", precision = 8, scale = 2)
+    private BigDecimal protein;
+
+    @Column(name = "fat_g", precision = 8, scale = 2)
+    private BigDecimal fat;
+
     private MealAnalysisJpaEntity(MealAnalysis meal) {
         this.id = meal.getId();
         this.userId = meal.getUserId();
@@ -56,12 +67,16 @@ public class MealAnalysisJpaEntity extends BaseCreatedUpdatedEntity {
         this.menu = meal.getMenu();
         this.fileId = meal.getFileId();
         this.kcal = meal.getKcal();
+        this.carbohydrate = meal.getCarbohydrate();
+        this.protein = meal.getProtein();
+        this.fat = meal.getFat();
     }
 
     public MealAnalysis toDomain() {
         return MealAnalysis.builder()
                 .id(id).userId(userId).mealType(mealType).mealTime(mealTime).menu(menu)
-                .fileId(fileId).kcal(kcal).createdAt(getCreatedAt()).updatedAt(getUpdatedAt())
+                .fileId(fileId).kcal(kcal).carbohydrate(carbohydrate).protein(protein).fat(fat)
+                .createdAt(getCreatedAt()).updatedAt(getUpdatedAt())
                 .build();
     }
 }

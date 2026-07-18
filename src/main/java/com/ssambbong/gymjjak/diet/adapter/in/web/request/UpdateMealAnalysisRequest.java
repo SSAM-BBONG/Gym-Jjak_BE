@@ -5,11 +5,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Getter
 @NoArgsConstructor
@@ -32,6 +34,21 @@ public class UpdateMealAnalysisRequest {
     @PositiveOrZero(message = "kcal은 0 이상이어야 합니다.")
     private Long kcal;
 
+    @Schema(description = "변경할 탄수화물(g). null로 제거 가능하며 AI 구독 사용자만 수정 가능", example = "67.00", nullable = true)
+    @PositiveOrZero(message = "탄수화물은 0 이상이어야 합니다.")
+    @Digits(integer = 6, fraction = 2, message = "탄수화물은 소수점 둘째 자리까지 입력할 수 있습니다.")
+    private BigDecimal carbohydrate;
+
+    @Schema(description = "변경할 단백질(g). null로 제거 가능하며 AI 구독 사용자만 수정 가능", example = "51.90", nullable = true)
+    @PositiveOrZero(message = "단백질은 0 이상이어야 합니다.")
+    @Digits(integer = 6, fraction = 2, message = "단백질은 소수점 둘째 자리까지 입력할 수 있습니다.")
+    private BigDecimal protein;
+
+    @Schema(description = "변경할 지방(g). null로 제거 가능하며 AI 구독 사용자만 수정 가능", example = "7.60", nullable = true)
+    @PositiveOrZero(message = "지방은 0 이상이어야 합니다.")
+    @Digits(integer = 6, fraction = 2, message = "지방은 소수점 둘째 자리까지 입력할 수 있습니다.")
+    private BigDecimal fat;
+
     @Schema(description = "변경할 사진 파일 ID. null을 명시하면 기존 값을 제거합니다.", example = "15", nullable = true)
     @PositiveOrZero(message = "파일 ID는 0 이상이어야 합니다.")
     private Long fileId;
@@ -48,6 +65,15 @@ public class UpdateMealAnalysisRequest {
     @JsonIgnore
     @Schema(hidden = true)
     private boolean kcalPresent;
+    @JsonIgnore
+    @Schema(hidden = true)
+    private boolean carbohydratePresent;
+    @JsonIgnore
+    @Schema(hidden = true)
+    private boolean proteinPresent;
+    @JsonIgnore
+    @Schema(hidden = true)
+    private boolean fatPresent;
     @JsonIgnore
     @Schema(hidden = true)
     private boolean fileIdPresent;
@@ -76,6 +102,25 @@ public class UpdateMealAnalysisRequest {
         this.kcal = kcal;
     }
 
+    @JsonSetter("carbohydrate")
+    public void setCarbohydrate(BigDecimal carbohydrate) {
+        // 필드 누락과 명시적 null을 구분해 부분 수정 및 값 제거를 지원한다.
+        this.carbohydratePresent = true;
+        this.carbohydrate = carbohydrate;
+    }
+
+    @JsonSetter("protein")
+    public void setProtein(BigDecimal protein) {
+        this.proteinPresent = true;
+        this.protein = protein;
+    }
+
+    @JsonSetter("fat")
+    public void setFat(BigDecimal fat) {
+        this.fatPresent = true;
+        this.fat = fat;
+    }
+
     @JsonSetter("fileId")
     public void setFileId(Long fileId) {
         this.fileIdPresent = true;
@@ -83,6 +128,7 @@ public class UpdateMealAnalysisRequest {
     }
 
     public boolean hasAnyField() {
-        return mealTypePresent || mealTimePresent || menuPresent || kcalPresent || fileIdPresent;
+        return mealTypePresent || mealTimePresent || menuPresent || kcalPresent
+                || carbohydratePresent || proteinPresent || fatPresent || fileIdPresent;
     }
 }

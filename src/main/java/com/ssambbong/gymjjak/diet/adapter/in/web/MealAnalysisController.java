@@ -40,12 +40,13 @@ public class MealAnalysisController {
     private final MealTypeMapper mealTypeMapper;
 
     @PostMapping
-    @Operation(summary = "식단 등록", description = "로그인한 사용자의 식단을 등록합니다. 식사 유형은 한글로 입력합니다.")
+    @Operation(summary = "식단 등록", description = "로그인한 사용자의 식단을 등록합니다. 탄수화물, 단백질, 지방은 활성 AI 구독 사용자만 입력할 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "식단 등록 성공",
                     content = @Content(schema = @Schema(implementation = MealAnalysisResponse.class))),
             @ApiResponse(responseCode = "400", description = "입력값 검증 실패", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content)
+            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "403", description = "영양성분 저장에 필요한 활성 AI 구독이 없음", content = @Content)
     })
     public ResponseEntity<GlobalApiResponse<MealAnalysisResponse>> create(
             @AuthenticationPrincipal AuthUser authUser,
@@ -93,12 +94,13 @@ public class MealAnalysisController {
     }
 
     @PatchMapping("/{mealId}")
-    @Operation(summary = "식단 부분 수정", description = "로그인한 사용자가 본인 소유 식단에서 요청에 포함한 필드만 수정합니다.")
+    @Operation(summary = "식단 부분 수정", description = "로그인한 사용자가 본인 소유 식단에서 요청에 포함한 필드만 수정합니다. 영양성분 변경과 null 제거는 활성 AI 구독 사용자만 가능합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "식단 수정 성공",
                     content = @Content(schema = @Schema(implementation = MealAnalysisResponse.class))),
             @ApiResponse(responseCode = "400", description = "입력값 검증 실패", content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
+            @ApiResponse(responseCode = "403", description = "영양성분 변경에 필요한 활성 AI 구독이 없음", content = @Content),
             @ApiResponse(responseCode = "404", description = "식단을 찾을 수 없음", content = @Content)
     })
     public ResponseEntity<GlobalApiResponse<MealAnalysisResponse>> update(
@@ -130,7 +132,7 @@ public class MealAnalysisController {
 
     private MealAnalysisCommand toCommand(Long userId, MealAnalysisRequest request) {
         return new MealAnalysisCommand(userId, mealTypeMapper.toEnum(request.mealType()), request.mealTime(),
-                request.menu().trim(), request.kcal(), request.fileId());
+                request.menu().trim(), request.kcal(), request.carbohydrate(), request.protein(), request.fat(), request.fileId());
     }
 
     private UpdateMealAnalysisCommand toUpdateCommand(Long userId, UpdateMealAnalysisRequest request) {
@@ -156,6 +158,12 @@ public class MealAnalysisController {
                 request.isMenuPresent(),
                 request.getKcal(),
                 request.isKcalPresent(),
+                request.getCarbohydrate(),
+                request.isCarbohydratePresent(),
+                request.getProtein(),
+                request.isProteinPresent(),
+                request.getFat(),
+                request.isFatPresent(),
                 request.getFileId(),
                 request.isFileIdPresent()
         );
@@ -163,7 +171,7 @@ public class MealAnalysisController {
 
     private MealAnalysisResponse toResponse(MealAnalysisResult result) {
         return new MealAnalysisResponse(result.mealId(), mealTypeMapper.toKorean(result.mealType()),
-                result.mealTime(), result.menu(), result.kcal(), result.fileId(),
+                result.mealTime(), result.menu(), result.kcal(), result.carbohydrate(), result.protein(), result.fat(), result.fileId(),
                 result.createdAt(), result.updatedAt());
     }
 }
