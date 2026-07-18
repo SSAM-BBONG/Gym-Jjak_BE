@@ -12,10 +12,6 @@ import com.ssambbong.gymjjak.diet.domain.exception.InvalidNutritionGoalUpdateExc
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,13 +30,6 @@ public class NutritionGoalController {
 
     @PostMapping
     @Operation(summary = "영양 목표 등록", description = "로그인 사용자의 일일 단백질, 탄수화물, 지방, 칼로리 목표를 등록합니다. 사용자당 한 건만 등록할 수 있습니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "영양 목표 등록 성공",
-                    content = @Content(schema = @Schema(implementation = NutritionGoalResponse.class))),
-            @ApiResponse(responseCode = "400", description = "필수 값 누락 또는 0보다 작은 목표 값", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "409", description = "이미 영양 목표가 등록되어 있음", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<NutritionGoalResponse>> create(
             @AuthenticationPrincipal AuthUser authUser, @Valid @RequestBody NutritionGoalRequest request) {
         NutritionGoalResult result = nutritionGoalUseCase.create(new NutritionGoalCommand(authUser.userId(),
@@ -51,12 +40,6 @@ public class NutritionGoalController {
 
     @GetMapping
     @Operation(summary = "영양 목표 조회", description = "로그인 사용자의 일일 영양 목표를 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "영양 목표 조회 성공",
-                    content = @Content(schema = @Schema(implementation = NutritionGoalResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "404", description = "등록된 영양 목표가 없음", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<NutritionGoalResponse>> get(@AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(GlobalApiResponse.ok(NutritionGoalResponseCode.GOAL_FETCHED,
                 toResponse(nutritionGoalUseCase.get(authUser.userId()))));
@@ -64,13 +47,6 @@ public class NutritionGoalController {
 
     @PatchMapping
     @Operation(summary = "영양 목표 부분 수정", description = "로그인 사용자의 영양 목표 중 요청에 포함된 값만 수정합니다. 한 개 이상의 필드를 입력해야 하며 null은 허용하지 않습니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "영양 목표 수정 성공",
-                    content = @Content(schema = @Schema(implementation = NutritionGoalResponse.class))),
-            @ApiResponse(responseCode = "400", description = "수정 필드가 없거나 null 또는 0보다 작은 목표 값", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "404", description = "등록된 영양 목표가 없음", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<NutritionGoalResponse>> update(
             @AuthenticationPrincipal AuthUser authUser, @Valid @RequestBody UpdateNutritionGoalRequest request) {
         if (!request.hasAnyField()
@@ -91,11 +67,6 @@ public class NutritionGoalController {
 
     @DeleteMapping
     @Operation(summary = "영양 목표 삭제", description = "로그인 사용자의 일일 영양 목표를 삭제합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "영양 목표 삭제 성공", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "404", description = "등록된 영양 목표가 없음", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<Void>> delete(@AuthenticationPrincipal AuthUser authUser) {
         nutritionGoalUseCase.delete(authUser.userId());
         return ResponseEntity.ok(GlobalApiResponse.ok(NutritionGoalResponseCode.GOAL_DELETED));

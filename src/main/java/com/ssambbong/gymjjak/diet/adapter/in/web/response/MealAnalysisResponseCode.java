@@ -11,7 +11,8 @@ public enum MealAnalysisResponseCode implements ResponseCode {
     MEAL_FETCHED("MEAL_200_1", "식단을 조회했습니다."),
     MEAL_LIST_FETCHED("MEAL_200_2", "식단 목록을 조회했습니다."),
     MEAL_UPDATED("MEAL_200_3", "식단을 수정했습니다."),
-    MEAL_DELETED("MEAL_200_4", "식단을 삭제했습니다.");
+    MEAL_DELETED("MEAL_200_4", "식단을 삭제했습니다."),
+    AI_MEAL_ANALYZED("MEAL_AI_201_1", "AI 식단 분석 결과를 저장했습니다.");
 
     private final String code;
     private final String message;

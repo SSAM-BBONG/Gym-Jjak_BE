@@ -15,10 +15,6 @@ import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,13 +37,6 @@ public class MealAnalysisController {
 
     @PostMapping
     @Operation(summary = "식단 등록", description = "로그인한 사용자의 식단을 등록합니다. 탄수화물, 단백질, 지방은 활성 AI 구독 사용자만 입력할 수 있습니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "식단 등록 성공",
-                    content = @Content(schema = @Schema(implementation = MealAnalysisResponse.class))),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "403", description = "영양성분 저장에 필요한 활성 AI 구독이 없음", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<MealAnalysisResponse>> create(
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody MealAnalysisRequest request) {
@@ -58,12 +47,6 @@ public class MealAnalysisController {
 
     @GetMapping("/{mealId}")
     @Operation(summary = "식단 단건 조회", description = "로그인한 사용자가 본인 소유의 식단 한 건을 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "식단 조회 성공",
-                    content = @Content(schema = @Schema(implementation = MealAnalysisResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "404", description = "식단을 찾을 수 없음", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<MealAnalysisResponse>> get(
             @AuthenticationPrincipal AuthUser authUser,
             @Parameter(description = "조회할 식단 ID", example = "1", required = true)
@@ -74,11 +57,6 @@ public class MealAnalysisController {
 
     @GetMapping
     @Operation(summary = "식단 목록 조회", description = "로그인한 사용자의 식단을 식사 일시 최신순으로 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "식단 목록 조회 성공",
-                    content = @Content(schema = @Schema(implementation = MealAnalysisPageResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<MealAnalysisPageResponse>> getList(
             @AuthenticationPrincipal AuthUser authUser,
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
@@ -95,14 +73,6 @@ public class MealAnalysisController {
 
     @PatchMapping("/{mealId}")
     @Operation(summary = "식단 부분 수정", description = "로그인한 사용자가 본인 소유 식단에서 요청에 포함한 필드만 수정합니다. 영양성분 변경과 null 제거는 활성 AI 구독 사용자만 가능합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "식단 수정 성공",
-                    content = @Content(schema = @Schema(implementation = MealAnalysisResponse.class))),
-            @ApiResponse(responseCode = "400", description = "입력값 검증 실패", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "403", description = "영양성분 변경에 필요한 활성 AI 구독이 없음", content = @Content),
-            @ApiResponse(responseCode = "404", description = "식단을 찾을 수 없음", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<MealAnalysisResponse>> update(
             @AuthenticationPrincipal AuthUser authUser,
             @Parameter(description = "수정할 식단 ID", example = "1", required = true)
@@ -117,11 +87,6 @@ public class MealAnalysisController {
 
     @DeleteMapping("/{mealId}")
     @Operation(summary = "식단 삭제", description = "로그인한 사용자가 본인 소유의 식단을 삭제합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "식단 삭제 성공", content = @Content),
-            @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content),
-            @ApiResponse(responseCode = "404", description = "식단을 찾을 수 없음", content = @Content)
-    })
     public ResponseEntity<GlobalApiResponse<Void>> delete(
             @AuthenticationPrincipal AuthUser authUser,
             @Parameter(description = "삭제할 식단 ID", example = "1", required = true)
