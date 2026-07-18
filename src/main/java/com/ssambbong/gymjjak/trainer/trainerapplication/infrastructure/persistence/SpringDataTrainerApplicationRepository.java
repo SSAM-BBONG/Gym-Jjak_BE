@@ -43,7 +43,6 @@ public interface SpringDataTrainerApplicationRepository extends JpaRepository<Tr
             countQuery = """
                     select count(ta)
                     from TrainerApplicationJpaEntity ta
-                    join OrganizationJpaEntity o on o.organizationId = ta.organizationId
                     where ta.userId = :userId
                     """
     )
