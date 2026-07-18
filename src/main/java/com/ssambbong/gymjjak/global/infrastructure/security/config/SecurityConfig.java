@@ -113,8 +113,12 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
                                 .hasAuthority("ORGANIZATION")
 
-                                // 내 트레이너 신청서 상세 조회 - 사용자/트레이너
+                                // 내 트레이너 신청서 목록 조회 - 사용자/트레이너
                                 .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
+                                .hasAnyAuthority("USER", "TRAINER")
+
+                                // 내 트레이너 신청서 상세 조회 - 사용자/트레이너
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me/*")
                                 .hasAnyAuthority("USER", "TRAINER")
 
                                 // 트레이너 신청 상세 조회 - 조직
@@ -157,6 +161,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/detail").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/organizations/search")
                         .hasAnyAuthority("USER", "TRAINER")
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/trainer/my-organizations")
+                        .hasAuthority("TRAINER")
                         .requestMatchers("/api/organizations/**")
                         .hasAnyAuthority("ORGANIZATION", "ADMIN")
 

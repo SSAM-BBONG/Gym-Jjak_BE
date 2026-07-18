@@ -56,7 +56,8 @@ public class UserController {
                         new UserProfileResponse(
                                 result.name(),
                                 result.nickname(),
-                                result.phone()
+                                result.phone(),
+                                result.paid()
                         )
                 ));
     }

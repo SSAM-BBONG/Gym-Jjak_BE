@@ -24,6 +24,8 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
 
     boolean existsByOrganizationIdAndTrainerProfileIdAndRemovedAtIsNull(Long organizationId, Long trainerProfileId);
 
+    List<OrganizationTrainerJpaEntity> findAllByTrainerProfileIdAndRemovedAtIsNull(Long trainerProfileId);
+
     long countByRemovedAtIsNull();
 
     @Query("SELECT COUNT(DISTINCT e.organizationId) FROM OrganizationTrainerJpaEntity e WHERE e.removedAt IS NULL")
@@ -96,7 +98,4 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
     @Query(value = "DELETE FROM organization_trainers WHERE organization_trainer_id IN :ids", nativeQuery = true)
     int hardDeleteByIds(@Param("ids") List<Long> ids);
 
-    // TrainerProfileId로 소속 조직 조회
-    Optional<OrganizationTrainerJpaEntity> findByTrainerProfileIdAndRemovedAtIsNull(
-            Long trainerProfileId);
 }

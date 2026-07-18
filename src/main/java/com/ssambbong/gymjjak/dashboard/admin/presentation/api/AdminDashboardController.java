@@ -2,10 +2,12 @@ package com.ssambbong.gymjjak.dashboard.admin.presentation.api;
 
 import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminContentStatisticsResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminMemberStatisticsResult;
+import com.ssambbong.gymjjak.dashboard.admin.application.query.AdminRevenueStatisticsResult;
 import com.ssambbong.gymjjak.dashboard.admin.application.usecase.AdminDashboardQueryUseCase;
 import com.ssambbong.gymjjak.dashboard.admin.presentation.api.response.AdminContentStatisticsResponse;
 import com.ssambbong.gymjjak.dashboard.admin.presentation.api.response.AdminDashboardResponseCode;
 import com.ssambbong.gymjjak.dashboard.admin.presentation.api.response.AdminMemberStatisticsResponse;
+import com.ssambbong.gymjjak.dashboard.admin.presentation.api.response.AdminRevenueStatisticsResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -74,6 +76,30 @@ public class AdminDashboardController {
                 GlobalApiResponse.ok(
                         AdminDashboardResponseCode.ADMIN_CONTENT_STATISTICS_FOUND,
                         AdminContentStatisticsResponse.from(result)
+                )
+        );
+    }
+
+    @GetMapping("/revenues")
+    @Operation(
+            summary = "관리자 대시보드 월별 매출 통계",
+            description = "이번 달을 포함한 최근 6개월의 월별 PT 수수료, 구독권 매출, 총매출을 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "관리자 대시보드 매출 통계 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 없음")
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<GlobalApiResponse<AdminRevenueStatisticsResponse>>
+    findRevenueStatistics() {
+
+        AdminRevenueStatisticsResult result = adminDashboardQueryUseCase.findRevenueStatistics();
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        AdminDashboardResponseCode.ADMIN_REVENUE_STATISTICS_FOUND,
+                        AdminRevenueStatisticsResponse.from(result)
                 )
         );
     }

@@ -1,15 +1,20 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationQueryPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.MyTrainerApplicationListResult;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.MyTrainerApplicationSummaryResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.DuplicateTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,7 +37,7 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
 
             return trainerApplicationPersistenceMapper.toDomain(savedEntity);
         } catch (DataIntegrityViolationException exception) {
-            if (isDuplicateBlockingUserConstraint(exception)) {
+            if (isDuplicateBlockingOrganizationConstraint(exception)) {
                 // 409 conflict로 예외 처리
                 throw new DuplicateTrainerApplicationException(
                         trainerApplication.getUserId(),
@@ -43,13 +48,36 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
         }
     }
 
+    @Override
+    public List<TrainerApplication> saveAll(List<TrainerApplication> trainerApplications) {
+        try {
+            List<TrainerApplicationJpaEntity> entities =
+                    trainerApplications.stream()
+                            .map(trainerApplicationPersistenceMapper::toEntity)
+                            .toList();
+
+            return springDataTrainerApplicationRepository.saveAll(entities)
+                    .stream()
+                    .map(trainerApplicationPersistenceMapper::toDomain)
+                    .toList();
+        } catch (DataIntegrityViolationException exception) {
+            if (isDuplicateBlockingOrganizationConstraint(exception)) {
+                throw new DuplicateTrainerApplicationException(
+                        trainerApplications.get(0).getUserId(),
+                        exception
+                );
+            }
+            throw exception;
+        }
+    }
+
     // DB 제약 위반 에러 중, 우리가 만든 유니크 index 때문에 발생한 에러인지 확인하는 메서드
-    private boolean isDuplicateBlockingUserConstraint(DataIntegrityViolationException exception) {
+    private boolean isDuplicateBlockingOrganizationConstraint(DataIntegrityViolationException exception) {
         String message = exception.getMostSpecificCause().getMessage();
 
         return message != null
                 // 에러 메시지 중 아래 index 문자열이 있으면 true
-                && message.contains("uk_trainer_applications_duplicate_blocking_user");
+                && message.contains("uk_trainer_applications_duplicate_blocking_organization");
     }
 
     @Override
@@ -60,12 +88,17 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
 
     // 중복 신청 검증
     @Override
-    public boolean existsDuplicateBlockingApplicationByUserId(Long userId) {
-        return springDataTrainerApplicationRepository.existsByUserIdAndStatusIn(
-                userId,
-                TrainerApplicationStatus.getDuplicateBlockingStatuses()
-        );
+    public boolean existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+            Long userId, List<Long> organizationIds
+    ) {
+        return springDataTrainerApplicationRepository
+                .existsByUserIdAndOrganizationIdInAndStatusIn(
+                        userId,
+                        organizationIds,
+                        TrainerApplicationStatus.getDuplicateBlockingStatuses()
+                );
     }
+
 
     @Override
     public Optional<TrainerApplication> findByIdForUpdate(Long trainerApplicationId) {
@@ -81,9 +114,31 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
 
     // 내 수강신청 조회
     @Override
-    public Optional<TrainerApplicationDetailResult> findLatestDetailByUserId(Long userId) {
+    // 트레이너 신청서 목록 조회
+    public MyTrainerApplicationListResult findMyTrainerApplications(Long userId, int page, int size) {
+        Page<MyTrainerApplicationSummaryResult> result =
+                springDataTrainerApplicationRepository.findMyTrainerApplicationSummaries(
+                        userId,
+                        PageRequest.of(page, size)
+                );
 
-        return springDataTrainerApplicationRepository.findTopByUserIdOrderByCreatedAtDescTrainerApplicationIdDesc(userId)
+        return new MyTrainerApplicationListResult(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.hasNext()
+        );
+    }
+
+    @Override
+    // 트레이너 신청서 상세 조회
+    public Optional<TrainerApplicationDetailResult> findMyTrainerApplicationDetailById(
+            Long userId,
+            Long trainerApplicationId
+    ) {
+        return springDataTrainerApplicationRepository.findByTrainerApplicationIdAndUserId(trainerApplicationId, userId)
                 .map(this::toDetailResult);
     }
 

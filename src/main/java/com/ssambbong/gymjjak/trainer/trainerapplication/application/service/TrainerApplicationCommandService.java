@@ -63,14 +63,17 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
     @TrainerApplicationTimed(operation = "create")
     @Override
-    public Long createTrainerApplication(CreateTrainerApplicationCommand command) {
+    public List<Long> createTrainerApplication(CreateTrainerApplicationCommand command) {
 
         // 필수값 검증
         validateRequiredCommand(command);
-        // 신청 대상 조직 검증
-        validateReceivableOrganization(command.organizationId());
+        // 신청 대상 조직 List 검증
+        validateReceivableOrganizations(command.organizationIds());
         // 중복 신청 검증
-        validateDuplicateApplication(command.applicantUserId());
+        validateDuplicateApplication(
+                command.applicantUserId(),
+                command.organizationIds()
+                );
 
         log.info(
                 "event=trainer_application_create_started, applicantUserId={}, profileImageFilePresent={}, certificateFilePresent={}",
@@ -129,22 +132,28 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         }
     }
 
-    private Long saveTrainerApplication(
+    private List<Long> saveTrainerApplication(
             CreateTrainerApplicationCommand command,
             RegisteredTrainerApplicationFiles registeredFiles
     ) {
         // 중복 신청 검사 : TOCTOU 방지를 위해 저장 직전에 중복 검증을 한 번 더 함
-        validateDuplicateApplication(command.applicantUserId());
-
-        TrainerApplication trainerApplication = TrainerApplication.create(
+        validateDuplicateApplication(
                 command.applicantUserId(),
-                command.organizationId(),
-                registeredFiles.profileImageFileId(),
-                registeredFiles.certificateFileId(),
-                command.qualifications(),
-                command.awardHistories(),
-                command.introduction()
+                command.organizationIds()
         );
+
+        List<TrainerApplication> trainerApplications =
+                command.organizationIds().stream()
+                        .map(organizationId -> TrainerApplication.create(
+                                command.applicantUserId(),
+                                organizationId,
+                                registeredFiles.profileImageFileId(),
+                                registeredFiles.certificateFileId(),
+                                command.qualifications(),
+                                command.awardHistories(),
+                                command.introduction()
+                        ))
+                        .toList();
 
         // 메트릭 추가
         Timer.Sample dbSaveTimer =
@@ -154,16 +163,21 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
 
         try {
             // DB에 저장
-            TrainerApplication savedTrainerApplication =
-                    trainerApplicationRepository.save(trainerApplication);
+            List<TrainerApplication> savedTrainerApplications =
+                    trainerApplicationRepository.saveAll(trainerApplications);
 
             log.info(
-                    "event=trainer_application_create_succeeded, trainerApplicationId={}, applicantUserId={}",
-                    savedTrainerApplication.getTrainerApplicationId(),
-                    savedTrainerApplication.getUserId()
+                    "event=trainer_applications_create_succeeded, applicantUserId={}, organizationCount={}, trainerApplicationIds={}",
+                    command.applicantUserId(),
+                    savedTrainerApplications.size(),
+                    savedTrainerApplications.stream()
+                            .map(TrainerApplication::getTrainerApplicationId)
+                            .toList()
             );
 
-            return savedTrainerApplication.getTrainerApplicationId();
+            return savedTrainerApplications.stream()
+                    .map(TrainerApplication::getTrainerApplicationId)
+                    .toList();
 
         } catch (RuntimeException exception) {
             outcome = trainerApplicationMetric.failure();
@@ -746,9 +760,14 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
         }
     }
 
-    // 신청 대상 조직 검증 기능
-    private void validateReceivableOrganization(Long organizationId) {
-        if (!trainerApplicationOrganizationPort.existsActiveOrganizationById(organizationId)) {
+    // 신청 조직 List -> 단일로 변환
+    private void validateReceivableOrganizations(
+            List<Long> organizationIds
+    ) {
+        long activeOrganizationCount = trainerApplicationOrganizationPort
+                .countActiveOrganizationsByIds(organizationIds);
+
+        if (activeOrganizationCount != organizationIds.size()) {
             throw new InvalidTrainerApplicationException(
                     "신청 가능한 조직이 존재하지 않습니다."
             );
@@ -756,13 +775,22 @@ public class TrainerApplicationCommandService implements TrainerApplicationComma
     }
 
     // 중복 신청 검증
-    private void validateDuplicateApplication(Long applicantUserId) {
-        boolean exists = trainerApplicationRepository.existsDuplicateBlockingApplicationByUserId(applicantUserId);
+    private void validateDuplicateApplication(
+            Long applicantUserId,
+            List<Long> organizationIds
+    ) {
+        // 동일 사용자가 동일한 헬스장에 신청서 제출했는지 검증
+        boolean exists = trainerApplicationRepository
+                .existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+                        applicantUserId,
+                        organizationIds
+                );
 
         if (exists) {
             log.warn(
-                    "event=trainer_application_duplicate_detected, applicantUserId={}",
-                    applicantUserId
+                    "event=trainer_application_duplicate_detected, applicantUserId={}, organizationIds={}",
+                    applicantUserId,
+                    organizationIds
             );
 
             throw new DuplicateTrainerApplicationException(applicantUserId);

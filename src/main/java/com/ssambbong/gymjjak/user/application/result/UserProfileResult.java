@@ -5,13 +5,15 @@ import com.ssambbong.gymjjak.user.domain.model.User;
 public record UserProfileResult(
         String name,
         String nickname,
-        String phone
+        String phone,
+        boolean paid
 ) {
     public static UserProfileResult from(User user) {
         return new UserProfileResult(
                 user.getName(),
                 user.getNickname(),
-                user.getPhone()
+                user.getPhone(),
+                user.isPaid()
         );
     }
 }
