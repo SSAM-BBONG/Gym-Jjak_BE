@@ -113,8 +113,12 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
                                 .hasAuthority("ORGANIZATION")
 
-                                // 내 트레이너 신청서 상세 조회 - 사용자/트레이너
+                                // 내 트레이너 신청서 목록 조회 - 사용자/트레이너
                                 .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
+                                .hasAnyAuthority("USER", "TRAINER")
+
+                                // 내 트레이너 신청서 상세 조회 - 사용자/트레이너
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me/*")
                                 .hasAnyAuthority("USER", "TRAINER")
 
                                 // 트레이너 신청 상세 조회 - 조직

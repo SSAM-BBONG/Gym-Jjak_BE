@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.application.service;
 
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationQueryPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.MyTrainerApplicationListResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationNotFoundException;
@@ -15,14 +16,34 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class TrainerApplicationQueryService implements TrainerApplicationQueryUseCase {
 
+    private static final int MY_TRAINER_APPLICATION_PAGE_SIZE = 10;
+
     private final TrainerApplicationQueryPort trainerApplicationQueryPort;
 
     @Override
-    public TrainerApplicationDetailResult getMyTrainerApplication(Long requesterId) {
-        log.info("event=trainer_application_detail_query_start, requesterId={}", requesterId);
+    // 트레이너 신청서 목록 조회
+    public MyTrainerApplicationListResult findMyTrainerApplications(Long requesterId, int page) {
+        log.info("event=my_trainer_application_list_query_start, requesterId={}, page={}", requesterId, page);
+        return trainerApplicationQueryPort.findMyTrainerApplications(
+                requesterId, page, MY_TRAINER_APPLICATION_PAGE_SIZE
+        );
+    }
 
-        TrainerApplicationDetailResult result = trainerApplicationQueryPort.findLatestDetailByUserId(requesterId)
-                .orElseThrow(() -> TrainerApplicationNotFoundException.byUserId(requesterId));
+    @Override
+    // 트레이너 신청서 상세 조회
+    public TrainerApplicationDetailResult getMyTrainerApplication(
+            Long requesterId,
+            Long trainerApplicationId
+    ) {
+        log.info(
+                "event=trainer_application_detail_query_start, requesterId={}, trainerApplicationId={}",
+                requesterId,
+                trainerApplicationId
+        );
+
+        TrainerApplicationDetailResult result = trainerApplicationQueryPort
+                .findMyTrainerApplicationDetailById(requesterId, trainerApplicationId)
+                .orElseThrow(() -> new TrainerApplicationNotFoundException(trainerApplicationId));
 
         log.info(
                 "event=trainer_application_detail_query_succeeded, requesterId={}, trainerApplicationId={}, status={}",
