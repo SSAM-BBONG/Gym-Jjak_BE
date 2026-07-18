@@ -1,12 +1,16 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationQueryPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.MyTrainerApplicationListResult;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.MyTrainerApplicationSummaryResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.DuplicateTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
@@ -110,9 +114,31 @@ public class TrainerApplicationRepositoryAdapter implements TrainerApplicationRe
 
     // 내 수강신청 조회
     @Override
-    public Optional<TrainerApplicationDetailResult> findLatestDetailByUserId(Long userId) {
+    // 트레이너 신청서 목록 조회
+    public MyTrainerApplicationListResult findMyTrainerApplications(Long userId, int page, int size) {
+        Page<MyTrainerApplicationSummaryResult> result =
+                springDataTrainerApplicationRepository.findMyTrainerApplicationSummaries(
+                        userId,
+                        PageRequest.of(page, size)
+                );
 
-        return springDataTrainerApplicationRepository.findTopByUserIdOrderByCreatedAtDescTrainerApplicationIdDesc(userId)
+        return new MyTrainerApplicationListResult(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.hasNext()
+        );
+    }
+
+    @Override
+    // 트레이너 신청서 상세 조회
+    public Optional<TrainerApplicationDetailResult> findMyTrainerApplicationDetailById(
+            Long userId,
+            Long trainerApplicationId
+    ) {
+        return springDataTrainerApplicationRepository.findByTrainerApplicationIdAndUserId(trainerApplicationId, userId)
                 .map(this::toDetailResult);
     }
 

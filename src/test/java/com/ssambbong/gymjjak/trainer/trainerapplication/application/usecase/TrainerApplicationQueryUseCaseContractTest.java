@@ -26,4 +26,20 @@ class TrainerApplicationQueryUseCaseContractTest {
 
         assertThat(hasMyApplicationListMethod).isTrue();
     }
+
+    @Test
+    void finds_my_trainer_application_detail_by_application_id() {
+        boolean hasMyApplicationDetailMethod = Arrays.stream(
+                        TrainerApplicationQueryUseCase.class.getMethods()
+                )
+                .anyMatch(method ->
+                        method.getName().equals("getMyTrainerApplication")
+                                && Arrays.equals(
+                                method.getParameterTypes(),
+                                new Class<?>[]{Long.class, Long.class}
+                        )
+                );
+
+        assertThat(hasMyApplicationDetailMethod).isTrue();
+    }
 }

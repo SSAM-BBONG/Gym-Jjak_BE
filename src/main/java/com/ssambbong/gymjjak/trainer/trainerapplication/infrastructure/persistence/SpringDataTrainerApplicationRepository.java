@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.persiste
 
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationReviewDetailResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationSummaryResult;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.MyTrainerApplicationSummaryResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -17,8 +18,39 @@ import java.util.Optional;
 
 public interface SpringDataTrainerApplicationRepository extends JpaRepository<TrainerApplicationJpaEntity, Long> {
 
-    Optional<TrainerApplicationJpaEntity
-            > findTopByUserIdOrderByCreatedAtDescTrainerApplicationIdDesc(Long userId);
+    // 본인 트레이너 신청서 일치 여부 검증 메서드
+    Optional<TrainerApplicationJpaEntity> findByTrainerApplicationIdAndUserId(
+            Long trainerApplicationId,
+            Long userId
+    );
+
+    // 트레이너 신청 목록 조회 (헬스장이름 join)
+    @Query(
+            value = """
+                    select new com.ssambbong.gymjjak.trainer.trainerapplication.application.query.MyTrainerApplicationSummaryResult(
+                        ta.trainerApplicationId,
+                        o.businessName,
+                        ta.status,
+                        ta.createdAt,
+                        ta.reviewedAt,
+                        ta.rejectReason
+                    )
+                    from TrainerApplicationJpaEntity ta
+                    join OrganizationJpaEntity o on o.organizationId = ta.organizationId
+                    where ta.userId = :userId
+                    order by ta.createdAt desc, ta.trainerApplicationId desc
+                    """,
+            countQuery = """
+                    select count(ta)
+                    from TrainerApplicationJpaEntity ta
+                    join OrganizationJpaEntity o on o.organizationId = ta.organizationId
+                    where ta.userId = :userId
+                    """
+    )
+    Page<MyTrainerApplicationSummaryResult> findMyTrainerApplicationSummaries(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
 
     // 조직별 트레이너 신청 목록 조회 기능
     @Query(
