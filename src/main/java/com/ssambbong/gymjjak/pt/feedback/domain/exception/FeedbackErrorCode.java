@@ -24,7 +24,10 @@ public enum FeedbackErrorCode implements ErrorCode {
     FEEDBACK_MEDIA_INVALID(HttpStatus.BAD_REQUEST, "FEEDBACK_005", "미디어는 BEFORE/AFTER 각 1개씩만 등록할 수 있습니다."),
 
     // 예약이 완료 상태이므로 피드백 삭제 불가
-    FEEDBACK_RESERVATION_COMPLETED(HttpStatus.CONFLICT, "FEEDBACK_006", "완료된 예약의 피드백은 삭제할 수 없습니다.");
+    FEEDBACK_RESERVATION_COMPLETED(HttpStatus.CONFLICT, "FEEDBACK_006", "완료된 예약의 피드백은 삭제할 수 없습니다."),
+
+    // 세션이 완료되지 않아 피드백 작성 불가
+    FEEDBACK_SESSION_NOT_COMPLETED(HttpStatus.CONFLICT, "FEEDBACK_007", "완료되지 않은 세션에는 피드백을 작성할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

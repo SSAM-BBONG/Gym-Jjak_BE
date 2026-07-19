@@ -18,6 +18,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenExcep
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackSessionNotCompletedException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
@@ -72,6 +73,11 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
 
         if (!reservation.trainerProfileId().equals(trainerProfileId)) {
             throw new FeedbackForbiddenException();
+        }
+
+        // 세션이 완료된 경우에만 피드백 작성 가능
+        if (reservation.status() != PtReservationStatus.COMPLETED) {
+            throw new FeedbackSessionNotCompletedException();
         }
 
         // 커리큘럼이 해당 코스 소속인지 확인

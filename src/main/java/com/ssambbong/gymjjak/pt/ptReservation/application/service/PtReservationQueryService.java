@@ -94,6 +94,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
         log.info("event=pt_reservation_detail_succeeded ptReservationId={}", ptReservationId);
         return new PtReservationDetailView(
+                reservation.getPtCourseId(),
                 resolveThumbnailUrl(courseInfo.thumbnailFileId()),
                 courseInfo.title(),
                 courseInfo.trainerName(),

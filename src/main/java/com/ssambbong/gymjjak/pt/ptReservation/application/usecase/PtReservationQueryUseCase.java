@@ -37,6 +37,7 @@ public interface PtReservationQueryUseCase {
     ) {}
 
     record PtReservationDetailView(
+            Long ptCourseId,
             String thumbnailUrl,
             String title,
             String trainerName,

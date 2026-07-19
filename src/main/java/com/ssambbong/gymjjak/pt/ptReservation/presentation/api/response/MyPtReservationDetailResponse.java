@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import java.util.List;
 
 public record MyPtReservationDetailResponse(
+        Long ptCourseId,
         String thumbnailUrl,
         String title,
         String trainerName,
@@ -25,6 +26,7 @@ public record MyPtReservationDetailResponse(
                 .toList();
 
         return new MyPtReservationDetailResponse(
+                view.ptCourseId(),
                 view.thumbnailUrl(),
                 view.title(),
                 view.trainerName(),
