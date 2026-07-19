@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.diet.adapter.out.persistence;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
 import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
 import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
+import com.ssambbong.gymjjak.diet.application.result.MealNutritionSummary;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAnalysisNotFoundException;
 import com.ssambbong.gymjjak.diet.domain.model.MealAnalysis;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Repository
 @RequiredArgsConstructor
@@ -54,5 +57,25 @@ public class MealAnalysisAdapter implements MealAnalysisPort {
     @Override
     public int deleteByIdAndUserId(Long mealId, Long userId) {
         return repository.deleteByIdAndUserId(mealId, userId);
+    }
+
+    @Override
+    public MealNutritionSummary sumNutritionByUserIdAndMealTimeBetween(
+            Long userId, LocalDateTime startInclusive, LocalDateTime endExclusive) {
+        SpringDataMealAnalysisRepository.NutritionSumProjection sum =
+                repository.sumNutritionByUserIdAndMealTimeBetween(userId, startInclusive, endExclusive);
+        if (sum == null) {
+            return MealNutritionSummary.empty();
+        }
+        return new MealNutritionSummary(
+                sum.getKcal() == null ? 0L : sum.getKcal(),
+                zeroIfNull(sum.getCarbohydrate()),
+                zeroIfNull(sum.getProtein()),
+                zeroIfNull(sum.getFat())
+        );
+    }
+
+    private BigDecimal zeroIfNull(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

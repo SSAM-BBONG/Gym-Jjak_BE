@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Schema(description = "식단 정보 응답")
 public record MealAnalysisResponse(
@@ -17,6 +18,12 @@ public record MealAnalysisResponse(
         String menu,
         @Schema(description = "섭취 열량(kcal)", example = "280", nullable = true)
         Long kcal,
+        @Schema(description = "탄수화물(g)", example = "67.00", nullable = true)
+        BigDecimal carbohydrate,
+        @Schema(description = "단백질(g)", example = "51.90", nullable = true)
+        BigDecimal protein,
+        @Schema(description = "지방(g)", example = "7.60", nullable = true)
+        BigDecimal fat,
         @Schema(description = "식단 사진의 파일 ID", example = "15", nullable = true)
         Long fileId,
         @Schema(description = "등록 일시", example = "2026-07-18T08:35:12")

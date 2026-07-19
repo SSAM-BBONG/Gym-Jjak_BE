@@ -18,6 +18,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenExcep
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackSessionNotCompletedException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
@@ -30,6 +31,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,6 +51,7 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
     private final TrainerQueryPort trainerQueryPort;
     private final FileUseCase fileUseCase;
     private final ApplicationEventPublisher eventPublisher;
+    private final Clock clock;
 
     @Override
     public Long createFeedback(CreateFeedbackCommand command) {
@@ -72,6 +76,13 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
 
         if (!reservation.trainerProfileId().equals(trainerProfileId)) {
             throw new FeedbackForbiddenException();
+        }
+
+        // sessionStatus 기준: DB status가 COMPLETED이거나 예약 종료 시각이 지난 경우만 피드백 작성 가능
+        boolean sessionCompleted = reservation.status() == PtReservationStatus.COMPLETED
+                || reservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
+        if (!sessionCompleted) {
+            throw new FeedbackSessionNotCompletedException();
         }
 
         // 커리큘럼이 해당 코스 소속인지 확인
