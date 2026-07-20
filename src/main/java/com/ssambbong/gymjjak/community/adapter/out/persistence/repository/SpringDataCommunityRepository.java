@@ -18,6 +18,8 @@ import java.util.Optional;
 public interface SpringDataCommunityRepository
         extends JpaRepository<CommunityPostJpaEntity, Long> {
 
+    long countByUserIdAndDeletedAtIsNull(Long userId);
+
     @Query(
             value = """
                     SELECT

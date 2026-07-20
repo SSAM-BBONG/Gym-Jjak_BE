@@ -6,7 +6,10 @@ import java.time.LocalDateTime;
 
 public record AiMealAnalysisCommand(
         Long userId,
-        Long fileId,
+        String fileKey,
+        String originalName,
+        String contentType,
+        Long fileSize,
         MealType mealType,
         LocalDateTime mealTime
 ) {

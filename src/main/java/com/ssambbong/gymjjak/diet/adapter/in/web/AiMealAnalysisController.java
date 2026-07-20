@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/diet/meals")
@@ -32,13 +31,16 @@ public class AiMealAnalysisController {
 
     @PostMapping("/ai-analyze")
     @Operation(summary = "AI 식단 분석 및 저장", description = "활성 AI 구독 사용자의 음식 이미지를 분석하고 결과를 식단으로 저장합니다.")
-    public Mono<ResponseEntity<GlobalApiResponse<AiMealAnalysisResponse>>> analyze(
+    public ResponseEntity<GlobalApiResponse<AiMealAnalysisResponse>> analyze(
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody AiMealAnalysisRequest request) {
-        return aiMealAnalysisUseCase.analyze(new AiMealAnalysisCommand(
-                        authUser.userId(), request.fileId(), mealTypeMapper.toEnum(request.mealType()), request.mealTime()))
-                .map(result -> ResponseEntity.status(201).body(GlobalApiResponse.created(
-                        MealAnalysisResponseCode.AI_MEAL_ANALYZED, toResponse(result))));
+        // Presigned URL로 S3 업로드를 마친 파일 메타데이터를 애플리케이션 계층 명령으로 변환한다.
+        AiMealAnalysisResult result = aiMealAnalysisUseCase.analyze(new AiMealAnalysisCommand(
+                authUser.userId(), request.file().fileKey(), request.file().originalName(),
+                request.file().contentType(), request.file().fileSize(),
+                mealTypeMapper.toEnum(request.mealType()), request.mealTime()));
+        return ResponseEntity.status(201).body(GlobalApiResponse.created(
+                MealAnalysisResponseCode.AI_MEAL_ANALYZED, toResponse(result)));
     }
 
     private AiMealAnalysisResponse toResponse(AiMealAnalysisResult result) {

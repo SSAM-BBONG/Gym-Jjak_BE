@@ -23,8 +23,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    // 애플리케이션 서버는 Spring MVC를 유지하고, AI 서버 비동기 호출에 WebClient만 사용한다.
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     // section 02: AOP 기반 로깅 구현을 위한 AspectJ 의존성
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     // 실시간 채팅 웹소켓 의존성 추가
