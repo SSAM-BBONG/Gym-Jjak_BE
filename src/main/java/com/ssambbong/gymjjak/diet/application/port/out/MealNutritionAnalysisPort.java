@@ -5,11 +5,10 @@ import com.ssambbong.gymjjak.diet.application.result.MealNutritionSummary;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import reactor.core.publisher.Mono;
 
 public interface MealNutritionAnalysisPort {
-    // AI 서버 호출은 네트워크 대기 동안 요청 스레드를 점유하지 않도록 비동기 결과를 반환한다.
-    Mono<AnalysisResult> analyze(AnalysisRequest request);
+    // AI 서버의 분석 응답이 도착할 때까지 현재 MVC 요청 스레드에서 동기 대기한다.
+    AnalysisResult analyze(AnalysisRequest request);
 
     record AnalysisRequest(
             String imageUrl,

@@ -5,7 +5,8 @@ import com.ssambbong.gymjjak.user.application.result.UserUsernameAndNicknameResu
 public record UserUsernameAndNicknameResponse(
         String username,
         String nickname,
-        boolean socialUser
+        boolean socialUser,
+        long communityPostCount
 ) {
 
     public static UserUsernameAndNicknameResponse from(
@@ -14,7 +15,8 @@ public record UserUsernameAndNicknameResponse(
         return new UserUsernameAndNicknameResponse(
                 result.username(),
                 result.nickname(),
-                result.socialUser()
+                result.socialUser(),
+                result.communityPostCount()
         );
     }
 }
