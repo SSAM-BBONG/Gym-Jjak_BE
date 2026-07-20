@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.UserTest;
 
+import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
 import com.ssambbong.gymjjak.user.application.command.RegisterUserCommand;
 import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
 import com.ssambbong.gymjjak.user.application.port.out.TokenPort;
@@ -38,6 +39,9 @@ class UserCommandServiceTest {
     @Mock
     private UserCacheEvictionPort userCacheEvictionPort;
 
+    @Mock
+    private CommunityPort communityPort;
+
     private UserCommandService userCommandService;
 
     @BeforeEach
@@ -46,7 +50,8 @@ class UserCommandServiceTest {
                 userPort,
                 tokenPort,
                 blacklistPort,
-                userCacheEvictionPort
+                userCacheEvictionPort,
+                communityPort
         );
     }
 

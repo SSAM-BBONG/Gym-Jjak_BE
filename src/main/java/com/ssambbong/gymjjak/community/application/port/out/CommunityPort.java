@@ -11,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface CommunityPort {
+    long countCommunityPostsByUserId(Long userId);
+
     Long saveCommunityPost(CommunityPost communityPost);
 
     Page<CommunityPostListResult> findCommunityPosts(
