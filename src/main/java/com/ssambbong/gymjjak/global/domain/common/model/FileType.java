@@ -12,7 +12,8 @@ public enum FileType {
     CERTIFICATION("uploads/certifications"),
     AWARD("uploads/awards"),
     BUSINESS_LICENSE("uploads/organizations"),
-    FEEDBACK_VIDEO("uploads/feedbacks/videos");
+    FEEDBACK_VIDEO("uploads/feedbacks/videos"),
+    MEAL_IMAGE("uploads/meals");
 
     private final String path;
 }

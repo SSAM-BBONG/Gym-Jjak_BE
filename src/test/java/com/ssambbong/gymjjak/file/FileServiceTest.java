@@ -56,6 +56,26 @@ class FileServiceTest {
     }
 
     @Test
+    @DisplayName("식단 이미지용 Presigned URL을 발급한다")
+    void generatePresignedUploadUrls_success_mealImage() {
+        when(fileStoragePort.generatePresignedUploadUrl(anyString(), eq("image/jpeg")))
+                .thenReturn("https://s3.amazonaws.com/presigned");
+
+        List<PresignedUrlResult> results = fileService.generatePresignedUploadUrls(List.of(
+                new GeneratePresignedUrlCommand(10L, FileType.MEAL_IMAGE, "image/jpeg")));
+
+        assertThat(results.get(0).fileKey()).contains("uploads/meals/10/");
+    }
+
+    @Test
+    @DisplayName("식단 이미지에는 PDF 형식을 허용하지 않는다")
+    void generatePresignedUploadUrls_fail_mealImagePdf() {
+        assertThatThrownBy(() -> fileService.generatePresignedUploadUrls(List.of(
+                new GeneratePresignedUrlCommand(10L, FileType.MEAL_IMAGE, "application/pdf"))))
+                .isInstanceOf(com.ssambbong.gymjjak.file.exception.InvalidFileException.class);
+    }
+
+    @Test
     @DisplayName("여러 파일 타입을 한 번에 발급할 수 있다")
     void generatePresignedUploadUrls_multipleTypes() {
         when(fileStoragePort.generatePresignedUploadUrl(anyString(), anyString()))

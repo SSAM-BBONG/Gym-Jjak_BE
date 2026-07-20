@@ -53,6 +53,12 @@ public enum FilePolicy {
             List.of("video/mp4", "video/quicktime"),
             50 * 1024 * 1024L,
             true
+    ),
+    MEAL_IMAGE(
+            FileType.MEAL_IMAGE,
+            List.of("image/jpeg", "image/png", "image/webp"),
+            10 * 1024 * 1024L,
+            true
     );
 
     private final FileType fileType;

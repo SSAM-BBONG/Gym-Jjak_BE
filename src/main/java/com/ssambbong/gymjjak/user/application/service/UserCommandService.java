@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.user.application.service;
 
+import com.ssambbong.gymjjak.community.application.port.out.CommunityPort;
 import com.ssambbong.gymjjak.report.application.port.user.UserQueryPort;
 import com.ssambbong.gymjjak.user.application.command.*;
 import com.ssambbong.gymjjak.user.application.port.out.BlacklistPort;
@@ -33,6 +34,7 @@ public class UserCommandService implements UserCommandUseCase {
     private final TokenPort tokenPort;
     private final BlacklistPort blacklistPort;
     private final UserCacheEvictionPort userCacheEvictionPort;
+    private final CommunityPort communityPort;
 
     @Override
     public void registerUser(RegisterUserCommand command) {
@@ -462,11 +464,16 @@ public class UserCommandService implements UserCommandUseCase {
     }
 
     @Override
-    @Cacheable(cacheNames = "userUsernameNickname", key = "#userId", sync = true)
     @Transactional(readOnly = true)
     public UserUsernameAndNicknameResult findUsernameAndNickname(Long userId) {
 
-        return userPort.findUsernameAndNickname(userId);
+        UserUsernameAndNicknameResult result =
+                userPort.findUsernameAndNickname(userId);
+
+        long communityPostCount =
+                communityPort.countCommunityPostsByUserId(userId);
+
+        return result.withCommunityPostCount(communityPostCount);
     }
 
     private void evictUserProfileAfterCommit(Long userId) {

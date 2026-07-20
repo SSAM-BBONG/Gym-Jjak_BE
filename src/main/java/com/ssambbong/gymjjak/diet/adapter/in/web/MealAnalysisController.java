@@ -65,8 +65,8 @@ public class MealAnalysisController {
             @RequestParam(defaultValue = "20") int size) {
         int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
         MealPageQuery query = new MealPageQuery(authUser.userId(), Math.max(page, 0), safeSize);
-        MealPageResult<MealAnalysisResponse> results = mealAnalysisUseCase.getList(query)
-                .map(this::toResponse);
+        MealPageResult<MealAnalysisListResponse> results = mealAnalysisUseCase.getList(query)
+                .map(this::toListResponse);
         return ResponseEntity.ok(GlobalApiResponse.ok(MealAnalysisResponseCode.MEAL_LIST_FETCHED,
                 MealAnalysisPageResponse.from(results)));
     }
@@ -138,5 +138,14 @@ public class MealAnalysisController {
         return new MealAnalysisResponse(result.mealId(), mealTypeMapper.toKorean(result.mealType()),
                 result.mealTime(), result.menu(), result.kcal(), result.carbohydrate(), result.protein(), result.fat(), result.fileId(),
                 result.createdAt(), result.updatedAt());
+    }
+
+    private MealAnalysisListResponse toListResponse(MealAnalysisResult result) {
+        return new MealAnalysisListResponse(
+                result.mealId(),
+                mealTypeMapper.toKorean(result.mealType()),
+                result.mealTime(),
+                result.menu()
+        );
     }
 }

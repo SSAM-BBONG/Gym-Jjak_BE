@@ -24,13 +24,14 @@ public class AiMealPersistenceService {
     @Transactional
     public AiMealAnalysisResult validateAndSave(
             AiMealAnalysisCommand command,
+            Long fileId,
             MealNutritionAnalysisPort.AnalysisResult analysis) {
         // 외부 AI 응답을 신뢰하지 않고 DB 제약 및 API 계약에 맞는지 저장 직전에 다시 검증한다.
         validateAnalysis(analysis);
 
         MealAnalysis saved = mealAnalysisPort.save(MealAnalysis.create(
                 command.userId(), command.mealType(), command.mealTime(), analysis.menu().trim(),
-                analysis.kcal(), analysis.carbohydrate(), analysis.protein(), analysis.fat(), command.fileId()));
+                analysis.kcal(), analysis.carbohydrate(), analysis.protein(), analysis.fat(), fileId));
 
         // 평가·신뢰도·경고는 현재 식단 테이블에 컬럼이 없으므로 저장하지 않고 이번 응답에만 포함한다.
         return new AiMealAnalysisResult(
