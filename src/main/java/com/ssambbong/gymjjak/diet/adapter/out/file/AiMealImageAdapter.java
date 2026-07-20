@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.file.exception.FileAccessDeniedException;
 import com.ssambbong.gymjjak.file.exception.FileErrorCode;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.file.exception.InvalidFileException;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +27,10 @@ public class AiMealImageAdapter implements AiMealImagePort {
         if (!userId.equals(file.getUploaderId())) {
             throw new FileAccessDeniedException();
         }
-        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
+        // 다른 기능에서 업로드한 이미지가 식단 분석에 재사용되지 않도록 식단 이미지 유형까지 확인한다.
+        if (file.getFileType() != FileType.MEAL_IMAGE
+                || file.getContentType() == null
+                || !file.getContentType().startsWith("image/")) {
             throw new InvalidFileException(FileErrorCode.FILE_INVALID_TYPE);
         }
 
