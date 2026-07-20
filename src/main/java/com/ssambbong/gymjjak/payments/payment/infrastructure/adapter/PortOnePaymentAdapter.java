@@ -19,7 +19,6 @@ public class PortOnePaymentAdapter implements PortOnePaymentVerifyPort {
 
     // PortOne V2 API로 결제 건 조회 — GET /payments/{paymentId}
     @Override
-    @SuppressWarnings("unchecked")
     public PortOnePaymentInfo getPaymentInfo(String portonePaymentId) {
         Map<String, Object> response = portOneRestClient.get()
                 .uri("/payments/{paymentId}", portonePaymentId)

@@ -28,7 +28,10 @@ public enum PtReservationErrorCode implements ErrorCode {
     PT_RESERVATION_SCHEDULE_MISMATCH(HttpStatus.BAD_REQUEST, "PT_RESERVATION_006", "강습 스케줄에 없는 요일 또는 시간입니다."),
 
     // 구매한 총 회차 수 초과
-    PT_RESERVATION_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "PT_RESERVATION_007", "예약 가능한 회차 수를 초과하였습니다.");
+    PT_RESERVATION_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "PT_RESERVATION_007", "예약 가능한 회차 수를 초과하였습니다."),
+
+    // 결제 완료되지 않은 PT 강습 예약 시도
+    PT_RESERVATION_PAYMENT_REQUIRED(HttpStatus.FORBIDDEN, "PT_RESERVATION_008", "결제가 완료된 PT 강습만 예약할 수 있습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

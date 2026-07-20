@@ -12,9 +12,11 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReserv
 import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationApprovedEvent;
 import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationCanceledEvent;
 import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationRequestedEvent;
+import com.ssambbong.gymjjak.pt.ptReservation.application.port.PaymentQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationPaymentRequiredException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationLimitExceededException;
@@ -47,6 +49,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     private final PtCourseRepository ptCourseRepository;
     private final PtCourseScheduleRepository ptCourseScheduleRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final PaymentQueryPort paymentQueryPort;
     private final ApplicationEventPublisher eventPublisher;
     private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
@@ -64,6 +67,13 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                             command.ptCourseId());
                     return new PtCourseNotFoundException();
                 });
+
+        // 결제 완료 여부 검증
+        if (!paymentQueryPort.existsPaidByUserIdAndPtCourseId(command.userId(), command.ptCourseId())) {
+            log.warn("event=pt_reservation_create_failed reason=payment_required userId={} ptCourseId={}",
+                    command.userId(), command.ptCourseId());
+            throw new PtReservationPaymentRequiredException();
+        }
 
         // 예약 시간 null 및 시간 순서 검증 (종료 > 시작이어야 함)
         if (command.reservedStartAt() == null || command.reservedEndAt() == null
