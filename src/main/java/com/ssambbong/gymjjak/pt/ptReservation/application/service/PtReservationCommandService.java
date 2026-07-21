@@ -24,6 +24,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotF
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationScheduleMismatchException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -253,7 +255,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
     // 내 PT 세션 취소
     @Override
-    public void cancelPtSession(CancelPtReservationCommand command) {
+    public PtSessionStatus cancelPtSession(CancelPtReservationCommand command) {
         if (command.userId() == null || command.ptReservationId() == null) {
             throw new PtReservationInvalidException();
         }
@@ -273,16 +275,22 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
+        // 당일 취소는 노쇼로 간주해 COMPLETED 처리, 전날 이전 취소는 CANCELLED
         // CANCELLED / COMPLETED 이면 도메인에서 PtReservationStatusInvalidException 발생
-        reservation.changeStatus(PtReservationStatus.CANCELLED);
+        boolean isNoshow = reservation.getReservedStartAt().toLocalDate().isEqual(LocalDate.now());
+        PtReservationStatus newStatus = isNoshow ? PtReservationStatus.COMPLETED : PtReservationStatus.CANCELLED;
+        reservation.changeStatus(newStatus);
         ptReservationRepository.updateStatus(reservation);
 
-        eventPublisher.publishEvent(
-                new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
+        if (!isNoshow) {
+            eventPublisher.publishEvent(
+                    new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
+        }
 
         evictMonthAfterCommit(reservation.getUserId(), reservation.getReservedStartAt());
 
-        log.info("event=pt_session_cancel_succeeded ptReservationId={}", reservation.getId());
+        log.info("event=pt_session_cancel_succeeded ptReservationId={} resolvedAs={}", reservation.getId(), newStatus);
+        return isNoshow ? PtSessionStatus.COMPLETED : PtSessionStatus.CANCELLED;
     }
 
     private void validateSchedule(Long ptCourseId, LocalDateTime reservedStartAt, LocalDateTime reservedEndAt) {

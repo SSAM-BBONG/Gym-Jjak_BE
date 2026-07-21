@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.payments.subscription.infrastructure.persistence.Sp
 import com.ssambbong.gymjjak.user.adapter.out.persistence.SpringDataUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,7 @@ public class SubscriptionExpirationBatchService {
                 batchSize,
                 Sort.by(Sort.Order.asc("userId"), Sort.Order.asc("id"))
         );
-        var candidates = subscriptionRepository.findExpirationCandidates(
+        Slice<SpringDataSubscriptionRepository.ExpirationCandidate> candidates = subscriptionRepository.findExpirationCandidates(
                 SubscriptionStatus.ACTIVE, now, pageable);
 
         if (candidates.isEmpty()) {

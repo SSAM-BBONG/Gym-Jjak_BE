@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.command.CancelPtReserv
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 
 public interface PtReservationCommandUseCase {
 
@@ -16,6 +17,6 @@ public interface PtReservationCommandUseCase {
     // PT 코스 전체 취소
     void cancelPtReservation(CancelPtReservationCommand command);
 
-    // 개별 세션 취소
-    void cancelPtSession(CancelPtReservationCommand command);
+    // 개별 세션 취소 → 처리 결과 상태(CANCELLED 또는 COMPLETED) 반환
+    PtSessionStatus cancelPtSession(CancelPtReservationCommand command);
 }
