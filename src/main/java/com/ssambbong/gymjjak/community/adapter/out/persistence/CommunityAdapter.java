@@ -64,6 +64,7 @@ public class CommunityAdapter implements CommunityPort, PostReportTargetPort, Po
 
     @Override
     public Page<CommunityPostListResult> findCommunityPosts(
+            Long userId,
             CommunityPostType type,
             String keyword,
             Pageable pageable
@@ -75,6 +76,7 @@ public class CommunityAdapter implements CommunityPort, PostReportTargetPort, Po
 
         return springDataCommunityRepository
                 .findCommunityPosts(
+                        userId,
                         typeValue,
                         keyword,
                         pageable

@@ -64,6 +64,45 @@ public class CommunityController {
                 );
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
+    @GetMapping("/posts/me")
+    @Operation(
+            summary = "내 게시글 목록 조회",
+            description = "현재 로그인한 사용자가 작성한 커뮤니티 게시글 목록을 조회합니다."
+    )
+    public ResponseEntity<
+            GlobalApiResponse<Page<CommunityPostListResponse>>> findMyCommunityPosts(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Parameter(description = "게시글 유형. 미입력 시 전체 유형을 조회합니다.", example = "FREE")
+            @RequestParam(required = false) CommunityPostType type,
+            @Parameter(description = "게시글 제목 검색어", example = "운동")
+            @RequestParam(required = false) String keyword,
+            @Parameter(description = "페이지 번호. 0부터 시작합니다.", example = "0")
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") @Min(1) int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<CommunityPostListResponse> response =
+                communityUseCase.findMyCommunityPosts(
+                                authUser.userId(),
+                                type,
+                                keyword,
+                                pageable
+                        )
+                        .map(CommunityPostListResponse::from);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        GlobalApiResponse.ok(
+                                CommunityResponseCode.COMMUNITY_POST_LIST_FETCHED,
+                                response
+                        )
+                );
+    }
+
     @GetMapping("/posts")
     @Operation(summary = "게시글 목록 조회", description = "전체, 자유게시판, 공지 게시글 목록을 조회하는 요청이다.")
     public ResponseEntity<

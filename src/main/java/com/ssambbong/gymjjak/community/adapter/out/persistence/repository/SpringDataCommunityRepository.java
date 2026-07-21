@@ -41,6 +41,7 @@ public interface SpringDataCommunityRepository
                     LEFT JOIN community_post_likes l
                         ON l.community_post_id = cp.community_post_id
                     WHERE cp.deleted_at IS NULL
+                      AND (:userId IS NULL OR cp.user_id = :userId)
                       AND (:type IS NULL OR cp.type = :type)
                       AND (:keyword IS NULL OR cp.title LIKE CONCAT('%', :keyword, '%'))
                     GROUP BY
@@ -58,12 +59,14 @@ public interface SpringDataCommunityRepository
                     SELECT COUNT(*)
                     FROM community_posts cp
                     WHERE cp.deleted_at IS NULL
+                      AND (:userId IS NULL OR cp.user_id = :userId)
                       AND (:type IS NULL OR cp.type = :type)
                       AND (:keyword IS NULL OR cp.title LIKE CONCAT('%', :keyword, '%'))
                     """,
             nativeQuery = true
     )
     Page<CommunityPostListProjection> findCommunityPosts(
+            @Param("userId") Long userId,
             @Param("type") String type,
             @Param("keyword") String keyword,
             Pageable pageable

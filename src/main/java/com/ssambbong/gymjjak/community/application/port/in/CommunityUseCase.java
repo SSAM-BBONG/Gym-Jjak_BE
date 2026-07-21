@@ -17,6 +17,13 @@ public interface CommunityUseCase {
             Pageable pageable
     );
 
+    Page<CommunityPostListResult> findMyCommunityPosts(
+            Long userId,
+            CommunityPostType type,
+            String keyword,
+            Pageable pageable
+    );
+
     CommunityPostDetailResult findCommunityPostDetail(
             Long userId,
             Long postId,

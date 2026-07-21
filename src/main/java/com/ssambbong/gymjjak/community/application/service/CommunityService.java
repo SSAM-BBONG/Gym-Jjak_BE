@@ -74,12 +74,47 @@ public class CommunityService implements CommunityUseCase {
 
         Page<CommunityPostListResult> result =
                 communityPort.findCommunityPosts(
+                        null,
                         type,
                         normalizedKeyword,
                         pageable
                 );
 
         log.info("event=communityPost_listFind_succeed type={}, keyword={}, page={}, size={}, totalElements={}",
+                type == null ? "ALL" : type,
+                normalizedKeyword,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                result.getTotalElements());
+
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CommunityPostListResult> findMyCommunityPosts(
+            Long userId,
+            CommunityPostType type,
+            String keyword,
+            Pageable pageable
+    ) {
+        String normalizedKeyword = normalizeKeyword(keyword);
+
+        log.debug("event=myCommunityPost_listFind_start userId={} type={} keyword={}",
+                userId,
+                type == null ? "ALL" : type,
+                normalizedKeyword);
+
+        Page<CommunityPostListResult> result =
+                communityPort.findCommunityPosts(
+                        userId,
+                        type,
+                        normalizedKeyword,
+                        pageable
+                );
+
+        log.info("event=myCommunityPost_listFind_succeed userId={} type={} keyword={} page={} size={} totalElements={}",
+                userId,
                 type == null ? "ALL" : type,
                 normalizedKeyword,
                 pageable.getPageNumber(),
