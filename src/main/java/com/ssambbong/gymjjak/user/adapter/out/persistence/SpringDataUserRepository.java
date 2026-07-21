@@ -64,6 +64,8 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
 
     boolean existsByPhoneAndRole(String phone, UserRole role);
 
+    boolean existsByIdAndRole(Long userId, UserRole role);
+
     Optional<UserJpaEntity> findByUsername(String username);
 
     boolean existsByNicknameAndIdNot(String nickname, Long userId);
@@ -129,6 +131,20 @@ where u.id = :userId
     void updateStatus(
             @Param("userId") Long userId,
             @Param("status") UserStatus status
+    );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update UserJpaEntity u
+        set u.status = :activeStatus
+        where u.id in :userIds
+          and u.status = :suspendedStatus
+          and u.deletedAt is null
+    """)
+    int activateSevenDaySuspendedUsers(
+            @Param("userIds") List<Long> userIds,
+            @Param("suspendedStatus") UserStatus suspendedStatus,
+            @Param("activeStatus") UserStatus activeStatus
     );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

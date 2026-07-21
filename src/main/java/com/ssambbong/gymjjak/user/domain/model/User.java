@@ -245,14 +245,6 @@ public class User {
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
-    public void releaseSuspensionIfExpired(LocalDateTime now) {
-        if (this.status != UserStatus.DAY_7) {
-            return;
-        }
-
-        this.status = UserStatus.ACTIVE;
-    }
-
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE && !isWithdrawn();
 
