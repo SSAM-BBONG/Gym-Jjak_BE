@@ -308,7 +308,9 @@ Response Body
 | `401 Unauthorized` | `COMMON_401` | 인증이 필요합니다. | Access Token이 없거나 유효하지 않은 경우 |
 | `403 Forbidden` | `PT_RESERVATION_004` | 본인의 예약만 조회할 수 있습니다. | 본인 강습의 예약이 아닌 경우 |
 | `404 Not Found` | `PT_RESERVATION_002` | 예약을 찾을 수 없습니다. | 존재하지 않는 예약인 경우 |
-| `409 Conflict` | `PT_RESERVATION_005` | 변경할 수 없는 상태값입니다. | `RESERVED` 직접 설정 시도인 경우 |
+| `409 Conflict` | `PT_RESERVATION_005` | 예약됨 상태로는 직접 변경할 수 없습니다. | `RESERVED`로 직접 변경 시도인 경우 |
+| `409 Conflict` | `PT_RESERVATION_009` | 이미 취소된 예약은 상태를 변경할 수 없습니다. | 이미 `CANCELLED` 상태인 경우 |
+| `409 Conflict` | `PT_RESERVATION_010` | 이미 완료된 예약은 상태를 변경할 수 없습니다. | 이미 `COMPLETED` 상태인 경우 |
 
 ---
 
@@ -502,7 +504,8 @@ Response Body
 | `401 Unauthorized` | `COMMON_401` | 인증이 필요합니다. | Access Token이 없거나 유효하지 않은 경우 |
 | `403 Forbidden` | `PT_RESERVATION_004` | 본인의 예약만 조회할 수 있습니다. | 본인 예약이 아닌 경우 |
 | `404 Not Found` | `PT_RESERVATION_002` | 예약을 찾을 수 없습니다. | 존재하지 않는 예약인 경우 |
-| `409 Conflict` | `PT_RESERVATION_005` | 변경할 수 없는 상태값입니다. | 이미 `COMPLETED` 또는 `CANCELLED` 상태인 경우 |
+| `409 Conflict` | `PT_RESERVATION_009` | 이미 취소된 예약은 상태를 변경할 수 없습니다. | 이미 `CANCELLED` 상태인 경우 |
+| `409 Conflict` | `PT_RESERVATION_010` | 이미 완료된 예약은 상태를 변경할 수 없습니다. | 이미 `COMPLETED` 상태인 경우 |
 
 > **노쇼 처리**: `reservedStartAt` 날짜가 오늘인 경우 취소 요청 시 `CANCELLED`가 아닌 `COMPLETED`로 처리됩니다. 응답의 `sessionStatus` 필드를 기준으로 처리 결과를 확인합니다.
 

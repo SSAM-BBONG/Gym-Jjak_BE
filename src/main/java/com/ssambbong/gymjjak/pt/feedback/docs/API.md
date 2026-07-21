@@ -63,6 +63,7 @@ Response Body
       "ptCurriculumId": 1,
       "sessionNo": 1,
       "title": "기초 자세 교정",
+      "reservedStartAt": "2026-07-10",
       "feedbacks": {
         "feedbackId": 5,
         "content": "자세가 많이 좋아졌습니다.",
@@ -73,6 +74,7 @@ Response Body
       "ptCurriculumId": 2,
       "sessionNo": 2,
       "title": "체력 강화 운동",
+      "reservedStartAt": null,
       "feedbacks": null
     }
   ]
@@ -85,6 +87,7 @@ Response Body
 | --- | --- |
 | `data[].ptCurriculumId` | 커리큘럼 ID입니다. |
 | `data[].sessionNo` | 회차 번호입니다. |
+| `data[].reservedStartAt` | 해당 회차의 예약 시작일입니다. 피드백이 없는 회차는 `null`입니다. |
 | `data[].feedbacks` | 해당 회차의 피드백 요약입니다. 피드백이 없으면 `null`입니다. |
 | `data[].feedbacks.feedbackId` | 피드백 ID입니다. 상세 조회 시 사용합니다. |
 
