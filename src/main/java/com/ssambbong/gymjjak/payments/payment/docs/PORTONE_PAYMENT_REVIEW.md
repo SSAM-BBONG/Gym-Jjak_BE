@@ -33,17 +33,15 @@ PortOne V2 웹훅에서 `data.orderId`는 존재하지 않는다. `data.paymentI
 
 > 남은 개선: `Map<String, Object>` 방식 대신 PortOne JVM SDK 또는 전용 응답 DTO로 교체하면 타입 안전성을 확보할 수 있다.
 
-### [치명적] 웹훅 서명 검증 누락
+### ~~[치명적] 웹훅 서명 검증 누락~~ ✅ 수정 완료
 
-웹훅 URL은 외부 공개 엔드포인트인데, `webhookSecret` 설정값이 실제 검증에 사용되지 않는다. 특히 `Transaction.Failed`, `Transaction.Cancelled`는 PortOne API 재조회 없이 결제 상태를 변경한다.
+`PortOneWebhookVerifier` 컴포넌트를 추가하여 Standard Webhooks 스펙 기반 서명 검증을 구현했다.
 
-이 상태에서는 외부 요청이 결제 실패 또는 취소 처리를 시도할 수 있다.
-
-**개선 방향**
-
-- 웹훅 원본 바디와 PortOne 서명 헤더를 사용해 서명을 검증한다.
-- 모든 상태 이벤트는 PortOne 결제 조회 결과와 대조한다.
-- 서명 검증 실패, 결제 ID 불일치, 금액 불일치는 감사 로그를 남기고 상태를 변경하지 않는다.
+- `PaymentWebhookController`가 `@RequestBody String rawBody`로 원본 바디를 수신
+- `webhook-id`, `webhook-timestamp`, `webhook-signature` 헤더 존재 확인
+- timestamp가 현재 시각 ±5분 이내인지 검증 (재전송 공격 방어)
+- `HMAC-SHA256(Base64Decode(secret), "{id}.{timestamp}.{rawBody}")` 재계산 후 헤더 서명값과 비교
+- 검증 실패 시 `WebhookInvalidSignatureException` → 400 반환
 
 ### [치명적] 중복 웹훅 동시 처리 시 구독 중복 생성 가능
 

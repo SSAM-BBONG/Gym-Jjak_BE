@@ -287,6 +287,9 @@ Request Header
 | name | description |
 | --- | --- |
 | `Content-Type` | `application/json` |
+| `webhook-id` | PortOne이 부여한 웹훅 이벤트 고유 ID입니다. 시그니처 검증에 사용됩니다. |
+| `webhook-timestamp` | 웹훅 발송 시각입니다 (Unix 초). 시그니처 검증 및 재전송 공격 방어에 사용됩니다. |
+| `webhook-signature` | PortOne이 계산한 서명값입니다. `v1,{Base64(HMAC-SHA256)}` 형식입니다. |
 
 Request Body
 
@@ -329,6 +332,7 @@ Response Body
 
 | HTTP 상태 | code | message | 설명 |
 | --- | --- | --- | --- |
+| `400 Bad Request` | `PAYMENT_006` | 웹훅 시그니처 검증에 실패했습니다. | 서명 헤더 누락, timestamp 5분 초과, 서명값 불일치인 경우 |
 | `404 Not Found` | `PAYMENT_002` | 결제 정보를 찾을 수 없습니다. | `orderId`에 해당하는 결제 정보가 없는 경우 |
 | `500 Internal Server Error` | `PAYMENT_003` | PortOne API 호출에 실패했습니다. | PortOne 결제 검증 API 호출에 실패한 경우 |
 

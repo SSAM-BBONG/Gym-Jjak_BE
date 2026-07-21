@@ -57,6 +57,11 @@ public class PaymentWebhookController {
 
         WebhookPaymentRequest request = parseBody(rawBody);
 
+        if (request.data() == null || request.data().paymentId() == null) {
+            log.warn("event=webhook_missing_data type={}", request.type());
+            return ResponseEntity.ok(GlobalApiResponse.ok(PaymentResponseCode.WEBHOOK_RECEIVED));
+        }
+
         paymentCommandUseCase.processWebhook(
                 new ProcessWebhookCommand(request.type(), request.data().paymentId(), request.data().transactionId()));
 
