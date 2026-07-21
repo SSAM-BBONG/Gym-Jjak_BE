@@ -26,6 +26,17 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
 
     List<OrganizationTrainerJpaEntity> findAllByTrainerProfileIdAndRemovedAtIsNull(Long trainerProfileId);
 
+    // [트레이너 pt 메인 페이지] 트레이너가 현재 소속된 조직 조회
+    @Query("""
+            SELECT COUNT(DISTINCT e.organizationId)
+            FROM OrganizationTrainerJpaEntity e
+            WHERE e.trainerProfileId = :trainerProfileId
+              AND e.removedAt IS NULL
+            """)
+    long countDistinctActiveOrganizationsByTrainerProfileId(
+            @Param("trainerProfileId") Long trainerProfileId
+    );
+
     long countByRemovedAtIsNull();
 
     @Query("SELECT COUNT(DISTINCT e.organizationId) FROM OrganizationTrainerJpaEntity e WHERE e.removedAt IS NULL")

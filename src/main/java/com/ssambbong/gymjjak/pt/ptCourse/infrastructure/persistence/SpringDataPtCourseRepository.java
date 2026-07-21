@@ -51,6 +51,46 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
     List<PtCourseJpaEntity> findAllByTrainerProfileIdAndStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
             Long trainerProfileId, PtCourseStatus status);
 
+    // [트레이너 pt 메인 페이지] 트레이너의 현재 수강생 수를 조회
+    @Query(value = """
+            SELECT COUNT(DISTINCT pc.pt_course_id, pr.user_id)
+            FROM pt_courses pc
+            JOIN pt_reservations pr ON pr.pt_course_id = pc.pt_course_id
+            WHERE pc.trainer_profile_id = :trainerProfileId
+              AND pc.status IN ('VISIBLE', 'HIDDEN')
+              AND pc.deleted_at IS NULL
+              AND pr.status = 'IN_PROGRESS'
+            """, nativeQuery = true)
+    long countCurrentStudentsByTrainerProfileId(
+            @Param("trainerProfileId") Long trainerProfileId
+    );
+
+    // 수강생이 없는 활성 강습까지 포함해 현재 수강생 수 기준으로 정렬합니다.
+    @Query(value = """
+            SELECT pc.pt_course_id AS ptCourseId,
+                   pc.organization_id AS organizationId,
+                   pc.thumbnail_file_id AS thumbnailFileId,
+                   pc.title AS title,
+                   pc.price AS price,
+                   COUNT(DISTINCT CASE WHEN pr.status = 'IN_PROGRESS' THEN pr.user_id END) AS currentStudentCount
+            FROM pt_courses pc
+            LEFT JOIN pt_reservations pr ON pr.pt_course_id = pc.pt_course_id
+            WHERE pc.trainer_profile_id = :trainerProfileId
+              AND pc.status IN ('VISIBLE', 'HIDDEN')
+              AND pc.deleted_at IS NULL
+            GROUP BY pc.pt_course_id,
+                     pc.organization_id,
+                     pc.thumbnail_file_id,
+                     pc.title,
+                     pc.price
+            ORDER BY currentStudentCount DESC, pc.pt_course_id DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<TrainerMainPtCourseRow> findTopCoursesByCurrentStudentCount(
+            @Param("trainerProfileId") Long trainerProfileId,
+            @Param("limit") int limit
+    );
+
     // pt_reservations 수로 GROUP BY 정렬, VISIBLE + soft delete 제외
     @Query(value = """
     SELECT pc.* FROM pt_courses pc
