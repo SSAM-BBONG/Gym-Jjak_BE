@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 public interface SpringDataMealAnalysisRepository extends JpaRepository<MealAnalysisJpaEntity, Long> {
     Optional<MealAnalysisJpaEntity> findByIdAndUserId(Long mealId, Long userId);
     Page<MealAnalysisJpaEntity> findAllByUserId(Long userId, Pageable pageable);
+    Page<MealAnalysisJpaEntity> findAllByUserIdAndMealTimeGreaterThanEqualAndMealTimeLessThan(
+            Long userId, LocalDateTime startInclusive, LocalDateTime endExclusive, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM MealAnalysisJpaEntity m WHERE m.id = :mealId AND m.userId = :userId")

@@ -18,10 +18,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/diet/meals")
@@ -62,9 +65,13 @@ public class MealAnalysisController {
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지당 조회 개수(최대 100)", example = "20")
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "조회할 식단 날짜(yyyy-MM-dd). 생략하면 전체 기간을 조회합니다.", example = "2026-07-21")
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date) {
         int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        MealPageQuery query = new MealPageQuery(authUser.userId(), Math.max(page, 0), safeSize);
+        MealPageQuery query = new MealPageQuery(authUser.userId(), Math.max(page, 0), safeSize, date);
         MealPageResult<MealAnalysisListResponse> results = mealAnalysisUseCase.getList(query)
                 .map(this::toListResponse);
         return ResponseEntity.ok(GlobalApiResponse.ok(MealAnalysisResponseCode.MEAL_LIST_FETCHED,
