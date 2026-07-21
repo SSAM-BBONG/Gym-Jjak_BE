@@ -21,6 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.user.SimpSubscription;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -48,6 +50,9 @@ class ChatWebSocketControllerTest {
         return ChatMessage.restore(99L, 10L, 1L, "안녕하세요", false, LocalDateTime.of(2024, 1, 1, 12, 0));
     }
 
+    // 웹소켓 핸들러가 실제로 받는 Principal 형태로 인증 주체를 전달합니다.
+    private final Authentication authentication = new UsernamePasswordAuthenticationToken(authUser, null);
+
     @Nested
     @DisplayName("메시지 전송 - /app/chat.send")
     class SendMessage {
@@ -58,7 +63,7 @@ class ChatWebSocketControllerTest {
             when(chatMessageUseCase.createMessage(any())).thenReturn(savedMessage());
             when(simpUserRegistry.findSubscriptions(any())).thenReturn(Set.of());
 
-            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authUser);
+            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authentication);
 
             verify(messagingTemplate).convertAndSend(eq("/topic/chat.room.10"), any(ChatMessageBroadcast.class));
         }
@@ -69,7 +74,7 @@ class ChatWebSocketControllerTest {
             when(chatMessageUseCase.createMessage(any())).thenReturn(savedMessage());
             when(simpUserRegistry.findSubscriptions(any())).thenReturn(Set.of());
 
-            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authUser);
+            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authentication);
 
             ArgumentCaptor<SendChatMessageCommand> captor = ArgumentCaptor.forClass(SendChatMessageCommand.class);
             verify(chatMessageUseCase).createMessage(captor.capture());
@@ -86,7 +91,7 @@ class ChatWebSocketControllerTest {
             when(chatMessageUseCase.createMessage(any())).thenReturn(message);
             when(simpUserRegistry.findSubscriptions(any())).thenReturn(Set.of());
 
-            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authUser);
+            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authentication);
 
             ArgumentCaptor<ChatMessageBroadcast> captor = ArgumentCaptor.forClass(ChatMessageBroadcast.class);
             verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
@@ -106,7 +111,7 @@ class ChatWebSocketControllerTest {
             SimpSubscription sub2 = mock(SimpSubscription.class);
             when(simpUserRegistry.findSubscriptions(any())).thenReturn(Set.of(sub1, sub2));
 
-            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authUser);
+            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authentication);
 
             InOrder inOrder = inOrder(chatMessageUseCase, messagingTemplate);
             inOrder.verify(chatMessageUseCase).markAsRead(99L);
@@ -121,7 +126,7 @@ class ChatWebSocketControllerTest {
             when(chatMessageUseCase.createMessage(any())).thenReturn(savedMessage());
             when(simpUserRegistry.findSubscriptions(any())).thenReturn(Set.of(mock(SimpSubscription.class)));
 
-            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authUser);
+            controller.sendMessage(new SendChatMessageRequest(10L, "안녕하세요"), authentication);
 
             verify(chatMessageUseCase, never()).markAsRead(any());
             ArgumentCaptor<ChatMessageBroadcast> captor = ArgumentCaptor.forClass(ChatMessageBroadcast.class);

@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.report.application.query.AdminReportListItem;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
 import com.ssambbong.gymjjak.report.application.query.AdminReportReasonItem;
+import com.ssambbong.gymjjak.report.application.query.AdminReportSnapshotResult;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCase;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupQueryUseCase;
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
@@ -35,6 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -312,4 +314,55 @@ class ReportGroupControllerTest {
 
         verify(reportGroupQueryUseCase).findReportDetail(999L);
     }
+
+    @Test
+    @DisplayName("관리자가 신고 대상 스냅샷을 조회한다")
+    void findReportSnapshot_success() throws Exception {
+        // 신고 접수 시점에 저장된 스냅샷을 모달 응답으로 반환합니다.
+        AdminReportSnapshotResult result = new AdminReportSnapshotResult(
+                10L,
+                ReportTargetType.COMMENT,
+                301L,
+                "댓글",
+                "신고된 댓글 내용",
+                null
+        );
+        when(reportGroupQueryUseCase.findReportSnapshot(10L)).thenReturn(result);
+
+        mockMvc.perform(
+                        get("/api/reportgroup/{reportGroupId}/snapshot", 10L)
+                                .with(authentication(adminAuthentication))
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.code").value("REPORT_200_10"))
+                .andExpect(jsonPath("$.data.reportGroupId").value(10))
+                .andExpect(jsonPath("$.data.targetType").value("댓글"))
+                .andExpect(jsonPath("$.data.targetId").value(301))
+                .andExpect(jsonPath("$.data.title").value("댓글"))
+                .andExpect(jsonPath("$.data.content").value("신고된 댓글 내용"))
+                .andExpect(jsonPath("$.data.fileUrl").value(nullValue()));
+
+        verify(reportGroupQueryUseCase).findReportSnapshot(10L);
+    }
+
+    @Test
+    @DisplayName("삭제됐거나 존재하지 않는 신고 그룹의 스냅샷 조회는 404를 반환한다")
+    void findReportSnapshot_notFound() throws Exception {
+        // 활성 신고 그룹만 조회하므로 삭제된 그룹도 동일하게 404로 처리합니다.
+        when(reportGroupQueryUseCase.findReportSnapshot(999L))
+                .thenThrow(new ReportGroupNotFoundException(999L));
+
+        mockMvc.perform(
+                        get("/api/reportgroup/{reportGroupId}/snapshot", 999L)
+                                .with(authentication(adminAuthentication))
+                )
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("REPORT_404_1"));
+
+        verify(reportGroupQueryUseCase).findReportSnapshot(999L);
+    }
+
 }
