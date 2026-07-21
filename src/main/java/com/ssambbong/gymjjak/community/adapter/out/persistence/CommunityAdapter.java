@@ -40,6 +40,11 @@ public class CommunityAdapter implements CommunityPort, PostReportTargetPort, Po
     private final SpringDataCommunityCommentRepository springDataCommunityCommentRepository;
 
     @Override
+    public long countCommunityPostsByUserId(Long userId) {
+        return springDataCommunityRepository.countByUserIdAndDeletedAtIsNull(userId);
+    }
+
+    @Override
     public Long saveCommunityPost(
             CommunityPost communityPost
     ) {

@@ -59,6 +59,9 @@ public class UserJpaEntity extends BaseTimeEntity {
     @Column(name = "onboarding_completed", nullable = false)
     private boolean onboardingCompleted;
 
+    @Column(name = "is_paid", nullable = false)
+    private boolean paid;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "social_provider", length = 20)
     private SocialProvider socialProvider;
@@ -77,6 +80,14 @@ public class UserJpaEntity extends BaseTimeEntity {
         this.onboardingCompleted = true;
     }
 
+    public void markAsPaid() {
+        this.paid = true;
+    }
+
+    public void markAsUnpaid() {
+        this.paid = false;
+    }
+
     public static UserJpaEntity from(User user) {
         return UserJpaEntity.builder()
                 .username(user.getUsername())
@@ -87,6 +98,7 @@ public class UserJpaEntity extends BaseTimeEntity {
                 .role(user.getRole())
                 .status(user.getStatus())
                 .onboardingCompleted(user.isOnboardingCompleted())
+                .paid(user.isPaid())
                 .socialProvider(user.getSocialProvider())
                 .socialId(user.getSocialId())
                 .lastLoginAt(user.getLastLoginAt())

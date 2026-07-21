@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.payments.subscription.domain.model.SubscriptionStat
 import com.ssambbong.gymjjak.payments.subscription.infrastructure.persistence.SpringDataSubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -14,7 +15,8 @@ public class SubscriptionPaymentQueryAdapter implements SubscriptionPaymentQuery
 
     // 활성 구독 존재 여부
     @Override
-    public boolean existsActiveByUserId(Long userId) {
-        return springDataSubscriptionRepository.existsByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE);
+    public boolean existsActiveByUserId(Long userId, LocalDateTime now) {
+        return springDataSubscriptionRepository
+                .existsByUserIdAndStatusAndExpiredAtAfter(userId, SubscriptionStatus.ACTIVE, now);
     }
 }

@@ -18,8 +18,10 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+
+import java.security.Principal;
 
 import java.time.LocalDateTime;
 
@@ -36,8 +38,9 @@ public class ChatWebSocketController {
     @MessageMapping("/chat.send")
     public void sendMessage(
             @Payload @Valid SendChatMessageRequest request,
-            @AuthenticationPrincipal AuthUser authUser
+            Principal principal
     ) {
+        AuthUser authUser = (AuthUser) ((Authentication) principal).getPrincipal();
         SendChatMessageCommand command = new SendChatMessageCommand(
                 request.chatRoomId(),
                 authUser.userId(),

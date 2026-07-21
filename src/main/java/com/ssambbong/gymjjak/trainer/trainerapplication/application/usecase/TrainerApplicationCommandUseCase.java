@@ -2,9 +2,11 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase;
 
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.*;
 
+import java.util.List;
+
 public interface TrainerApplicationCommandUseCase {
 
-    Long createTrainerApplication(CreateTrainerApplicationCommand command);
+    List<Long> createTrainerApplication(CreateTrainerApplicationCommand command);
 
     Long updateTrainerApplication(UpdateTrainerApplicationCommand command);
 

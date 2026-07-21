@@ -18,6 +18,9 @@ import static com.ssambbong.gymjjak.report.application.port.ReportSanctionAction
 public class CommunityCommentReportAdapter
         implements CommentReportTargetPort, CommentSanctionPort {
 
+    // 댓글 신고 스냅샷
+    private static final String COMMENT_REPORT_TITLE = "댓글";
+
     private final SpringDataCommunityCommentRepository
             springDataCommunityCommentRepository;
 
@@ -41,7 +44,7 @@ public class CommunityCommentReportAdapter
         return new ReportTargetSnapshot(
                 communityComment.getId(),
                 communityComment.getUserId(),
-                null,
+                COMMENT_REPORT_TITLE,
                 communityComment.getContent(),
                 null
         );

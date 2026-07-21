@@ -275,7 +275,7 @@ public class ReportGroupCommandService implements ReportGroupCommandUseCase {
                 .orElse("알 수 없음");
 
         return new AdminReportReasonItem(
-                report.getReporterId(),
+                report.getReportId(),
                 reporterUsername,
                 report.getReason(),
                 report.getDetail(),

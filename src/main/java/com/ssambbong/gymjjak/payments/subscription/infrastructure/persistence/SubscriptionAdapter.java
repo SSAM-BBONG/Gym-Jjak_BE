@@ -26,8 +26,9 @@ public class SubscriptionAdapter implements SubscriptionRepository {
 
     // 활성 구독 조회
     @Override
-    public Optional<Subscription> findActiveByUserId(Long userId) {
-        return springDataSubscriptionRepository.findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
+    public Optional<Subscription> findActiveByUserId(Long userId, LocalDateTime now) {
+        return springDataSubscriptionRepository
+                .findByUserIdAndStatusAndExpiredAtAfter(userId, SubscriptionStatus.ACTIVE, now)
                 .map(SubscriptionJpaEntity::toDomain);
     }
 }

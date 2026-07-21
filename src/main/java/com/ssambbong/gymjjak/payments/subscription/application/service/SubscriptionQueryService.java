@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -20,6 +22,7 @@ import java.util.Optional;
 public class SubscriptionQueryService implements SubscriptionQueryUseCase {
 
     private final SubscriptionRepository subscriptionRepository;
+    private final Clock clock;
 
     // 구독 플랜 조회
     @Override
@@ -36,7 +39,8 @@ public class SubscriptionQueryService implements SubscriptionQueryUseCase {
     @Override
     public Optional<SubscriptionView> findMySubscription(Long userId) {
         log.debug("event=subscription_fetch userId={}", userId);
-        Optional<SubscriptionView> result = subscriptionRepository.findActiveByUserId(userId)
+        Optional<SubscriptionView> result = subscriptionRepository
+                .findActiveByUserId(userId, LocalDateTime.now(clock))
                 .map(this::toView);
         log.info("event=subscription_fetch_succeeded userId={} found={}", userId, result.isPresent());
         return result;
