@@ -119,7 +119,7 @@ Response Body
   "message": "구독 결제 요청이 생성되었습니다",
   "data": {
     "orderId": "SUB-05YJQK1Z0GY4R",
-    "amount": 7900
+    "amount": 4900
   }
 }
 ```
