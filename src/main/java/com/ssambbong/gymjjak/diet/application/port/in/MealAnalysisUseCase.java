@@ -8,7 +8,7 @@ import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 
 public interface MealAnalysisUseCase {
     MealAnalysisResult create(MealAnalysisCommand command);
-    MealAnalysisResult get(Long userId, Long mealId);
+    MealAnalysisResult get(Long requesterUserId, Long targetUserId, Long mealId);
     MealPageResult<MealAnalysisResult> getList(MealPageQuery query);
     MealAnalysisResult update(Long mealId, UpdateMealAnalysisCommand command);
     void delete(Long userId, Long mealId);
