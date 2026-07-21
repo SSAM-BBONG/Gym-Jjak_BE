@@ -80,20 +80,16 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
     List<ChatRoomSummaryProjection> findChatRoomSummariesByRequesterId(@Param("requesterId") Long requesterId);
 
     @Query(value = """
-            SELECT COALESCE(SUM(cnt), 0)
-            FROM (
-                SELECT COUNT(*) AS cnt
-                FROM chat_messages cm
-                JOIN chat_rooms cr ON cm.chat_room_id = cr.chat_room_id
-                LEFT JOIN trainer_profiles tp ON cr.trainer_profile_id = tp.trainer_profile_id
-                WHERE (cr.user_id = :requesterId OR tp.user_id = :requesterId)
-                  AND cr.status != 'DELETED'
-                  AND NOT (cr.user_id = :requesterId AND cr.user_left = true)
-                  AND NOT (tp.user_id = :requesterId AND cr.trainer_left = true)
-                  AND cm.sender_id != :requesterId
-                  AND cm.is_read = false
-                GROUP BY cm.chat_room_id
-            ) AS t
+            SELECT COUNT(*)
+            FROM chat_messages cm
+            JOIN chat_rooms cr ON cm.chat_room_id = cr.chat_room_id
+            LEFT JOIN trainer_profiles tp ON cr.trainer_profile_id = tp.trainer_profile_id
+            WHERE (cr.user_id = :requesterId OR tp.user_id = :requesterId)
+              AND cr.status != 'DELETED'
+              AND NOT (cr.user_id = :requesterId AND cr.user_left = true)
+              AND NOT (tp.user_id = :requesterId AND cr.trainer_left = true)
+              AND cm.sender_id != :requesterId
+              AND cm.is_read = false
             """, nativeQuery = true)
     long countTotalUnreadByRequesterId(@Param("requesterId") Long requesterId);
 
