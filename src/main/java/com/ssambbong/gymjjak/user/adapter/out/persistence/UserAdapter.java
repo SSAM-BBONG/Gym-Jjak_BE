@@ -151,6 +151,18 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     }
 
     @Override
+    public int activateExpiredSevenDaySuspendedUsers(List<Long> userIds) {
+        if (userIds.isEmpty()) {
+            return 0;
+        }
+        return springDataUserRepository.activateSevenDaySuspendedUsers(
+                userIds,
+                UserStatus.DAY_7,
+                UserStatus.ACTIVE
+        );
+    }
+
+    @Override
     public void updatePassword(
             Long userId,
             String encodedPassword,

@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.user.domain.model.UserStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserPort {
@@ -38,6 +39,8 @@ public interface UserPort {
     void withdraw(Long userId, LocalDateTime now);
 
     void updateStatus(Long userId, UserStatus status);
+
+    int activateExpiredSevenDaySuspendedUsers(List<Long> userIds);
 
     void updatePassword(Long userId, String encodedPassword, LocalDateTime updatedAt);
 

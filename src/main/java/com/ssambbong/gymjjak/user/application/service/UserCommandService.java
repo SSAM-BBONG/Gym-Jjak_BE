@@ -86,10 +86,6 @@ public class UserCommandService implements UserCommandUseCase {
 
         LocalDateTime now = LocalDateTime.now();
 
-        UserStatus beforeStatus = user.getStatus();
-
-        user.releaseSuspensionIfExpired(now);
-
         if (user.getPassword() == null) {
             log.warn("event=user_login_failed reason=social_login_required userId={}, username={}, provider={}",
                     user.getId(),
@@ -102,10 +98,6 @@ public class UserCommandService implements UserCommandUseCase {
 
         if (!userPort.matchesPassword(command.password(), user.getPassword())) {
             throw new UserException(UserErrorCode.LOGIN_FAILED);
-        }
-
-        if (beforeStatus != user.getStatus()) {
-            userPort.save(user);
         }
 
         user.validateLoginAllowed();

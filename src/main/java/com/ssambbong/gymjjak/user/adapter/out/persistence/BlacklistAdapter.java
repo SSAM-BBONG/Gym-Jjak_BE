@@ -6,6 +6,9 @@ import com.ssambbong.gymjjak.user.domain.model.BlacklistStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class BlacklistAdapter implements BlacklistPort {
@@ -28,5 +31,18 @@ public class BlacklistAdapter implements BlacklistPort {
         BlacklistsJpaEntity savedEntity = springDataBlacklistsJpaRepository.save(entity);
 
         return blacklistPersistenceMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public List<Long> findExpiredSevenDaySuspensionUserIds(LocalDateTime now) {
+        return springDataBlacklistsJpaRepository.findExpiredSevenDaySuspensionUserIds(now);
+    }
+
+    @Override
+    public int releaseExpiredSevenDaySuspensions(List<Long> userIds, LocalDateTime now) {
+        if (userIds.isEmpty()) {
+            return 0;
+        }
+        return springDataBlacklistsJpaRepository.releaseExpiredSevenDaySuspensions(userIds, now);
     }
 }
