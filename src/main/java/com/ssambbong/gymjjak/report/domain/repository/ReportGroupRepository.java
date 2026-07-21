@@ -18,6 +18,9 @@ public interface ReportGroupRepository {
 
     Optional<ReportGroup> findById(Long reportGroupId);
 
+    // 활성화된 신고그룹 조회
+    Optional<ReportGroup> findActiveById(Long reportGroupId);
+
     AdminReportListResult findAdminReportList(AdminReportListQuery query);
 
     AdminReportDetailResult findReportDetail(Long reportGroupId);

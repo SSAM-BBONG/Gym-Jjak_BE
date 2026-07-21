@@ -60,6 +60,14 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<ReportGroup> findActiveById(Long reportGroupId) {
+        // soft delete 안된 신고그룹 조회
+        return reportGroupRepository.findByReportGroupIdAndDeletedAtIsNull(reportGroupId)
+                .map(reportGroupPersistenceMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     // 이건 aggregate를 조작하는 명령 메서드가 아님
     // 화면용 읽기 모델을 만드는 메서드임
     public AdminReportListResult findAdminReportList(AdminReportListQuery query) {
