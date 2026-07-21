@@ -17,6 +17,7 @@ public class AiMealAnalysisConfig {
     @Bean
     public RestClient aiMealAnalysisRestClient(RestClient.Builder builder, AiMealAnalysisProperties properties) {
         HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
                 // AI 서버에 연결하지 못할 때 MVC 요청 스레드가 장시간 묶이지 않도록 연결 제한 시간을 둔다.
                 .connectTimeout(Duration.ofMillis(properties.getConnectTimeoutMillis()))
                 .build();
