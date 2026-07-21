@@ -49,9 +49,11 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         List<PtCurriculumQueryPort.CurriculumSummary> curricula =
                 ptCurriculumQueryPort.findAllByPtCourseId(reservation.ptCourseId());
 
-        // 4. ptCurriculumId 기준으로 피드백 목록을 Map
+        // 4. 해당 유저의 코스 전체 세션 예약 ID 조회 후 피드백 Map 구성
+        List<Long> reservationIds = ptReservationQueryPort.findReservationIdsByUserIdAndPtCourseId(
+                reservation.userId(), reservation.ptCourseId());
         Map<Long, Feedback> feedbackMap =
-                feedbackRepository.findAllByPtReservationId(ptReservationId)
+                feedbackRepository.findAllByPtReservationIds(reservationIds)
                         .stream()
                         .collect(Collectors.toMap(
                                 Feedback::getPtCurriculumId,
@@ -77,8 +79,10 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         Feedback feedback = feedbackRepository.findById(feedbackId)
                 .orElseThrow(FeedbackNotFoundException::new);
 
-        // 2. path param의 ptReservationId와 피드백의 예약 ID 일치 확인
-        if (!feedback.getPtReservationId().equals(ptReservationId)) {
+        // 2. path param 예약과 피드백 예약이 같은 코스인지 확인
+        PtReservationQueryPort.ReservationInfo pathReservation = ptReservationQueryPort.findById(ptReservationId);
+        PtReservationQueryPort.ReservationInfo feedbackReservation = ptReservationQueryPort.findById(feedback.getPtReservationId());
+        if (!pathReservation.ptCourseId().equals(feedbackReservation.ptCourseId())) {
             throw new FeedbackNotFoundException();
         }
 

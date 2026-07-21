@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface SpringDataTrainerReviewRepository extends JpaRepository<TrainerReviewJpaEntity, Long> {
 
-    boolean existsByPtReservationIdAndDeletedAtIsNull(Long ptReservationId);
+    boolean existsByPtCourseIdAndUserIdAndDeletedAtIsNull(Long ptCourseId, Long userId);
 
     @Query(value = """
             SELECT tr.trainer_review_id AS trainerReviewId, tr.rating AS rating,

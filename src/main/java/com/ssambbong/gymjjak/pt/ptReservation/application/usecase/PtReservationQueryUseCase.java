@@ -22,6 +22,9 @@ public interface PtReservationQueryUseCase {
     // 유저+코스 기준 완료 회차 수
     int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId);
 
+    // 유저+코스 기준 derived status (수동 완료 포함)
+    PtReservationStatus deriveCourseStatus(Long userId, Long ptCourseId);
+
     // 내 PT 세션 목록 조회 (예약 탭)
     List<PtSessionView> findMySessions(Long userId);
 

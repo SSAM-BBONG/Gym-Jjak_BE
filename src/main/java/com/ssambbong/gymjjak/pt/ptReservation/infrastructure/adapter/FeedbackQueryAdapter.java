@@ -6,7 +6,6 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.port.FeedbackQueryPort
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,21 +17,16 @@ public class FeedbackQueryAdapter implements FeedbackQueryPort {
     private final SpringDataFeedbackRepository feedbackRepository;
 
     @Override
-    public LocalDate findLastFeedbackDate(Long ptReservationId) {
-        return feedbackRepository.findMaxCreatedAtByPtReservationId(ptReservationId)
-                .map(dt -> dt.toLocalDate())
-                .orElse(null);
-    }
-
-    @Override
-    public Map<Long, Long> findFeedbackIdMapByReservationId(Long ptReservationId) {
+    public Map<Long, Long> findFeedbackIdMapByReservationIds(List<Long> ptReservationIds) {
+        if (ptReservationIds.isEmpty()) return Map.of();
         List<FeedbackJpaEntity> feedbacks =
-                feedbackRepository.findAllByPtReservationIdAndDeletedAtIsNull(ptReservationId);
+                feedbackRepository.findAllByPtReservationIdInAndDeletedAtIsNull(ptReservationIds);
 
         return feedbacks.stream()
                 .collect(Collectors.toMap(
                         FeedbackJpaEntity::getPtCurriculumId,
-                        FeedbackJpaEntity::getId
+                        FeedbackJpaEntity::getId,
+                        (a, b) -> a
                 ));
     }
 }

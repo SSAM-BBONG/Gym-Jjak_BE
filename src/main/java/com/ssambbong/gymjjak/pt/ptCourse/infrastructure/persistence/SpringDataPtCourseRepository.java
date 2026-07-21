@@ -18,6 +18,7 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
     Optional<PtCourseJpaEntity> findByIdAndDeletedAtIsNull(Long id);
 
     // [dashboard] 조직 소속 PT 목록 + 현재 수강생 수 집계 (트레이너 이름순)
+    // currentStudentCount: progressCount 기준 (취소 안됨 + done_count < totalSessionCount)
     @Query(value = """
             SELECT pc.pt_course_id        AS ptCourseId,
                    pc.title               AS title,
@@ -25,10 +26,22 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
                    pc.total_session_count AS totalSessionCount,
                    pc.status              AS status,
                    tp.trainer_name        AS trainerName,
-                   COUNT(DISTINCT CASE WHEN pr.status = 'IN_PROGRESS' THEN pr.user_id END) AS currentStudentCount
+                   COUNT(DISTINCT CASE
+                       WHEN pr.status != 'CANCELLED'
+                            AND COALESCE(prog.done_count, 0) < pc.total_session_count
+                       THEN pr.user_id
+                   END) AS currentStudentCount
             FROM pt_courses pc
             JOIN trainer_profiles tp ON pc.trainer_profile_id = tp.trainer_profile_id
             LEFT JOIN pt_reservations pr ON pc.pt_course_id = pr.pt_course_id
+            LEFT JOIN (
+                SELECT r2.user_id, r2.pt_course_id, COUNT(*) AS done_count
+                FROM pt_reservations r2
+                WHERE r2.status = 'COMPLETED'
+                   OR (r2.reserved_end_at < NOW() AND r2.status != 'CANCELLED')
+                   OR (r2.status = 'CANCELLED' AND DATE(r2.cancelled_at) = DATE(r2.reserved_start_at))
+                GROUP BY r2.user_id, r2.pt_course_id
+            ) prog ON prog.user_id = pr.user_id AND prog.pt_course_id = pr.pt_course_id
             WHERE pc.organization_id = :organizationId
             GROUP BY pc.pt_course_id, pc.title, pc.price, pc.total_session_count, pc.status, tp.trainer_name
             ORDER BY tp.trainer_name ASC, pc.pt_course_id DESC

@@ -54,13 +54,14 @@ public class PtReservationController {
         );
 
         Long reservationId = ptReservationCommandUseCase.createPtReservation(command);
+        PtReservationStatus courseStatus = ptReservationQueryUseCase.deriveCourseStatus(authUser.userId(), ptCourseId);
 
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
                         PtReservationResponseCode.PT_RESERVATION_CREATED,
                         new CreatePtReservationResponse(
                                 reservationId,
-                                PtReservationStatus.RESERVED
+                                courseStatus
                         )
                         ));
     }
@@ -129,8 +130,10 @@ public class PtReservationController {
                 new ChangePtReservationStatusCommand(authUser.userId(), reservationId, request.status()));
         int progressCount = ptReservationQueryUseCase.countProgressByUserIdAndPtCourseId(
                 reservation.getUserId(), reservation.getPtCourseId());
+        PtReservationStatus derivedStatus = ptReservationQueryUseCase.deriveCourseStatus(
+                reservation.getUserId(), reservation.getPtCourseId());
         ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
-                reservation.getStatus(),
+                derivedStatus,
                 progressCount,
                 reservation.getTotalSessionCount()
         );

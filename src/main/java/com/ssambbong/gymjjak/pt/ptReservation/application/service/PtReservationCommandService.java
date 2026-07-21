@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -54,6 +55,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     private final PaymentQueryPort paymentQueryPort;
     private final ApplicationEventPublisher eventPublisher;
     private final CalendarCacheEvictionPort calendarCacheEvictionPort;
+    private final Clock clock;
 
     @Override
     public Long createPtReservation(CreatePtReservationCommand command) {
@@ -277,7 +279,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
         // 당일 취소는 노쇼로 간주해 COMPLETED 처리, 전날 이전 취소는 CANCELLED
         // CANCELLED / COMPLETED 이면 도메인에서 PtReservationStatusInvalidException 발생
-        boolean isNoshow = reservation.getReservedStartAt().toLocalDate().isEqual(LocalDate.now());
+        boolean isNoshow = reservation.getReservedStartAt().toLocalDate().isEqual(LocalDate.now(clock));
         PtReservationStatus newStatus = isNoshow ? PtReservationStatus.COMPLETED : PtReservationStatus.CANCELLED;
         reservation.changeStatus(newStatus);
         ptReservationRepository.updateStatus(reservation);

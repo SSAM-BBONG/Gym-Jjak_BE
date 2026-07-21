@@ -13,7 +13,7 @@ public interface TrainerReviewRepository {
 
     Long save(TrainerReview trainerReview);
 
-    boolean existsByPtReservationId(Long ptReservationId);
+    boolean existsByPtCourseIdAndUserId(Long ptCourseId, Long userId);
 
     Optional<TrainerReview> findActiveById(Long trainerReviewId);
 

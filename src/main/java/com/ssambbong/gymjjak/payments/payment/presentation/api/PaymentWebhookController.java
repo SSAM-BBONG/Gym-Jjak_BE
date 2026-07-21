@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.payments.payment.application.command.ProcessWebhookCommand;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
-import com.ssambbong.gymjjak.payments.payment.infrastructure.adapter.PortOneWebhookVerifier;
+import com.ssambbong.gymjjak.payments.payment.infrastructure.portone.PortOneWebhookVerifier;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.request.WebhookPaymentRequest;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.response.PaymentResponseCode;
 import io.swagger.v3.oas.annotations.Operation;

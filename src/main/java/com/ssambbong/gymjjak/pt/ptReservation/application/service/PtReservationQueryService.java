@@ -80,9 +80,14 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         List<PtCourseQueryPort.CurriculumInfo> curriculums =
                 ptCourseQueryPort.findCurriculumsByPtCourseId(reservation.getPtCourseId());
 
-        // 커리큘럼ID → 피드백ID 맵 조회
+        // 코스 전체 세션 예약 ID 조회 후 커리큘럼ID → 피드백ID 맵 구성
+        List<Long> reservationIds = ptReservationRepository.findAllByUserId(userId, null)
+                .stream()
+                .filter(r -> r.getPtCourseId().equals(reservation.getPtCourseId()))
+                .map(PtReservation::getId)
+                .toList();
         Map<Long, Long> feedbackIdMap =
-                feedbackQueryPort.findFeedbackIdMapByReservationId(ptReservationId);
+                feedbackQueryPort.findFeedbackIdMapByReservationIds(reservationIds);
 
         // 커리큘럼 + 피드백ID(없으면 null) 합쳐서 View 리스트 생성
         List<CurriculumView> curriculumViews = curriculums.stream()
@@ -91,6 +96,28 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
         int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
                 reservation.getUserId(), reservation.getPtCourseId());
+        int totalSessionCount = reservation.getTotalSessionCount();
+
+        List<PtReservation> mySessions = ptReservationRepository.findAllByUserId(userId, null)
+                .stream()
+                .filter(r -> r.getPtCourseId().equals(reservation.getPtCourseId()))
+                .toList();
+
+        boolean allCancelled = mySessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+        boolean allCompleted = mySessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
+
+        PtReservationStatus derivedStatus;
+        if (allCancelled) {
+            derivedStatus = PtReservationStatus.CANCELLED;
+        } else if (allCompleted || progressCount >= totalSessionCount) {
+            derivedStatus = PtReservationStatus.COMPLETED;
+        } else if (progressCount == 0) {
+            derivedStatus = PtReservationStatus.RESERVED;
+        } else {
+            derivedStatus = PtReservationStatus.IN_PROGRESS;
+        }
 
         log.info("event=pt_reservation_detail_succeeded ptReservationId={}", ptReservationId);
         return new PtReservationDetailView(
@@ -98,9 +125,9 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 resolveThumbnailUrl(courseInfo.thumbnailFileId()),
                 courseInfo.title(),
                 courseInfo.trainerName(),
-                reservation.getStatus(),
+                derivedStatus,
                 progressCount,
-                reservation.getTotalSessionCount(),
+                totalSessionCount,
                 curriculumViews
         );
 
@@ -109,6 +136,25 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
     @Override
     public int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
         return ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
+    public PtReservationStatus deriveCourseStatus(Long userId, Long ptCourseId) {
+        List<PtReservation> sessions = ptReservationRepository.findAllByUserId(userId, null)
+                .stream()
+                .filter(r -> r.getPtCourseId().equals(ptCourseId))
+                .toList();
+
+        boolean allCancelled = sessions.stream().allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+        boolean allCompleted = sessions.stream().allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
+
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
+        int totalSessionCount = sessions.isEmpty() ? 0 : sessions.get(0).getTotalSessionCount();
+
+        if (allCancelled) return PtReservationStatus.CANCELLED;
+        if (allCompleted || progressCount >= totalSessionCount) return PtReservationStatus.COMPLETED;
+        if (progressCount == 0) return PtReservationStatus.RESERVED;
+        return PtReservationStatus.IN_PROGRESS;
     }
 
     // 내 PT 세션 목록 조회
@@ -254,14 +300,16 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
         boolean allCancelled = sessions.stream()
                 .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+        boolean allCompleted = sessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
 
         PtReservationStatus derivedStatus;
         if (allCancelled) {
             derivedStatus = PtReservationStatus.CANCELLED;
+        } else if (allCompleted || progressCount >= totalSessionCount) {
+            derivedStatus = PtReservationStatus.COMPLETED;
         } else if (progressCount == 0) {
             derivedStatus = PtReservationStatus.RESERVED;
-        } else if (progressCount >= totalSessionCount) {
-            derivedStatus = PtReservationStatus.COMPLETED;
         } else {
             derivedStatus = PtReservationStatus.IN_PROGRESS;
         }

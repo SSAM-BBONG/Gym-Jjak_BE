@@ -20,6 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
     private final TrainerReviewRepository trainerReviewRepository;
     private final PtReservationQueryPort ptReservationQueryPort;
     private final TrainerReviewMetricsPort trainerReviewMetricsPort;
+    private final Clock clock;
 
     @Override
     @Transactional
@@ -39,7 +43,7 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
             throw new PtReservationNotCompletedException();
         }
 
-        if (trainerReviewRepository.existsByPtReservationId(command.ptReservationId())) {
+        if (trainerReviewRepository.existsByPtCourseIdAndUserId(command.ptCourseId(), command.userId())) {
             throw new TrainerReviewAlreadyExistsException();
         }
 
@@ -47,7 +51,6 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
                 command.userId(),
                 reservation.trainerProfileId(),
                 command.ptCourseId(),
-                command.ptReservationId(),
                 command.rating(),
                 command.content()
         );
@@ -82,7 +85,7 @@ public class TrainerReviewCommandService implements TrainerReviewCommandUseCase 
             throw new TrainerReviewForbiddenException();
         }
 
-        trainerReviewRepository.save(review.delete());
+        trainerReviewRepository.save(review.delete(LocalDateTime.now(clock)));
         recordMetricSafely(trainerReviewMetricsPort::recordDeleted, "recordDeleted");
     }
 

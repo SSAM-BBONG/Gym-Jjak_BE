@@ -11,7 +11,7 @@
 1. 서버가 PT 또는 구독 결제 가격을 확정하고 `PENDING` 결제를 생성한다.
 2. 프론트엔드가 서버에서 받은 결제 ID로 PortOne 결제를 요청한다.
 3. PortOne이 웹훅으로 결제 상태 변경을 알린다.
-4. 서버가 PortOne 결제 조회 API로 상태와 금액을 재검증한다.
+4. 서버가 웹훅 시그니처를 검증한 뒤 PortOne 결제 조회 API로 상태와 금액을 재검증한다.
 5. 검증에 성공하면 결제를 `PAID`로 변경하고, 구독 상품이면 구독을 생성한다.
 
 서버가 가격을 결정하고, 웹훅 이후 PortOne API로 금액을 재검증하는 큰 방향은 적절하다. 다만 웹훅은 중복, 지연, 순서 역전, 위조 요청을 전제로 처리해야 한다.
@@ -31,39 +31,28 @@ PortOne V2 웹훅에서 `data.orderId`는 존재하지 않는다. `data.paymentI
 
 `PortOnePaymentAdapter`가 `amount.paid`를 읽던 코드를 `amount.total`로 수정했다. PortOne V2 결제 조회 응답에서 실제 결제 금액은 `amount.total` 기준이다.
 
-> 남은 개선: `Map<String, Object>` 방식 대신 PortOne JVM SDK 또는 전용 응답 DTO로 교체하면 타입 안전성을 확보할 수 있다.
+추가로 `Map<String, Object>` 방식을 `PortOnePaymentResponse` 전용 DTO로 교체하여 타입 안전성을 확보했다. (`infrastructure/portone/PortOnePaymentResponse.java`)
 
 ### ~~[치명적] 웹훅 서명 검증 누락~~ ✅ 수정 완료
 
-`PortOneWebhookVerifier` 컴포넌트를 추가하여 Standard Webhooks 스펙 기반 서명 검증을 구현했다.
+`infrastructure/portone/PortOneWebhookVerifier` 컴포넌트를 추가하여 Standard Webhooks 스펙 기반 서명 검증을 구현했다.
 
 - `PaymentWebhookController`가 `@RequestBody String rawBody`로 원본 바디를 수신
 - `webhook-id`, `webhook-timestamp`, `webhook-signature` 헤더 존재 확인
 - timestamp가 현재 시각 ±5분 이내인지 검증 (재전송 공격 방어)
 - `HMAC-SHA256(Base64Decode(secret), "{id}.{timestamp}.{rawBody}")` 재계산 후 헤더 서명값과 비교
 - 검증 실패 시 `WebhookInvalidSignatureException` → 400 반환
+- `data` 또는 `data.paymentId` null 시 200 반환 후 종료 (NPE 방지)
 
-### [치명적] 중복 웹훅 동시 처리 시 구독 중복 생성 가능
+### ~~[치명적] 중복 웹훅 동시 처리 시 구독 중복 생성 가능~~ ✅ 코드 확인 결과 이미 처리됨
 
-`Transaction.Paid` 처리에서 일반 조회 후 `PENDING` 상태를 확인하고 구독을 생성한다. 동일한 웹훅이 동시에 도착하면 두 요청이 모두 `PENDING`을 읽고 구독을 각각 생성할 수 있다.
+`PaymentCommandService.processWebhook()`에서 구독 결제의 경우 트랜잭션 내에서 `subscriptionUserPort.lockById(userId)`로 사용자 행을 잠근 뒤 `findByOrderId()`로 결제를 재조회한다. 첫 번째 웹훅이 커밋되면 두 번째 웹훅은 재조회 시 `PENDING`이 아님을 확인하고 종료한다.
 
-**개선 방향**
+### ~~[치명적] 구독 만료와 취소 이후 권한 회수 누락~~ ✅ 코드 확인 결과 이미 처리됨
 
-- `findByOrderIdForUpdate` 같은 비관적 락을 적용하거나 `@Version` 기반 낙관적 락을 사용한다.
-- 또는 `WHERE status = 'PENDING'` 조건부 업데이트의 영향 행 수로 단일 처리 여부를 보장한다.
-- 구독 생성과 결제 상태 변경은 하나의 짧은 트랜잭션에서 원자적으로 처리한다.
-
-### [치명적] 구독 만료와 취소 이후 권한 회수 누락
-
-구독 조회와 활성 여부 검증이 `ACTIVE` 상태만 확인하며 `expiredAt`을 조건에 포함하지 않는다. `SubscriptionJpaEntity.expire()`를 호출하는 흐름도 없다.
-
-결제 취소 웹훅은 결제만 `CANCELLED`로 전환하고, 이미 생성된 구독 권한은 종료하지 않는다.
-
-**개선 방향**
-
-- 구독 권한 조회 조건을 `ACTIVE AND expired_at > 현재 시각`으로 제한한다.
-- 스케줄러 또는 조회 시점 만료 처리로 만료 상태를 갱신한다.
-- 취소와 환불 정책에 따라 연결된 구독을 즉시 종료하거나 종료 예정 상태로 변경한다.
+- **취소**: `Transaction.Cancelled` 처리 시 `subscriptionLifecyclePort.expire(subscriptionId)`로 구독을 EXPIRED 처리하고, 활성 구독이 없으면 `subscriptionUserPort.markAsUnpaid(userId)`로 권한을 회수한다.
+- **만료**: `SubscriptionExpirationScheduler` + `SubscriptionExpirationBatchService`가 주기적으로 `expiredAt <= now`인 ACTIVE 구독을 EXPIRED로 전환하고 사용자 권한을 회수한다.
+- **조회**: `findByUserIdAndStatusAndExpiredAtAfter(userId, ACTIVE, now)`로 만료 시각까지 조건에 포함해 활성 구독을 조회한다.
 
 ### [중요] 웹훅 재시도와 부분 취소 정책 필요
 
@@ -84,9 +73,7 @@ PortOne V2 웹훅에서 `data.orderId`는 존재하지 않는다. `data.paymentI
 - `Clock`을 주입한다.
 - 결제 완료, 실패, 취소, 구독 시작 및 만료 시간을 `LocalDateTime.now(clock)`으로 생성한다.
 
-### [권장] 웹훅 입력 검증과 테스트 보강
-
-웹훅 DTO에 `@Valid`, `@NotBlank`, 중첩 `@Valid`가 없어 `data` 또는 `paymentId`가 누락되면 예상하지 못한 500 오류가 발생할 수 있다.
+### [권장] 테스트 보강
 
 **추가할 테스트**
 
