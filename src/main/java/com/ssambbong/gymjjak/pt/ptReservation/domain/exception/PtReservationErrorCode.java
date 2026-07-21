@@ -22,7 +22,13 @@ public enum PtReservationErrorCode implements ErrorCode {
     PT_RESERVATION_FORBIDDEN(HttpStatus.FORBIDDEN, "PT_RESERVATION_004", "본인의 예약만 조회할 수 있습니다."),
 
     // RESERVED는 예약 생성 시에만 자동 설정되므로 직접 변경 불가
-    PT_RESERVATION_STATUS_INVALID(HttpStatus.CONFLICT, "PT_RESERVATION_005", "변경할 수 없는 상태값입니다."),
+    PT_RESERVATION_STATUS_INVALID(HttpStatus.CONFLICT, "PT_RESERVATION_005", "예약됨 상태로는 직접 변경할 수 없습니다."),
+
+    // 이미 취소된 예약
+    PT_RESERVATION_ALREADY_CANCELLED(HttpStatus.CONFLICT, "PT_RESERVATION_009", "이미 취소된 예약은 상태를 변경할 수 없습니다."),
+
+    // 이미 완료된 예약
+    PT_RESERVATION_ALREADY_COMPLETED(HttpStatus.CONFLICT, "PT_RESERVATION_010", "이미 완료된 예약은 상태를 변경할 수 없습니다."),
 
     // 강습 스케줄에 없는 요일/시간으로 예약 시도
     PT_RESERVATION_SCHEDULE_MISMATCH(HttpStatus.BAD_REQUEST, "PT_RESERVATION_006", "강습 스케줄에 없는 요일 또는 시간입니다."),

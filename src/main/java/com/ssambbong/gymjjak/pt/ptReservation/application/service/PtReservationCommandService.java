@@ -185,11 +185,11 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         Long reservationUserId = reservation.getUserId();
         LocalDateTime reservedStartAt = reservation.getReservedStartAt();
 
-        // COMPLETED는 수강생의 전체 세션 일괄 완료 처리
+        // COMPLETED는 수강생의 전체 세션 일괄 완료 처리 (도메인 검증을 먼저 통과한 뒤 bulk 실행)
         if (command.status() == PtReservationStatus.COMPLETED) {
+            reservation.changeStatus(command.status());
             ptReservationRepository.bulkCompleteByUserIdAndPtCourseId(
                     reservation.getUserId(), reservation.getPtCourseId());
-            reservation.changeStatus(command.status());
         } else {
             // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
             reservation.changeStatus(command.status());
