@@ -132,7 +132,7 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                 return;
             }
             // PENDING 확인 후에만 PortOne API 호출 (트랜잭션 밖 — DB 커넥션 점유 방지)
-            portOneInfo = portOnePaymentVerifyPort.getPaymentInfo(command.portonePaymentId());
+            portOneInfo = portOnePaymentVerifyPort.getPaymentInfo(command.orderId());
         }
 
         final PortOnePaymentVerifyPort.PortOnePaymentInfo finalInfo = portOneInfo;
@@ -173,11 +173,11 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                         Long subscriptionId = subscriptionCreatePort.create(
                                 payment.getUserId(), planType, payment.getAmount(), startedAt, expiredAt);
                         paymentRepository.update(payment.paySubscription(
-                                command.portonePaymentId(), subscriptionId, startedAt));
+                                command.transactionId(), subscriptionId, startedAt));
                         subscriptionUserPort.markAsPaid(payment.getUserId());
                         log.info("event=webhook_subscription_created orderId={} subscriptionId={}", command.orderId(), subscriptionId);
                     } else {
-                        paymentRepository.update(payment.pay(command.portonePaymentId(), LocalDateTime.now(clock)));
+                        paymentRepository.update(payment.pay(command.transactionId(), LocalDateTime.now(clock)));
                     }
                     log.info("event=webhook_paid_succeeded orderId={}", command.orderId());
                 }

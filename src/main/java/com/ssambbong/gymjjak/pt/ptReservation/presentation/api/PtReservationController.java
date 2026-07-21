@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.request.ChangePtReservationStatusRequest;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.request.CreatePtReservationRequest;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.*;
@@ -53,13 +54,14 @@ public class PtReservationController {
         );
 
         Long reservationId = ptReservationCommandUseCase.createPtReservation(command);
+        PtReservationStatus courseStatus = ptReservationQueryUseCase.deriveCourseStatus(authUser.userId(), ptCourseId);
 
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
                         PtReservationResponseCode.PT_RESERVATION_CREATED,
                         new CreatePtReservationResponse(
                                 reservationId,
-                                PtReservationStatus.RESERVED
+                                courseStatus
                         )
                         ));
     }
@@ -71,12 +73,12 @@ public class PtReservationController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(required = false) PtReservationStatus status
     ) {
-        var views = ptReservationQueryUseCase.findMyReservations(
+        List<PtReservationQueryUseCase.MyPtReservationView> views = ptReservationQueryUseCase.findMyReservations(
                 authUser.userId(),
                 status
         );
 
-        var response = MyPtReservationsResponse.from(views);
+        MyPtReservationsResponse response = MyPtReservationsResponse.from(views);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
@@ -93,13 +95,13 @@ public class PtReservationController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("reservationId") Long ptReservationId
     ) {
-        var view = ptReservationQueryUseCase.findMyReservationDetail(
+        PtReservationQueryUseCase.PtReservationDetailView view = ptReservationQueryUseCase.findMyReservationDetail(
                 authUser.userId(),
                 ptReservationId
         );
 
         // View → 응답 DTO 변환
-        var response = MyPtReservationDetailResponse.from(view);
+        MyPtReservationDetailResponse response = MyPtReservationDetailResponse.from(view);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
@@ -128,8 +130,10 @@ public class PtReservationController {
                 new ChangePtReservationStatusCommand(authUser.userId(), reservationId, request.status()));
         int progressCount = ptReservationQueryUseCase.countProgressByUserIdAndPtCourseId(
                 reservation.getUserId(), reservation.getPtCourseId());
+        PtReservationStatus derivedStatus = ptReservationQueryUseCase.deriveCourseStatus(
+                reservation.getUserId(), reservation.getPtCourseId());
         ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
-                reservation.getStatus(),
+                derivedStatus,
                 progressCount,
                 reservation.getTotalSessionCount()
         );
@@ -170,7 +174,7 @@ public class PtReservationController {
     public ResponseEntity<GlobalApiResponse<PtSessionsResponse>> findMySessions(
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        var views = ptReservationQueryUseCase.findMySessions(authUser.userId());
+        List<PtReservationQueryUseCase.PtSessionView> views = ptReservationQueryUseCase.findMySessions(authUser.userId());
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtReservationResponseCode.PT_SESSIONS_FETCHED,
                 PtSessionsResponse.from(views)
@@ -195,12 +199,12 @@ public class PtReservationController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("reservationId") Long ptReservationId
     ) {
-        ptReservationCommandUseCase.cancelPtSession(
+        PtSessionStatus sessionStatus = ptReservationCommandUseCase.cancelPtSession(
                 new CancelPtReservationCommand(authUser.userId(), ptReservationId)
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtReservationResponseCode.PT_SESSION_CANCELLED,
-                CancelPtReservationResponse.cancelled()
+                CancelPtReservationResponse.of(sessionStatus)
         ));
     }
 

@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.domain.model;
 
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationErrorCode;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationStatusInvalidException;
 
@@ -116,8 +117,11 @@ public class PtReservation {
         if (newStatus == null || newStatus == PtReservationStatus.RESERVED) {
             throw new PtReservationStatusInvalidException();
         }
-        if (this.status == PtReservationStatus.CANCELLED || this.status == PtReservationStatus.COMPLETED) {
-            throw new PtReservationStatusInvalidException();
+        if (this.status == PtReservationStatus.CANCELLED) {
+            throw new PtReservationStatusInvalidException(PtReservationErrorCode.PT_RESERVATION_ALREADY_CANCELLED);
+        }
+        if (this.status == PtReservationStatus.COMPLETED) {
+            throw new PtReservationStatusInvalidException(PtReservationErrorCode.PT_RESERVATION_ALREADY_COMPLETED);
         }
         this.status = newStatus;
         if (newStatus == PtReservationStatus.CANCELLED) {

@@ -43,7 +43,10 @@ public enum PtCourseErrorCode implements ErrorCode {
     PT_COURSE_CANNOT_DELETE(HttpStatus.CONFLICT, "PT_COURSE_009", "BLOCKED 상태의 PT 강습은 삭제할 수 없습니다."),
 
     // 활성 예약(RESERVED/IN_PROGRESS)이 있어 삭제 불가
-    PT_COURSE_HAS_ACTIVE_RESERVATION(HttpStatus.CONFLICT, "PT_COURSE_010", "진행 중인 예약이 있어 PT 강습을 삭제할 수 없습니다.");
+    PT_COURSE_HAS_ACTIVE_RESERVATION(HttpStatus.CONFLICT, "PT_COURSE_010", "진행 중인 예약이 있어 PT 강습을 삭제할 수 없습니다."),
+
+    // 활성 예약(RESERVED/IN_PROGRESS)이 있어 비활성화 불가
+    PT_COURSE_HAS_ACTIVE_RESERVATION_FOR_HIDE(HttpStatus.CONFLICT, "PT_COURSE_011", "진행 중인 예약이 있어 PT 강습을 비활성화할 수 없습니다.");
 
 
     private final HttpStatus httpStatus;

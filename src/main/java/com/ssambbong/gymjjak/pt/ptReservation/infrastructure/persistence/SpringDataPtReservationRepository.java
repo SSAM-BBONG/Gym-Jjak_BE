@@ -34,24 +34,60 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     List<PtReservationJpaEntity> findAllByUserIdAndStatusOrderByReservedStartAtDesc(Long userId, PtReservationStatus status);
 
     // 강습별 현재 수강 중인 수강생 수 + 전체 수강생 수를 한 번에 배치 집계
-    @Query("""
-            SELECT r.ptCourseId,
-                   COUNT(DISTINCT CASE WHEN r.status IN :activeStatuses THEN r.userId END),
-                   COUNT(DISTINCT CASE WHEN r.status <> :cancelledStatus THEN r.userId END)
-            FROM PtReservationJpaEntity r
-            WHERE r.ptCourseId IN :ptCourseIds
-            GROUP BY r.ptCourseId
-            """)
+    // activeCount: 취소 안됨 + done_count < totalSessionCount (수동완료 포함)
+    @Query(value = """
+            SELECT
+                r.pt_course_id,
+                COUNT(DISTINCT CASE
+                    WHEN r.status != 'CANCELLED'
+                         AND COALESCE(prog.done_count, 0) < r.total_session_count
+                    THEN r.user_id
+                END) AS active_count,
+                COUNT(DISTINCT CASE
+                    WHEN r.status != 'CANCELLED'
+                    THEN r.user_id
+                END) AS total_count
+            FROM pt_reservations r
+            LEFT JOIN (
+                SELECT r2.user_id, r2.pt_course_id, COUNT(*) AS done_count
+                FROM pt_reservations r2
+                WHERE r2.status = 'COMPLETED'
+                   OR (r2.reserved_end_at < NOW() AND r2.status != 'CANCELLED')
+                   OR (r2.status = 'CANCELLED' AND DATE(r2.cancelled_at) = DATE(r2.reserved_start_at))
+                GROUP BY r2.user_id, r2.pt_course_id
+            ) prog ON prog.user_id = r.user_id AND prog.pt_course_id = r.pt_course_id
+            WHERE r.pt_course_id IN :ptCourseIds
+            GROUP BY r.pt_course_id
+            """, nativeQuery = true)
     List<Object[]> countStudentsGroupByPtCourseId(
-            @Param("ptCourseIds") List<Long> ptCourseIds,
-            @Param("activeStatuses") List<PtReservationStatus> activeStatuses,
-            @Param("cancelledStatus") PtReservationStatus cancelledStatus);
+            @Param("ptCourseIds") List<Long> ptCourseIds);
 
     // 강습별 수강생 목록 조회 (최신 예약일순)
     List<PtReservationJpaEntity> findAllByPtCourseIdOrderByReservedStartAtDesc(Long ptCourseId);
 
-    // 진행 중인 PT 수
+    // 특정 상태 예약 수 집계 (통계용)
     long countByStatus(PtReservationStatus status);
+
+    // progressCount 기준 진행 중인 코스 수 (user+course 쌍 단위)
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM (
+                SELECT r.user_id, r.pt_course_id
+                FROM pt_reservations r
+                JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
+                GROUP BY r.user_id, r.pt_course_id, pc.total_session_count
+                HAVING
+                    COUNT(CASE WHEN r.status = 'CANCELLED' THEN 1 END) < COUNT(*)
+                    AND COUNT(CASE WHEN r.status = 'COMPLETED' THEN 1 END) < COUNT(*)
+                    AND COUNT(CASE WHEN (r.reserved_end_at < NOW() AND r.status != 'CANCELLED')
+                                        OR (r.status = 'CANCELLED' AND DATE(r.cancelled_at) = DATE(r.reserved_start_at))
+                               THEN 1 END) > 0
+                    AND COUNT(CASE WHEN (r.reserved_end_at < NOW() AND r.status != 'CANCELLED')
+                                        OR (r.status = 'CANCELLED' AND DATE(r.cancelled_at) = DATE(r.reserved_start_at))
+                               THEN 1 END) < pc.total_session_count
+            ) sub
+            """, nativeQuery = true)
+    long countInProgressCourses();
 
     // ── 메트릭용 집계 쿼리 ──
 
@@ -85,12 +121,25 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             """, nativeQuery = true)
     long countDistinctUsersByOrganizationId(@Param("organizationId") Long organizationId);
 
-    // 대시보드 — 조직별 현재 이용자 수 (IN_PROGRESS DISTINCT user_id)
+    // 대시보드 — 조직별 현재 이용자 수 (progressCount 기준 IN_PROGRESS, DISTINCT user_id)
     @Query(value = """
-            SELECT COUNT(DISTINCT r.user_id)
-            FROM pt_reservations r
-            WHERE r.organization_id = :organizationId
-              AND r.status = 'IN_PROGRESS'
+            SELECT COUNT(DISTINCT sub.user_id)
+            FROM (
+                SELECT r.user_id, r.pt_course_id
+                FROM pt_reservations r
+                JOIN pt_courses pc ON r.pt_course_id = pc.pt_course_id
+                WHERE r.organization_id = :organizationId
+                GROUP BY r.user_id, r.pt_course_id, pc.total_session_count
+                HAVING
+                    COUNT(CASE WHEN r.status = 'CANCELLED' THEN 1 END) < COUNT(*)
+                    AND COUNT(CASE WHEN r.status = 'COMPLETED' THEN 1 END) < COUNT(*)
+                    AND COUNT(CASE WHEN (r.reserved_end_at < NOW() AND r.status != 'CANCELLED')
+                                        OR (r.status = 'CANCELLED' AND DATE(r.cancelled_at) = DATE(r.reserved_start_at))
+                               THEN 1 END) > 0
+                    AND COUNT(CASE WHEN (r.reserved_end_at < NOW() AND r.status != 'CANCELLED')
+                                        OR (r.status = 'CANCELLED' AND DATE(r.cancelled_at) = DATE(r.reserved_start_at))
+                               THEN 1 END) < pc.total_session_count
+            ) sub
             """, nativeQuery = true)
     long countDistinctCurrentUsersByOrganizationId(@Param("organizationId") Long organizationId);
 
@@ -159,6 +208,7 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
             SELECT u.name                                                             AS userName,
                    MIN(r.created_at)                                                  AS enrolledAt,
                    SUM(CASE
+             WHEN r.status = 'COMPLETED' THEN 1
              WHEN r.reserved_end_at < NOW() AND r.status != 'CANCELLED' THEN 1
              WHEN r.status = 'CANCELLED' AND DATE(r.cancelled_at) = DATE(r.reserved_start_at) THEN 1
              ELSE 0
@@ -205,12 +255,13 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
         """, nativeQuery = true)
     int countConsumedByUserIdAndPtCourseId(@Param("userId") Long userId, @Param("ptCourseId") Long ptCourseId);
 
-    // 유저+코스 기준 진행 회차 수 (endAt 지난 비취소 + 당일 취소)
+    // 유저+코스 기준 진행 회차 수 (COMPLETED + endAt 지난 비취소 + 당일 취소)
     @Query(value = """
         SELECT COUNT(*) FROM pt_reservations
         WHERE user_id = :userId AND pt_course_id = :ptCourseId
           AND (
-            (reserved_end_at < NOW() AND status != 'CANCELLED')
+            status = 'COMPLETED'
+            OR (reserved_end_at < NOW() AND status != 'CANCELLED')
             OR (status = 'CANCELLED' AND DATE(cancelled_at) = DATE(reserved_start_at))
           )
         """, nativeQuery = true)

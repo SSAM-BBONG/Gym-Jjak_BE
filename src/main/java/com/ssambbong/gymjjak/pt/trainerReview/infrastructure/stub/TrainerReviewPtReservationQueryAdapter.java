@@ -3,6 +3,8 @@ package com.ssambbong.gymjjak.pt.trainerReview.infrastructure.stub;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
+
+import java.util.List;
 import com.ssambbong.gymjjak.pt.trainerReview.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.pt.trainerReview.application.port.ReservationResult;
 import com.ssambbong.gymjjak.pt.trainerReview.domain.exception.TrainerReviewPtReservationNotFoundException;
@@ -24,9 +26,19 @@ public class TrainerReviewPtReservationQueryAdapter implements PtReservationQuer
             throw new TrainerReviewPtReservationNotFoundException();
         }
 
-        return new ReservationResult(
-                reservation.getStatus() == PtReservationStatus.COMPLETED,
-                reservation.getTrainerProfileId()
-        );
+        int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
+
+        List<PtReservation> sessions =
+                ptReservationRepository.findAllByUserId(userId, null).stream()
+                        .filter(r -> r.getPtCourseId().equals(ptCourseId))
+                        .toList();
+        boolean allCancelled = sessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+        boolean allCompleted = sessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
+
+        boolean completed = !allCancelled && (allCompleted || progressCount >= reservation.getTotalSessionCount());
+
+        return new ReservationResult(completed, reservation.getTrainerProfileId());
     }
 }

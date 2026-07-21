@@ -28,6 +28,15 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
     }
 
     @Override
+    public List<Feedback> findAllByPtReservationIds(List<Long> ptReservationIds) {
+        if (ptReservationIds.isEmpty()) return List.of();
+        return repository.findAllByPtReservationIdInAndDeletedAtIsNull(ptReservationIds)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public Optional<Feedback> findById(Long feedbackId) {
         return repository.findByIdAndDeletedAtIsNull(feedbackId)
                 .map(mapper::toDomain);
@@ -67,8 +76,9 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
     }
 
     @Override
-    public boolean existsByPtReservationIdAndPtCurriculumId(Long ptReservationId, Long ptCurriculumId) {
-        return repository.existsByPtReservationIdAndPtCurriculumIdAndDeletedAtIsNull(ptReservationId, ptCurriculumId);
+    public boolean existsByPtReservationIdsAndPtCurriculumId(List<Long> ptReservationIds, Long ptCurriculumId) {
+        if (ptReservationIds.isEmpty()) return false;
+        return repository.existsByPtReservationIdInAndPtCurriculumIdAndDeletedAtIsNull(ptReservationIds, ptCurriculumId);
     }
 
     @Override

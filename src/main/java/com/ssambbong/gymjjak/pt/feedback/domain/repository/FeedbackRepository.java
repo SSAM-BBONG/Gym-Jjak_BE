@@ -11,6 +11,9 @@ public interface FeedbackRepository {
     // 예약 ID로 피드백 목록 조회
     List<Feedback> findAllByPtReservationId(Long ptReservationId);
 
+    // 예약 ID 목록으로 피드백 전체 조회 (코스 전체 세션 피드백 조회용)
+    List<Feedback> findAllByPtReservationIds(List<Long> ptReservationIds);
+
     // 피드백 ID로 단건 조회
     Optional<Feedback> findById(Long feedbackId);
 
@@ -20,8 +23,8 @@ public interface FeedbackRepository {
     // 피드백 내용 수정
     void update(Feedback feedback);
 
-    // 동일 예약 - 회차 피드백 중복 여부 확인
-    boolean existsByPtReservationIdAndPtCurriculumId(Long ptReservationId, Long ptCurriculumId);
+    // 코스 전체 세션 중 동일 커리큘럼 피드백 중복 여부 확인
+    boolean existsByPtReservationIdsAndPtCurriculumId(List<Long> ptReservationIds, Long ptCurriculumId);
 
     // 피드백 삭제
     void deleteById(Long feedbackId);

@@ -29,9 +29,6 @@ public class TrainerReviewJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "pt_course_id", nullable = false)
     private Long ptCourseId;
 
-    @Column(name = "pt_reservation_id", nullable = false, unique = true)
-    private Long ptReservationId;
-
     @Column(name = "rating", nullable = false, columnDefinition = "TINYINT")
     private int rating;
 
@@ -46,13 +43,12 @@ public class TrainerReviewJpaEntity extends BaseCreatedUpdatedEntity {
 
     @Builder
     private TrainerReviewJpaEntity(Long id, Long userId, Long trainerProfileId, Long ptCourseId,
-                                   Long ptReservationId, int rating, String content,
+                                   int rating, String content,
                                    String status, LocalDateTime deletedAt) {
         this.id = id;
         this.userId = userId;
         this.trainerProfileId = trainerProfileId;
         this.ptCourseId = ptCourseId;
-        this.ptReservationId = ptReservationId;
         this.rating = rating;
         this.content = content;
         this.status = status;

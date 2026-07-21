@@ -35,8 +35,8 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
     @Column(name = "order_id", nullable = false, length = 50)
     private String orderId;
 
-    @Column(name = "portone_payment_id", length = 50)
-    private String portonePaymentId;
+    @Column(name = "transaction_id", length = 50)
+    private String transactionId;
 
     @Column(name = "amount", nullable = false)
     private int amount;
@@ -84,14 +84,14 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
         this.status = PaymentStatus.PENDING;
     }
 
-    public void markPaid(String portonePaymentId, LocalDateTime paidAt) {
-        this.portonePaymentId = portonePaymentId;
+    public void markPaid(String transactionId, LocalDateTime paidAt) {
+        this.transactionId = transactionId;
         this.status = PaymentStatus.PAID;
         this.paidAt = paidAt;
     }
 
-    public void markPaid(String portonePaymentId, Long subscriptionId, LocalDateTime paidAt) {
-        this.portonePaymentId = portonePaymentId;
+    public void markPaid(String transactionId, Long subscriptionId, LocalDateTime paidAt) {
+        this.transactionId = transactionId;
         this.aiSubscriptionId = subscriptionId;
         this.status = PaymentStatus.PAID;
         this.paidAt = paidAt;
@@ -123,7 +123,7 @@ public class PaymentJpaEntity extends BaseCreatedUpdatedEntity {
     public Payment toDomain() {
         return Payment.restore(
                 id, userId, ptCourseId, aiSubscriptionId,
-                orderId, portonePaymentId, amount,
+                orderId, transactionId, amount,
                 planType, status, productType,
                 paidAt, cancelledAt, failedAt, failReason
         );

@@ -17,6 +17,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseCannotDeleteEx
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseTrainerNotInOrganizationException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseHasActiveReservationException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseHasActiveReservationForHideException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseRequestInvalidException;
@@ -309,6 +310,17 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             log.warn("event=pt_course_status_change_failed, reason=forbidden, userId={}, ptCourseId={}",
                     command.userId(), command.ptCourseId());
             throw new PtCourseForbiddenException();
+        }
+
+        if (command.status() == PtCourseStatus.HIDDEN) {
+            int activeCount = ptReservationCountQueryPort
+                    .countStudentsByPtCourseIds(List.of(command.ptCourseId()))
+                    .active().getOrDefault(command.ptCourseId(), 0);
+            if (activeCount > 0) {
+                log.warn("event=pt_course_status_change_failed, reason=has_active_reservation, ptCourseId={}, activeCount={}",
+                        command.ptCourseId(), activeCount);
+                throw new PtCourseHasActiveReservationForHideException();
+            }
         }
 
         ptCourse.changeStatus(command.status());

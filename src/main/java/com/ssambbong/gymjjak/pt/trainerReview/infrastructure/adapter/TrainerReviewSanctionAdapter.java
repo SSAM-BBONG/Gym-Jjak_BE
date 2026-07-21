@@ -10,12 +10,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class TrainerReviewSanctionAdapter implements TrainerReviewSanctionPort {
 
     private final TrainerReviewRepository trainerReviewRepository;
+    private final Clock clock;
 
     @Override
     @Transactional
@@ -26,7 +30,7 @@ public class TrainerReviewSanctionAdapter implements TrainerReviewSanctionPort {
                 .orElseThrow(TrainerReviewNotFoundException::new);
 
         switch (action) {
-            case APPLY_MANUAL_BLIND -> trainerReviewRepository.save(trainerReview.delete());
+            case APPLY_MANUAL_BLIND -> trainerReviewRepository.save(trainerReview.delete(LocalDateTime.now(clock)));
         }
 
         log.info("[TrainerReviewSanction] trainerReviewId={}, action={}", targetId, action);

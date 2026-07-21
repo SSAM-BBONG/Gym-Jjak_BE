@@ -89,10 +89,14 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
         return repository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
     }
 
-    // 진행 중인 PT 수
     @Override
     public long countByStatus(PtReservationStatus status) {
         return repository.countByStatus(status);
+    }
+
+    @Override
+    public long countInProgressCourses() {
+        return repository.countInProgressCourses();
     }
 
     @Override

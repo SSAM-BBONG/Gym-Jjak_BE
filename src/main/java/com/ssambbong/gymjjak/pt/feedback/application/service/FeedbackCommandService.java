@@ -88,9 +88,11 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
         // 커리큘럼이 해당 코스 소속인지 확인
         ptCurriculumQueryPort.findByIdAndPtCourseId(command.ptCurriculumId(), reservation.ptCourseId());
 
-        // 중복 피드백 확인
-        if (feedbackRepository.existsByPtReservationIdAndPtCurriculumId(
-                command.ptReservationId(), command.ptCurriculumId())) {
+        // 코스 전체 세션 기준 동일 커리큘럼 중복 피드백 확인
+        List<Long> courseReservationIds = ptReservationQueryPort.findReservationIdsByUserIdAndPtCourseId(
+                reservation.userId(), reservation.ptCourseId());
+        if (feedbackRepository.existsByPtReservationIdsAndPtCurriculumId(
+                courseReservationIds, command.ptCurriculumId())) {
             throw new FeedbackAlreadyExistsException();
         }
 
@@ -154,8 +156,10 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
                     return new FeedbackNotFoundException();
                 });
 
-        // path parameter의 예약 ID와 피드백의 예약 ID 일치 확인
-        if (!feedback.getPtReservationId().equals(command.ptReservationId())) {
+        // path param 예약과 피드백 예약이 같은 코스인지 확인
+        PtReservationQueryPort.ReservationInfo pathReservation = ptReservationQueryPort.findById(command.ptReservationId());
+        PtReservationQueryPort.ReservationInfo feedbackReservation = ptReservationQueryPort.findById(feedback.getPtReservationId());
+        if (!pathReservation.ptCourseId().equals(feedbackReservation.ptCourseId())) {
             throw new FeedbackNotFoundException();
         }
 
@@ -167,6 +171,13 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             log.warn("event=feedback_update_failed reason=forbidden userId={} feedbackId={}",
                     command.userId(), command.feedbackId());
             throw new FeedbackForbiddenException();
+        }
+
+        // 피드백이 연결된 세션이 완료된 경우 수정 불가
+        boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
+                || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
+        if (sessionCompleted) {
+            throw new FeedbackReservationCompletedException();
         }
 
         // 미디어 파일 필수값 검증
@@ -213,8 +224,10 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
                     return new FeedbackNotFoundException();
                 });
 
-        // path parameter의 예약 ID와 피드백의 예약 ID 일치 확인
-        if (!feedback.getPtReservationId().equals(command.ptReservationId())) {
+        // path param 예약과 피드백 예약이 같은 코스인지 확인
+        PtReservationQueryPort.ReservationInfo pathReservation = ptReservationQueryPort.findById(command.ptReservationId());
+        PtReservationQueryPort.ReservationInfo feedbackReservation = ptReservationQueryPort.findById(feedback.getPtReservationId());
+        if (!pathReservation.ptCourseId().equals(feedbackReservation.ptCourseId())) {
             throw new FeedbackNotFoundException();
         }
 
@@ -228,10 +241,10 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackForbiddenException();
         }
 
-        // 예약이 COMPLETED이면 삭제 불가
-        PtReservationQueryPort.ReservationInfo reservation =
-                ptReservationQueryPort.findById(command.ptReservationId());
-        if (reservation.status() == PtReservationStatus.COMPLETED) {
+        // 피드백이 연결된 세션이 완료된 경우 삭제 불가 (작성 체크와 동일 기준)
+        boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
+                || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
+        if (sessionCompleted) {
             log.warn("event=feedback_delete_failed reason=reservation_completed feedbackId={}", command.feedbackId());
             throw new FeedbackReservationCompletedException();
         }

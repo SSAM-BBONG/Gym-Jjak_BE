@@ -1,7 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
-import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.infrastructure.persistence.SpringDataPtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,15 +16,11 @@ public class PtReservationCountQueryAdapter implements PtReservationCountQueryPo
 
     private final SpringDataPtReservationRepository ptReservationRepository;
 
-    private static final List<PtReservationStatus> ACTIVE_STATUSES =
-            List.of(PtReservationStatus.RESERVED, PtReservationStatus.IN_PROGRESS);
-
     @Override
     public StudentCounts countStudentsByPtCourseIds(List<Long> ptCourseIds) {
         if (ptCourseIds.isEmpty()) return new StudentCounts(Map.of(), Map.of());
 
-        List<Object[]> rows = ptReservationRepository.countStudentsGroupByPtCourseId(
-                ptCourseIds, ACTIVE_STATUSES, PtReservationStatus.CANCELLED);
+        List<Object[]> rows = ptReservationRepository.countStudentsGroupByPtCourseId(ptCourseIds);
 
         Map<Long, Integer> active = new HashMap<>();
         Map<Long, Integer> total = new HashMap<>();
