@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "PortOne 웹훅 요청")
 public record WebhookPaymentRequest(
 
-        @Schema(description = "웹훅 이벤트 타입", example = "Transaction.Paid")
+        @Schema(description = "웹훅 이벤트 타입. 알 수 없는 타입은 200 반환 후 무시한다.", example = "Transaction.Paid")
         String type,
 
         @Schema(description = "결제 데이터")

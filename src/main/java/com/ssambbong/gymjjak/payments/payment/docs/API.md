@@ -119,7 +119,7 @@ Response Body
   "message": "구독 결제 요청이 생성되었습니다",
   "data": {
     "orderId": "SUB-05YJQK1Z0GY4R",
-    "amount": 7900
+    "amount": 4900
   }
 }
 ```
@@ -278,7 +278,80 @@ Response Body
 
 `POST /api/payments/webhook`
 
-PortOne이 결제 이벤트 발생 시 서버로 직접 전송합니다. 인증 토큰이 필요하지 않습니다. 서버가 200을 반환하지 않으면 PortOne이 웹훅을 재전송합니다.
+---
+
+### 웹훅이란?
+
+결제 흐름은 아래 순서로 진행됩니다.
+
+```
+[사용자] → 결제 요청 생성 (POST /api/payments/pt)
+         → 서버가 orderId·amount 반환
+         → 프론트가 PortOne SDK로 실제 결제 진행
+         → PortOne이 결제 결과를 서버로 웹훅 전송 (이 API)
+         → 서버가 PortOne API를 호출해 금액·상태 재검증 후 DB 갱신
+```
+
+즉 결제 최종 확정은 프론트가 아닌 **PortOne이 서버로 직접 쏘는 웹훅**을 통해 이루어집니다. 서버가 200을 반환하지 않으면 PortOne이 일정 간격으로 웹훅을 재전송합니다.
+
+> **프론트 연동 주의사항**: `PortOne.requestPayment()` 호출 시 `noticeUrls` 파라미터에 웹훅 엔드포인트를 명시해야 합니다. 누락 시 PortOne 콘솔에 등록된 URL로만 웹훅이 전송되므로, 개발 환경에서 웹훅이 서버에 도달하지 않을 수 있습니다.
+> ```javascript
+> PortOne.requestPayment({
+>   storeId: "store-xxx",
+>   channelKey: "channel-key-xxx",
+>   noticeUrls: ["https://api.gymjjak.com/api/payments/webhook"],
+>   // ...
+> })
+> ```
+
+---
+
+### 시그니처 검증
+
+PortOne은 웹훅 위변조 방지를 위해 [Standard Webhooks](https://www.standardwebhooks.com/) 스펙으로 서명값을 헤더에 포함합니다. 서버는 웹훅을 처리하기 전에 반드시 서명을 검증합니다.
+
+**검증 방식 (`PortOneWebhookVerifier`)**
+
+1. 요청 헤더에서 `webhook-id`, `webhook-timestamp`, `webhook-signature` 추출
+2. `{webhook-id}.{webhook-timestamp}.{rawBody}` 문자열을 HMAC-SHA256으로 서명
+3. 서명 키는 환경변수 `PORTONE_WEBHOOK_SECRET` (Base64 인코딩, `whsec_` 접두사 제거 후 디코딩)
+4. `webhook-timestamp`가 현재 시각 기준 ±5분 이내인지 확인 (재전송 공격 방어)
+5. 계산한 서명과 헤더의 `webhook-signature`(`v1,{Base64값}`) 비교
+   - `webhook-signature`는 공백으로 구분된 여러 서명값을 포함할 수 있습니다 (PortOne 시크릿 키 로테이션 시 구/신 키로 서명한 값을 동시에 전송). 하나라도 일치하면 검증 통과
+
+검증 실패 시 `400 PAYMENT_006`을 반환하고 처리를 중단합니다.
+
+---
+
+### 웹훅 처리 흐름
+
+```
+웹훅 수신
+  ↓
+시그니처 검증 (실패 → 400)
+  ↓
+type 확인
+  - 알 수 없는 type → 200 반환 후 무시 (PortOne이 추가한 새 이벤트 타입 대응)
+  ↓
+orderId로 결제 조회 (없으면 → 404)
+  ↓
+[Transaction.Paid]
+  - 이미 PENDING이 아니면 → 중복 처리, 200 반환 후 무시
+  - PortOne API 호출해 status="PAID", amount 일치 여부 재검증
+  - 검증 통과 → DB 상태 PAID로 갱신, transactionId 저장
+  - PT 결제면 종료 / 구독 결제면 구독 생성 + 사용자 권한 변경
+
+[Transaction.Failed]
+  - 이미 PENDING이 아니면 → 중복 처리, 200 반환 후 무시
+  - DB 상태 FAILED로 갱신
+
+[Transaction.Cancelled]
+  - 이미 PAID가 아니면 → 중복 처리, 200 반환 후 무시
+  - DB 상태 CANCELLED로 갱신
+  - 구독 결제면 구독 EXPIRED 처리 + 활성 구독 없으면 사용자 권한 해제
+```
+
+---
 
 # **[request]**
 
@@ -305,8 +378,8 @@ Request Body
 
 | name | 설명 |
 | --- | --- |
-| `type` | 웹훅 이벤트 타입입니다. `Transaction.Paid` / `Transaction.Failed` / `Transaction.Cancelled` 중 하나입니다. |
-| `data.paymentId` | 서버가 생성한 주문 ID입니다 (PortOne V2에서 merchantPaymentId = 우리 orderId). |
+| `type` | 웹훅 이벤트 타입입니다. 서버가 처리하는 타입은 `Transaction.Paid` / `Transaction.Failed` / `Transaction.Cancelled`이며, 그 외 알 수 없는 타입은 200을 반환하고 무시합니다. |
+| `data.paymentId` | 서버가 생성한 주문 ID입니다 (PortOne V2에서 `data.paymentId` = 우리 `orderId`). |
 | `data.transactionId` | PortOne 거래 고유 ID입니다. DB의 `transaction_id` 컬럼에 저장됩니다. |
 
 # **[response]**
@@ -315,7 +388,7 @@ Request Body
 
 | HTTP 상태 | code | 설명 |
 | --- | --- | --- |
-| `200 OK` | `WEBHOOK_RECEIVED` | 웹훅 처리 완료 |
+| `200 OK` | `WEBHOOK_RECEIVED` | 웹훅 처리 완료 (알 수 없는 type, 중복 수신 포함) |
 
 Response Body
 
