@@ -23,7 +23,7 @@ public class TrainerMainPageController {
 
     @GetMapping("/main")
     @PreAuthorize("hasAuthority('TRAINER')")
-    // 로그인한 트레이너의 PT 운영 현황 대시보드를 조회합니다.
+    // 트레이너의 PT Zone 대시보드 조회
     public ResponseEntity<GlobalApiResponse<TrainerMainPageResponse>> findMainPage(
             @AuthenticationPrincipal AuthUser authUser
     ) {

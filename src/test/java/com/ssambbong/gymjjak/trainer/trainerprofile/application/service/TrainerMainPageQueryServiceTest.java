@@ -98,6 +98,31 @@ class TrainerMainPageQueryServiceTest {
         verifyNoInteractions(fileUrlUseCase);
     }
 
+    @Test
+    void findMainPage_returnsNullOrganizationNameWhenCourseHasNoOrganization() {
+        TrainerMainPtQueryPort.InProgressPtCourse course =
+                new TrainerMainPtQueryPort.InProgressPtCourse(
+                        101L,
+                        null,
+                        null,
+                        "체형 교정 PT",
+                        70000,
+                        0L
+                );
+
+        when(trainerProfileRepository.findByUserId(7L)).thenReturn(Optional.of(activeTrainerProfile()));
+        when(organizationQueryPort.countActiveOrganizations(10L)).thenReturn(0L);
+        when(ptQueryPort.countCurrentStudents(10L)).thenReturn(0L);
+        when(ptQueryPort.findTopCoursesByCurrentStudentCount(10L, 4)).thenReturn(List.of(course));
+
+        TrainerMainPageResult result = trainerMainPageQueryService.findMainPage(7L);
+
+        assertThat(result.inProgressPtCourses()).singleElement()
+                .satisfies(card -> assertThat(card.organizationName()).isNull());
+        verify(organizationQueryPort, never()).findOrganizationNamesByIds(anyList());
+        verifyNoInteractions(fileUrlUseCase);
+    }
+
     private TrainerProfile activeTrainerProfile() {
         return TrainerProfile.restore(
                 10L,

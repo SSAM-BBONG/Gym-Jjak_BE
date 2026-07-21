@@ -13,7 +13,6 @@ public record TrainerMainPageResponse(
         List<InProgressPtCourseResponse> inProgressPtCourses
 ) {
 
-    // Application 조회 결과를 트레이너 메인 페이지 API 응답으로 변환합니다.
     public static TrainerMainPageResponse from(TrainerMainPageResult result) {
         return new TrainerMainPageResponse(
                 result.organizationCount(),
@@ -26,6 +25,7 @@ public record TrainerMainPageResponse(
         );
     }
 
+    // 해당 메서드에서만 사용하기 때문에 내부 record로 구현
     public record InProgressPtCourseResponse(
             Long ptCourseId,
             String thumbnailUrl,

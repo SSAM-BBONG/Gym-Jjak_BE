@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -32,27 +33,35 @@ public class TrainerMainPageQueryService implements TrainerMainPageQueryUseCase 
     private final FileUrlUseCase fileUrlUseCase;
 
     @Override
-    // trainerprofile 도메인을 기준으로 대시보드 조회 결과를 조합합니다.
+    // 트레이너 대시보드 조회.
     public TrainerMainPageResult findMainPage(Long userId) {
+        // 트레이너 profileId 조회
         TrainerProfile trainerProfile = findActiveTrainerProfile(userId);
 
+        // 소속 조직 수 조회
         long organizationCount = organizationQueryPort
                 .countActiveOrganizations(trainerProfile.getTrainerProfileId());
+        // 수강생 수 조회
         long currentStudentCount = ptQueryPort
                 .countCurrentStudents(trainerProfile.getTrainerProfileId());
+        // 진행 중인 pt 조회
         List<TrainerMainPtQueryPort.InProgressPtCourse> courses = ptQueryPort
+                // 상위 4개 조회
                 .findTopCoursesByCurrentStudentCount(trainerProfile.getTrainerProfileId(), TOP_PT_COURSE_LIMIT);
 
+        // 인기 pt 4개 각 헬스장명 조회
         Map<Long, String> organizationNameById = findOrganizationNames(courses);
+        // 인기 pt 4개 각 섬네일 이미지 조회
         Map<Long, FileUrlResult> thumbnailByFileId = findThumbnailUrls(courses);
 
+        // 카드에서 조회할 항목으로 변환
         List<TrainerMainPageResult.InProgressPtCourse> cards = courses.stream()
                 .map(course -> new TrainerMainPageResult.InProgressPtCourse(
                         course.ptCourseId(),
                         resolveThumbnailUrl(course.thumbnailFileId(), thumbnailByFileId),
                         course.title(),
                         trainerProfile.getTrainerName(),
-                        organizationNameById.get(course.organizationId()),
+                        resolveOrganizationName(course.organizationId(), organizationNameById),
                         course.price(),
                         course.currentStudentCount()
                 ))
@@ -78,12 +87,13 @@ public class TrainerMainPageQueryService implements TrainerMainPageQueryUseCase 
         return trainerProfile;
     }
 
+    // pt 내부 조직id 추출 후 조직명 찾기
     private Map<Long, String> findOrganizationNames(
             List<TrainerMainPtQueryPort.InProgressPtCourse> courses
     ) {
         List<Long> organizationIds = courses.stream()
                 .map(TrainerMainPtQueryPort.InProgressPtCourse::organizationId)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
 
@@ -99,7 +109,7 @@ public class TrainerMainPageQueryService implements TrainerMainPageQueryUseCase 
     ) {
         List<Long> thumbnailFileIds = courses.stream()
                 .map(TrainerMainPtQueryPort.InProgressPtCourse::thumbnailFileId)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
 
@@ -122,5 +132,14 @@ public class TrainerMainPageQueryService implements TrainerMainPageQueryUseCase 
 
         FileUrlResult fileUrlResult = thumbnailByFileId.get(thumbnailFileId);
         return fileUrlResult == null ? null : fileUrlResult.url();
+    }
+
+    // 소속 조직이 없는 강습은 null 키 조회 없이 조직명을 비워 반환합니다.
+    private String resolveOrganizationName(Long organizationId, Map<Long, String> organizationNameById) {
+        if (organizationId == null) {
+            return null;
+        }
+
+        return organizationNameById.get(organizationId);
     }
 }

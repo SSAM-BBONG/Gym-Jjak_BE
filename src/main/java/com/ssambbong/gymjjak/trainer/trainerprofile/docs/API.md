@@ -72,7 +72,7 @@ Response Body
 | `data.inProgressPtCourses[].thumbnailUrl` | PT 썸네일 URL입니다. 썸네일이 없거나 URL 조회에 실패하면 `null`입니다. |
 | `data.inProgressPtCourses[].title` | PT 강습명입니다. |
 | `data.inProgressPtCourses[].trainerName` | 담당 트레이너명입니다. |
-| `data.inProgressPtCourses[].organizationName` | 강습이 속한 조직명입니다. |
+| `data.inProgressPtCourses[].organizationName` | 강습이 속한 조직명입니다. 소속 조직 ID가 없거나 조직명을 찾지 못하면 `null`입니다. |
 | `data.inProgressPtCourses[].price` | PT 강습 가격입니다. |
 | `data.inProgressPtCourses[].currentStudentCount` | 해당 강습의 `IN_PROGRESS` 상태 수강생 수입니다. |
 
@@ -429,3 +429,4 @@ Response Body
   - 수강생 집계와 카드 정렬·빈 값 정책을 명세화했습니다. 📊
   - 공개·내 프로필 조회, 프로필 수정, 조직·관리자 검색 API 명세를 추가했습니다. 📚
   - 수강생이 없는 내 활성 PT 강습도 카드 목록에 포함하도록 정책을 확장했습니다. 🪪
+  - 소속 조직 ID가 없는 강습 카드의 `organizationName: null` 처리 정책을 명시했습니다. 🛡️
