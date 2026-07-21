@@ -18,6 +18,7 @@ public interface FeedbackQueryUseCase {
             Long ptCurriculumId,
             int sessionNo,
             String title,
+            LocalDate reservedStartAt,
             FeedbackSummary feedback
     ) {}
 

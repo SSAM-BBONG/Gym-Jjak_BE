@@ -61,9 +61,20 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
                                 (a, b) -> a   // 중복 시 먼저 저장된 거 유지
                         ));
 
-        // 5. 커리큘럼별 피드백 매핑
+        // 5. 예약 ID → 예약 시작일 맵 조회 (피드백 회차별 날짜 표시용)
+        Map<Long, java.time.LocalDate> reservationDateMap =
+                ptReservationQueryPort.findReservationStartDatesByUserIdAndPtCourseId(
+                        reservation.userId(), reservation.ptCourseId());
+
+        // 6. 커리큘럼별 피드백 매핑
         List<FeedbackListView> result = curricula.stream()
-                .map(c -> toListView(c, feedbackMap.get(c.ptCurriculumId())))
+                .map(c -> {
+                    Feedback feedback = feedbackMap.get(c.ptCurriculumId());
+                    java.time.LocalDate reservedStartAt = (feedback != null)
+                            ? reservationDateMap.get(feedback.getPtReservationId())
+                            : null;
+                    return toListView(c, feedback, reservedStartAt);
+                })
                 .toList();
 
         log.info("event=feedback_list_query_complete ptReservationId={} curriculumCount={}", ptReservationId, result.size());
@@ -154,9 +165,10 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         }
     }
 
-    // 커리큘럼 + 피드백(nullable) → FeedbackListView 변환
+    // 커리큘럼 + 피드백(nullable) + 예약 시작일(nullable) → FeedbackListView 변환
     private FeedbackListView toListView(PtCurriculumQueryPort.CurriculumSummary curriculum,
-                                        Feedback feedback) {
+                                        Feedback feedback,
+                                        java.time.LocalDate reservedStartAt) {
         FeedbackSummary summary = (feedback == null) ? null : new FeedbackSummary(
                 feedback.getId(),
                 feedback.getContent(),
@@ -166,6 +178,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
                 curriculum.ptCurriculumId(),
                 curriculum.sessionNo(),
                 curriculum.title(),
+                reservedStartAt,
                 summary
         );
     }
