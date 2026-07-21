@@ -23,6 +23,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -45,6 +46,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final UserNicknameQueryPort userNicknameQueryPort;
     private final ReviewQueryPort reviewQueryPort;
     private final FileUrlUseCase fileUrlUseCase;
+    private final Clock clock;
 
     @Override
     @Cacheable(value = "ptCourseList", sync = true)
@@ -184,7 +186,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         Map<Long, String> nicknameMap = userNicknameQueryPort.findNicknamesByUserIds(userIds);
 
         // 수강생 1명당 1줄 — 세션별 row를 userId 기준으로 집계
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         Map<Long, List<PtReservation>> byUser = reservations.stream()
                 .collect(Collectors.groupingBy(PtReservation::getUserId, LinkedHashMap::new, Collectors.toList()));
 
@@ -192,7 +194,10 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .map(entry -> {
                     Long studentUserId = entry.getKey();
                     List<PtReservation> studentSessions = entry.getValue();
-                    PtReservation rep = studentSessions.get(0);
+                    PtReservation rep = studentSessions.stream()
+                            .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
+                            .findFirst()
+                            .orElse(studentSessions.get(0));
 
                     // sessionStatus=COMPLETED(예약 종료 시각이 지난 회차)인 것 중 가장 최근 reservedEndAt
                     LocalDate lastPtDate = studentSessions.stream()
@@ -209,14 +214,16 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
                     boolean allCancelled = studentSessions.stream()
                             .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+                    boolean allCompleted = studentSessions.stream()
+                            .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
 
                     PtReservationStatus derivedStatus;
                     if (allCancelled) {
                         derivedStatus = PtReservationStatus.CANCELLED;
+                    } else if (allCompleted || progressCount >= totalSessionCount) {
+                        derivedStatus = PtReservationStatus.COMPLETED;
                     } else if (progressCount == 0) {
                         derivedStatus = PtReservationStatus.RESERVED;
-                    } else if (progressCount >= totalSessionCount) {
-                        derivedStatus = PtReservationStatus.COMPLETED;
                     } else {
                         derivedStatus = PtReservationStatus.IN_PROGRESS;
                     }
@@ -280,14 +287,36 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(
                 reservation.getUserId(), reservation.getPtCourseId());
+        int totalSessionCount = reservation.getTotalSessionCount();
+
+        List<PtReservation> studentSessions = ptReservationRepository.findAllByUserId(reservation.getUserId(), null)
+                .stream()
+                .filter(r -> r.getPtCourseId().equals(reservation.getPtCourseId()))
+                .toList();
+
+        boolean allCancelled = studentSessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
+        boolean allCompleted = studentSessions.stream()
+                .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
+
+        PtReservationStatus derivedStatus;
+        if (allCancelled) {
+            derivedStatus = PtReservationStatus.CANCELLED;
+        } else if (allCompleted || progressCount >= totalSessionCount) {
+            derivedStatus = PtReservationStatus.COMPLETED;
+        } else if (progressCount == 0) {
+            derivedStatus = PtReservationStatus.RESERVED;
+        } else {
+            derivedStatus = PtReservationStatus.IN_PROGRESS;
+        }
 
         return new ReservationDetailView(
                 studentProfile.nickname(),
                 studentProfile.email(),
                 studentProfile.phone(),
-                reservation.getStatus(),
+                derivedStatus,
                 progressCount,
-                reservation.getTotalSessionCount(),
+                totalSessionCount,
                 ptCourse.getTitle()
         );
     }
@@ -305,7 +334,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         long organizationCount = organizationQueryPort.countActive();
         long activeTrainerCount = trainerProfileQueryPort.countActive();
-        long inProgressPtCount = ptReservationRepository.countByStatus(PtReservationStatus.IN_PROGRESS);
+        long inProgressPtCount = ptReservationRepository.countInProgressCourses();
         Double averageSatisfaction = trainerProfileQueryPort.averageRating();
 
         log.info("event=pt_stats_find_succeeded organizationCount={}, activeTrainerCount={}, inProgressPtCount={}, averageSatisfaction={}",
@@ -449,7 +478,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourseScheduleRepository.findAllByPtCourseId(ptCourseId);
         if (schedules.isEmpty()) return new AvailableDatesView(List.of());
 
-        LocalDate firstDay = LocalDate.now();
+        LocalDate firstDay = LocalDate.now(clock);
         LocalDate lastDay = firstDay.plusDays(29);
 
         Set<LocalDateTime> reserved = new HashSet<>(
@@ -460,7 +489,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 )
         );
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         List<LocalDate> availableDates = new ArrayList<>();
         LocalDate date = firstDay;
         while (!date.isAfter(lastDay)) {
@@ -482,7 +511,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
     @Override
     public AvailableTimeSlotsView findAvailableTimeSlots(Long ptCourseId, LocalDate date) {
-        if (date.isBefore(LocalDate.now())) {
+        if (date.isBefore(LocalDate.now(clock))) {
             log.warn("event=pt_course_available_time_slots_failed reason=past_date ptCourseId={} date={}", ptCourseId, date);
             throw new PtCourseInvalidException();
         }
@@ -501,7 +530,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 )
         );
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         List<TimeSlotView> timeSlots = ptCourseScheduleRepository.findAllByPtCourseId(ptCourseId).stream()
                 .filter(s -> s.getDayOfWeek() == date.getDayOfWeek())
                 .sorted(Comparator.comparing(com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseSchedule::getStartTime))

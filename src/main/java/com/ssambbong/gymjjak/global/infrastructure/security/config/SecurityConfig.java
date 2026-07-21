@@ -157,6 +157,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/trainers/**")
                         .hasAnyAuthority("TRAINER", "ADMIN")
 
+                        // 트레이너 메인 대시보드
+                        .requestMatchers(HttpMethod.GET, "/api/dashboard/trainer/main")
+                        .hasAuthority("TRAINER")
+
                         // 조직 API
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/detail").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/organizations/search")

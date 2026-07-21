@@ -1,4 +1,4 @@
-package com.ssambbong.gymjjak.payments.payment.infrastructure.adapter;
+package com.ssambbong.gymjjak.payments.payment.infrastructure.portone;
 
 import com.ssambbong.gymjjak.global.domain.common.exception.InfrastructureException;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentErrorCode;

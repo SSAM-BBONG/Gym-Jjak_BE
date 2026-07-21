@@ -8,6 +8,7 @@ public record FeedbackListResponse(
         Long ptCurriculumId,
         int sessionNo,
         String title,
+        LocalDate reservedStartAt,
         FeedbackSummary feedbacks // null 가능
 ) {
 
@@ -22,6 +23,7 @@ public record FeedbackListResponse(
                 view.ptCurriculumId(),
                 view.sessionNo(),
                 view.title(),
+                view.reservedStartAt(),
                 summary
         );
     }

@@ -12,9 +12,11 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReserv
 import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationApprovedEvent;
 import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationCanceledEvent;
 import com.ssambbong.gymjjak.pt.ptReservation.application.event.PtReservationRequestedEvent;
+import com.ssambbong.gymjjak.pt.ptReservation.application.port.PaymentQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationDuplicateException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationPaymentRequiredException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationLimitExceededException;
@@ -22,6 +24,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotF
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationScheduleMismatchException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -47,8 +52,10 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
     private final PtCourseRepository ptCourseRepository;
     private final PtCourseScheduleRepository ptCourseScheduleRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final PaymentQueryPort paymentQueryPort;
     private final ApplicationEventPublisher eventPublisher;
     private final CalendarCacheEvictionPort calendarCacheEvictionPort;
+    private final Clock clock;
 
     @Override
     public Long createPtReservation(CreatePtReservationCommand command) {
@@ -64,6 +71,13 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                             command.ptCourseId());
                     return new PtCourseNotFoundException();
                 });
+
+        // 결제 완료 여부 검증
+        if (!paymentQueryPort.existsPaidByUserIdAndPtCourseId(command.userId(), command.ptCourseId())) {
+            log.warn("event=pt_reservation_create_failed reason=payment_required userId={} ptCourseId={}",
+                    command.userId(), command.ptCourseId());
+            throw new PtReservationPaymentRequiredException();
+        }
 
         // 예약 시간 null 및 시간 순서 검증 (종료 > 시작이어야 함)
         if (command.reservedStartAt() == null || command.reservedEndAt() == null
@@ -171,11 +185,11 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
         Long reservationUserId = reservation.getUserId();
         LocalDateTime reservedStartAt = reservation.getReservedStartAt();
 
-        // COMPLETED는 수강생의 전체 세션 일괄 완료 처리
+        // COMPLETED는 수강생의 전체 세션 일괄 완료 처리 (도메인 검증을 먼저 통과한 뒤 bulk 실행)
         if (command.status() == PtReservationStatus.COMPLETED) {
+            reservation.changeStatus(command.status());
             ptReservationRepository.bulkCompleteByUserIdAndPtCourseId(
                     reservation.getUserId(), reservation.getPtCourseId());
-            reservation.changeStatus(command.status());
         } else {
             // 상태 변경 (RESERVED 요청 시 도메인에서 예외 발생)
             reservation.changeStatus(command.status());
@@ -243,7 +257,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
 
     // 내 PT 세션 취소
     @Override
-    public void cancelPtSession(CancelPtReservationCommand command) {
+    public PtSessionStatus cancelPtSession(CancelPtReservationCommand command) {
         if (command.userId() == null || command.ptReservationId() == null) {
             throw new PtReservationInvalidException();
         }
@@ -263,16 +277,22 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
+        // 당일 취소는 노쇼로 간주해 COMPLETED 처리, 전날 이전 취소는 CANCELLED
         // CANCELLED / COMPLETED 이면 도메인에서 PtReservationStatusInvalidException 발생
-        reservation.changeStatus(PtReservationStatus.CANCELLED);
+        boolean isNoshow = reservation.getReservedStartAt().toLocalDate().isEqual(LocalDate.now(clock));
+        PtReservationStatus newStatus = isNoshow ? PtReservationStatus.COMPLETED : PtReservationStatus.CANCELLED;
+        reservation.changeStatus(newStatus);
         ptReservationRepository.updateStatus(reservation);
 
-        eventPublisher.publishEvent(
-                new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
+        if (!isNoshow) {
+            eventPublisher.publishEvent(
+                    new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
+        }
 
         evictMonthAfterCommit(reservation.getUserId(), reservation.getReservedStartAt());
 
-        log.info("event=pt_session_cancel_succeeded ptReservationId={}", reservation.getId());
+        log.info("event=pt_session_cancel_succeeded ptReservationId={} resolvedAs={}", reservation.getId(), newStatus);
+        return isNoshow ? PtSessionStatus.COMPLETED : PtSessionStatus.CANCELLED;
     }
 
     private void validateSchedule(Long ptCourseId, LocalDateTime reservedStartAt, LocalDateTime reservedEndAt) {

@@ -4,9 +4,13 @@ import com.ssambbong.gymjjak.diet.application.command.MealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
 import com.ssambbong.gymjjak.diet.application.port.out.AiNutritionAccessPort;
+import com.ssambbong.gymjjak.diet.application.port.out.MealAccessPort;
+import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
+import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAnalysisNotFoundException;
 import com.ssambbong.gymjjak.diet.domain.exception.AiNutritionAccessRequiredException;
+import com.ssambbong.gymjjak.diet.domain.exception.MealAccessDeniedException;
 import com.ssambbong.gymjjak.diet.domain.model.MealAnalysis;
 import com.ssambbong.gymjjak.diet.domain.model.MealType;
 import org.junit.jupiter.api.Test;
@@ -18,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,6 +38,9 @@ class MealAnalysisServiceTest {
 
     @Mock
     private AiNutritionAccessPort aiNutritionAccessPort;
+
+    @Mock
+    private MealAccessPort mealAccessPort;
 
     @InjectMocks
     private MealAnalysisService service;
@@ -82,8 +90,41 @@ class MealAnalysisServiceTest {
     void 본인_소유가_아닌_식단은_조회할_수_없다() {
         given(repository.findByIdAndUserId(1L, 10L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.get(10L, 1L))
+        assertThatThrownBy(() -> service.get(10L, 10L, 1L))
                 .isInstanceOf(MealAnalysisNotFoundException.class);
+    }
+
+    @Test
+    void 담당_트레이너는_회원의_식단_상세를_조회할_수_있다() {
+        MealAnalysis memberMeal = meal(1L, 20L, MealType.LUNCH,
+                LocalDateTime.of(2026, 7, 21, 12, 30), "샐러드", 300L, null);
+        given(mealAccessPort.existsActivePtRelation(20L, 10L)).willReturn(true);
+        given(repository.findByIdAndUserId(1L, 20L)).willReturn(Optional.of(memberMeal));
+
+        MealAnalysisResult result = service.get(10L, 20L, 1L);
+
+        assertThat(result.mealId()).isEqualTo(1L);
+        verify(mealAccessPort).existsActivePtRelation(20L, 10L);
+    }
+
+    @Test
+    void 담당_PT_관계가_없으면_다른_회원의_식단을_조회할_수_없다() {
+        given(mealAccessPort.existsActivePtRelation(20L, 10L)).willReturn(false);
+
+        assertThatThrownBy(() -> service.get(10L, 20L, 1L))
+                .isInstanceOf(MealAccessDeniedException.class);
+    }
+
+    @Test
+    void 담당_트레이너는_회원의_식단_목록을_조회할_수_있다() {
+        MealPageQuery query = new MealPageQuery(10L, 20L, 0, 20, null);
+        given(mealAccessPort.existsActivePtRelation(20L, 10L)).willReturn(true);
+        given(repository.findAllByUserId(query))
+                .willReturn(new MealPageResult<>(List.of(), 0, 20, 0, 0, false));
+
+        service.getList(query);
+
+        verify(repository).findAllByUserId(query);
     }
 
     @Test

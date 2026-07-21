@@ -14,7 +14,6 @@ public class TrainerReviewPersistenceMapper {
                 .userId(domain.getUserId())
                 .trainerProfileId(domain.getTrainerProfileId())
                 .ptCourseId(domain.getPtCourseId())
-                .ptReservationId(domain.getPtReservationId())
                 .rating(domain.getRating())
                 .content(domain.getContent())
                 .status(domain.getStatus().name())
@@ -28,7 +27,6 @@ public class TrainerReviewPersistenceMapper {
                 entity.getUserId(),
                 entity.getTrainerProfileId(),
                 entity.getPtCourseId(),
-                entity.getPtReservationId(),
                 entity.getRating(),
                 entity.getContent(),
                 TrainerReviewStatus.valueOf(entity.getStatus()),

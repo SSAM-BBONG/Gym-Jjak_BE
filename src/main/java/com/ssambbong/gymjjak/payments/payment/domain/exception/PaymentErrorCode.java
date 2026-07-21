@@ -13,7 +13,8 @@ public enum PaymentErrorCode implements ErrorCode {
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_002", "결제 정보를 찾을 수 없습니다."),
     PORTONE_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT_003", "PortOne API 호출에 실패했습니다."),
     SUBSCRIPTION_DUPLICATE(HttpStatus.CONFLICT, "PAYMENT_004", "이미 활성 구독이 존재합니다."),
-    PAYMENT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_005", "결제 대상을 찾을 수 없습니다.");
+    PAYMENT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_005", "결제 대상을 찾을 수 없습니다."),
+    WEBHOOK_INVALID_SIGNATURE(HttpStatus.BAD_REQUEST, "PAYMENT_006", "웹훅 시그니처 검증에 실패했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

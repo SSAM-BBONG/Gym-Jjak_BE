@@ -48,8 +48,16 @@ public class MealAnalysisAdapter implements MealAnalysisPort {
                 query.size(),
                 Sort.by(Sort.Order.desc("mealTime"), Sort.Order.desc("id"))
         );
-        Page<MealAnalysis> page = repository.findAllByUserId(query.userId(), pageable)
-                .map(persistenceMapper::toDomain);
+        Page<MealAnalysisJpaEntity> entityPage;
+        if (query.date() == null) {
+            entityPage = repository.findAllByUserId(query.targetUserId(), pageable);
+        } else {
+            LocalDateTime startInclusive = query.date().atStartOfDay();
+            LocalDateTime endExclusive = query.date().plusDays(1).atStartOfDay();
+            entityPage = repository.findAllByUserIdAndMealTimeGreaterThanEqualAndMealTimeLessThan(
+                    query.targetUserId(), startInclusive, endExclusive, pageable);
+        }
+        Page<MealAnalysis> page = entityPage.map(persistenceMapper::toDomain);
         return new MealPageResult<>(page.getContent(), page.getNumber(), page.getSize(),
                 page.getTotalElements(), page.getTotalPages(), page.hasNext());
     }
