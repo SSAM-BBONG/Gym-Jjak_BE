@@ -49,13 +49,6 @@ public enum NotificationType {
             "PT 예약이 승인되었습니다."
     ),
 
-    PT_RESERVATION_REJECTED(
-            NotificationCategory.PT,
-            NotificationTargetType.PT_RESERVATION,
-            "PT 예약 거절 안내",
-            "PT 예약이 거절되었습니다. 재예약을 진행해주세요."
-    ),
-
     PT_RESERVATION_CANCELED(
             NotificationCategory.PT,
             NotificationTargetType.PT_RESERVATION,

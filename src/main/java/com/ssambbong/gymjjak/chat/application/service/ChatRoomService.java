@@ -137,6 +137,12 @@ public class ChatRoomService implements ChatRoomUseCase {
         return new ChatRoomListResult(rooms.size(), totalUnreadCount, roomsWithUrl);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long getTotalUnreadCount(Long requesterId) {
+        return chatRoomRepository.countTotalUnread(requesterId);
+    }
+
     private void recordMetricSafely(Runnable metricCall, String metricName) {
         Runnable safeCall = () -> {
             try {

@@ -16,6 +16,7 @@ public interface CommunityPort {
     Long saveCommunityPost(CommunityPost communityPost);
 
     Page<CommunityPostListResult> findCommunityPosts(
+            Long userId,
             CommunityPostType type,
             String keyword,
             Pageable pageable
