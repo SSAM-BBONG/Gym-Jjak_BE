@@ -16,6 +16,8 @@ public interface ChatRoomRepository {
     List<ChatRoomSummary> findChatRoomsByRequesterId(Long requesterId);
     long countActive();
 
+    long countTotalUnread(Long requesterId);
+
     List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
 
     int hardDeleteByIds(List<Long> ids);

@@ -79,6 +79,20 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
             """, nativeQuery = true)
     List<ChatRoomSummaryProjection> findChatRoomSummariesByRequesterId(@Param("requesterId") Long requesterId);
 
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM chat_messages cm
+            JOIN chat_rooms cr ON cm.chat_room_id = cr.chat_room_id
+            LEFT JOIN trainer_profiles tp ON cr.trainer_profile_id = tp.trainer_profile_id
+            WHERE (cr.user_id = :requesterId OR tp.user_id = :requesterId)
+              AND cr.status != 'DELETED'
+              AND NOT (cr.user_id = :requesterId AND cr.user_left = true)
+              AND NOT (tp.user_id = :requesterId AND cr.trainer_left = true)
+              AND cm.sender_id != :requesterId
+              AND cm.is_read = false
+            """, nativeQuery = true)
+    long countTotalUnreadByRequesterId(@Param("requesterId") Long requesterId);
+
     @Query(value = "SELECT chat_room_id FROM chat_rooms WHERE deleted_at IS NOT NULL AND deleted_at < :threshold ORDER BY deleted_at ASC, chat_room_id ASC LIMIT :batchSize", nativeQuery = true)
     List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);
 

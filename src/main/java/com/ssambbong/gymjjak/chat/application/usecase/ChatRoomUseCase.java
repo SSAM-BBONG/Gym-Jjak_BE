@@ -7,4 +7,5 @@ public interface ChatRoomUseCase {
     Long createChatRoom(CreateChatRoomCommand command);
     void leaveChatRoom(Long chatRoomId, Long requesterId);
     ChatRoomListResult getChatRooms(Long requesterId);
+    long getTotalUnreadCount(Long requesterId);
 }

@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.chat.presentation.api.request.CreateChatRoomRequest
 import com.ssambbong.gymjjak.chat.presentation.api.response.ChatRoomListResponse;
 import com.ssambbong.gymjjak.chat.presentation.api.response.ChatRoomResponseCode;
 import com.ssambbong.gymjjak.chat.presentation.api.response.CreateChatRoomResponse;
+import com.ssambbong.gymjjak.chat.presentation.api.response.UnreadCountResponse;
 import com.ssambbong.gymjjak.global.presentation.api.common.GlobalApiResponse;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,6 +51,27 @@ public class ChatRoomController {
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 ChatRoomResponseCode.CHAT_ROOM_LIST_FETCHED,
                 chatMapper.toListResponse(result)
+        ));
+    }
+
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "전체 안 읽은 메시지 수 조회", description = "내 모든 채팅방의 안 읽은 메시지 총 개수를 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = UnreadCountResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "403", description = "권한 없음",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/unread-count")
+    public ResponseEntity<GlobalApiResponse<UnreadCountResponse>> getTotalUnreadCount(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        long count = chatRoomUseCase.getTotalUnreadCount(authUser.userId());
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                ChatRoomResponseCode.CHAT_UNREAD_COUNT_FETCHED,
+                new UnreadCountResponse(count)
         ));
     }
 
