@@ -11,6 +11,7 @@
 
 - 📋 관리자는 대상 유형별 신고 그룹 목록을 페이지 단위로 조회합니다.
 - 🔎 신고 그룹 상세에서 개별 신고 사유와 처리 상태를 확인합니다.
+- 🖼️ 관리자는 신고 접수 시점의 대상 스냅샷을 모달용으로 조회합니다.
 - ✅/❌ 개별 신고를 승인 또는 반려하면 신고 그룹의 검토 상태와 유효 신고 수가 다시 계산됩니다.
 - 🚫 관리자는 특정 신고 그룹의 대상을 수동 블라인드 처리할 수 있습니다.
 
@@ -382,6 +383,88 @@ Response Body
 
 ---
 
+## 6. 신고 대상 스냅샷 조회
+
+`GET /api/reportgroup/{reportGroupId}/snapshot`
+
+관리자가 신고 접수 시점에 `ReportGroup`에 저장된 대상 스냅샷을 조회합니다. 원본 대상이 이후 수정되더라도, 이 API는 신고 당시 저장된 값을 반환합니다. 🖼️
+
+# **[request]**
+
+Request Header
+
+| name | description |
+| --- | --- |
+| `Authorization` | `Bearer {accessToken}` 형식의 관리자 인증 토큰입니다. |
+
+Path Variable
+
+| name | description |
+| --- | --- |
+| `reportGroupId` | 스냅샷을 조회할 신고 그룹 ID입니다. |
+
+Request Parameter
+
+없음
+
+Request Body
+
+```json
+
+```
+
+| name | 설명 |
+| --- | --- |
+| - | 본 API는 Request Body를 사용하지 않습니다. |
+
+# **[response]**
+
+### 성공코드
+
+| HTTP 상태 | code | 설명 |
+| --- | --- | --- |
+| `200 OK` | `REPORT_200_10` | 신고 스냅샷 조회 성공 |
+
+Response Body
+
+```json
+{
+  "status": 200,
+  "code": "REPORT_200_10",
+  "message": "신고 스냅샷 조회에 성공했습니다.",
+  "data": {
+    "reportGroupId": 10,
+    "targetType": "댓글",
+    "targetId": 301,
+    "title": "댓글",
+    "content": "신고된 댓글 내용",
+    "fileUrl": null
+  }
+}
+```
+
+### Response Field
+
+| name | 설명 |
+| --- | --- |
+| `data.reportGroupId` | 조회한 신고 그룹 ID입니다. |
+| `data.targetType` | 신고 대상 유형의 화면 표시값입니다. 예: `PT`, `강사평`, `댓글`, `게시글`, `피드백`, `채팅` |
+| `data.targetId` | 신고 대상 ID입니다. |
+| `data.title` | 신고 접수 시점에 저장된 대상 제목입니다. 대상 유형에 따라 `null`일 수 있습니다. |
+| `data.content` | 신고 접수 시점에 저장된 대상 본문 또는 메시지입니다. 대상 유형에 따라 `null`일 수 있습니다. |
+| `data.fileUrl` | 신고 접수 시점에 저장된 첨부 파일 URL입니다. 첨부 파일이 없으면 `null`입니다. |
+
+### 실패 코드
+
+| HTTP 상태 | code | message | 설명 |
+| --- | --- | --- | --- |
+| `401 Unauthorized` | `COMMON_401` | 인증이 필요합니다. | Access Token이 없거나 유효하지 않은 경우 |
+| `403 Forbidden` | `COMMON_403` | 접근 권한이 없습니다. | ADMIN 권한이 아닌 경우 |
+| `404 Not Found` | `REPORT_404_1` | 신고 그룹을 찾을 수 없습니다. | 존재하지 않거나 soft delete된 신고 그룹인 경우 |
+| `500 Internal Server Error` | `COMMON_500` | 서버 내부 오류가 발생했습니다. | 예상하지 못한 서버 오류 |
+
+---
+
 ## 🚨 신고 API
 
 신고 대상의 타입과 ID, 신고 사유를 전달해 신고를 접수합니다. 같은 대상에 대한 신고는 하나의 `ReportGroup`으로 관리되며, 신고 그룹이 처음 생성될 때 대상의 스냅샷 정보도 함께 저장됩니다.
@@ -467,5 +550,6 @@ Response Body
 
 - 업데이트일: `2026-07-21`
 - 변경 사항(요약):
+  - 신고 접수 시점에 저장된 대상 스냅샷을 관리자 모달에서 조회하는 `GET /api/reportgroup/{reportGroupId}/snapshot` 명세를 추가했습니다. 🖼️
   - 승인·반려 응답의 `reportId`가 신고자 ID가 아닌 개별 신고 ID를 반환하도록 구현과 문서를 일치시켰습니다.
   - PT 코스 신고의 대상 소유자 ID를 트레이너 프로필 ID가 아닌 사용자 ID 기준으로 정정했습니다.

@@ -9,10 +9,7 @@ import com.ssambbong.gymjjak.report.application.query.*;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupCommandUseCase;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupQueryUseCase;
 import com.ssambbong.gymjjak.report.domain.model.ReportTargetType;
-import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportDetailResponse;
-import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportListResponse;
-import com.ssambbong.gymjjak.report.presentation.api.response.AdminReportReasonItemResponse;
-import com.ssambbong.gymjjak.report.presentation.api.response.ReportResponseCode;
+import com.ssambbong.gymjjak.report.presentation.api.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -188,6 +185,36 @@ public class ReportGroupController {
                 GlobalApiResponse.ok(
                         ReportResponseCode.MANUAL_BLIND_REPORT_GROUP_SUCCESS,
                         null
+                )
+        );
+    }
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Operation(
+            summary = "신고 대상 스냅샷 조회",
+            description = "관리자가 신고 접수 시점에 저장된 대상 스냅샷 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "신고 스냅샷 조회 성공"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+            @ApiResponse(responseCode = "404", description = "신고 그룹을 찾을 수 없거나 삭제됨")
+    })
+    @GetMapping("/{reportGroupId}/snapshot")
+    public ResponseEntity<GlobalApiResponse<AdminReportSnapshotResponse>> findReportSnapshot(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long reportGroupId
+    ) {
+        log.info(
+                "[ReportGroupController] 관리자 신고 스냅샷 조회 API 호출 - reportGroupId: {}, adminId: {}",
+                reportGroupId,
+                authUser.userId()
+        );
+
+        AdminReportSnapshotResult result = reportGroupQueryUseCase.findReportSnapshot(reportGroupId);
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        ReportResponseCode.GET_ADMIN_REPORT_SNAPSHOT_SUCCESS,
+                        AdminReportSnapshotResponse.from(result)
                 )
         );
     }

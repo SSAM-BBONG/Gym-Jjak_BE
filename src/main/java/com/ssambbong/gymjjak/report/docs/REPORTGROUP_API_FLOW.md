@@ -11,7 +11,7 @@
 
 - 개별 `Report`는 신고자, 신고 사유, 개별 심사 상태를 가집니다.
 - `ReportGroup`은 누적 신고 수, 유효 신고 수, 그룹 심사 상태, 제재 상태를 관리합니다.
-- 관리자는 그룹 목록과 상세를 조회하고, 개별 신고를 승인/반려하거나 그룹을 수동 블라인드할 수 있습니다.
+- 관리자는 그룹 목록·상세·대상 스냅샷을 조회하고, 개별 신고를 승인/반려하거나 그룹을 수동 블라인드할 수 있습니다.
 - 실제 대상(PT 코스, 게시글, 댓글 등)의 숨김·복구는 `ReportSanctionTargetPort`를 통해 각 도메인에 위임합니다.
 
 ```mermaid
@@ -75,6 +75,7 @@ graph LR
 | --- | --- | --- |
 | `GET /api/reportgroup/list` | 신고 그룹 목록 조회 | 대상 타입별 신고 그룹을 페이지 단위로 조회 |
 | `GET /api/reportgroup/detail/{reportGroupId}` | 신고 그룹 상세 조회 | 그룹 정보와 개별 신고 사유·심사 상태 조회 |
+| `GET /api/reportgroup/{reportGroupId}/snapshot` | 신고 대상 스냅샷 조회 | 신고 접수 시점의 제목·본문·첨부 파일 정보를 모달용으로 조회 |
 | `PATCH /api/reportgroup/{reportGroupId}/reports/{reportId}/approve` | 개별 신고 승인 | 그룹 상태 재계산 및 필요 시 대상 제재 |
 | `PATCH /api/reportgroup/{reportGroupId}/reports/{reportId}/reject` | 개별 신고 반려 | 유효 신고 수 감소, 그룹·제재 상태 재계산 |
 | `PATCH /api/reportgroup/{reportGroupId}/manual-blind` | 그룹 수동 블라인드 | 대상 숨김 및 해결된 신고 소프트 삭제 |
@@ -147,13 +148,54 @@ sequenceDiagram
 
 상세 화면에서 주로 확인하는 정보:
 
-- 신고 대상 타입과 대상 ID
-- 대상 제목·내용·파일 스냅샷
-- 총 신고 수, 유효 신고 수
-- 그룹 심사 상태와 제재 상태
+- 신고 그룹 ID와 그룹 심사 상태
 - 개별 신고자의 신고 사유, 심사 상태, 심사 처리자 및 처리 시각
 
 > ✅ 승인·반려 응답의 `reportId`는 `report.getReportId()`로 매핑됩니다. 신고자 이름 조회에만 `report.getReporterId()`를 사용합니다.
+
+### 4.3 신고 대상 스냅샷 조회
+
+`GET /api/reportgroup/{reportGroupId}/snapshot`
+
+댓글, 피드백, 채팅, 강사평처럼 원본 화면으로 바로 이동하기 어려운 대상의 신고 당시 내용을 관리자 모달에 표시하는 API입니다. 원본 대상 도메인을 다시 조회하지 않습니다. 🖼️
+
+```mermaid
+sequenceDiagram
+    actor Admin as 관리자
+    participant C as ReportGroupController
+    participant S as ReportGroupQueryService
+    participant R as ReportGroupRepository
+    participant J as SpringDataReportGroupRepository
+
+    Admin->>C: GET snapshot by reportGroupId
+    C->>S: findReportSnapshot(reportGroupId)
+    S->>R: findActiveById(reportGroupId)
+    R->>J: find by ID and deletedAt is null
+    alt 그룹이 없거나 soft delete됨
+        J-->>R: empty
+        R-->>S: empty
+        S-->>C: ReportGroupNotFoundException
+        C-->>Admin: REPORT_404_1
+    else 활성 그룹 존재
+        J-->>R: ReportGroup entity
+        R-->>S: ReportGroup aggregate
+        S-->>C: AdminReportSnapshotResult
+        C-->>Admin: REPORT_200_10
+    end
+```
+
+처리 순서:
+
+1. 컨트롤러가 관리자 권한과 `reportGroupId`를 확인합니다.
+2. `ReportGroupQueryService`가 `findActiveById`로 soft delete되지 않은 그룹만 조회합니다.
+3. 서비스는 `ReportGroup`에 저장된 `targetType`, `targetId`, `snapshotTitle`, `snapshotContent`, `snapshotFileUrl`을 결과로 변환합니다.
+4. 컨트롤러는 `AdminReportSnapshotResponse`로 변환해 `REPORT_200_10`을 반환합니다.
+
+핵심 정책:
+
+- 대상 원본이 수정되거나 삭제되어도, 이 API는 대상 도메인 Port를 호출하지 않고 신고 접수 시점의 저장 스냅샷만 반환합니다.
+- `title`, `content`, `fileUrl`은 대상 유형과 첨부 여부에 따라 `null`일 수 있습니다.
+- 수동 블라인드 처리로 soft delete된 신고 그룹은 존재하지 않는 그룹과 동일하게 `REPORT_404_1`을 반환합니다.
 
 ---
 
@@ -342,4 +384,5 @@ flowchart LR
 
 - 업데이트일: `2026-07-21`
 - 변경 사항(요약):
+  - 관리자 모달용 신고 대상 스냅샷 조회 API의 처리 흐름과 soft delete 제외 정책을 추가했습니다. 🖼️
   - 승인·반려 응답의 `reportId` 매핑 오류를 해결해 개별 신고 ID를 반환하도록 최신화했습니다.
