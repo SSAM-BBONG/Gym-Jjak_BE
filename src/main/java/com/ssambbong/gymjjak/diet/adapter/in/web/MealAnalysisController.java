@@ -53,9 +53,12 @@ public class MealAnalysisController {
     public ResponseEntity<GlobalApiResponse<MealAnalysisResponse>> get(
             @AuthenticationPrincipal AuthUser authUser,
             @Parameter(description = "조회할 식단 ID", example = "1", required = true)
-            @PathVariable Long mealId) {
+            @PathVariable Long mealId,
+            @Parameter(description = "조회 대상 회원 ID. 생략하면 본인을 조회합니다.", example = "15")
+            @RequestParam(required = false) Long targetUserId) {
+        Long resolvedTargetUserId = resolveTargetUserId(authUser.userId(), targetUserId);
         return ResponseEntity.ok(GlobalApiResponse.ok(MealAnalysisResponseCode.MEAL_FETCHED,
-                toResponse(mealAnalysisUseCase.get(authUser.userId(), mealId))));
+                toResponse(mealAnalysisUseCase.get(authUser.userId(), resolvedTargetUserId, mealId))));
     }
 
     @GetMapping
@@ -69,9 +72,13 @@ public class MealAnalysisController {
             @Parameter(description = "조회할 식단 날짜(yyyy-MM-dd). 생략하면 전체 기간을 조회합니다.", example = "2026-07-21")
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate date) {
+            LocalDate date,
+            @Parameter(description = "조회 대상 회원 ID. 생략하면 본인을 조회합니다.", example = "15")
+            @RequestParam(required = false) Long targetUserId) {
         int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        MealPageQuery query = new MealPageQuery(authUser.userId(), Math.max(page, 0), safeSize, date);
+        Long resolvedTargetUserId = resolveTargetUserId(authUser.userId(), targetUserId);
+        MealPageQuery query = new MealPageQuery(
+                authUser.userId(), resolvedTargetUserId, Math.max(page, 0), safeSize, date);
         MealPageResult<MealAnalysisListResponse> results = mealAnalysisUseCase.getList(query)
                 .map(this::toListResponse);
         return ResponseEntity.ok(GlobalApiResponse.ok(MealAnalysisResponseCode.MEAL_LIST_FETCHED,
@@ -154,5 +161,9 @@ public class MealAnalysisController {
                 result.mealTime(),
                 result.menu()
         );
+    }
+
+    private Long resolveTargetUserId(Long requesterUserId, Long targetUserId) {
+        return targetUserId == null ? requesterUserId : targetUserId;
     }
 }

@@ -33,7 +33,7 @@ class MealAnalysisAdapterTest {
     void 날짜가_없으면_전체_기간의_식단을_조회한다() {
         given(repository.findAllByUserId(any(), any(Pageable.class))).willReturn(Page.empty());
 
-        adapter.findAllByUserId(new MealPageQuery(10L, 0, 20, null));
+        adapter.findAllByUserId(new MealPageQuery(10L, 10L, 0, 20, null));
 
         verify(repository).findAllByUserId(eq(10L), any(Pageable.class));
     }
@@ -46,7 +46,7 @@ class MealAnalysisAdapterTest {
         given(repository.findAllByUserIdAndMealTimeGreaterThanEqualAndMealTimeLessThan(
                 any(), any(), any(), any(Pageable.class))).willReturn(Page.empty());
 
-        adapter.findAllByUserId(new MealPageQuery(10L, 0, 20, date));
+        adapter.findAllByUserId(new MealPageQuery(10L, 10L, 0, 20, date));
 
         verify(repository).findAllByUserIdAndMealTimeGreaterThanEqualAndMealTimeLessThan(
                 eq(10L), eq(startInclusive), eq(endExclusive), any(Pageable.class));

@@ -5,10 +5,12 @@ import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.in.MealAnalysisUseCase;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
 import com.ssambbong.gymjjak.diet.application.port.out.AiNutritionAccessPort;
+import com.ssambbong.gymjjak.diet.application.port.out.MealAccessPort;
 import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
 import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAnalysisNotFoundException;
+import com.ssambbong.gymjjak.diet.domain.exception.MealAccessDeniedException;
 import com.ssambbong.gymjjak.diet.domain.exception.AiNutritionAccessRequiredException;
 import com.ssambbong.gymjjak.diet.domain.model.MealAnalysis;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class MealAnalysisService implements MealAnalysisUseCase {
 
     private final MealAnalysisPort mealAnalysisPort;
     private final AiNutritionAccessPort aiNutritionAccessPort;
+    private final MealAccessPort mealAccessPort;
 
     @Override
     @Transactional
@@ -36,13 +39,15 @@ public class MealAnalysisService implements MealAnalysisUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public MealAnalysisResult get(Long userId, Long mealId) {
-        return MealAnalysisResult.from(getOwnedMeal(userId, mealId));
+    public MealAnalysisResult get(Long requesterUserId, Long targetUserId, Long mealId) {
+        validateReadAccess(requesterUserId, targetUserId);
+        return MealAnalysisResult.from(getOwnedMeal(targetUserId, mealId));
     }
 
     @Transactional(readOnly = true)
     @Override
     public MealPageResult<MealAnalysisResult> getList(MealPageQuery query) {
+        validateReadAccess(query.requesterUserId(), query.targetUserId());
         return mealAnalysisPort.findAllByUserId(query).map(MealAnalysisResult::from);
     }
 
@@ -80,6 +85,15 @@ public class MealAnalysisService implements MealAnalysisUseCase {
         // 소유자 조건을 조회에 포함해 다른 사용자의 식단 존재 여부도 노출하지 않는다.
         return mealAnalysisPort.findByIdAndUserId(mealId, userId)
                 .orElseThrow(() -> new MealAnalysisNotFoundException(mealId));
+    }
+
+    private void validateReadAccess(Long requesterUserId, Long targetUserId) {
+        if (requesterUserId.equals(targetUserId)) {
+            return;
+        }
+        if (!mealAccessPort.existsActivePtRelation(targetUserId, requesterUserId)) {
+            throw new MealAccessDeniedException();
+        }
     }
 
     private void validateAiNutritionAccess(Long userId) {
