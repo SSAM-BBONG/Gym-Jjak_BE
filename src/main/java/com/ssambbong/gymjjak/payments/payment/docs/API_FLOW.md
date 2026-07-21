@@ -69,7 +69,7 @@ sequenceDiagram
     participant PO as PortOnePaymentVerifyPort
     participant DB as PaymentRepository
 
-    P->>WC: POST /api/payments/webhook (type, paymentId, orderId)
+    P->>WC: POST /api/payments/webhook (type, data.paymentId=orderId, data.transactionId)
     WC->>S: ProcessWebhookCommand
     S->>DB: orderId로 Payment 조회
     alt Payment 없음

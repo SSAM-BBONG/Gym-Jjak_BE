@@ -294,8 +294,8 @@ Request Body
 {
   "type": "Transaction.Paid",
   "data": {
-    "paymentId": "portone_payment_id",
-    "orderId": "PT-0QZHBKQN83C5Z"
+    "paymentId": "PT-0QZHBKQN83C5Z",
+    "transactionId": "portone-tx-0QZHBKQN83C5Z"
   }
 }
 ```
@@ -303,8 +303,8 @@ Request Body
 | name | 설명 |
 | --- | --- |
 | `type` | 웹훅 이벤트 타입입니다. `Transaction.Paid` / `Transaction.Failed` / `Transaction.Cancelled` 중 하나입니다. |
-| `data.paymentId` | PortOne 결제 고유 ID입니다. |
-| `data.orderId` | 서버 주문 ID입니다. |
+| `data.paymentId` | 서버가 생성한 주문 ID입니다 (PortOne V2에서 merchantPaymentId = 우리 orderId). |
+| `data.transactionId` | PortOne 거래 고유 ID입니다. DB의 `transaction_id` 컬럼에 저장됩니다. |
 
 # **[response]**
 

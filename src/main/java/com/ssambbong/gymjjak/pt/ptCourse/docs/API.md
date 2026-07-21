@@ -397,6 +397,7 @@ Response Body
 | `401 Unauthorized` | `COMMON_401` | 인증이 필요합니다. | Access Token이 없거나 유효하지 않은 경우 |
 | `403 Forbidden` | `PT_COURSE_003` | 본인의 PT 강습이 아닙니다. | 본인 강습이 아닌 경우 |
 | `404 Not Found` | `PT_COURSE_002` | PT 강습을 찾을 수 없습니다. | 존재하지 않는 PT 강습인 경우 |
+| `409 Conflict` | `PT_COURSE_011` | 진행 중인 예약이 있어 PT 강습을 비활성화할 수 없습니다. | 활성 예약(`RESERVED`/`IN_PROGRESS`)이 있는 경우 |
 
 ---
 

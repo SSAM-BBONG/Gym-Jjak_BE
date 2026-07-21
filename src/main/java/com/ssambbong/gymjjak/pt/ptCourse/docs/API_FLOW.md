@@ -79,6 +79,15 @@
 
 ```text
 트레이너
+  → PATCH /api/pt-courses/{ptCourseId}/status { "status": "HIDDEN" }
+  → PtCourseCommandService
+      1. PT 강습 조회 및 소유자 검증 (PT_COURSE_003)
+      2. HIDDEN 요청 시 활성 예약(RESERVED/IN_PROGRESS)이 있으면 비활성화 불가 (PT_COURSE_011)
+      3. 상태 변경
+```
+
+```text
+트레이너
   → DELETE /api/pt-courses/{ptCourseId}
   → PtCourseCommandService
       1. PT 강습 조회 및 소유자 검증 (PT_COURSE_003)

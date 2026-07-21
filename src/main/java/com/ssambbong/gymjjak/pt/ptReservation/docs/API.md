@@ -447,7 +447,7 @@ Response Body
 
 `PATCH /api/reservations/me/sessions/{reservationId}/cancel`
 
-세션 단건을 취소합니다. `COMPLETED` 또는 `CANCELLED` 상태이면 취소할 수 없습니다.
+세션 단건을 취소합니다. `COMPLETED` 또는 `CANCELLED` 상태이면 취소할 수 없습니다. 당일 취소는 노쇼로 간주하여 `COMPLETED` 처리됩니다.
 
 # **[request]**
 
@@ -489,7 +489,7 @@ Response Body
   "code": "PT_SESSION_CANCELLED",
   "message": "PT 세션이 취소되었습니다",
   "data": {
-    "sessionStatus": "CANCELLED",
+    "sessionStatus": "CANCELLED | COMPLETED",
     "cancelledAt": "2026-07-21T14:30:00"
   }
 }
@@ -503,6 +503,8 @@ Response Body
 | `403 Forbidden` | `PT_RESERVATION_004` | 본인의 예약만 조회할 수 있습니다. | 본인 예약이 아닌 경우 |
 | `404 Not Found` | `PT_RESERVATION_002` | 예약을 찾을 수 없습니다. | 존재하지 않는 예약인 경우 |
 | `409 Conflict` | `PT_RESERVATION_005` | 변경할 수 없는 상태값입니다. | 이미 `COMPLETED` 또는 `CANCELLED` 상태인 경우 |
+
+> **노쇼 처리**: `reservedStartAt` 날짜가 오늘인 경우 취소 요청 시 `CANCELLED`가 아닌 `COMPLETED`로 처리됩니다. 응답의 `sessionStatus` 필드를 기준으로 처리 결과를 확인합니다.
 
 ---
 

@@ -31,7 +31,7 @@ public class PortOnePaymentAdapter implements PortOnePaymentVerifyPort {
 
         String status = (String) response.get("status");
         Map<String, Object> amount = (Map<String, Object>) response.get("amount");
-        int paid = ((Number) amount.get("paid")).intValue();
+        int paid = ((Number) amount.get("total")).intValue();
 
         log.debug("event=portone_payment_verify portonePaymentId={} status={} amount={}",
                 portonePaymentId, status, paid);

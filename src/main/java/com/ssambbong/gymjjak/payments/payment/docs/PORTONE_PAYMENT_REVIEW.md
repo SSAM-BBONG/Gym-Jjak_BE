@@ -18,29 +18,20 @@
 
 ## 주요 개선 사항
 
-### [치명적] 웹훅에서 `orderId`에 의존
+### ~~[치명적] 웹훅에서 `orderId`에 의존~~ ✅ 수정 완료
 
-`PaymentWebhookController`는 `request.data().orderId()`를 `ProcessWebhookCommand`에 전달한다.
+PortOne V2 웹훅에서 `data.orderId`는 존재하지 않는다. `data.paymentId` = 서버가 생성해 PortOne에 전달한 주문 ID(우리 `orderId`)이고, `data.transactionId` = PortOne 내부 거래 고유 ID이다.
 
-PortOne V2 웹훅의 기본 결제 식별자는 `data.paymentId`이므로, 실제 이벤트에 `orderId`가 없으면 `findByOrderId(null)`로 이어져 결제 완료 처리가 실패할 수 있다.
+- `WebhookPaymentRequest.WebhookData`에서 `orderId` 제거, `transactionId` 추가
+- 컨트롤러가 `data.paymentId` → `orderId`로, `data.transactionId` → `transactionId`로 전달
+- DB 컬럼 `portone_payment_id` → `transaction_id`로 rename (V3.5 마이그레이션)
+- `Payment` 도메인 필드 `portonePaymentId` → `transactionId`
 
-**개선 방향**
+### ~~[치명적] PortOne 결제 금액 필드 파싱 확인 필요~~ ✅ 수정 완료
 
-- 서버가 생성해 PortOne에 전달한 `paymentId`를 로컬 `orderId`로 사용한다.
-- 웹훅에서는 `data.paymentId`만 사용해 로컬 결제를 조회한다.
-- 실제 PortOne V2 payload를 사용한 DTO 계약 테스트를 추가한다.
+`PortOnePaymentAdapter`가 `amount.paid`를 읽던 코드를 `amount.total`로 수정했다. PortOne V2 결제 조회 응답에서 실제 결제 금액은 `amount.total` 기준이다.
 
-### [치명적] PortOne 결제 금액 필드 파싱 확인 필요
-
-`PortOnePaymentAdapter`는 응답의 `amount.paid`를 읽는다. PortOne V2 결제 조회의 결제 금액은 `payment.amount.total` 기준으로 검증해야 한다.
-
-현재 필드가 응답에 없으면 NPE가 발생하거나, 잘못된 금액 비교가 수행될 수 있다.
-
-**개선 방향**
-
-- `Map<String, Object>` 캐스팅 대신 PortOne SDK 또는 전용 응답 DTO를 사용한다.
-- `paymentId`, 결제 상태, `amount.total`을 모두 명시적으로 검증한다.
-- 내부 주문 금액과 PortOne 조회 금액이 다르면 결제를 확정하지 않는다.
+> 남은 개선: `Map<String, Object>` 방식 대신 PortOne JVM SDK 또는 전용 응답 DTO로 교체하면 타입 안전성을 확보할 수 있다.
 
 ### [치명적] 웹훅 서명 검증 누락
 

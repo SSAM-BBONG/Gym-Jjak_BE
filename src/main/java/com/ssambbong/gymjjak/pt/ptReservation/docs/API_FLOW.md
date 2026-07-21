@@ -119,10 +119,10 @@ flowchart TD
   → PtReservationCommandService
       1. 예약 조회 및 본인 소유 검증
       2. CANCELLED/COMPLETED 상태이면 예외 (PT_RESERVATION_005)
-      3. 단건 CANCELLED 처리
-      4. 취소 알림 이벤트 발행
+      3. 당일 취소(reservedStartAt.date == today)이면 COMPLETED(노쇼), 아니면 CANCELLED 처리
+      4. 노쇼가 아닌 경우에만 취소 알림 이벤트 발행
       5. 트랜잭션 커밋 후 캘린더 캐시 무효화
-  → CancelPtReservationResponse(sessionStatus: CANCELLED, cancelledAt)
+  → CancelPtReservationResponse(sessionStatus: CANCELLED | COMPLETED, cancelledAt)
 ```
 
 ---

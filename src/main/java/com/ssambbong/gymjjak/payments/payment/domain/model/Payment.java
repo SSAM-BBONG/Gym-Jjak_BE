@@ -13,7 +13,7 @@ public class Payment {
     private final Long ptCourseId;
     private final Long aiSubscriptionId;
     private final String orderId;
-    private final String portonePaymentId;
+    private final String transactionId;
     private final int amount;
     private final SubscriptionPlanType planType;
     private final PaymentStatus status;
@@ -25,7 +25,7 @@ public class Payment {
 
     private Payment(
             Long id, Long userId, Long ptCourseId, Long aiSubscriptionId,
-            String orderId, String portonePaymentId, int amount,
+            String orderId, String transactionId, int amount,
             SubscriptionPlanType planType, PaymentStatus status, ProductType productType,
             LocalDateTime paidAt, LocalDateTime cancelledAt,
             LocalDateTime failedAt, String failReason
@@ -35,7 +35,7 @@ public class Payment {
         this.ptCourseId = ptCourseId;
         this.aiSubscriptionId = aiSubscriptionId;
         this.orderId = orderId;
-        this.portonePaymentId = portonePaymentId;
+        this.transactionId = transactionId;
         this.amount = amount;
         this.planType = planType;
         this.status = status;
@@ -60,28 +60,28 @@ public class Payment {
 
     public static Payment restore(
             Long id, Long userId, Long ptCourseId, Long aiSubscriptionId,
-            String orderId, String portonePaymentId, int amount,
+            String orderId, String transactionId, int amount,
             SubscriptionPlanType planType, PaymentStatus status, ProductType productType,
             LocalDateTime paidAt, LocalDateTime cancelledAt,
             LocalDateTime failedAt, String failReason
     ) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
-                orderId, portonePaymentId, amount, planType, status, productType,
+                orderId, transactionId, amount, planType, status, productType,
                 paidAt, cancelledAt, failedAt, failReason);
     }
 
     // PortOne 결제 확인 후 PAID로 전환 (PT)
-    public Payment pay(String portonePaymentId, LocalDateTime paidAt) {
+    public Payment pay(String transactionId, LocalDateTime paidAt) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
-                orderId, portonePaymentId, amount,
+                orderId, transactionId, amount,
                 planType, PaymentStatus.PAID, productType,
                 paidAt, null, null, null);
     }
 
     // PortOne 결제 확인 후 PAID로 전환 + 생성된 구독 ID 연결 (구독)
-    public Payment paySubscription(String portonePaymentId, Long subscriptionId, LocalDateTime paidAt) {
+    public Payment paySubscription(String transactionId, Long subscriptionId, LocalDateTime paidAt) {
         return new Payment(id, userId, ptCourseId, subscriptionId,
-                orderId, portonePaymentId, amount,
+                orderId, transactionId, amount,
                 planType, PaymentStatus.PAID, productType,
                 paidAt, null, null, null);
     }
@@ -89,7 +89,7 @@ public class Payment {
     // 결제 실패 처리
     public Payment fail(String failReason, LocalDateTime failedAt) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
-                orderId, portonePaymentId, amount,
+                orderId, transactionId, amount,
                 planType, PaymentStatus.FAILED, productType,
                 null, null, failedAt, failReason);
     }
@@ -97,7 +97,7 @@ public class Payment {
     // 결제 취소 처리
     public Payment cancel(LocalDateTime cancelledAt) {
         return new Payment(id, userId, ptCourseId, aiSubscriptionId,
-                orderId, portonePaymentId, amount,
+                orderId, transactionId, amount,
                 planType, PaymentStatus.CANCELLED, productType,
                 paidAt, cancelledAt, null, null);
     }

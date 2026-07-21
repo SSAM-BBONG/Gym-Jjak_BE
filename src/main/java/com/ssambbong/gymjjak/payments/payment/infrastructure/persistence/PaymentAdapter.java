@@ -54,9 +54,9 @@ public class PaymentAdapter implements PaymentRepository {
             switch (payment.getStatus()) {
                 case PAID -> {
                     if (payment.getAiSubscriptionId() != null) {
-                        entity.markPaid(payment.getPortonePaymentId(), payment.getAiSubscriptionId(), payment.getPaidAt());
+                        entity.markPaid(payment.getTransactionId(), payment.getAiSubscriptionId(), payment.getPaidAt());
                     } else {
-                        entity.markPaid(payment.getPortonePaymentId(), payment.getPaidAt());
+                        entity.markPaid(payment.getTransactionId(), payment.getPaidAt());
                     }
                 }
                 case CANCELLED -> entity.markCancelled(payment.getCancelledAt());
