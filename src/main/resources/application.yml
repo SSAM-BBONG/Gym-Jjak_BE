@@ -141,6 +141,12 @@ portone:
   webhook-secret: ${PORTONE_WEBHOOK_SECRET}
 
 ai:
+  service:
+    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+    # 로컬·테스트 기본값이며 배포 환경에서는 반드시 별도 비밀값으로 덮어쓴다.
+    internal-api-key: ${AI_INTERNAL_API_KEY:local-development-only}
+    connect-timeout-millis: ${AI_SERVICE_CONNECT_TIMEOUT_MILLIS:3000}
+    response-timeout-seconds: ${AI_SERVICE_RESPONSE_TIMEOUT_SECONDS:90}
   meal-analysis:
     base-url: ${AI_MEAL_ANALYSIS_BASE_URL:http://localhost:8000}
     analyze-path: ${AI_MEAL_ANALYSIS_PATH:/api/v1/meals/analyze}
