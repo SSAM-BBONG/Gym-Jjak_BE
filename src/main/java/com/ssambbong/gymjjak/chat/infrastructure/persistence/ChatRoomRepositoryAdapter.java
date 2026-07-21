@@ -68,6 +68,11 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     }
 
     @Override
+    public long countTotalUnread(Long requesterId) {
+        return repository.countTotalUnreadByRequesterId(requesterId);
+    }
+
+    @Override
     public long countActive() {
         return repository.countByStatus(ChatRoomStatus.ACTIVE);
     }
