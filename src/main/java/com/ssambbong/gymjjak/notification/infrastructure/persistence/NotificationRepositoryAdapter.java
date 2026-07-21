@@ -99,4 +99,10 @@ public class NotificationRepositoryAdapter implements NotificationRepository, No
                 slice.hasNext()
         );
     }
+
+    // 헤더 표시용 미읽음 알림 수를 단일 COUNT 쿼리로 조회
+    @Override
+    public long countUnreadNotifications(Long receiverId, LocalDateTime now) {
+        return repository.countUnreadNotifications(receiverId, now);
+    }
 }

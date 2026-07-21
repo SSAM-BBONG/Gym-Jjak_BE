@@ -4,6 +4,7 @@ package com.ssambbong.gymjjak.notification.application.service;
 import com.ssambbong.gymjjak.notification.application.port.out.NotificationQueryPort;
 import com.ssambbong.gymjjak.notification.application.query.FindNotificationsQuery;
 import com.ssambbong.gymjjak.notification.application.result.NotificationListResult;
+import com.ssambbong.gymjjak.notification.application.result.UnreadNotificationCountResult;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationQueryUseCase;
 import com.ssambbong.gymjjak.notification.domain.exception.InvalidNotificationException;
 import com.ssambbong.gymjjak.notification.infrastructure.metrics.NotificationMetric;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -70,6 +73,19 @@ public class NotificationQueryService implements NotificationQueryUseCase {
 
     }
 
+    @Override
+    public UnreadNotificationCountResult findUnreadNotificationCount(Long receiverId) {
+        // 헤더 표시용 활성 미읽음 알림 개수 조회
+        validateReceiverId(receiverId);
+
+        long unreadCount = notificationQueryPort.countUnreadNotifications(
+                receiverId,
+                LocalDateTime.now()
+        );
+
+        return new UnreadNotificationCountResult(unreadCount);
+    }
+
     // 쿼리 검증
     private void validateFindQuery(FindNotificationsQuery query) {
         if (query == null) {
@@ -93,6 +109,14 @@ public class NotificationQueryService implements NotificationQueryUseCase {
         if (query.size() <= 0 || query.size() > 50) {
             throw new InvalidNotificationException(
                     "size는 1 이상 50 이하이어야 합니다."
+            );
+        }
+    }
+
+    private void validateReceiverId(Long receiverId) {
+        if (receiverId == null || receiverId <= 0) {
+            throw new InvalidNotificationException(
+                    "receiverId는 1 이상이어야 합니다."
             );
         }
     }
