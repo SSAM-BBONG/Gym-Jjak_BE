@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.pt.ptRecommendation.application.result.PtRecommenda
 
 import java.util.List;
 
+// 클라이언트 응답 DTO. recommendations 순서 = AI가 매긴 추천 순위(1순위부터).
 public record PtRecommendationResponse(
         List<RecommendedPtCourseResponse> recommendations
 ) {

@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
+// 클라이언트가 PT 추천 시 2차 온보딩(부위/거리/통증) 답변으로 보내는 요청. userId는 JWT에서 채운다.
 public record PtRecommendationRequest(
 
         @Schema(description = "원하는 운동 부위 (복수 선택 가능)")

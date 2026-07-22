@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+// PT추천 도메인 에러코드. AI_로 시작하는 코드는 FastAPI 호출 실패 시에만 사용한다.
 @Getter
 @RequiredArgsConstructor
 public enum PtRecommendationErrorCode implements ErrorCode {

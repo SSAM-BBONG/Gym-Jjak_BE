@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.global.presentation.api.common.ResponseCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+// PT추천 성공 응답 코드. 실패 시 코드는 PtRecommendationErrorCode를 따로 쓴다.
 @Getter
 @AllArgsConstructor
 public enum PtRecommendationResponseCode implements ResponseCode {

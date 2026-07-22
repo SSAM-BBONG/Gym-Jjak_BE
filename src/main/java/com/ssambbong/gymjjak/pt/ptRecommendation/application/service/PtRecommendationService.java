@@ -1,7 +1,5 @@
 package com.ssambbong.gymjjak.pt.ptRecommendation.application.service;
 
-import com.ssambbong.gymjjak.onboarding.application.port.in.OnboardingUsecase;
-import com.ssambbong.gymjjak.onboarding.application.result.MyOnboardingResult;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort.OrganizationInfo;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
@@ -11,6 +9,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase.MyPtReservationView;
 import com.ssambbong.gymjjak.pt.ptRecommendation.application.command.PtRecommendationCommand;
+import com.ssambbong.gymjjak.pt.ptRecommendation.application.port.OnboardingQueryPort;
 import com.ssambbong.gymjjak.pt.ptRecommendation.application.port.PtRecommendationAiPort;
 import com.ssambbong.gymjjak.pt.ptRecommendation.application.result.PtRecommendationResult;
 import com.ssambbong.gymjjak.pt.ptRecommendation.application.usecase.PtRecommendationUseCase;
@@ -18,12 +17,13 @@ import com.ssambbong.gymjjak.pt.ptRecommendation.domain.exception.PtRecommendati
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// PT추천 오케스트레이션. 1차 필터링(비AI, 부위+거리)과 프로필 조회는 여기서 직접 수행하고,
+// 후보+프로필을 번들로 묶어 FastAPI(2차 AI 종합)에 넘긴다
 @Service
 @RequiredArgsConstructor
 public class PtRecommendationService implements PtRecommendationUseCase {
@@ -44,13 +44,13 @@ public class PtRecommendationService implements PtRecommendationUseCase {
     private final PtCourseRepository ptCourseRepository;
     private final OrganizationQueryPort organizationQueryPort;
     private final TrainerProfileQueryPort trainerProfileQueryPort;
-    private final OnboardingUsecase onboardingUsecase;
+    private final OnboardingQueryPort onboardingQueryPort;
     private final PtReservationQueryUseCase ptReservationQueryUseCase;
     private final PtRecommendationAiPort ptRecommendationAiPort;
 
     @Override
     public PtRecommendationResult recommend(PtRecommendationCommand command) {
-        MyOnboardingResult onboarding = onboardingUsecase.getMyOnboarding(command.userId());
+        OnboardingQueryPort.MyOnboardingInfo onboarding = onboardingQueryPort.findMyOnboarding(command.userId());
 
         List<PtCourse> candidates = filterByPartAndDistance(command, onboarding);
         if (candidates.isEmpty()) {
@@ -88,7 +88,8 @@ public class PtRecommendationService implements PtRecommendationUseCase {
     }
 
     // 1차 필터링(비AI): 부위 조건으로 후보를 뽑은 뒤, 온보딩 기준주소 대비 거리로 좁힌다.
-    private List<PtCourse> filterByPartAndDistance(PtRecommendationCommand command, MyOnboardingResult onboarding) {
+    private List<PtCourse> filterByPartAndDistance(
+            PtRecommendationCommand command, OnboardingQueryPort.MyOnboardingInfo onboarding) {
         List<PtCourse> matchedByPart = ptCourseRepository.findAllVisibleByParts(command.targetParts());
         if (matchedByPart.isEmpty()) {
             return List.of();
@@ -98,9 +99,8 @@ public class PtRecommendationService implements PtRecommendationUseCase {
                 matchedByPart.stream().map(PtCourse::getOrganizationId).distinct().toList());
 
         double maxDistanceKm = DISTANCE_LEVEL_TO_KM.getOrDefault(command.distanceLevel(), DEFAULT_MAX_DISTANCE_KM);
-        MyOnboardingResult.RegionResult region = onboarding.preferredRegion();
-        double userLat = region.latitude().doubleValue();
-        double userLng = region.longitude().doubleValue();
+        double userLat = onboarding.regionLatitude().doubleValue();
+        double userLng = onboarding.regionLongitude().doubleValue();
 
         return matchedByPart.stream()
                 .map(course -> Map.entry(course, organizations.get(course.getOrganizationId())))
