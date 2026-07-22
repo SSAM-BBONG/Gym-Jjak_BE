@@ -240,3 +240,8 @@ src/main/resources/db/dummy-data.sql
 
 # k6 load test files
 /k6/
+
+CLAUDE.md
+
+# Local Git worktrees
+.worktrees/
