@@ -13,8 +13,15 @@ public record ClovaOcrResponse(
     public record ClovaOcrImageResponse(
             String inferResult, // OCR 성공/실패 여부
             String message, // 실패 사유
+            ClovaValidationResult validationResult, // 템플릿 검증 결과
             ClovaMatchedTemplate matchedTemplate, // 자격증/사업자등록증 템플릿 구분
             List<ClovaOcrFieldResponse> fields // 실제 추출 데이터
+    ) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record ClovaValidationResult(
+            String result
     ) {
     }
 
