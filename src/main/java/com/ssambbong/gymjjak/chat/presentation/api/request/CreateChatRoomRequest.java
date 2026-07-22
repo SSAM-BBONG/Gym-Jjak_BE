@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public record CreateChatRoomRequest(
-        @NotNull @Positive Long ptCourseId
+        @NotNull @Positive Long ptCourseId,
+        @Positive Long userId
 ) {
 }

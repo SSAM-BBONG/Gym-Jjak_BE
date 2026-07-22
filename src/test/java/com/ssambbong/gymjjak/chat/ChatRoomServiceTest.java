@@ -43,7 +43,7 @@ class ChatRoomServiceTest {
     @DisplayName("채팅방 생성")
     class CreateChatRoom {
 
-        private final CreateChatRoomCommand command = new CreateChatRoomCommand(1L, 11L);
+        private final CreateChatRoomCommand command = new CreateChatRoomCommand(1L, 1L, 11L);
 
         @Test
         @DisplayName("정상적으로 채팅방을 생성한다")
