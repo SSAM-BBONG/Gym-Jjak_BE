@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -55,6 +56,9 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
 
     // VISIBLE 상태 전체 목록 최신순
     List<PtCourseJpaEntity> findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(PtCourseStatus status);
+
+    // PT추천 1차 필터링 — 부위 조건으로 VISIBLE 목록 조회
+    List<PtCourseJpaEntity> findAllByPartInAndStatusAndDeletedAtIsNull(List<PartType> parts, PtCourseStatus status);
 
     // 내 강습 전체 조회 — VISIBLE + HIDDEN만 (BLOCKED, DELETED 제외, soft delete 안전)
     List<PtCourseJpaEntity> findAllByTrainerProfileIdAndStatusInAndDeletedAtIsNullOrderByCreatedAtDesc(

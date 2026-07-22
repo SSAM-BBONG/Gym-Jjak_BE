@@ -31,7 +31,7 @@ class TrainerReviewReportTargetAdapterTest {
     void getSnapshot_success() {
         // Given
         TrainerReview trainerReview = TrainerReview.restore(
-                1L, 77L, 5L, 10L, 20L, 5,
+                1L, 77L, 5L, 10L, 5,
                 "강사평 내용", TrainerReviewStatus.ACTIVE, null, null, null
         );
         when(trainerReviewRepository.findActiveById(1L)).thenReturn(Optional.of(trainerReview));

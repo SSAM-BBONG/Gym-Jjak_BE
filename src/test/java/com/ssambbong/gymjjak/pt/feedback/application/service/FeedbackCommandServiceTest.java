@@ -16,6 +16,8 @@ import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackMediaRepository;
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackRepository;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +25,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,14 +45,31 @@ class FeedbackCommandServiceTest {
     @Mock private PtCurriculumQueryPort ptCurriculumQueryPort;
     @Mock private TrainerQueryPort trainerQueryPort;
     @Mock private FileUseCase fileUseCase;
+    @Mock private Clock clock;
 
     @InjectMocks
     private FeedbackCommandService feedbackCommandService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(clock.instant()).thenReturn(Instant.parse("2026-07-17T00:00:00Z"));
+        lenient().when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
+    }
 
     private static final Long USER_ID = 1L;
     private static final Long PT_RESERVATION_ID = 10L;
     private static final Long FEEDBACK_ID = 20L;
     private static final Long TRAINER_PROFILE_ID = 5L;
+    private static final Long PT_COURSE_ID = 100L;
+
+    // path parameter 예약과 피드백 예약이 "같은 코스" 검증을 통과시키기 위한 기본 조회 결과.
+    // "완료된 세션은 피드백 수정 불가" 규칙에 안 걸리도록 진행중 + 종료시각은 미래로 둔다.
+    private PtReservationQueryPort.ReservationInfo reservationInfo(Long ptCourseId) {
+        // clock 목(2026-07-17 고정)보다 항상 뒤에 오도록 고정된 미래 시각을 쓴다.
+        return new PtReservationQueryPort.ReservationInfo(
+                ptCourseId, TRAINER_PROFILE_ID, USER_ID,
+                PtReservationStatus.IN_PROGRESS, LocalDateTime.of(2099, 1, 1, 0, 0));
+    }
 
     private UpdateFeedbackCommand defaultUpdateCommand() {
         return new UpdateFeedbackCommand(
@@ -86,6 +108,7 @@ class FeedbackCommandServiceTest {
 
         // given
         when(feedbackRepository.findById(FEEDBACK_ID)).thenReturn(Optional.of(existingFeedback()));
+        when(ptReservationQueryPort.findById(PT_RESERVATION_ID)).thenReturn(reservationInfo(PT_COURSE_ID));
         when(trainerQueryPort.findTrainerProfileIdByUserId(USER_ID))
                 .thenReturn(Optional.of(TRAINER_PROFILE_ID));
         when(fileUseCase.registerFiles(any()))
@@ -128,6 +151,9 @@ class FeedbackCommandServiceTest {
                 "내용", FeedbackStatus.ACTIVE, LocalDateTime.now()
         );
         when(feedbackRepository.findById(FEEDBACK_ID)).thenReturn(Optional.of(mismatchFeedback));
+        // path 예약(10L)과 피드백 예약(999L)이 서로 다른 코스를 가리키게 한다.
+        when(ptReservationQueryPort.findById(PT_RESERVATION_ID)).thenReturn(reservationInfo(PT_COURSE_ID));
+        when(ptReservationQueryPort.findById(999L)).thenReturn(reservationInfo(200L));
 
         // when & then
         assertThrows(FeedbackNotFoundException.class,
@@ -143,6 +169,7 @@ class FeedbackCommandServiceTest {
 
         // given
         when(feedbackRepository.findById(FEEDBACK_ID)).thenReturn(Optional.of(existingFeedback()));
+        when(ptReservationQueryPort.findById(PT_RESERVATION_ID)).thenReturn(reservationInfo(PT_COURSE_ID));
         when(trainerQueryPort.findTrainerProfileIdByUserId(USER_ID)).thenReturn(Optional.empty());
 
         // when & then
@@ -158,6 +185,7 @@ class FeedbackCommandServiceTest {
 
         // given — 피드백의 trainerProfileId=5, 요청자의 trainerProfileId=99
         when(feedbackRepository.findById(FEEDBACK_ID)).thenReturn(Optional.of(existingFeedback()));
+        when(ptReservationQueryPort.findById(PT_RESERVATION_ID)).thenReturn(reservationInfo(PT_COURSE_ID));
         when(trainerQueryPort.findTrainerProfileIdByUserId(USER_ID))
                 .thenReturn(Optional.of(99L)); // 다른 트레이너
 
@@ -219,6 +247,7 @@ class FeedbackCommandServiceTest {
         );
 
         when(feedbackRepository.findById(FEEDBACK_ID)).thenReturn(Optional.of(existingFeedback()));
+        when(ptReservationQueryPort.findById(PT_RESERVATION_ID)).thenReturn(reservationInfo(PT_COURSE_ID));
         when(trainerQueryPort.findTrainerProfileIdByUserId(USER_ID))
                 .thenReturn(Optional.of(TRAINER_PROFILE_ID));
 
