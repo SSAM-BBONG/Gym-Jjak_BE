@@ -98,7 +98,6 @@ public class ChatRoomController {
     ) {
         CreateChatRoomCommand command = new CreateChatRoomCommand(
                 authUser.userId(),
-                request.trainerProfileId(),
                 request.ptCourseId()
         );
 
