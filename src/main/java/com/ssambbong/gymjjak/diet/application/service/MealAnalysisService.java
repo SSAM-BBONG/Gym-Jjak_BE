@@ -7,8 +7,10 @@ import com.ssambbong.gymjjak.diet.application.port.in.MealAnalysisUseCase;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
 import com.ssambbong.gymjjak.diet.application.port.out.AiNutritionAccessPort;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAccessPort;
+import com.ssambbong.gymjjak.diet.application.port.out.MealImageUrlPort;
 import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
+import com.ssambbong.gymjjak.diet.application.result.MealAnalysisDetailResult;
 import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAnalysisNotFoundException;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAccessDeniedException;
@@ -32,6 +34,7 @@ public class MealAnalysisService implements MealAnalysisUseCase {
     private final AiNutritionAccessPort aiNutritionAccessPort;
     private final MealAccessPort mealAccessPort;
     private final FileUseCase fileUseCase;
+    private final MealImageUrlPort mealImageUrlPort;
 
     @Override
     @Transactional
@@ -48,9 +51,13 @@ public class MealAnalysisService implements MealAnalysisUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public MealAnalysisResult get(Long requesterUserId, Long targetUserId, Long mealId) {
+    public MealAnalysisDetailResult get(Long requesterUserId, Long targetUserId, Long mealId) {
         validateReadAccess(requesterUserId, targetUserId);
-        return MealAnalysisResult.from(getOwnedMeal(targetUserId, mealId));
+        MealAnalysis meal = getOwnedMeal(targetUserId, mealId);
+        String imageUrl = meal.getFileId() == null
+                ? null
+                : mealImageUrlPort.resolve(meal.getFileId(), targetUserId);
+        return new MealAnalysisDetailResult(MealAnalysisResult.from(meal), imageUrl);
     }
 
     @Transactional(readOnly = true)
