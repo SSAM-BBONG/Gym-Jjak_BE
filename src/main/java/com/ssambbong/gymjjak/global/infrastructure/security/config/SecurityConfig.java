@@ -94,6 +94,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/parts/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/parts/**").hasAnyAuthority("ADMIN", "TRAINER", "USER")
 
+                        // PT 추천 API — 구독 여부 무관 전 회원 무료 제공
+                        .requestMatchers(HttpMethod.POST, "/api/pt-recommendations").hasAuthority("USER")
+
                         // PT API
                         .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations").hasAnyAuthority("USER", "TRAINER")

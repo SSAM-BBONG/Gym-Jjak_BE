@@ -1,11 +1,10 @@
-package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adater;
+package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
-import com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter.PtCourseSanctionAdapter;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
