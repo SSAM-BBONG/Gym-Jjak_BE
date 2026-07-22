@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -36,6 +37,14 @@ public class PtCourseRepositoryAdapter implements PtCourseRepository {
     @Override
     public List<PtCourse> findAllVisible() {
         return repository.findAllByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(PtCourseStatus.VISIBLE)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<PtCourse> findAllVisibleByParts(List<PartType> parts) {
+        return repository.findAllByPartInAndStatusAndDeletedAtIsNull(parts, PtCourseStatus.VISIBLE)
                 .stream()
                 .map(mapper::toDomain)
                 .toList();
