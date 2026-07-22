@@ -68,6 +68,13 @@ public enum NotificationType {
             NotificationTargetType.FEEDBACK,
             "피드백 등록 안내",
             "새로운 피드백이 등록되었습니다. 피드백을 확인해주세요."
+    ),
+
+    TRAINER_REPORT_GENERATED(
+            NotificationCategory.TRAINER,
+            NotificationTargetType.TRAINER_REPORT,
+            "트레이너 리포트 도착 안내",
+            "이번 달 트레이너 리포트가 도착했습니다."
     );
 
     private final NotificationCategory category;

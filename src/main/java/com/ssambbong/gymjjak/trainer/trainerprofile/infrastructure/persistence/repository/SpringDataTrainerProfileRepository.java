@@ -153,5 +153,18 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
     @Query("SELECT AVG(tp.averageRating) FROM TrainerProfileJpaEntity tp WHERE tp.status = :status")
     Double findAverageRatingByStatus(@Param("status") TrainerProfileStatus status);
 
+    // [trainerReport] 배치 스케줄러가 매달 순회할 활성 트레이너 (trainerProfileId, userId) 목록
+    @Query("""
+        SELECT tp.trainerProfileId AS trainerProfileId, tp.userId AS userId
+        FROM TrainerProfileJpaEntity tp
+        WHERE tp.status = :status
+        """)
+    List<TrainerProfileIdAndUserId> findAllIdAndUserIdByStatus(@Param("status") TrainerProfileStatus status);
+
+    interface TrainerProfileIdAndUserId {
+        Long getTrainerProfileId();
+
+        Long getUserId();
+    }
 
 }
