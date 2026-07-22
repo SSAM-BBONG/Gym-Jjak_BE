@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class NutritionGoalService implements NutritionGoalUseCase {
@@ -26,7 +28,9 @@ public class NutritionGoalService implements NutritionGoalUseCase {
     }
 
     @Override @Transactional(readOnly = true)
-    public NutritionGoalResult get(Long userId) { return NutritionGoalResult.from(getGoal(userId)); }
+    public Optional<NutritionGoalResult> get(Long userId) {
+        return nutritionGoalPort.findByUserId(userId).map(NutritionGoalResult::from);
+    }
 
     @Override @Transactional
     public NutritionGoalResult update(UpdateNutritionGoalCommand command) {
