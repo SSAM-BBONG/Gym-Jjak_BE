@@ -37,6 +37,8 @@ public class ClovaOcrClientAdapter implements OcrClientPort {
     // OCR 호출에 필요한 상수
     private static final String SECRET_HEADER = "X-OCR-SECRET";
     private static final String OCR_SUCCESS = "SUCCESS";
+    private static final String TEMPLATE_NOT_FOUND_MESSAGE = "NOT_FOUND: not found matched template";
+    private static final String VALIDATION_RESULT_NO_REQUESTED = "NO_REQUESTED";
 
     // 메트릭을 위한 상수 추가
     private static final String PROVIDER_CLOVA = "clova";
@@ -241,6 +243,10 @@ public class ClovaOcrClientAdapter implements OcrClientPort {
 
         // 성공 여부 검증
         if (!OCR_SUCCESS.equals(image.inferResult())) {
+            if (isTemplateNotMatched(image)) {
+                return new OcrResult(null, List.of());
+            }
+
             throw new OcrException(
                     OcrErrorCode.OCR_INVALID_RESPONSE,
                     "OCR 이미지 분석 결과가 성공이 아닙니다."
@@ -267,6 +273,15 @@ public class ClovaOcrClientAdapter implements OcrClientPort {
                 .toList();
 
         return new OcrResult(matchedTemplateName, fields);
+    }
+
+    private boolean isTemplateNotMatched(ClovaOcrResponse.ClovaOcrImageResponse image) {
+        if (TEMPLATE_NOT_FOUND_MESSAGE.equals(image.message())) {
+            return true;
+        }
+
+        return image.validationResult() != null
+                && VALIDATION_RESULT_NO_REQUESTED.equals(image.validationResult().result());
     }
 
     // format 확장자 값 결정
