@@ -7,6 +7,7 @@ import com.ssambbong.gymjjak.global.presentation.security.JwtAuthenticationConve
 import com.ssambbong.gymjjak.payments.payment.application.command.ProcessWebhookCommand;
 import com.ssambbong.gymjjak.payments.payment.application.usecase.PaymentCommandUseCase;
 import com.ssambbong.gymjjak.payments.payment.domain.exception.PaymentNotFoundException;
+import com.ssambbong.gymjjak.payments.payment.infrastructure.portone.PortOneWebhookVerifier;
 import com.ssambbong.gymjjak.payments.payment.presentation.api.request.WebhookPaymentRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class PaymentWebhookControllerTest {
     @MockitoBean private PaymentCommandUseCase paymentCommandUseCase;
     @MockitoBean private AuthenticateAccessTokenUseCase authenticateAccessTokenUseCase;
     @MockitoBean private JwtAuthenticationConverter jwtAuthenticationConverter;
+    @MockitoBean private PortOneWebhookVerifier portOneWebhookVerifier;
 
     private static final String URL = "/api/payments/webhook";
 

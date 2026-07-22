@@ -21,8 +21,8 @@ public record UpdateMealAnalysisCommand(
         boolean proteinPresent,
         BigDecimal fat,
         boolean fatPresent,
-        Long fileId,
-        boolean fileIdPresent
+        MealImageMetadataCommand file,
+        boolean filePresent
 ) {
     // 값이 null이어도 필드가 전달됐다면 영양성분 제거 요청이므로 권한 검증 대상이다.
     public boolean updatesMacronutrients() {

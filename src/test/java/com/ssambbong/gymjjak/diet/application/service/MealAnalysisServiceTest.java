@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.diet.application.service;
 
 import com.ssambbong.gymjjak.diet.application.command.MealAnalysisCommand;
+import com.ssambbong.gymjjak.diet.application.command.MealImageMetadataCommand;
 import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
 import com.ssambbong.gymjjak.diet.application.port.out.AiNutritionAccessPort;
@@ -13,6 +14,11 @@ import com.ssambbong.gymjjak.diet.domain.exception.AiNutritionAccessRequiredExce
 import com.ssambbong.gymjjak.diet.domain.exception.MealAccessDeniedException;
 import com.ssambbong.gymjjak.diet.domain.model.MealAnalysis;
 import com.ssambbong.gymjjak.diet.domain.model.MealType;
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
+import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -42,6 +48,9 @@ class MealAnalysisServiceTest {
     @Mock
     private MealAccessPort mealAccessPort;
 
+    @Mock
+    private FileUseCase fileUseCase;
+
     @InjectMocks
     private MealAnalysisService service;
 
@@ -61,12 +70,51 @@ class MealAnalysisServiceTest {
     }
 
     @Test
+    void 식단_이미지_메타데이터를_등록하고_생성된_fileId를_저장한다() {
+        LocalDateTime mealTime = LocalDateTime.of(2026, 7, 18, 8, 30);
+        MealImageMetadataCommand file = new MealImageMetadataCommand(
+                "uploads/meals/10/uuid", "meal.jpg", "image/jpeg", 1024L);
+        given(fileUseCase.registerFiles(any())).willReturn(
+                List.of(new FileRegistrationResult(20L, FileType.MEAL_IMAGE)));
+        given(repository.save(any(MealAnalysis.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        MealAnalysisResult result = service.create(new MealAnalysisCommand(
+                10L, MealType.BREAKFAST, mealTime, "계란", 150L,
+                null, null, null, file));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<CreateFileCommand>> captor = ArgumentCaptor.forClass(List.class);
+        verify(fileUseCase).registerFiles(captor.capture());
+        CreateFileCommand registered = captor.getValue().get(0);
+        assertThat(registered.uploaderId()).isEqualTo(10L);
+        assertThat(registered.fileKey()).isEqualTo("uploads/meals/10/uuid");
+        assertThat(registered.fileType()).isEqualTo(FileType.MEAL_IMAGE);
+        assertThat(result.fileId()).isEqualTo(20L);
+    }
+
+    @Test
+    void file을_null로_수정하면_기존_이미지를_제거한다() {
+        LocalDateTime mealTime = LocalDateTime.of(2026, 7, 18, 12, 30);
+        MealAnalysis ownedMeal = meal(1L, 10L, MealType.LUNCH, mealTime, "샐러드", 300L, 15L);
+        given(repository.findByIdAndUserId(1L, 10L)).willReturn(Optional.of(ownedMeal));
+        given(repository.save(ownedMeal)).willReturn(ownedMeal);
+
+        MealAnalysisResult result = service.update(1L, new UpdateMealAnalysisCommand(
+                10L, null, false, null, false, null, false, null, false,
+                null, false, null, false, null, false, null, true));
+
+        assertThat(result.fileId()).isNull();
+    }
+
+    @Test
     void 본인_소유_식단을_수정한다() {
         LocalDateTime oldTime = LocalDateTime.of(2026, 7, 18, 8, 30);
         LocalDateTime newTime = LocalDateTime.of(2026, 7, 18, 12, 30);
         MealAnalysis ownedMeal = meal(1L, 10L, MealType.BREAKFAST, oldTime, "계란", 150L, null);
         given(repository.findByIdAndUserId(1L, 10L)).willReturn(Optional.of(ownedMeal));
         given(repository.save(ownedMeal)).willReturn(ownedMeal);
+        given(fileUseCase.registerFiles(any())).willReturn(
+                List.of(new FileRegistrationResult(20L, FileType.MEAL_IMAGE)));
 
         MealAnalysisResult result = service.update(1L,
                 new UpdateMealAnalysisCommand(
@@ -78,7 +126,8 @@ class MealAnalysisServiceTest {
                         null, false,
                         null, false,
                         null, false,
-                        20L, true
+                        new MealImageMetadataCommand(
+                                "uploads/meals/10/new-uuid", "new-meal.jpg", "image/jpeg", 2048L), true
                 ));
 
         assertThat(result.mealType()).isEqualTo(MealType.LUNCH);

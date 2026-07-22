@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.pt.trainerReview.domain.model.TrainerReview;
 import com.ssambbong.gymjjak.pt.trainerReview.domain.model.TrainerReviewStatus;
 import com.ssambbong.gymjjak.pt.trainerReview.domain.repository.TrainerReviewRepository;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,8 +30,17 @@ class TrainerReviewSanctionAdapterTest {
     @Mock
     private TrainerReviewRepository trainerReviewRepository;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private TrainerReviewSanctionAdapter adapter;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(clock.instant()).thenReturn(Instant.parse("2026-07-17T00:00:00Z"));
+        lenient().when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
+    }
 
     @Test
     @DisplayName("수동 블라인드 적용 시 강사평 status가 DELETED로 소프트딜리트되어야 한다")

@@ -149,7 +149,7 @@ class PaymentCommandServiceTest {
                 eq(SubscriptionPlanType.MONTHLY.price()), any(), any())).thenReturn(10L);
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Paid", PORTONE_PAYMENT_ID, "SUB-TEST0001"));
+                new ProcessWebhookCommand("Transaction.Paid", "SUB-TEST0001", PORTONE_PAYMENT_ID));
 
         verify(subscriptionUserPort).lockById(1L);
         verify(subscriptionUserPort).markAsPaid(1L);
@@ -166,7 +166,7 @@ class PaymentCommandServiceTest {
         when(subscriptionPaymentQueryPort.existsActiveByUserId(eq(1L), any())).thenReturn(false);
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Cancelled", PORTONE_PAYMENT_ID, "SUB-TEST0001"));
+                new ProcessWebhookCommand("Transaction.Cancelled", "SUB-TEST0001", PORTONE_PAYMENT_ID));
 
         verify(subscriptionUserPort).lockById(1L);
         verify(subscriptionLifecyclePort).expire(10L);
@@ -183,7 +183,7 @@ class PaymentCommandServiceTest {
                 .thenReturn(new PortOnePaymentVerifyPort.PortOnePaymentInfo("PAID", AMOUNT));
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Paid", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Paid", ORDER_ID, PORTONE_PAYMENT_ID));
 
         ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
         verify(paymentRepository).update(captor.capture());
@@ -199,7 +199,7 @@ class PaymentCommandServiceTest {
                 .thenReturn(new PortOnePaymentVerifyPort.PortOnePaymentInfo("PAID", 100));
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Paid", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Paid", ORDER_ID, PORTONE_PAYMENT_ID));
 
         verify(paymentRepository, never()).update(any());
     }
@@ -210,7 +210,7 @@ class PaymentCommandServiceTest {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(paidPayment()));
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Paid", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Paid", ORDER_ID, PORTONE_PAYMENT_ID));
 
         verify(paymentRepository, never()).update(any());
         verify(portOnePaymentVerifyPort, never()).getPaymentInfo(any());
@@ -224,7 +224,7 @@ class PaymentCommandServiceTest {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(pendingPayment()));
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Failed", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Failed", ORDER_ID, PORTONE_PAYMENT_ID));
 
         ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
         verify(paymentRepository).update(captor.capture());
@@ -238,7 +238,7 @@ class PaymentCommandServiceTest {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(failedPayment()));
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Failed", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Failed", ORDER_ID, PORTONE_PAYMENT_ID));
 
         verify(paymentRepository, never()).update(any());
     }
@@ -251,7 +251,7 @@ class PaymentCommandServiceTest {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(paidPayment()));
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Cancelled", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Cancelled", ORDER_ID, PORTONE_PAYMENT_ID));
 
         ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
         verify(paymentRepository).update(captor.capture());
@@ -264,7 +264,7 @@ class PaymentCommandServiceTest {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(cancelledPayment()));
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Cancelled", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Cancelled", ORDER_ID, PORTONE_PAYMENT_ID));
 
         verify(paymentRepository, never()).update(any());
     }
@@ -275,7 +275,7 @@ class PaymentCommandServiceTest {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(pendingPayment()));
 
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Cancelled", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Cancelled", ORDER_ID, PORTONE_PAYMENT_ID));
 
         verify(paymentRepository, never()).update(any());
     }
@@ -289,7 +289,7 @@ class PaymentCommandServiceTest {
 
         assertThrows(PaymentNotFoundException.class,
                 () -> paymentCommandService.processWebhook(
-                        new ProcessWebhookCommand("Transaction.Paid", PORTONE_PAYMENT_ID, ORDER_ID)));
+                        new ProcessWebhookCommand("Transaction.Paid", ORDER_ID, PORTONE_PAYMENT_ID)));
 
         verify(paymentRepository, never()).update(any());
     }
@@ -298,7 +298,7 @@ class PaymentCommandServiceTest {
     @DisplayName("알 수 없는 웹훅 타입은 무시된다")
     void processWebhook_unknownType_ignored() {
         paymentCommandService.processWebhook(
-                new ProcessWebhookCommand("Transaction.Unknown", PORTONE_PAYMENT_ID, ORDER_ID));
+                new ProcessWebhookCommand("Transaction.Unknown", ORDER_ID, PORTONE_PAYMENT_ID));
 
         verify(paymentRepository, never()).findByOrderId(any());
         verify(paymentRepository, never()).update(any());

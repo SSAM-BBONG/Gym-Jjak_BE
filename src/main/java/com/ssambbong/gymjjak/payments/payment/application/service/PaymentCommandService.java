@@ -132,7 +132,8 @@ public class PaymentCommandService implements PaymentCommandUseCase {
                 return;
             }
             // PENDING 확인 후에만 PortOne API 호출 (트랜잭션 밖 — DB 커넥션 점유 방지)
-            portOneInfo = portOnePaymentVerifyPort.getPaymentInfo(command.orderId());
+            // PortOne 쪽 결제 건 조회이므로 우리 orderId가 아니라 PortOne이 발급한 transactionId를 사용한다.
+            portOneInfo = portOnePaymentVerifyPort.getPaymentInfo(command.transactionId());
         }
 
         final PortOnePaymentVerifyPort.PortOnePaymentInfo finalInfo = portOneInfo;
