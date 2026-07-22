@@ -9,6 +9,7 @@ import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.in.MealAnalysisUseCase;
 import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
+import com.ssambbong.gymjjak.diet.application.result.MealAnalysisDetailResult;
 import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 import com.ssambbong.gymjjak.diet.domain.exception.InvalidMealUpdateException;
 import com.ssambbong.gymjjak.diet.domain.model.MealType;
@@ -51,7 +52,7 @@ public class MealAnalysisController {
 
     @GetMapping("/{mealId}")
     @Operation(summary = "식단 단건 조회", description = "로그인한 사용자가 본인 소유의 식단 한 건을 조회합니다.")
-    public ResponseEntity<GlobalApiResponse<MealAnalysisResponse>> get(
+    public ResponseEntity<GlobalApiResponse<MealAnalysisDetailResponse>> get(
             @AuthenticationPrincipal AuthUser authUser,
             @Parameter(description = "조회할 식단 ID", example = "1", required = true)
             @PathVariable Long mealId,
@@ -59,7 +60,7 @@ public class MealAnalysisController {
             @RequestParam(required = false) Long targetUserId) {
         Long resolvedTargetUserId = resolveTargetUserId(authUser.userId(), targetUserId);
         return ResponseEntity.ok(GlobalApiResponse.ok(MealAnalysisResponseCode.MEAL_FETCHED,
-                toResponse(mealAnalysisUseCase.get(authUser.userId(), resolvedTargetUserId, mealId))));
+                toDetailResponse(mealAnalysisUseCase.get(authUser.userId(), resolvedTargetUserId, mealId))));
     }
 
     @GetMapping
@@ -167,6 +168,13 @@ public class MealAnalysisController {
                 result.mealTime(),
                 result.menu()
         );
+    }
+
+    private MealAnalysisDetailResponse toDetailResponse(MealAnalysisDetailResult detail) {
+        MealAnalysisResult result = detail.meal();
+        return new MealAnalysisDetailResponse(result.mealId(), mealTypeMapper.toKorean(result.mealType()),
+                result.mealTime(), result.menu(), result.kcal(), result.carbohydrate(), result.protein(), result.fat(),
+                detail.imageUrl(), result.createdAt(), result.updatedAt());
     }
 
     private Long resolveTargetUserId(Long requesterUserId, Long targetUserId) {
