@@ -18,7 +18,7 @@ public enum TrainerApplicationErrorCode implements ErrorCode {
     REQUIRED_CERTIFICATION_NOT_VERIFIED(
             HttpStatus.BAD_REQUEST,
             "TRAINER_APPLICATION_400_2",
-            "필수 자격증 OCR 검증에 실패했습니다."
+            "필수 자격증을 확인할 수 없습니다. 올바른 자격증 이미지를 업로드해 주세요."
     ),
 
     TRAINER_APPLICATION_ACCESS_DENIED(

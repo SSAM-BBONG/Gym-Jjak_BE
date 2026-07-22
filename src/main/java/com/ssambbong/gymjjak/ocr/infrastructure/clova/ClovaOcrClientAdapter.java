@@ -353,4 +353,9 @@ public class ClovaOcrClientAdapter implements OcrClientPort {
 
         throw new OcrException(OcrErrorCode.OCR_REQUEST_FAILED, exception);
     }
+
+    @Recover
+    public OcrResult recover(OcrException exception, ExtractOcrCommand command) {
+        throw exception;
+    }
 }
