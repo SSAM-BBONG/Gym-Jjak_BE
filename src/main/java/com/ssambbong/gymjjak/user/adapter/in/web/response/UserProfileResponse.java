@@ -9,7 +9,9 @@ public record UserProfileResponse(
         @Schema(description = "닉네임")
         String nickname,
         @Schema(description = "전화번호")
-        String phone
+        String phone,
+        @Schema(description = "현재 유료 구독 이용 여부")
+        boolean paid
 
 ) {
 }

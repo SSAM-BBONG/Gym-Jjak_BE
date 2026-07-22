@@ -1,16 +1,14 @@
 package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 
 public record PopularPtCourseResponse(
         Long ptCourseId,
         String title,
         int price,
-        Long thumbnailFileId,
-        Long categoryId,
-        String categoryName,
-        Long tagId,
-        String tagName,
+        String thumbnailUrl,
+        PartType part,
         String trainerName,
         String roadAddress
 ) {
@@ -19,11 +17,8 @@ public record PopularPtCourseResponse(
                 view.ptCourseId(),
                 view.title(),
                 view.price(),
-                view.thumbnailFileId(),
-                view.categoryId(),
-                view.categoryName(),
-                view.tagId(),
-                view.tagName(),
+                view.thumbnailUrl(),
+                view.part(),
                 view.trainerName(),
                 view.roadAddress()
         );

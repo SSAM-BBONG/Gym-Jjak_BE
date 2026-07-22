@@ -1,8 +1,11 @@
 package com.ssambbong.gymjjak.pt.ptReservation.application.usecase;
 
+import com.ssambbong.gymjjak.pt.ptReservation.application.result.MonthlyPtReservationResult;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PtReservationQueryUseCase {
@@ -13,9 +16,21 @@ public interface PtReservationQueryUseCase {
     // 내 PT 예약 기록 상세 조회 + 본인 확인
     PtReservationDetailView findMyReservationDetail(Long userId, Long ptReservationId);
 
+    // adminDashBoard에서 사용할 월별 예약된 pt 수 조회
+    List<MonthlyPtReservationResult> findMonthlyPtReservations();
+
+    // 유저+코스 기준 완료 회차 수
+    int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
+    // 유저+코스 기준 derived status (수동 완료 포함)
+    PtReservationStatus deriveCourseStatus(Long userId, Long ptCourseId);
+
+    // 내 PT 세션 목록 조회 (예약 탭)
+    List<PtSessionView> findMySessions(Long userId);
+
     record MyPtReservationView(
             Long ptReservationId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String trainerName,
             PtReservationStatus status,
@@ -25,7 +40,8 @@ public interface PtReservationQueryUseCase {
     ) {}
 
     record PtReservationDetailView(
-            Long thumbnailFileId,
+            Long ptCourseId,
+            String thumbnailUrl,
             String title,
             String trainerName,
             PtReservationStatus status,
@@ -40,5 +56,15 @@ public interface PtReservationQueryUseCase {
             int sessionNo,
             String title,
             Long feedbackId
+    ) {}
+
+    record PtSessionView(
+            Long ptReservationId,
+            Long ptCourseId,
+            String ptCourseTitle,
+            String trainerName,
+            LocalDateTime reservedStartAt,
+            LocalDateTime reservedEndAt,
+            PtSessionStatus sessionStatus
     ) {}
 }

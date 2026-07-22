@@ -2,15 +2,21 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.application.service;
 
 import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
 import com.ssambbong.gymjjak.ocr.application.usecase.OcrUseCase;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.CreateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.RejectTrainerApplicationCommand;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.ApprovedTrainerProfilePort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationTrainerPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationUserPort;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.DuplicateTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationNotFoundException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationStatusConflictException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplication;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.model.TrainerApplicationStatus;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.repository.TrainerApplicationRepository;
+import com.ssambbong.gymjjak.trainer.trainerapplication.infrastructure.metrics.TrainerApplicationMetric;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +24,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
@@ -45,7 +52,19 @@ public class TrainerApplicationCommandServiceTest {
     private TrainerApplicationUserPort trainerApplicationUserPort;
 
     @Mock
+    private TrainerApplicationOrganizationPort trainerApplicationOrganizationPort;
+
+    @Mock
     private ApprovedTrainerProfilePort approvedTrainerProfilePort;
+
+    @Mock
+    private TrainerApplicationOrganizationTrainerPort trainerApplicationOrganizationTrainerPort;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private TrainerApplicationMetric trainerApplicationMetric;
 
     @InjectMocks
     private TrainerApplicationCommandService service;
@@ -54,6 +73,7 @@ public class TrainerApplicationCommandServiceTest {
         return TrainerApplication.builder()
                 .trainerApplicationId(1L)
                 .userId(10L)
+                .organizationId(1L)
                 .profileFileId(100L)
                 .certificateFileId(200L)
                 .qualifications(List.of("생활스포츠지도사 2급"))
@@ -61,6 +81,79 @@ public class TrainerApplicationCommandServiceTest {
                 .introduction("트레이너 신청입니다.")
                 .status(TrainerApplicationStatus.PENDING)
                 .build();
+    }
+
+    @Test
+    @DisplayName("신청 대상 조직 중 하나라도 비활성이면 파일 등록 전에 신청을 거절한다")
+    void createTrainerApplication_fail_whenAnyOrganizationIsInactive() {
+        // given
+        CreateTrainerApplicationCommand command =
+                createTrainerApplicationCommand(List.of(1L, 2L, 3L));
+
+        when(trainerApplicationOrganizationPort
+                .countActiveOrganizationsByIds(List.of(1L, 2L, 3L)))
+                .thenReturn(2L);
+
+        // when & then
+        assertThatThrownBy(() -> service.createTrainerApplication(command))
+                .isInstanceOf(InvalidTrainerApplicationException.class);
+
+        verify(trainerApplicationOrganizationPort)
+                .countActiveOrganizationsByIds(List.of(1L, 2L, 3L));
+        verifyNoInteractions(fileUseCase, ocrUseCase);
+        verify(trainerApplicationRepository, never()).save(any());
+        verify(trainerApplicationRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("요청 조직 중 진행 중인 신청이 하나라도 있으면 파일 등록 전에 신청을 거절한다")
+    void createTrainerApplication_fail_whenAnyOrganizationHasBlockingApplication() {
+        // given
+        List<Long> organizationIds = List.of(1L, 2L, 3L);
+        CreateTrainerApplicationCommand command =
+                createTrainerApplicationCommand(organizationIds);
+
+        when(trainerApplicationOrganizationPort
+                .countActiveOrganizationsByIds(organizationIds))
+                .thenReturn((long) organizationIds.size());
+        when(trainerApplicationRepository
+                .existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+                        10L,
+                        organizationIds
+                ))
+                .thenReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> service.createTrainerApplication(command))
+                .isInstanceOf(DuplicateTrainerApplicationException.class);
+
+        verify(trainerApplicationRepository)
+                .existsDuplicateBlockingApplicationByUserIdAndOrganizationIds(
+                        10L,
+                        organizationIds
+                );
+        verifyNoInteractions(fileUseCase, ocrUseCase);
+        verify(trainerApplicationRepository, never()).save(any());
+        verify(trainerApplicationRepository, never()).saveAll(anyList());
+    }
+
+    private CreateTrainerApplicationCommand createTrainerApplicationCommand(
+            List<Long> organizationIds
+    ) {
+        return new CreateTrainerApplicationCommand(
+                10L,
+                organizationIds,
+                null,
+                new UploadedFileMetadataCommand(
+                        "trainer-applications/certificate.png",
+                        "certificate.png",
+                        "image/png",
+                        1024L
+                ),
+                List.of(),
+                List.of(),
+                "트레이너 신청입니다."
+        );
     }
 
     @Test
@@ -76,6 +169,8 @@ public class TrainerApplicationCommandServiceTest {
 
         when(trainerApplicationRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(pendingApplication()));
+        when(trainerApplicationOrganizationPort.findOrganizationIdByAccountId(99L))
+                .thenReturn(1L);
 
         // when
         service.rejectTrainerApplication(command);
@@ -110,6 +205,8 @@ public class TrainerApplicationCommandServiceTest {
 
         when(trainerApplicationRepository.findByIdForUpdate(999L))
                 .thenReturn(Optional.empty());
+        when(trainerApplicationOrganizationPort.findOrganizationIdByAccountId(99L))
+                .thenReturn(1L);
 
         // when & then
         assertThatThrownBy(() ->
@@ -127,6 +224,7 @@ public class TrainerApplicationCommandServiceTest {
                 TrainerApplication.builder()
                         .trainerApplicationId(1L)
                         .userId(10L)
+                        .organizationId(1L)
                         .certificateFileId(200L)
                         .qualifications(List.of())
                         .awardHistories(List.of())
@@ -144,6 +242,8 @@ public class TrainerApplicationCommandServiceTest {
 
         when(trainerApplicationRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(approvedApplication));
+        when(trainerApplicationOrganizationPort.findOrganizationIdByAccountId(99L))
+                .thenReturn(1L);
 
         // when & then
         assertThatThrownBy(() ->

@@ -3,7 +3,10 @@ package com.ssambbong.gymjjak.report.application.service;
 import com.ssambbong.gymjjak.report.application.query.AdminReportDetailResult;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListQuery;
 import com.ssambbong.gymjjak.report.application.query.AdminReportListResult;
+import com.ssambbong.gymjjak.report.application.query.AdminReportSnapshotResult;
 import com.ssambbong.gymjjak.report.application.usecase.ReportGroupQueryUseCase;
+import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
+import com.ssambbong.gymjjak.report.domain.model.ReportGroup;
 import com.ssambbong.gymjjak.report.domain.repository.ReportGroupRepository;
 import com.ssambbong.gymjjak.report.domain.repository.ReportRepository;
 import com.ssambbong.gymjjak.report.infrastructure.metrics.ReportGroupMetric;
@@ -49,5 +52,20 @@ public class ReportGroupQueryService implements ReportGroupQueryUseCase {
                 result.reportGroupId());
 
         return result;
+    }
+    @Override
+    public AdminReportSnapshotResult findReportSnapshot(Long reportGroupId) {
+        // 활성화된 신고그룹 조회
+        ReportGroup reportGroup = reportGroupRepository.findActiveById(reportGroupId)
+                .orElseThrow(() -> new ReportGroupNotFoundException(reportGroupId));
+
+        return new AdminReportSnapshotResult(
+                reportGroup.getReportGroupId(),
+                reportGroup.getTargetType(),
+                reportGroup.getTargetId(),
+                reportGroup.getSnapshotTitle(),
+                reportGroup.getSnapshotContent(),
+                reportGroup.getSnapshotFileUrl()
+        );
     }
 }

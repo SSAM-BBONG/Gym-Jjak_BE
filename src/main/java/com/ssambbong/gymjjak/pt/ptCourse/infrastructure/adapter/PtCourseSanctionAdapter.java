@@ -3,7 +3,7 @@ package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adapter;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
-import com.ssambbong.gymjjak.report.application.port.PtCourseSanctionPort;
+import com.ssambbong.gymjjak.report.application.port.ptcourse.PtCourseSanctionPort;
 import com.ssambbong.gymjjak.report.application.port.ReportSanctionAction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

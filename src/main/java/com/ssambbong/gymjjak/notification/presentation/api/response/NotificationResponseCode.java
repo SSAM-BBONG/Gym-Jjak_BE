@@ -26,6 +26,11 @@ public enum NotificationResponseCode implements ResponseCode {
     NOTIFICATION_DELETED(
             "NOTIFICATION_200_4",
             "알림 삭제가 완료되었습니다."
+    ),
+
+    NOTIFICATION_UNREAD_COUNT_FOUND(
+            "NOTIFICATION_200_5",
+            "미읽음 알림 개수 조회에 성공했습니다."
     );
 
     private final String code;

@@ -24,6 +24,19 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
 
     boolean existsByOrganizationIdAndTrainerProfileIdAndRemovedAtIsNull(Long organizationId, Long trainerProfileId);
 
+    List<OrganizationTrainerJpaEntity> findAllByTrainerProfileIdAndRemovedAtIsNull(Long trainerProfileId);
+
+    // [트레이너 pt 메인 페이지] 트레이너가 현재 소속된 조직 조회
+    @Query("""
+            SELECT COUNT(DISTINCT e.organizationId)
+            FROM OrganizationTrainerJpaEntity e
+            WHERE e.trainerProfileId = :trainerProfileId
+              AND e.removedAt IS NULL
+            """)
+    long countDistinctActiveOrganizationsByTrainerProfileId(
+            @Param("trainerProfileId") Long trainerProfileId
+    );
+
     long countByRemovedAtIsNull();
 
     @Query("SELECT COUNT(DISTINCT e.organizationId) FROM OrganizationTrainerJpaEntity e WHERE e.removedAt IS NULL")
@@ -66,6 +79,28 @@ public interface SpringDataOrganizationTrainerRepository extends JpaRepository<O
               AND pr.cancelled_at IS NULL
             """, nativeQuery = true)
     long countAccumulatedMembersByOrganizationId(@Param("organizationId") Long organizationId);
+
+    // [dashboard] 트레이너별 누적 수강생 수 + PT 강습 수 (CANCELLED 제외 DISTINCT user_id), 수강생 수 내림차순 정렬
+    @Query(value = """
+            SELECT ot.trainer_profile_id                  AS trainerProfileId,
+                   tp.trainer_name                        AS trainerName,
+                   COUNT(DISTINCT pr.user_id)             AS clientCount,
+                   COUNT(DISTINCT pc.pt_course_id)        AS ptCount
+            FROM organization_trainers ot
+            JOIN trainer_profiles tp ON ot.trainer_profile_id = tp.trainer_profile_id
+            LEFT JOIN pt_reservations pr ON pr.trainer_profile_id = ot.trainer_profile_id
+                AND pr.organization_id = :organizationId
+                AND pr.status != 'CANCELLED'
+            LEFT JOIN pt_courses pc ON pc.trainer_profile_id = ot.trainer_profile_id
+                AND pc.organization_id = :organizationId
+                AND pc.deleted_at IS NULL
+            WHERE ot.organization_id = :organizationId
+              AND ot.removed_at IS NULL
+              AND tp.deleted_at IS NULL
+            GROUP BY ot.trainer_profile_id, tp.trainer_name
+            ORDER BY clientCount DESC
+            """, nativeQuery = true)
+    List<TrainerClientRow> findTrainerClientsByOrganizationId(@Param("organizationId") Long organizationId);
 
     @Query(value = "SELECT organization_trainer_id FROM organization_trainers WHERE removed_at IS NOT NULL AND removed_at < :threshold ORDER BY removed_at ASC, organization_trainer_id ASC LIMIT :batchSize", nativeQuery = true)
     List<Long> findHardDeleteCandidateIds(@Param("threshold") LocalDateTime threshold, @Param("batchSize") int batchSize);

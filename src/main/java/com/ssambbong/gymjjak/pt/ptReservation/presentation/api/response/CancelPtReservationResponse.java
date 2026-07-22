@@ -1,19 +1,26 @@
 package com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response;
 
-import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
-import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public record CancelPtReservationResponse(
-        PtReservationStatus status,
+        PtSessionStatus sessionStatus,
         LocalDateTime cancelledAt
 ) {
-    // 도메인 객체로부터 응답 생성
-    public static CancelPtReservationResponse from(PtReservation reservation) {
+    public static CancelPtReservationResponse cancelled() {
         return new CancelPtReservationResponse(
-                reservation.getStatus(),
-                reservation.getCancelledAt()
+                PtSessionStatus.CANCELLED,
+                LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        );
+    }
+
+    // sessionStatus를 파라미터로 받아서 그대로 넣어주는 of 메서드
+    public static CancelPtReservationResponse of(PtSessionStatus sessionStatus) {
+        return new CancelPtReservationResponse(
+                sessionStatus,
+                LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
         );
     }
 }

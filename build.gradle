@@ -65,6 +65,8 @@ dependencies {
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     // spring retry 의존성 추가
     implementation 'org.springframework.retry:spring-retry'
+    // PortOne V2 서버 SDK
+    implementation 'io.portone:server-sdk:0.24.0'
     // flyway 의존성 추가
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-mysql'
@@ -75,6 +77,9 @@ dependencies {
     // 캐시 적용
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
+//    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+
 }
 
 tasks.named('test') {

@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.user.adapter.in.internal;
 
-import com.ssambbong.gymjjak.report.application.port.UserProfileView;
-import com.ssambbong.gymjjak.report.application.port.UserQueryPort;
+import com.ssambbong.gymjjak.report.application.port.user.UserProfileView;
+import com.ssambbong.gymjjak.report.application.port.user.UserQueryPort;
 import com.ssambbong.gymjjak.user.adapter.out.persistence.SpringDataUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

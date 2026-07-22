@@ -3,7 +3,6 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.respon
 import com.ssambbong.gymjjak.global.presentation.api.common.ResponseCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -31,7 +30,7 @@ public enum TrainerApplicationResponseCode implements ResponseCode {
 
     TRAINER_APPLICATION_REVIEW_DETAIL_FOUND(
             "TRAINER_APPLICATION_200_4",
-            "트레이너 신청서 관리자 상세 조회에 성공했습니다."
+            "트레이너 신청서 헬스장 계정 상세 조회에 성공했습니다."
     ),
 
     TRAINER_APPLICATION_APPROVED(

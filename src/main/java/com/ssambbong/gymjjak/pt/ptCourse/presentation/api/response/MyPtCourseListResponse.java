@@ -4,17 +4,17 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCas
 
 public record MyPtCourseListResponse(
         Long ptCourseId,
-        Long thumbnailFileId,
+        String thumbnailUrl,
         String title,
         String trainerName,
         String status,               // VISIBLE / HIDDEN
-        int activeReservationCount,  // RESERVED + IN_PROGRESS 수
-        int totalReservationCount    // 전체 예약 수
+        int activeReservationCount,  // 현재 수강 중인 수강생 수
+        int totalReservationCount    // 전체 수강생 수 (취소 제외)
 ) {
     public static MyPtCourseListResponse from(PtCourseQueryUseCase.MyPtCourseListView view) {
         return new MyPtCourseListResponse(
                 view.ptCourseId(),
-                view.thumbnailFileId(),
+                view.thumbnailUrl(),
                 view.title(),
                 view.trainerName(),
                 view.status().name(),

@@ -70,7 +70,7 @@ public class UserAuthController {
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", result.refreshToken())
                 .httpOnly(true)
-                .secure(false) // 로컬 개발 환경이면 false, 배포 HTTPS 환경이면 true
+                .secure(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(Duration.ofDays(14))
@@ -103,7 +103,7 @@ public class UserAuthController {
 
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(0)
@@ -111,7 +111,7 @@ public class UserAuthController {
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(0)

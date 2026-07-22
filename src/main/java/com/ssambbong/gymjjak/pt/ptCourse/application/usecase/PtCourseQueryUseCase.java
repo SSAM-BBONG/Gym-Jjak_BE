@@ -1,11 +1,13 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.usecase;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.ReviewQueryPort;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -32,18 +34,20 @@ public interface PtCourseQueryUseCase {
     // PT 통계 조회
     PtStatsView findStats();
 
+    // 예약 가능 날짜 조회 (오늘부터 30일)
+    AvailableDatesView findAvailableDates(Long ptCourseId);
+
+    // 예약 가능 시간 슬롯 조회 (날짜 기준)
+    AvailableTimeSlotsView findAvailableTimeSlots(Long ptCourseId, LocalDate date);
+
     // ──── 목록 뷰 ────
     record PtCourseListView(
             Long ptCourseId,
             String title,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             int price,
-            // 태그
-            Long tagId,
-            String tagName,
-            // 카테고리
-            Long categoryId,
-            String categoryName,
+            // 부위
+            PartType part,
             // 트레이너
             String trainerName,
             // 조직
@@ -53,28 +57,21 @@ public interface PtCourseQueryUseCase {
             Double latitude,
             Double longitude,
             // 리뷰
-            int reviewCount
+            Double averageRating,
+            int reviewCount,
+            LocalDateTime createdAt
     ) {}
 
     // ──── 상세 뷰 ────
     record PtCourseDetailView(
             Long ptCourseId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String description,
             int price,
             int totalSessionCount,
-            Double averageRating,
-            int reviewCount,
-            // 조직
             Long organizationId,
-            // 트레이너
             Long trainerProfileId,
-            String trainerName,
-            Long trainerProfileFileId,
-            String trainerIntroduction,
-            List<String> certifications,
-            List<String> awards,
             List<CurriculumView> curriculums,
             List<ScheduleView> schedules,
             List<ReviewQueryPort.ReviewSummary> recentReviews
@@ -99,12 +96,12 @@ public interface PtCourseQueryUseCase {
     // ──── 내 강습 목록 뷰 ────
     record MyPtCourseListView(
             Long ptCourseId,
-            Long thumbnailFileId,
+            String thumbnailUrl,
             String title,
             String trainerName,
             PtCourseStatus status,
-            int activeReservationCount,   // RESERVED + IN_PROGRESS 수
-            int totalReservationCount     // 전체 예약 수
+            int activeReservationCount,   // 현재 수강 중인 수강생 수
+            int totalReservationCount     // 전체 수강생 수 (취소 제외)
     ) {}
 
     // 강습별 수강생 목록 응답 (강습 제목 + 예약 목록)
@@ -118,7 +115,7 @@ public interface PtCourseQueryUseCase {
             Long ptReservationId,
             String nickname,
             PtReservationStatus status,
-            LocalDate lastPtDate,      // 가장 최근 피드백 날짜, 없으면 null
+            LocalDate lastPtDate,      // 가장 최근 완료 회차의 종료일, 없으면 null
             int progressCount,
             int totalSessionCount
     ) {}
@@ -134,6 +131,14 @@ public interface PtCourseQueryUseCase {
             String title
     ) {}
 
+    // ──── 예약 가능 날짜 뷰 ────
+    record AvailableDatesView(List<LocalDate> availableDates) {}
+
+    // ──── 예약 가능 시간 슬롯 뷰 ────
+    record AvailableTimeSlotsView(LocalDate date, List<TimeSlotView> timeSlots) {}
+
+    record TimeSlotView(LocalTime startTime, LocalTime endTime, boolean available) {}
+
     // ──── PT 통계 뷰 ────
     record PtStatsView(
             long organizationCount,
@@ -147,11 +152,8 @@ public interface PtCourseQueryUseCase {
             Long ptCourseId,
             String title,
             int price,
-            Long thumbnailFileId,
-            Long categoryId,
-            String categoryName,
-            Long tagId,
-            String tagName,
+            String thumbnailUrl,
+            PartType part,
             String trainerName,
             String roadAddress
     ) {}

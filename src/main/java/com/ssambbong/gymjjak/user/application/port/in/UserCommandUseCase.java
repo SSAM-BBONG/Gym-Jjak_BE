@@ -37,5 +37,7 @@ public interface UserCommandUseCase {
 
     PageResult<FindTrainerUserResult> findTrainerUsers(String keyword, int page, int size);
 
+    UserUsernameAndNicknameResult findUsernameAndNickname(Long userId);
+
 
 }

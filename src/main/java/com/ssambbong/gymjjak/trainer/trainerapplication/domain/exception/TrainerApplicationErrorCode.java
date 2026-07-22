@@ -49,6 +49,12 @@ public enum TrainerApplicationErrorCode implements ErrorCode {
             HttpStatus.FORBIDDEN,
             "TRAINER_APPLICATION_403_2",
             "본인의 트레이너 신청서만 취소할 수 있습니다."
+    ),
+
+    TRAINER_APPLICATION_REVIEW_ACCESS_DENIED(
+            HttpStatus.FORBIDDEN,
+            "TRAINER_APPLICATION_403_3",
+            "해당 조직의 트레이너 신청서만 승인 또는 반려할 수 있습니다."
     );
 
     private final HttpStatus httpStatus;

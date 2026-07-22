@@ -16,6 +16,7 @@ public class User {
     private UserRole role;
     private UserStatus status;
     private boolean onboardingCompleted;
+    private boolean paid;
     private SocialProvider socialProvider;
     private String socialId;
     private LocalDateTime  lastLoginAt;
@@ -33,6 +34,7 @@ public class User {
             UserRole role,
             UserStatus status,
             boolean onboardingCompleted,
+            boolean paid,
             SocialProvider socialProvider,
             String socialId,
             LocalDateTime  lastLoginAt,
@@ -49,6 +51,7 @@ public class User {
         this.role = Objects.requireNonNull(role, "role은 필수입니다.");
         this.status = Objects.requireNonNull(status, "status는 필수입니다.");
         this.onboardingCompleted = onboardingCompleted;
+        this.paid = paid;
         this.socialProvider = socialProvider;
         this.socialId = socialId;
         this.lastLoginAt = lastLoginAt;
@@ -73,6 +76,7 @@ public class User {
                 phone,
                 UserRole.USER,
                 UserStatus.ACTIVE,
+                false,
                 false,
                 null,
                 null,
@@ -100,6 +104,7 @@ public class User {
                 UserRole.USER,
                 UserStatus.ACTIVE,
                 false,
+                false,
                 Objects.requireNonNull(socialProvider, "socialProvider는 필수입니다."),
                 validateRequired(socialId, UserErrorCode.SOCIAL_ID_REQUIRED),
                 null,
@@ -119,6 +124,7 @@ public class User {
             UserRole role,
             UserStatus status,
             boolean onboardingCompleted,
+            boolean paid,
             SocialProvider socialProvider,
             String socialId,
             LocalDateTime  lastLoginAt,
@@ -136,6 +142,7 @@ public class User {
                 role,
                 status,
                 onboardingCompleted,
+                paid,
                 socialProvider,
                 socialId,
                 lastLoginAt,
@@ -238,14 +245,6 @@ public class User {
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt은 필수입니다.");
     }
 
-    public void releaseSuspensionIfExpired(LocalDateTime now) {
-        if (this.status != UserStatus.DAY_7) {
-            return;
-        }
-
-        this.status = UserStatus.ACTIVE;
-    }
-
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE && !isWithdrawn();
 
@@ -271,6 +270,7 @@ public class User {
                 UserRole.ORGANIZATION,
                 UserStatus.ACTIVE,
                 true,
+                false,
                 null,
                 null,
                 null,
@@ -282,6 +282,18 @@ public class User {
 
     public boolean isOnboardingCompleted() {
         return onboardingCompleted;
+    }
+
+    public void markAsPaid() {
+        this.paid = true;
+    }
+
+    public void markAsUnpaid() {
+        this.paid = false;
+    }
+
+    public boolean isPaid() {
+        return paid;
     }
 
     public boolean isSevenDaysSuspended() {

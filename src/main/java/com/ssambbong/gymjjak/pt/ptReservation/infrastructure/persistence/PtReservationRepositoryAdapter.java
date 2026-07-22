@@ -29,7 +29,6 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 ptReservation.getTrainerProfileId(),
                 ptReservation.getReservedStartAt(),
                 ptReservation.getReservedEndAt(),
-                ptReservation.getProgressCount(),
                 ptReservation.getTotalSessionCount(),
                 ptReservation.getStatus()
         );
@@ -70,10 +69,59 @@ public class PtReservationRepositoryAdapter implements PtReservationRepository {
                 .toList();
     }
 
-    // 진행 중인 PT 수
+    @Override
+    public int bulkCancelByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.bulkCancelByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
+    public int bulkCompleteByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.bulkCompleteByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
+    public int countConsumedByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.countConsumedByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
+    @Override
+    public int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId) {
+        return repository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
+    }
+
     @Override
     public long countByStatus(PtReservationStatus status) {
         return repository.countByStatus(status);
+    }
+
+    @Override
+    public long countInProgressCourses() {
+        return repository.countInProgressCourses();
+    }
+
+    @Override
+    public List<LocalDateTime> findReservedStartAtsByPtCourseId(Long ptCourseId, LocalDateTime from, LocalDateTime to) {
+        return repository.findReservedStartAtsByPtCourseIdAndRange(ptCourseId, from, to);
+    }
+
+    // AdminDashboard - 월별 예약된 pt 수 조회
+    @Override
+    public List<MonthlyReservationCount> findMonthlyReservationCounts(
+            PtReservationStatus excludedStatus,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        return repository.findMonthlyPtReservations(
+                        excludedStatus.name(),
+                        startDate,
+                        endDate
+                )
+                .stream()
+                .map(row -> new MonthlyReservationCount(
+                        row.getMonth(),
+                        row.getCount() == null ? 0L : row.getCount()
+                ))
+                .toList();
     }
 
     @Override

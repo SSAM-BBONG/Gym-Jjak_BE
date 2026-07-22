@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerapplication.domain.model;
 
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.ForbiddenTrainerApplicationCancelException;
+import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.ForbiddenTrainerApplicationReviewException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.InvalidTrainerApplicationException;
 import com.ssambbong.gymjjak.trainer.trainerapplication.domain.exception.TrainerApplicationStatusConflictException;
 import lombok.AccessLevel;
@@ -9,6 +10,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 public class TrainerApplication {
@@ -17,6 +19,11 @@ public class TrainerApplication {
 
     // 신청자 id
     private final Long userId;
+
+    // 신청 대상 조직 ID
+    // 트레이너 신청서를 검토할 조직 식별값
+    // 조직 승인/반려 권한 검증 기준
+    private final Long organizationId;
 
     // 프로필 이미지 fileId
     private final Long profileFileId;
@@ -42,6 +49,7 @@ public class TrainerApplication {
     private TrainerApplication(
             Long trainerApplicationId,
             Long userId,
+            Long organizationId,
             Long profileFileId,
             Long certificateFileId,
             List<String> qualifications,
@@ -54,6 +62,7 @@ public class TrainerApplication {
     ) {
         this.trainerApplicationId = trainerApplicationId;
         this.userId = userId;
+        this.organizationId = organizationId;
         this.profileFileId = profileFileId;
         this.certificateFileId = certificateFileId;
         this.qualifications = qualifications == null ? List.of() : List.copyOf(qualifications);
@@ -68,6 +77,7 @@ public class TrainerApplication {
     // 트레이너 신청
     public static TrainerApplication create(
             Long userId,
+            Long organizationId,
             Long profileFileId,
             Long certificateFileId,
             List<String> qualifications,
@@ -77,6 +87,7 @@ public class TrainerApplication {
         return new TrainerApplication(
                 null,
                 userId,
+                organizationId,
                 profileFileId,
                 certificateFileId,
                 qualifications,
@@ -99,6 +110,7 @@ public class TrainerApplication {
         return new TrainerApplication(
                 this.trainerApplicationId,
                 this.userId,
+                this.organizationId,
                 profileFileId,
                 this.certificateFileId, // 필수 자격증은 수정 x, 기존 값 유지
                 qualifications,
@@ -114,6 +126,7 @@ public class TrainerApplication {
     public static TrainerApplication restore(
             Long trainerApplicationId,
             Long userId,
+            Long organizationId,
             Long profileFileId,
             Long certificateFileId,
             List<String> qualifications,
@@ -127,6 +140,7 @@ public class TrainerApplication {
         return new TrainerApplication(
                 trainerApplicationId,
                 userId,
+                organizationId,
                 profileFileId,
                 certificateFileId,
                 qualifications,
@@ -171,6 +185,7 @@ public class TrainerApplication {
         return new TrainerApplication(
                 this.trainerApplicationId,
                 this.userId,
+                this.organizationId,
                 this.profileFileId,
                 this.certificateFileId,
                 this.qualifications,
@@ -216,6 +231,7 @@ public class TrainerApplication {
         return new TrainerApplication(
                 this.trainerApplicationId,
                 this.userId,
+                this.organizationId,
                 this.profileFileId,
                 this.certificateFileId,
                 this.qualifications,
@@ -240,6 +256,22 @@ public class TrainerApplication {
             throw new TrainerApplicationStatusConflictException(
                     this.trainerApplicationId,
                     this.status
+            );
+        }
+    }
+
+    // 조직 검토 권한 검증 기능
+    public void validateReviewableBy(Long requesterOrganizationId) {
+        if (requesterOrganizationId == null || requesterOrganizationId <= 0) {
+            throw new InvalidTrainerApplicationException(
+                    "검토 조직 ID는 1 이상이어야 합니다."
+            );
+        }
+
+        if (!Objects.equals(this.organizationId, requesterOrganizationId)) {
+            throw new ForbiddenTrainerApplicationReviewException(
+                    requesterOrganizationId,
+                    this.trainerApplicationId
             );
         }
     }

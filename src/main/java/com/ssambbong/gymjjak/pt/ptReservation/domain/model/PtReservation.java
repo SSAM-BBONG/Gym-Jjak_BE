@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptReservation.domain.model;
 
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationErrorCode;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationStatusInvalidException;
 
@@ -16,7 +17,6 @@ public class PtReservation {
     private final LocalDateTime reservedEndAt;
     private LocalDateTime cancelledAt;
     private LocalDateTime completedAt;
-    private int progressCount;
     private final int totalSessionCount;
     // 예약 상태. 생성 시 RESERVED로 고정
     private PtReservationStatus status;
@@ -30,7 +30,6 @@ public class PtReservation {
                          LocalDateTime reservedEndAt,
                          LocalDateTime cancelledAt,
                          LocalDateTime completedAt,
-                         int progressCount,
                          int totalSessionCount,
                          PtReservationStatus status
     ) {
@@ -54,7 +53,6 @@ public class PtReservation {
         this.reservedEndAt = reservedEndAt;
         this.cancelledAt = cancelledAt;
         this.completedAt = completedAt;
-        this.progressCount = progressCount;
         this.totalSessionCount = totalSessionCount;
         this.status = status;
     }
@@ -67,7 +65,8 @@ public class PtReservation {
             Long trainerProfileId,
             LocalDateTime reservedStartAt,
             LocalDateTime reservedEndAt,
-            int totalSessionCount
+            int totalSessionCount,
+            PtReservationStatus status
     ) {
         return new PtReservation(
                 null,
@@ -79,9 +78,8 @@ public class PtReservation {
                 reservedEndAt,
                 null,   // cancelledAt
                 null,   // completedAt
-                0,      // progressCount
                 totalSessionCount,
-                PtReservationStatus.RESERVED
+                status
         );
     }
 
@@ -96,7 +94,6 @@ public class PtReservation {
             LocalDateTime reservedEndAt,
             LocalDateTime cancelledAt,
             LocalDateTime completedAt,
-            int progressCount,
             int totalSessionCount,
             PtReservationStatus status
     ) {
@@ -110,7 +107,6 @@ public class PtReservation {
                 reservedEndAt,
                 cancelledAt,
                 completedAt,
-                progressCount,
                 totalSessionCount,
                 status
         );
@@ -121,8 +117,11 @@ public class PtReservation {
         if (newStatus == null || newStatus == PtReservationStatus.RESERVED) {
             throw new PtReservationStatusInvalidException();
         }
-        if (this.status == PtReservationStatus.CANCELLED || this.status == PtReservationStatus.COMPLETED) {
-            throw new PtReservationStatusInvalidException();
+        if (this.status == PtReservationStatus.CANCELLED) {
+            throw new PtReservationStatusInvalidException(PtReservationErrorCode.PT_RESERVATION_ALREADY_CANCELLED);
+        }
+        if (this.status == PtReservationStatus.COMPLETED) {
+            throw new PtReservationStatusInvalidException(PtReservationErrorCode.PT_RESERVATION_ALREADY_COMPLETED);
         }
         this.status = newStatus;
         if (newStatus == PtReservationStatus.CANCELLED) {
@@ -143,7 +142,6 @@ public class PtReservation {
     public LocalDateTime getReservedEndAt() { return reservedEndAt; }
     public LocalDateTime getCancelledAt() { return cancelledAt; }
     public LocalDateTime getCompletedAt() { return completedAt; }
-    public int getProgressCount() { return progressCount; }
     public int getTotalSessionCount() { return totalSessionCount; }
     public PtReservationStatus getStatus() { return status; }
 }

@@ -5,10 +5,12 @@ import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CancelPtReservationCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.ChangePtReservationStatusCommand;
 import com.ssambbong.gymjjak.pt.ptReservation.application.command.CreatePtReservationCommand;
+import com.ssambbong.gymjjak.pt.ptReservation.application.result.MonthlyPtReservationResult;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.request.ChangePtReservationStatusRequest;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.request.CreatePtReservationRequest;
 import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.*;
@@ -25,6 +27,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "PT 예약", description = "PT 예약 관련 API")
 @RestController
 @RequestMapping("/api")
@@ -37,7 +41,7 @@ public class PtReservationController {
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "PT 예약", description = "사용자가 PT 강습을 예약한다.")
     @PostMapping("/pt-courses/{ptCourseId}/reservations")
-    public ResponseEntity<GlobalApiResponse<?>> createPtReservation(
+    public ResponseEntity<GlobalApiResponse<CreatePtReservationResponse>> createPtReservation(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long ptCourseId,                  // 예약할 PT 강습 ID
             @RequestBody @Valid CreatePtReservationRequest request
@@ -50,13 +54,14 @@ public class PtReservationController {
         );
 
         Long reservationId = ptReservationCommandUseCase.createPtReservation(command);
+        PtReservationStatus courseStatus = ptReservationQueryUseCase.deriveCourseStatus(authUser.userId(), ptCourseId);
 
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
                         PtReservationResponseCode.PT_RESERVATION_CREATED,
                         new CreatePtReservationResponse(
                                 reservationId,
-                                PtReservationStatus.RESERVED
+                                courseStatus
                         )
                         ));
     }
@@ -68,12 +73,12 @@ public class PtReservationController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(required = false) PtReservationStatus status
     ) {
-        var views = ptReservationQueryUseCase.findMyReservations(
+        List<PtReservationQueryUseCase.MyPtReservationView> views = ptReservationQueryUseCase.findMyReservations(
                 authUser.userId(),
                 status
         );
 
-        var response = MyPtReservationsResponse.from(views);
+        MyPtReservationsResponse response = MyPtReservationsResponse.from(views);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
@@ -83,20 +88,20 @@ public class PtReservationController {
         );
     }
 
-    @GetMapping("/reservations/me/{ptReservationId}")
+    @GetMapping("/reservations/me/{reservationId}")
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "내 PT 예약 상세 조회", description = "본인의 PT 예약 상세 정보를 조회한다.")
     public ResponseEntity<GlobalApiResponse<MyPtReservationDetailResponse>> findMyReservationDetail(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long ptReservationId   // 조회할 예약 ID
+            @PathVariable("reservationId") Long ptReservationId
     ) {
-        var view = ptReservationQueryUseCase.findMyReservationDetail(
+        PtReservationQueryUseCase.PtReservationDetailView view = ptReservationQueryUseCase.findMyReservationDetail(
                 authUser.userId(),
                 ptReservationId
         );
 
         // View → 응답 DTO 변환
-        var response = MyPtReservationDetailResponse.from(view);
+        MyPtReservationDetailResponse response = MyPtReservationDetailResponse.from(view);
 
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
@@ -115,17 +120,21 @@ public class PtReservationController {
             @ApiResponse(responseCode = "403", description = "본인 예약 아님", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음", content = @Content(schema = @Schema()))
     })
-    @PatchMapping("/reservations/{ptReservationId}/status")
+    @PatchMapping("/reservations/{reservationId}/status")
     public ResponseEntity<GlobalApiResponse<ChangePtReservationStatusResponse>> changePtReservationStatus(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long ptReservationId,
+            @PathVariable Long reservationId,
             @RequestBody @Valid ChangePtReservationStatusRequest request
     ) {
         PtReservation reservation = ptReservationCommandUseCase.changePtReservationStatus(
-                new ChangePtReservationStatusCommand(authUser.userId(), ptReservationId, request.status()));
+                new ChangePtReservationStatusCommand(authUser.userId(), reservationId, request.status()));
+        int progressCount = ptReservationQueryUseCase.countProgressByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
+        PtReservationStatus derivedStatus = ptReservationQueryUseCase.deriveCourseStatus(
+                reservation.getUserId(), reservation.getPtCourseId());
         ChangePtReservationStatusResponse response = new ChangePtReservationStatusResponse(
-                reservation.getStatus(),
-                reservation.getProgressCount(),
+                derivedStatus,
+                progressCount,
                 reservation.getTotalSessionCount()
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(PtReservationResponseCode.PT_RESERVATION_STATUS_UPDATED, response));
@@ -149,12 +158,81 @@ public class PtReservationController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("reservationId") Long ptReservationId
     ) {
-        PtReservation reservation = ptReservationCommandUseCase.cancelPtReservation(
+        ptReservationCommandUseCase.cancelPtReservation(
                 new CancelPtReservationCommand(authUser.userId(), ptReservationId)
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtReservationResponseCode.PT_RESERVATION_CANCELLED,
-                CancelPtReservationResponse.from(reservation)
+                CancelPtReservationResponse.cancelled()
         ));
+    }
+
+    // 내 PT 세션 예약 목록 조회
+    @GetMapping("/reservations/me/sessions")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "내 PT 세션 목록 조회", description = "수강생이 본인의 모든 PT 세션(예약 단건) 목록을 조회한다.")
+    public ResponseEntity<GlobalApiResponse<PtSessionsResponse>> findMySessions(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        List<PtReservationQueryUseCase.PtSessionView> views = ptReservationQueryUseCase.findMySessions(authUser.userId());
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtReservationResponseCode.PT_SESSIONS_FETCHED,
+                PtSessionsResponse.from(views)
+        ));
+    }
+
+    // 내 PT 세션 예약 취소
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "PT 세션 개별 취소", description = "수강생이 본인의 PT 세션 1건을 취소한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "취소 성공",
+                    content = @Content(schema = @Schema(implementation = CancelPtReservationResponse.class))),
+            @ApiResponse(responseCode = "403", description = "본인 예약 아님",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(responseCode = "409", description = "취소 불가 상태 (COMPLETED / CANCELLED)",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/reservations/me/sessions/{reservationId}/cancel")
+    public ResponseEntity<GlobalApiResponse<CancelPtReservationResponse>> cancelPtSession(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable("reservationId") Long ptReservationId
+    ) {
+        PtSessionStatus sessionStatus = ptReservationCommandUseCase.cancelPtSession(
+                new CancelPtReservationCommand(authUser.userId(), ptReservationId)
+        );
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                PtReservationResponseCode.PT_SESSION_CANCELLED,
+                CancelPtReservationResponse.of(sessionStatus)
+        ));
+    }
+
+    // AdminDashboard - 월별 예약된 pt 수 조회
+    @GetMapping("/dashboard/admin/reservations")
+    @Operation(
+            summary = "관리자 대시보드 월별 예약 PT 수 조회",
+            description = """
+                관리자 대시보드에서 사용하는 월별 예약 PT 수를 조회.
+                최근 6개월 기준으로 CANCELLED 상태를 제외한 예약 수 조회.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "관리자 대시보드 월별 예약 PT 수 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 없음")
+    })
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<GlobalApiResponse<AdminMonthlyPtReservationStatisticsResponse>>
+    findMonthlyPtReservationsForAdminDashboard() {
+        List<MonthlyPtReservationResult> results =
+                ptReservationQueryUseCase.findMonthlyPtReservations();
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        PtReservationResponseCode.ADMIN_MONTHLY_PT_RESERVATIONS_FETCHED,
+                        AdminMonthlyPtReservationStatisticsResponse.from(results)
+                )
+        );
     }
 }

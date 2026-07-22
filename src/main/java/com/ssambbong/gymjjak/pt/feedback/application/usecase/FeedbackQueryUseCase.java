@@ -18,6 +18,7 @@ public interface FeedbackQueryUseCase {
             Long ptCurriculumId,
             int sessionNo,
             String title,
+            LocalDate reservedStartAt,
             FeedbackSummary feedback
     ) {}
 
@@ -39,6 +40,6 @@ public interface FeedbackQueryUseCase {
     record MediaView(
             Long feedbackMediaId,
             FeedbackMediaType mediaType,
-            Long fileId
+            String fileUrl
     ) {}
 }

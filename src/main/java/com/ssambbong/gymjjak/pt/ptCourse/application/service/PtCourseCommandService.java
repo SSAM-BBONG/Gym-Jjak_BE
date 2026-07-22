@@ -9,12 +9,15 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.command.CreatePtCourseComma
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.DeletePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UpdatePtCourseCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
+import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.PtReservationCountQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.CurriculumUpdateNotAllowedException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseCannotDeleteException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseForbiddenException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseTrainerNotInOrganizationException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseHasActiveReservationException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseHasActiveReservationForHideException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseInvalidException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseRequestInvalidException;
@@ -28,6 +31,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepos
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,10 +50,12 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
     private final PtCurriculumRepository ptCurriculumRepository;
     private final PtCourseScheduleRepository ptCourseScheduleRepository;
     private final TrainerProfileQueryPort trainerProfileQueryPort;
+    private final OrganizationQueryPort organizationQueryPort;
     private final PtReservationCountQueryPort ptReservationCountQueryPort;
     private final FileUseCase fileUseCase;
 
     @Override
+    @CacheEvict(cacheNames = "ptCourseList", allEntries = true)
     public Long createPtCourse(CreatePtCourseCommand command) {
 
         int curriculumCount = command.curriculums() == null ? 0 : command.curriculums().size();
@@ -97,21 +103,25 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         }
 
         log.info(
-                "event=pt_course_create_started, userId={}, categoryId={}, tagId={}, price={}, curriculumCount={}, scheduleCount={}",
-                command.userId(), command.categoryId(), command.tagId(), command.price(),
+                "event=pt_course_create_started, userId={}, part={}, price={}, curriculumCount={}, scheduleCount={}",
+                command.userId(), command.part(), command.price(),
                 curriculumCount, scheduleCount
         );
 
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
+        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+        // 소속된 조직
+        Long organizationId = command.organizationId();
+        // 진짜 소속되어 있는지 검증
+        if (!organizationQueryPort.isTrainerBelongsToOrganization(trainerProfileId, organizationId)) {
+            throw new PtCourseTrainerNotInOrganizationException();
+        }
 
         Long thumbnailFileId = registerThumbnailFile(command.userId(), command.thumbnailFile());
 
         PtCourse ptCourse = PtCourse.create(
-                trainerInfo.organizationId(),
-                trainerInfo.trainerProfileId(),
-                command.categoryId(),
-                command.tagId(),
+                organizationId,
+                trainerProfileId,
+                command.part(),
                 thumbnailFileId,
                 command.title(),
                 command.description(),
@@ -140,6 +150,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
     // PT 강습 수정
     @Override
+    @CacheEvict(cacheNames = "ptCourseList", allEntries = true)
     public Long updatePtCourse(UpdatePtCourseCommand command) {
         log.debug("event=pt_course_update_started userId={}, ptCourseId={}", command.userId(), command.ptCourseId());
 
@@ -151,9 +162,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 });
 
         // 본인 강습 여부 확인
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_course_update_failed reason=forbidden userId={}, ptCourseId={}", command.userId(), command.ptCourseId());
             throw new PtCourseForbiddenException();
         }
@@ -161,8 +171,8 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         // 커리큘럼 변경 시 활성 수강생 0명 확인 (빈 리스트 = 전체 삭제도 변경에 해당)
         if (command.curriculums() != null) {
             int activeCount = ptReservationCountQueryPort
-                    .countActiveByPtCourseIds(List.of(command.ptCourseId()))
-                    .getOrDefault(command.ptCourseId(), 0);
+                    .countStudentsByPtCourseIds(List.of(command.ptCourseId()))
+                    .active().getOrDefault(command.ptCourseId(), 0);
             if (activeCount > 0) {
                 log.warn("event=pt_course_update_failed reason=curriculum_update_not_allowed ptCourseId={}, activeCount={}", command.ptCourseId(), activeCount);
                 throw new CurriculumUpdateNotAllowedException();
@@ -176,8 +186,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
         // 강습 필드 수정
         ptCourse.update(
-                command.categoryId(),
-                command.tagId(),
+                command.part(),
                 thumbnailFileId,
                 command.title(),
                 command.description(),
@@ -282,6 +291,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
     // PT 상태 변경
     @Override
+    @CacheEvict(cacheNames = "ptCourseList", allEntries = true)
     public void changePtCourseStatus(ChangePtCourseStatusCommand command) {
         log.debug("event=pt_course_status_change_started, userId={}, ptCourseId={}, status={}",
                 command.userId(), command.ptCourseId(), command.status());
@@ -295,12 +305,22 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
                 });
 
         // 본인 PT인지 여부 검증
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_course_status_change_failed, reason=forbidden, userId={}, ptCourseId={}",
                     command.userId(), command.ptCourseId());
             throw new PtCourseForbiddenException();
+        }
+
+        if (command.status() == PtCourseStatus.HIDDEN) {
+            int activeCount = ptReservationCountQueryPort
+                    .countStudentsByPtCourseIds(List.of(command.ptCourseId()))
+                    .active().getOrDefault(command.ptCourseId(), 0);
+            if (activeCount > 0) {
+                log.warn("event=pt_course_status_change_failed, reason=has_active_reservation, ptCourseId={}, activeCount={}",
+                        command.ptCourseId(), activeCount);
+                throw new PtCourseHasActiveReservationForHideException();
+            }
         }
 
         ptCourse.changeStatus(command.status());
@@ -311,6 +331,7 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
 
     // PT 강습 삭제
     @Override
+    @CacheEvict(cacheNames = "ptCourseList", allEntries = true)
     public void deletePtCourse(DeletePtCourseCommand command) {
         log.debug("event=pt_course_delete_started userId={} ptCourseId={}",
                 command.userId(), command.ptCourseId());
@@ -329,17 +350,16 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
         }
 
         // 본인 강습 여부 확인
-        TrainerProfileQueryPort.TrainerInfo trainerInfo =
-                trainerProfileQueryPort.findByUserId(command.userId());
-        if (!ptCourse.getTrainerProfileId().equals(trainerInfo.trainerProfileId())) {
+        Long trainerProfileId = trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(command.userId());
+        if (!ptCourse.getTrainerProfileId().equals(trainerProfileId)) {
             log.warn("event=pt_course_delete_failed reason=forbidden userId={} ptCourseId={}", command.userId(), command.ptCourseId());
             throw new PtCourseForbiddenException();
         }
 
         // 활성 예약 존재 시 삭제 거부
-        int activeCount = ptReservationCountQueryPort.countActiveByPtCourseIds(
-                List.of(command.ptCourseId()))
-                .getOrDefault(command.ptCourseId(), 0);
+        int activeCount = ptReservationCountQueryPort
+                .countStudentsByPtCourseIds(List.of(command.ptCourseId()))
+                .active().getOrDefault(command.ptCourseId(), 0);
         if (activeCount > 0) {
             log.warn("event=pt_course_delete_failed reason=has_active_reservation ptCourseId={} activeCount={}", command.ptCourseId(), activeCount);
             throw new PtCourseHasActiveReservationException();

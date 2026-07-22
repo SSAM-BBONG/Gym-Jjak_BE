@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.chat.application.service;
 
 import com.ssambbong.gymjjak.chat.application.command.CreateChatRoomCommand;
 import com.ssambbong.gymjjak.chat.application.port.ChatMetricsPort;
+import com.ssambbong.gymjjak.chat.application.port.PtCourseQueryPort;
 import com.ssambbong.gymjjak.chat.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomListResult;
 import com.ssambbong.gymjjak.chat.application.query.ChatRoomSummary;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 
 @Slf4j
 @Service
@@ -36,21 +38,26 @@ public class ChatRoomService implements ChatRoomUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
     private final TrainerQueryPort trainerQueryPort;
+    private final PtCourseQueryPort ptCourseQueryPort;
     private final FileUrlUseCase fileUrlUseCase;
     private final ChatMetricsPort chatMetricsPort;
 
+    @Monitored(name = "gymjjak.chat.room.duration", domain = "chat", action = "create_room")
     @Override
     @Transactional
     public Long createChatRoom(CreateChatRoomCommand command) {
-        trainerQueryPort.findActiveTrainerUserId(command.trainerProfileId())
+        Long trainerProfileId = ptCourseQueryPort.findTrainerProfileIdByCourseId(command.ptCourseId())
+                .orElseThrow(PtCourseNotFoundException::new);
+
+        trainerQueryPort.findActiveTrainerUserId(trainerProfileId)
                 .orElseThrow(TrainerNotFoundException::new);
 
         if (chatRoomRepository.existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(
-                command.userId(), command.trainerProfileId(), command.ptCourseId(), ChatRoomStatus.ACTIVE)) {
+                command.userId(), trainerProfileId, command.ptCourseId(), ChatRoomStatus.ACTIVE)) {
             throw new ChatRoomAlreadyExistsException();
         }
 
-        ChatRoom chatRoom = ChatRoom.create(command.userId(), command.trainerProfileId(), command.ptCourseId());
+        ChatRoom chatRoom = ChatRoom.create(command.userId(), trainerProfileId, command.ptCourseId());
         ChatRoom saved;
         try {
             saved = chatRoomRepository.save(chatRoom);
@@ -68,7 +75,7 @@ public class ChatRoomService implements ChatRoomUseCase {
         }
         recordMetricSafely(chatMetricsPort::recordChatRoomCreated, "chat_room_created");
         log.info("채팅방 생성 완료 - chatRoomId: {}, userId: {}, trainerProfileId: {}",
-                saved.getId(), command.userId(), command.trainerProfileId());
+                saved.getId(), command.userId(), trainerProfileId);
         return saved.getId();
     }
 
@@ -109,6 +116,7 @@ public class ChatRoomService implements ChatRoomUseCase {
                 chatRoomId, requesterId, chatRoom.getStatus());
     }
 
+    @Monitored(name = "gymjjak.chat.room.duration", domain = "chat", action = "get_rooms")
     @Override
     @Transactional(readOnly = true)
     public ChatRoomListResult getChatRooms(Long requesterId) {
@@ -132,6 +140,12 @@ public class ChatRoomService implements ChatRoomUseCase {
 
         long totalUnreadCount = roomsWithUrl.stream().mapToLong(ChatRoomSummary::unreadCount).sum();
         return new ChatRoomListResult(rooms.size(), totalUnreadCount, roomsWithUrl);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getTotalUnreadCount(Long requesterId) {
+        return chatRoomRepository.countTotalUnread(requesterId);
     }
 
     private void recordMetricSafely(Runnable metricCall, String metricName) {

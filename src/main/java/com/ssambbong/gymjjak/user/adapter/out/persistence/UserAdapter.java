@@ -2,10 +2,7 @@ package com.ssambbong.gymjjak.user.adapter.out.persistence;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtTokenProvider;
 import com.ssambbong.gymjjak.user.application.port.out.DeleteWithdrawnUserPort;
-import com.ssambbong.gymjjak.user.application.result.FindBlacklistUserResult;
-import com.ssambbong.gymjjak.user.application.result.FindTrainerUserResult;
-import com.ssambbong.gymjjak.user.application.result.FindUserResult;
-import com.ssambbong.gymjjak.user.application.result.PageResult;
+import com.ssambbong.gymjjak.user.application.result.*;
 import com.ssambbong.gymjjak.user.domain.exception.UserErrorCode;
 import com.ssambbong.gymjjak.user.domain.exception.UserException;
 import com.ssambbong.gymjjak.user.application.port.out.UserPort;
@@ -61,8 +58,8 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     }
 
     @Override
-    public boolean existsByPhone(String phone) {
-        return springDataUserRepository.existsByPhone(phone);
+    public boolean existsByPhoneAndRole(String phone, UserRole role) {
+        return springDataUserRepository.existsByPhoneAndRole(phone, role);
     }
 
     @Override
@@ -151,6 +148,18 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     @Override
     public void updateStatus(Long userId, UserStatus status) {
         springDataUserRepository.updateStatus(userId, status);
+    }
+
+    @Override
+    public int activateExpiredSevenDaySuspendedUsers(List<Long> userIds) {
+        if (userIds.isEmpty()) {
+            return 0;
+        }
+        return springDataUserRepository.activateSevenDaySuspendedUsers(
+                userIds,
+                UserStatus.DAY_7,
+                UserStatus.ACTIVE
+        );
     }
 
     @Override
@@ -247,6 +256,24 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
                 result.isLast(),
                 result.hasNext(),
                 result.hasPrevious()
+        );
+    }
+
+    @Override
+    public UserUsernameAndNicknameResult findUsernameAndNickname(Long userId) {
+
+        UserJpaEntity user = springDataUserRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserException(UserErrorCode.USER_NOT_FOUND)
+                );
+        boolean socialUser =
+                user.getSocialProvider() != null
+                        && user.getSocialId() != null;
+
+        return new UserUsernameAndNicknameResult(
+                user.getUsername(),
+                user.getNickname(),
+                socialUser
         );
     }
 

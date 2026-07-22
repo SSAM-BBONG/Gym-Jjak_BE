@@ -30,6 +30,9 @@ public interface SpringDataReportGroupRepository extends JpaRepository<ReportGro
     // 신고 번호 존재 여부 확인
     boolean existsByReportNumber(String reportNumber);
 
+    // 소프트 삭제된 신고 그룹 제외 후 단건 상세 조회합니다.
+    Optional<ReportGroupJpaEntity> findByReportGroupIdAndDeletedAtIsNull(Long reportGroupId);
+
     long countByReviewStatusAndDeletedAtIsNull(ReportGroupReviewStatus reportGroupReviewStatus);
 
     long countBySanctionStatusAndDeletedAtIsNull(ReportGroupSanctionStatus reportGroupSanctionStatus);

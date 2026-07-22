@@ -14,6 +14,7 @@ import com.ssambbong.gymjjak.trainer.trainerprofile.domain.model.TrainerProfileS
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.repository.TrainerAwardRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.repository.TrainerCertificationRepository;
 import com.ssambbong.gymjjak.trainer.trainerprofile.domain.repository.TrainerProfileRepository;
+import com.ssambbong.gymjjak.trainer.trainerprofile.infrastructure.metrics.TrainerProfileMetric;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -47,6 +48,9 @@ class TrainerProfileQueryServiceTest {
 
     @Mock
     private TrainerProfileSearchQueryPort trainerProfileSearchQueryPort;
+
+    @Mock
+    private TrainerProfileMetric trainerProfileMetric;
 
     @Test
     void 프로필_ID로_공개_상세_정보를_조회한다() {
@@ -170,8 +174,6 @@ class TrainerProfileQueryServiceTest {
                         ),
                         0,
                         10,
-                        2L,
-                        1,
                         false
                 );
 
@@ -191,8 +193,6 @@ class TrainerProfileQueryServiceTest {
 
         assertThat(result.page()).isZero();
         assertThat(result.size()).isEqualTo(10);
-        assertThat(result.totalElements()).isEqualTo(2L);
-        assertThat(result.totalPages()).isEqualTo(1);
         assertThat(result.hasNext()).isFalse();
 
         verify(trainerProfileSearchQueryPort)

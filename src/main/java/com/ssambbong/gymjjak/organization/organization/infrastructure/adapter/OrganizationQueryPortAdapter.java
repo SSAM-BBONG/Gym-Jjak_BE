@@ -5,7 +5,9 @@ import com.ssambbong.gymjjak.organization.organization.domain.model.Organization
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
 import com.ssambbong.gymjjak.organization.organization.infrastructure.persistence.SpringDataOrganizationRepository;
+import com.ssambbong.gymjjak.organization.organizationTrainer.domain.repository.OrganizationTrainerRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.port.out.TrainerApplicationOrganizationPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +17,11 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class OrganizationQueryPortAdapter implements OrganizationQueryPort {
+public class OrganizationQueryPortAdapter implements OrganizationQueryPort, TrainerApplicationOrganizationPort {
 
     private final OrganizationRepository organizationRepository;
     private final SpringDataOrganizationRepository springDataOrganizationRepository;
+    private final OrganizationTrainerRepository organizationTrainerRepository;
 
     @Override
     public OrganizationInfo findById(Long organizationId) {
@@ -55,8 +58,35 @@ public class OrganizationQueryPortAdapter implements OrganizationQueryPort {
                 ));
     }
 
+    // 트레이너가 선택한 조직에 실제로 소속되어 있는지 검증
+    @Override
+    public boolean isTrainerBelongsToOrganization(Long trainerProfileId, Long organizationId) {
+        return organizationTrainerRepository
+                .existsActiveByOrganizationIdAndTrainerProfileId(organizationId, trainerProfileId);
+    }
+
     @Override
     public long countActive() {
         return organizationRepository.countByStatus(OrganizationStatus.ACTIVE);
+    }
+
+    // 활성 조직 존재 여부 확인 기능
+    // organizationId 기준 ACTIVE 상태 확인 메서드
+    @Override
+    public long countActiveOrganizationsByIds(List<Long> organizationIds) {
+        return springDataOrganizationRepository.countByOrganizationIdInAndStatus(
+                organizationIds,
+                OrganizationStatus.ACTIVE
+        );
+    }
+
+    // 조직 계정의 조직 ID 조회 기능
+    // organizationAccountId 기준 organizationId 반환 메서드
+    @Override
+    public Long findOrganizationIdByAccountId(Long organizationAccountId) {
+        return organizationRepository.findIdByOrganizationAccountIdAndStatus(
+                organizationAccountId,
+                OrganizationStatus.ACTIVE
+        ).orElseThrow(OrganizationNotFoundException::new);
     }
 }

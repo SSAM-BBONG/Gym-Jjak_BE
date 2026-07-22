@@ -3,6 +3,8 @@ package com.ssambbong.gymjjak.organization.organization.domain.repository;
 import com.ssambbong.gymjjak.organization.organization.application.query.MyOrganizationResult;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListQuery;
 import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchListResult;
+import com.ssambbong.gymjjak.organization.organization.application.query.OrganizationSearchQuery;
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.model.OrganizationStatus;
 
@@ -26,6 +28,16 @@ public interface OrganizationRepository {
 
     long countByStatus(OrganizationStatus status);
 
+    boolean existsByOrganizationIdAndStatus(
+            Long organizationId,
+            OrganizationStatus status
+    );
+
+    Optional<Long> findIdByOrganizationAccountIdAndStatus(
+            Long organizationAccountId,
+            OrganizationStatus status
+    );
+
     Optional<String> findRequestedLoginIdById(Long organizationId);
 
     List<Long> findHardDeleteCandidateIds(LocalDateTime threshold, int batchSize);
@@ -33,4 +45,6 @@ public interface OrganizationRepository {
     List<Long> findApplicationIdsByOrganizationIds(List<Long> organizationIds);
 
     int hardDeleteByIds(List<Long> ids);
+
+    OrganizationSearchListResult searchOrganizations(OrganizationSearchQuery query);
 }

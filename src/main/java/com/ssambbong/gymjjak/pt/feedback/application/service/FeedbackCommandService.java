@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.pt.feedback.application.command.CreateFeedbackComma
 import com.ssambbong.gymjjak.pt.feedback.application.command.DeleteFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.command.UpdateFeedbackCommand;
 import com.ssambbong.gymjjak.pt.feedback.application.command.UploadedFileMetadataCommand;
+import com.ssambbong.gymjjak.pt.feedback.application.event.FeedbackCreatedEvent;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtCurriculumQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
@@ -17,6 +18,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenExcep
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackSessionNotCompletedException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
@@ -25,9 +27,12 @@ import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackMediaReposito
 import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,6 +50,8 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
     private final PtCurriculumQueryPort ptCurriculumQueryPort;
     private final TrainerQueryPort trainerQueryPort;
     private final FileUseCase fileUseCase;
+    private final ApplicationEventPublisher eventPublisher;
+    private final Clock clock;
 
     @Override
     public Long createFeedback(CreateFeedbackCommand command) {
@@ -71,12 +78,21 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackForbiddenException();
         }
 
+        // sessionStatus 기준: DB status가 COMPLETED이거나 예약 종료 시각이 지난 경우만 피드백 작성 가능
+        boolean sessionCompleted = reservation.status() == PtReservationStatus.COMPLETED
+                || reservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
+        if (!sessionCompleted) {
+            throw new FeedbackSessionNotCompletedException();
+        }
+
         // 커리큘럼이 해당 코스 소속인지 확인
         ptCurriculumQueryPort.findByIdAndPtCourseId(command.ptCurriculumId(), reservation.ptCourseId());
 
-        // 중복 피드백 확인
-        if (feedbackRepository.existsByPtReservationIdAndPtCurriculumId(
-                command.ptReservationId(), command.ptCurriculumId())) {
+        // 코스 전체 세션 기준 동일 커리큘럼 중복 피드백 확인
+        List<Long> courseReservationIds = ptReservationQueryPort.findReservationIdsByUserIdAndPtCourseId(
+                reservation.userId(), reservation.ptCourseId());
+        if (feedbackRepository.existsByPtReservationIdsAndPtCurriculumId(
+                courseReservationIds, command.ptCurriculumId())) {
             throw new FeedbackAlreadyExistsException();
         }
 
@@ -111,6 +127,12 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
                 .toList();
         feedbackMediaRepository.saveAll(mediaList);
 
+        // 피드백 등록 완료 - 예약 회원에게 알림 발행
+        eventPublisher.publishEvent(new FeedbackCreatedEvent(
+                reservation.userId(),
+                saved.getId()
+        ));
+
         log.info("event=feedback_create_complete feedbackId={}", saved.getId());
         return saved.getId();
     }
@@ -134,8 +156,10 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
                     return new FeedbackNotFoundException();
                 });
 
-        // path parameter의 예약 ID와 피드백의 예약 ID 일치 확인
-        if (!feedback.getPtReservationId().equals(command.ptReservationId())) {
+        // path param 예약과 피드백 예약이 같은 코스인지 확인
+        PtReservationQueryPort.ReservationInfo pathReservation = ptReservationQueryPort.findById(command.ptReservationId());
+        PtReservationQueryPort.ReservationInfo feedbackReservation = ptReservationQueryPort.findById(feedback.getPtReservationId());
+        if (!pathReservation.ptCourseId().equals(feedbackReservation.ptCourseId())) {
             throw new FeedbackNotFoundException();
         }
 
@@ -147,6 +171,13 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             log.warn("event=feedback_update_failed reason=forbidden userId={} feedbackId={}",
                     command.userId(), command.feedbackId());
             throw new FeedbackForbiddenException();
+        }
+
+        // 피드백이 연결된 세션이 완료된 경우 수정 불가
+        boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
+                || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
+        if (sessionCompleted) {
+            throw new FeedbackReservationCompletedException();
         }
 
         // 미디어 파일 필수값 검증
@@ -193,8 +224,10 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
                     return new FeedbackNotFoundException();
                 });
 
-        // path parameter의 예약 ID와 피드백의 예약 ID 일치 확인
-        if (!feedback.getPtReservationId().equals(command.ptReservationId())) {
+        // path param 예약과 피드백 예약이 같은 코스인지 확인
+        PtReservationQueryPort.ReservationInfo pathReservation = ptReservationQueryPort.findById(command.ptReservationId());
+        PtReservationQueryPort.ReservationInfo feedbackReservation = ptReservationQueryPort.findById(feedback.getPtReservationId());
+        if (!pathReservation.ptCourseId().equals(feedbackReservation.ptCourseId())) {
             throw new FeedbackNotFoundException();
         }
 
@@ -208,10 +241,10 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackForbiddenException();
         }
 
-        // 예약이 COMPLETED이면 삭제 불가
-        PtReservationQueryPort.ReservationInfo reservation =
-                ptReservationQueryPort.findById(command.ptReservationId());
-        if (reservation.status() == PtReservationStatus.COMPLETED) {
+        // 피드백이 연결된 세션이 완료된 경우 삭제 불가 (작성 체크와 동일 기준)
+        boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
+                || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
+        if (sessionCompleted) {
             log.warn("event=feedback_delete_failed reason=reservation_completed feedbackId={}", command.feedbackId());
             throw new FeedbackReservationCompletedException();
         }

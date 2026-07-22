@@ -3,6 +3,16 @@ spring:
     activate:
       on-profile: deploy
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "${BACKEND_BASE_URL}/login/oauth2/code/{registrationId}"
+
+          naver:
+            redirect-uri: "${BACKEND_BASE_URL}/login/oauth2/code/{registrationId}"
+
   datasource:
     url: ${DEPLOY_MYSQL_URL}
     username: ${DEPLOY_MYSQL_USERNAME}
@@ -18,7 +28,12 @@ spring:
 logging:
   level:
     root: info
+    com.ssambbong.gymjjak: info
+    org.springframework.web: info
+    org.springframework.security: info
+    org.springframework.messaging: info
     org.hibernate.SQL: warn
+    org.hibernate.orm.jdbc.bind: warn
 
 management:
   endpoint:

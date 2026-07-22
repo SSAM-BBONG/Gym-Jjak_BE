@@ -6,6 +6,7 @@ import com.ssambbong.gymjjak.organization.organization.application.usecase.Organ
 import com.ssambbong.gymjjak.organization.organization.domain.model.Organization;
 import com.ssambbong.gymjjak.organization.organization.domain.repository.OrganizationRepository;
 import com.ssambbong.gymjjak.organization.organization.exception.OrganizationNotFoundException;
+import com.ssambbong.gymjjak.global.infrastructure.aop.Monitored;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class OrganizationCommandService implements OrganizationCommandUseCase {
     private final OrganizationRepository organizationRepository;
     private final OrganizationMetricsPort organizationMetricsPort;
 
+    @Monitored(name = "gymjjak.org.command.duration", domain = "organization", action = "update")
     @Override
     @Transactional
     public void updateOrganization(OrganizationUpdateCommand command) {

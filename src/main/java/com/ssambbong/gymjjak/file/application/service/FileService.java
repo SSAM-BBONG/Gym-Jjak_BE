@@ -37,6 +37,7 @@ public class FileService implements FileUseCase {
     private final FileRepository fileRepository;
     private final FileMetricsPort fileMetricsPort;
 
+    @Monitored(name = "gymjjak.file.upload.duration", domain = "file", action = "generate_presigned_url")
     @Override
     public List<PresignedUrlResult> generatePresignedUploadUrls(List<GeneratePresignedUrlCommand> commands) {
         return commands.stream()
@@ -58,6 +59,7 @@ public class FileService implements FileUseCase {
         return new PresignedUrlResult(presignedUrl, key);
     }
 
+    @Monitored(name = "gymjjak.file.register.duration", domain = "file", action = "register")
     @Override
     @Transactional
     public List<FileRegistrationResult> registerFiles(List<CreateFileCommand> commands) {
@@ -106,6 +108,7 @@ public class FileService implements FileUseCase {
         return fileStoragePort.getPresignedUrl(file.getFileUrl());
     }
 
+    @Monitored(name = "gymjjak.file.download.duration", domain = "file", action = "download")
     @Override
     @Transactional(readOnly = true)
     public FileContentResult downloadFile(Long fileId, Long requesterId, boolean isAdmin, FileType expectedFileType) {

@@ -10,8 +10,7 @@ public class PtCourse {
     private final Long id;
     private final Long organizationId;
     private final Long trainerProfileId;
-    private Long categoryId;
-    private Long tagId;
+    private PartType part;
     private Long thumbnailFileId;
     private String title;
     private String description;
@@ -19,13 +18,13 @@ public class PtCourse {
     private int totalSessionCount;
 
     private PtCourseStatus status;
+    private LocalDateTime createdAt;
     private LocalDateTime deletedAt;
 
     private PtCourse(Long id,
                     Long organizationId,
                     Long trainerProfileId,
-                    Long categoryId,
-                    Long tagId,
+                    PartType part,
                     Long thumbnailFileId,
                     String title,
                     String description,
@@ -50,8 +49,7 @@ public class PtCourse {
         this.id = id;
         this.organizationId = organizationId;
         this.trainerProfileId = trainerProfileId;
-        this.categoryId = categoryId;
-        this.tagId = tagId;
+        this.part = part;
         this.thumbnailFileId = thumbnailFileId;
         this.title = title;
         this.description = description;
@@ -64,8 +62,7 @@ public class PtCourse {
     public static PtCourse create(
             Long organizationId,
             Long trainerProfileId,
-            Long categoryId,
-            Long tagId,
+            PartType part,
             Long thumbnailFileId,
             String title,
             String description,
@@ -76,8 +73,7 @@ public class PtCourse {
                 null,
                 organizationId,
                 trainerProfileId,
-                categoryId,
-                tagId,
+                part,
                 thumbnailFileId,
                 title,
                 description,
@@ -92,22 +88,21 @@ public class PtCourse {
             Long id,
             Long organizationId,
             Long trainerProfileId,
-            Long categoryId,
-            Long tagId,
+            PartType part,
             Long thumbnailFileId,
             String title,
             String description,
             int price,
             int totalSessionCount,
             PtCourseStatus status,
+            LocalDateTime createdAt,
             LocalDateTime deletedAt
     ) {
         PtCourse ptCourse = new PtCourse(
                 id,
                 organizationId,
                 trainerProfileId,
-                categoryId,
-                tagId,
+                part,
                 thumbnailFileId,
                 title,
                 description,
@@ -115,6 +110,7 @@ public class PtCourse {
                 totalSessionCount,
                 status
         );
+        ptCourse.createdAt = createdAt;
         ptCourse.deletedAt = deletedAt;
         return ptCourse;
     }
@@ -128,15 +124,14 @@ public class PtCourse {
     }
 
     // 트레이너가 강습 수정
-    public void update(Long categoryId, Long tagId, Long thumbnailFileId,
+    public void update(PartType part, Long thumbnailFileId,
                        String title, String description, int price, int totalSessionCount) {
         if (title == null || title.isBlank()) throw new PtCourseInvalidException();
         if (description == null || description.isBlank()) throw new PtCourseInvalidException();
         if (price < 0) throw new PtCourseInvalidException();
         if (totalSessionCount < 1) throw new PtCourseInvalidException();
 
-        this.categoryId = categoryId;
-        this.tagId = tagId;
+        this.part = part;
         this.thumbnailFileId = thumbnailFileId;
         this.title = title;
         this.description = description;
@@ -167,14 +162,14 @@ public class PtCourse {
     public Long getId() { return id; }
     public Long getOrganizationId() { return organizationId; }
     public Long getTrainerProfileId() { return trainerProfileId; }
-    public Long getCategoryId() { return categoryId; }
-    public Long getTagId() { return tagId; }
+    public PartType getPart() { return part; }
     public Long getThumbnailFileId() { return thumbnailFileId; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public int getPrice() { return price; }
     public int getTotalSessionCount() { return totalSessionCount; }
     public PtCourseStatus getStatus() { return status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getDeletedAt() { return deletedAt; }
 
 }

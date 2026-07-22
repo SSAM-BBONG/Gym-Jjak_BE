@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptCourse.infrastructure.adater;
 
 import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.PtCourseNotFoundException;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
@@ -34,9 +35,9 @@ class PtCourseSanctionAdapterTest {
     void applyAutoBlind_success() {
         // Given
         PtCourse ptCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, null,
+                1L, 1L, 1L, PartType.CHEST, null,
                 "PT 강습", "설명", 50000, 12,
-                PtCourseStatus.VISIBLE, null
+                PtCourseStatus.VISIBLE, null, null
         );
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
 
@@ -53,9 +54,9 @@ class PtCourseSanctionAdapterTest {
     void releaseAutoBlind_success() {
         // Given
         PtCourse ptCourse = PtCourse.restore(
-                1L, 1L, 1L, 1L, 1L, null,
+                1L, 1L, 1L, PartType.CHEST, null,
                 "PT 강습", "설명", 50000, 12,
-                PtCourseStatus.BLOCKED, null
+                PtCourseStatus.BLOCKED, null, null
         );
         when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
 

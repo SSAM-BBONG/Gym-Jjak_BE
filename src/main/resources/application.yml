@@ -2,6 +2,18 @@ spring:
   application:
     name: Gym-Jjak
 
+#  cache:
+#    type: redis
+#
+#  data:
+#    redis:
+#      host: ${REDIS_HOST:localhost}
+#      port: ${REDIS_PORT:6379}
+#      connect-timeout: ${REDIS_CONNECT_TIMEOUT:2s}
+#      timeout: ${REDIS_TIMEOUT:2s}
+#      ssl:
+#        enabled: ${REDIS_SSL_ENABLED:false}
+
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
@@ -69,6 +81,10 @@ spring:
             user-name-attribute: response
 
 logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: TRACE
+    org.springframework.security.oauth2.client: TRACE
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"
 
@@ -100,46 +116,47 @@ app:
   oauth2:
     success-redirect-url: ${OAUTH2_SUCCESS_REDIRECT_URL}
 
+#  redis:
+#    key-prefix: ${REDIS_KEY_PREFIX:gymjjak:local}
+
   scheduler:
     retention:
       cron: "${APP_SCHEDULER_RETENTION_CRON:0 0 3 * * *}"
       zone: "${APP_SCHEDULER_RETENTION_ZONE:Asia/Seoul}"
 
   retention:
-    report-group:
-      period-days: ${APP_RETENTION_REPORT_GROUP_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_REPORT_GROUP_BATCH_SIZE}
-
     withdrawn-user:
       enabled: ${APP_RETENTION_WITHDRAWN_USER_ENABLED}
-      period-days: ${APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
-
-    pt-course:
-      period-days: ${APP_RETENTION_PT_COURSE_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_PT_COURSE_BATCH_SIZE}
-
-    feedback:
-      period-days: ${APP_RETENTION_FEEDBACK_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_FEEDBACK_BATCH_SIZE}
-
-    trainer-review:
-      period-days: ${APP_RETENTION_TRAINER_REVIEW_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_TRAINER_REVIEW_BATCH_SIZE}
-
-    notification:
-      period-days: ${APP_RETENTION_NOTIFICATION_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_NOTIFICATION_BATCH_SIZE}
-
-    organization-trainer:
-      period-days: ${APP_RETENTION_ORGANIZATION_TRAINER_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_ORGANIZATION_TRAINER_BATCH_SIZE}
-
-    chat-room:
-      period-days: ${APP_RETENTION_CHAT_ROOM_PERIOD_DAYS}
-      batch-size: ${APP_RETENTION_CHAT_ROOM_BATCH_SIZE}
 
 clova:
   ocr:
     invoke-url: "${CLOVA_OCR_INVOKE_URL}"
     secret-key: "${CLOVA_OCR_SECRET_KEY}"
+
+portone:
+  store-id: ${PORTONE_STORE_ID}
+  api-key: ${PORTONE_API_KEY}
+  api-secret: ${PORTONE_API_SECRET}
+  channel-key: ${PORTONE_CHANNEL_KEY}
+  webhook-secret: ${PORTONE_WEBHOOK_SECRET}
+
+ai:
+  service:
+    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+    # 로컬·테스트 기본값이며 배포 환경에서는 반드시 별도 비밀값으로 덮어쓴다.
+    internal-api-key: ${AI_INTERNAL_API_KEY:local-development-only}
+    connect-timeout-millis: ${AI_SERVICE_CONNECT_TIMEOUT_MILLIS:3000}
+    response-timeout-seconds: ${AI_SERVICE_RESPONSE_TIMEOUT_SECONDS:90}
+  meal-analysis:
+    base-url: ${AI_MEAL_ANALYSIS_BASE_URL:http://localhost:8000}
+    analyze-path: ${AI_MEAL_ANALYSIS_PATH:/api/v1/meals/analyze}
+    # 로컬·테스트 기본값이며 배포 환경에서는 반드시 별도 비밀값으로 덮어쓴다.
+    internal-api-key: ${AI_INTERNAL_API_KEY:local-development-only}
+    connect-timeout-millis: ${AI_MEAL_CONNECT_TIMEOUT_MILLIS:3000}
+    response-timeout-seconds: ${AI_MEAL_RESPONSE_TIMEOUT_SECONDS:30}
+
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true
+  forward-headers-strategy: framework

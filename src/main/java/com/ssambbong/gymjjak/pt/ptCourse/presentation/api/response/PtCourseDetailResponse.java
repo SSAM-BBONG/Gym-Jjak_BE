@@ -15,8 +15,8 @@ public record PtCourseDetailResponse(
         @Schema(description = "PT 강습 ID", example = "1")
         Long ptCourseId,
 
-        @Schema(description = "썸네일 파일 ID")
-        Long thumbnailFileId,
+        @Schema(description = "썸네일 이미지 URL")
+        String thumbnailUrl,
 
         @Schema(description = "제목", example = "맞춤 PT 1개월 과정")
         String title,
@@ -30,17 +30,11 @@ public record PtCourseDetailResponse(
         @Schema(description = "전체 회차 수", example = "12")
         int totalSessionCount,
 
-        @Schema(description = "평균 평점", example = "4.8")
-        Double averageRating,
-
-        @Schema(description = "리뷰 수", example = "127")
-        int reviewCount,
-
         @Schema(description = "조직 ID", example = "1")
         Long organizationId,
 
-        @Schema(description = "트레이너 정보")
-        TrainerInfo trainer,
+        @Schema(description = "트레이너 프로필 ID", example = "1")
+        Long trainerProfileId,
 
         @Schema(description = "커리큘럼 목록")
         List<CurriculumInfo> curriculums,
@@ -52,20 +46,6 @@ public record PtCourseDetailResponse(
         List<ReviewQueryPort.ReviewSummary> recentReviews
 
 ) {
-    public record TrainerInfo(
-            @Schema(description = "트레이너 프로필 ID", example = "1")
-            Long trainerProfileId,
-            @Schema(description = "트레이너 이름", example = "김철수")
-            String trainerName,
-            @Schema(description = "프로필 이미지 파일 ID")
-            Long profileFileId,
-            @Schema(description = "소개")
-            String introduction,
-            @Schema(description = "자격증 목록")
-            List<String> certifications,
-            @Schema(description = "수상 목록")
-            List<String> awards
-    ) {}
 
     public record CurriculumInfo(
             @Schema(description = "커리큘럼 ID", example = "1")
@@ -93,34 +73,23 @@ public record PtCourseDetailResponse(
 
     public static PtCourseDetailResponse from(PtCourseQueryUseCase.PtCourseDetailView view) {
 
-        // 커리큘럼
         List<CurriculumInfo> curriculums = view.curriculums().stream()
                 .map(c -> new CurriculumInfo(c.curriculumId(), c.sessionNo(), c.title(), c.content()))
                 .toList();
 
-        // 스케쥴
         List<ScheduleInfo> schedules = view.schedules().stream()
                 .map(s -> new ScheduleInfo(s.scheduleId(), s.dayOfWeek(), s.startTime(), s.endTime()))
                 .toList();
 
         return new PtCourseDetailResponse(
                 view.ptCourseId(),
-                view.thumbnailFileId(),
+                view.thumbnailUrl(),
                 view.title(),
                 view.description(),
                 view.price(),
                 view.totalSessionCount(),
-                view.averageRating(),
-                view.reviewCount(),
                 view.organizationId(),
-                new TrainerInfo(
-                        view.trainerProfileId(),
-                        view.trainerName(),
-                        view.trainerProfileFileId(),
-                        view.trainerIntroduction(),
-                        view.certifications(),
-                        view.awards()
-                ),
+                view.trainerProfileId(),
                 curriculums,
                 schedules,
                 view.recentReviews()

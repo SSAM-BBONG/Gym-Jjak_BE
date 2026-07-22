@@ -1,32 +1,64 @@
 package com.ssambbong.gymjjak.calendar.adapter.in.web.request;
 
 import com.ssambbong.gymjjak.calendar.application.command.UpdateWorkoutDiaryCommand;
+import com.ssambbong.gymjjak.calendar.application.command.WorkoutDiarySetCommand;
+import com.ssambbong.gymjjak.global.presentation.api.common.PartTypeNameMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
-@Schema(description = "운동 일지 수정 요청")
+import java.math.BigDecimal;
+import java.util.List;
+
+@Schema(description = "Workout diary update request")
 public record UpdateWorkoutDiaryRequest(
 
-        @Schema(description = "카테고리", example = "재활")
-        @NotBlank(message = "카테고리는 필수입니다.")
-        String categoryName,
+        @Schema(description = "Workout part", example = "하체")
+        @NotBlank(message = "Workout part is required.")
+        String part,
 
-        @Schema(description = "제목", example = "힘든 운동을 한 날")
-        @NotBlank(message = "일지 제목은 필수입니다.")
-        @Size(max = 100, message = "일지 제목은 100자 이하로 입력해야 합니다.")
-        String title,
+        @Schema(description = "Exercise id", example = "1")
+        @NotNull(message = "Exercise id is required.")
+        Long exerciseId,
 
-        @Schema(description = "내용", example = "힘드노 헥헥 개힘드노 헥헥 살려줘")
-        @NotBlank(message = "일지 내용은 필수입니다.")
-        String content
+        @Schema(description = "Replacement workout sets")
+        @Valid
+        @NotEmpty(message = "At least one workout set is required.")
+        List<@Valid @NotNull(message = "Workout set is required.") WorkoutDiarySetRequest> sets
 ) {
-
     public UpdateWorkoutDiaryCommand toCommand() {
         return new UpdateWorkoutDiaryCommand(
-                categoryName,
-                title,
-                content
+                PartTypeNameMapper.fromKoreanName(part),
+                exerciseId,
+                sets.stream()
+                        .map(WorkoutDiarySetRequest::toCommand)
+                        .toList()
         );
+    }
+
+    public record WorkoutDiarySetRequest(
+
+            @Schema(description = "Set order", example = "1")
+            @NotNull(message = "Set order is required.")
+            @Min(value = 1, message = "Set order must be greater than 0.")
+            Integer setOrder,
+
+            @Schema(description = "Weight in kg", example = "20")
+            @NotNull(message = "Weight is required.")
+            @DecimalMin(value = "0.0", message = "Weight must be 0 or greater.")
+            BigDecimal weight,
+
+            @Schema(description = "Reps", example = "3")
+            @NotNull(message = "Reps is required.")
+            @Min(value = 1, message = "Reps must be greater than 0.")
+            Integer reps
+    ) {
+        private WorkoutDiarySetCommand toCommand() {
+            return new WorkoutDiarySetCommand(setOrder, weight, reps);
+        }
     }
 }

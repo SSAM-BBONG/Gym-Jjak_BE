@@ -8,7 +8,7 @@ import java.util.List;
 public record CalendarDayResponse(
         LocalDate date,
         List<CalendarDayPtResponse> pts,
-        CalendarDayDiaryResponse diary
+        List<CalendarDayDiaryResponse> diaries
 ) {
 
     public static CalendarDayResponse from(CalendarDayResult result) {
@@ -17,9 +17,9 @@ public record CalendarDayResponse(
                 result.pts().stream()
                         .map(CalendarDayPtResponse::from)
                         .toList(),
-                result.diary() == null
-                        ? null
-                        : CalendarDayDiaryResponse.from(result.diary())
+                result.diaries().stream()
+                        .map(CalendarDayDiaryResponse::from)
+                        .toList()
         );
     }
 }

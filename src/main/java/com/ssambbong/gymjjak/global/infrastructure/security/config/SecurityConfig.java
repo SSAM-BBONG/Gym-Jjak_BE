@@ -61,6 +61,8 @@ public class SecurityConfig {
                 // URL별 인증/인가 설정
                 .authorizeHttpRequests(auth -> auth
 
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers("/api/auth/logout").authenticated()
 
                         // 회원가입, 로그인, 토큰 재발급 등 인증 없이 접근 가능
@@ -71,7 +73,8 @@ public class SecurityConfig {
                                 "/login/oauth2/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/ws/**"
+                                "/ws/**",
+                                "/error"
                         ).permitAll()
 
                         .requestMatchers("/api/token/reissue").permitAll()
@@ -85,21 +88,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/reportgroup/**")
                         .hasAnyAuthority("ADMIN")
 
-                        // 카테고리 API
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/categories")
-                        .hasAnyAuthority("ADMIN", "TRAINER", "USER")
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**")
-                        .hasAnyAuthority("ADMIN", "TRAINER")
-
-                        // 태그 API
-                        .requestMatchers(HttpMethod.POST, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/tags/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/tags/**")
-                        .hasAnyAuthority("ADMIN", "TRAINER")
+                        // 부위 API
+                        .requestMatchers(HttpMethod.POST, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/parts/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/parts/**").hasAnyAuthority("ADMIN", "TRAINER", "USER")
 
                         // PT API
                         .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
@@ -115,26 +108,38 @@ public class SecurityConfig {
                         // 관리자가 사용자 API도 접근 가능해야 하면 ROLE_ADMIN 포함
                         .requestMatchers("/api/users/**")
 
-                        .hasAnyAuthority("ADMIN", "USER","TRAINER")
-                        // 트레이너 신청 목록 조회 - 관리자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
-                        .hasAuthority("ADMIN")
+                        .hasAnyAuthority("ADMIN", "USER","TRAINER","ORGANIZATION")
+                                // 트레이너 신청 목록 조회 - 조직
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications")
+                                .hasAuthority("ORGANIZATION")
 
-                        // 내 트레이너 신청서 상세 조회 - 사용자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
-                        .hasAnyAuthority("USER", "TRAINER")
+                                // 내 트레이너 신청서 목록 조회 - 사용자/트레이너
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me")
+                                .hasAnyAuthority("USER", "TRAINER")
 
-                         // 트레이너 신청서 관리자 상세 조회 - 관리자
-                        .requestMatchers(HttpMethod.GET, "/api/trainer-applications/*")
-                        .hasAuthority("ADMIN")
+                                // 내 트레이너 신청서 상세 조회 - 사용자/트레이너
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/me/*")
+                                .hasAnyAuthority("USER", "TRAINER")
 
-                        // 트레이너 신청 생성 - 사용자
-                        .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
-                        .hasAuthority("USER")
+                                // 트레이너 신청 상세 조회 - 조직
+                                .requestMatchers(HttpMethod.GET, "/api/trainer-applications/*")
+                                .hasAuthority("ORGANIZATION")
 
-                        // 트레이너 신청 승인 - 관리자
-                        .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
-                        .hasAuthority("ADMIN")
+                                // 트레이너 신청 생성 - 사용자
+                                .requestMatchers(HttpMethod.POST, "/api/trainer-applications")
+                                .hasAuthority("USER")
+
+                                // 트레이너 신청 승인 - 조직
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/approve")
+                                .hasAuthority("ORGANIZATION")
+
+                                // 트레이너 신청 반려 - 조직
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*/reject")
+                                .hasAuthority("ORGANIZATION")
+
+                                // 트레이너 신청 수정/취소 - 사용자
+                                .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*")
+                                .hasAuthority("USER")
 
                         // 트레이너 검색 - 조직 및 관리자
                         .requestMatchers(HttpMethod.GET, "/api/trainers/search")
@@ -148,16 +153,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/trainers/*")
                         .permitAll()
 
-                        // 트레이너 신청 수정 - 사용자
-                        .requestMatchers(HttpMethod.PATCH, "/api/trainer-applications/*")
-                        .hasAuthority("USER")
-
                         // 트레이너 API
                         .requestMatchers("/api/trainers/**")
                         .hasAnyAuthority("TRAINER", "ADMIN")
 
+                        // 트레이너 메인 대시보드
+                        .requestMatchers(HttpMethod.GET, "/api/dashboard/trainer/main")
+                        .hasAuthority("TRAINER")
+
                         // 조직 API
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/detail").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/search")
+                        .hasAnyAuthority("USER", "TRAINER")
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/trainer/my-organizations")
+                        .hasAuthority("TRAINER")
                         .requestMatchers("/api/organizations/**")
                         .hasAnyAuthority("ORGANIZATION", "ADMIN")
 
@@ -175,6 +184,22 @@ public class SecurityConfig {
                         // Calendar API
                         .requestMatchers("/api/calendar/**")
                         .authenticated()
+
+                        // Community API
+                        .requestMatchers("/api/community/**")
+                        .permitAll()
+
+                        // 결제 웹훅 (PortOne 서버에서 호출)
+                        .requestMatchers(HttpMethod.POST, "/api/payments/webhook").permitAll()
+
+                        // 구독 플랜 목록 조회 (비로그인 접근 가능)
+                        .requestMatchers(HttpMethod.GET, "/api/subscriptions/plans").permitAll()
+
+                        // 내 구독 조회
+                        .requestMatchers(HttpMethod.GET, "/api/subscriptions/me").hasAnyAuthority("USER", "TRAINER")
+
+                        // 구독 결제 요청
+                        .requestMatchers(HttpMethod.POST, "/api/payments/subscriptions").hasAnyAuthority("USER", "TRAINER")
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
@@ -206,8 +231,13 @@ public class SecurityConfig {
         // 프론트엔드 주소 허용
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
-                "http://localhost:8080"
+                "http://localhost:8080",
+                // 프론트 배포 주소
+//                "http://13.209.67.161",
+//                "https://13.124.200.97.sslip.io"
 //                "https://gymjjak.com"
+                "https://gymjjak.site",
+                "https://www.gymjjak.site"
         ));
 
         // 허용 HTTP 메서드

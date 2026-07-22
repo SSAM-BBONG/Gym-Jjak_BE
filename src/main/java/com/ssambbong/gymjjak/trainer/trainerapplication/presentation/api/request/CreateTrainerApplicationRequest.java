@@ -3,13 +3,21 @@ package com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.reques
 import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.util.List;
 
 public record CreateTrainerApplicationRequest(
+
+        // 신청 대상 조직 ID
+        // 조직 검색 API에서 선택한 organizationId 전달
+        @Schema(description = "트레이너 신청서를 제출할 조직 ID 목록",
+                example = "[1, 2, 3]")
+        @NotEmpty(message = "신청 대상 조직은 하나 이상 선택해야 합니다.")
+        List<
+                @NotNull(message = "조직 ID는 null일 수 없습니다.")
+                @Positive(message = "조직 ID는 1 이상이어야 합니다.")
+                Long> organizationIds,
 
         @Schema(description = "S3 업로드가 완료된 프로필 이미지 메타데이터")
         @Valid

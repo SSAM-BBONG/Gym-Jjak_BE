@@ -56,7 +56,8 @@ public class UserController {
                         new UserProfileResponse(
                                 result.name(),
                                 result.nickname(),
-                                result.phone()
+                                result.phone(),
+                                result.paid()
                         )
                 ));
     }
@@ -77,6 +78,7 @@ public class UserController {
 
     }
 
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @DeleteMapping("/me")
     @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 한다.")
     public ResponseEntity<GlobalApiResponse<Void>> deleteUser (@AuthenticationPrincipal AuthUser authUser) {
@@ -219,6 +221,22 @@ public class UserController {
                                 result.hasNext(),
                                 result.hasPrevious()
                         )
+                )
+        );
+    }
+
+    @GetMapping("/mypage")
+    @Operation(summary = "회원 username 및 nickname 조회, 소셜로그인 확인", description = "현재 로그인한 회원의 username과 nickname, 소셜 로그인 참 거짓을 조회하는 요청이다.")
+    public ResponseEntity<GlobalApiResponse<UserUsernameAndNicknameResponse>> findUsernameAndNickname(
+            @AuthenticationPrincipal AuthUser authUser) {
+
+        UserUsernameAndNicknameResult result =
+                userCommandUseCase.findUsernameAndNickname(authUser.userId());
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        UserResponseCode.USER_PROFILE_FOUND,
+                        UserUsernameAndNicknameResponse.from(result)
                 )
         );
     }

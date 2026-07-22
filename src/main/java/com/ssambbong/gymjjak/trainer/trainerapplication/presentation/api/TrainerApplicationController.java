@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.Crea
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UpdateTrainerApplicationCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.TrainerApplicationDetailResult;
+import com.ssambbong.gymjjak.trainer.trainerapplication.application.query.MyTrainerApplicationListResult;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationCommandUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.application.usecase.TrainerApplicationQueryUseCase;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request.CreateTrainerApplicationRequest;
@@ -17,24 +18,31 @@ import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.request
 import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.CreateTrainerApplicationResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationDetailResponse;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.MyTrainerApplicationListResponse;
 import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.TrainerApplicationResponseCode;
+import com.ssambbong.gymjjak.trainer.trainerapplication.presentation.api.response.UpdateTrainerApplicationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Trainer_Application", description = "트레이너 신청 api")
 @Slf4j
 @RestController
 @RequestMapping("/api/trainer-applications")
 @RequiredArgsConstructor
+@Validated
 public class TrainerApplicationController {
 
     private final TrainerApplicationCommandUseCase trainerApplicationCommandUseCase;
@@ -59,9 +67,11 @@ public class TrainerApplicationController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody @Valid CreateTrainerApplicationRequest request
             ) {
-        Long trainerApplicationId = trainerApplicationCommandUseCase.createTrainerApplication(
+        List<Long> trainerApplicationIds = trainerApplicationCommandUseCase
+                .createTrainerApplication(
                 new CreateTrainerApplicationCommand(
                         authUser.userId(),
+                        request.organizationIds(),
                         toCommand(request.profileImageFile()),
                         toCommand(request.certificateFile()),
                         request.qualifications(),
@@ -73,7 +83,7 @@ public class TrainerApplicationController {
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
                         TrainerApplicationResponseCode.TRAINER_APPLICATION_CREATED,
-                        new CreateTrainerApplicationResponse(trainerApplicationId)
+                        new CreateTrainerApplicationResponse(trainerApplicationIds)
                 ));
     }
 
@@ -106,7 +116,7 @@ public class TrainerApplicationController {
             @ApiResponse(responseCode = "409", description = "PENDING 상태가 아니어서 수정할 수 없음")
     })
     @PreAuthorize("hasAuthority('USER')")
-    public ResponseEntity<GlobalApiResponse<CreateTrainerApplicationResponse>> updateTrainerApplication(
+    public ResponseEntity<GlobalApiResponse<UpdateTrainerApplicationResponse>> updateTrainerApplication(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long trainerApplicationId,
             @RequestBody @Valid UpdateTrainerApplicationRequest request
@@ -126,48 +136,74 @@ public class TrainerApplicationController {
         return ResponseEntity.status(201)
                 .body(GlobalApiResponse.created(
                        TrainerApplicationResponseCode.TRAINER_APPLICATION_UPDATED,
-                       new CreateTrainerApplicationResponse(updatedTrainerApplicationId)
+                       new UpdateTrainerApplicationResponse(updatedTrainerApplicationId)
                 ));
     }
 
+    // 다중 조직 신청 건을 사용자별 페이지 목록으로 조회합니다.
     @GetMapping("/me")
     @Operation(
-            summary = "내 트레이너 신청서 상세 조회",
-            description = "로그인한 사용자의 최신 트레이너 신청서를 조회합니다. 신청 현황 화면에서 사용합니다."
+            summary = "내 트레이너 신청 목록 조회",
+            description = "로그인한 사용자의 조직별 트레이너 신청서를 페이지 단위로 조회."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "트레이너 신청서 목록 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "403", description = "USER 또는 TRAINER 권한 없음"),
+    })
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    public ResponseEntity<GlobalApiResponse<MyTrainerApplicationListResponse>> findMyTrainerApplications(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page
+    ) {
+        MyTrainerApplicationListResult result =
+                trainerApplicationQueryUseCase.findMyTrainerApplications(
+                        authUser.userId(),
+                        page
+                );
+
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                TrainerApplicationResponseCode.TRAINER_APPLICATION_LIST_FOUND,
+                MyTrainerApplicationListResponse.from(result)
+        ));
+    }
+
+    // 목록에서 선택한 신청서 ID로 본인 신청서의 상세 정보를 조회합니다.
+    @GetMapping("/me/{trainerApplicationId}")
+    @Operation(
+            summary = "내 트레이너 신청 상세 조회",
+            description = "로그인한 사용자가 본인의 특정 트레이너 신청서를 조회."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "트레이너 신청서 상세 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패"),
-            @ApiResponse(responseCode = "404", description = "트레이너 신청서를 찾을 수 없음")
+            @ApiResponse(responseCode = "403", description = "USER 또는 TRAINER 권한 없음"),
+            @ApiResponse(responseCode = "404", description = "트레이너 신청서가 없거나 본인 소유가 아님"),
     })
     @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     public ResponseEntity<GlobalApiResponse<TrainerApplicationDetailResponse>> getMyTrainerApplication(
-            @AuthenticationPrincipal AuthUser authUser
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long trainerApplicationId
     ) {
-
         TrainerApplicationDetailResult result =
-                trainerApplicationQueryUseCase.getMyTrainerApplication(authUser.userId());
-
-        FileUrlResult profileImageFile = resolveFileUrl(
-                result.profileImageFileId(), authUser.userId(), false
+                trainerApplicationQueryUseCase.getMyTrainerApplication(
+                authUser.userId(),
+                trainerApplicationId
         );
 
-        FileUrlResult certificateFile = resolveFileUrl(
-                result.certificateFileId(), authUser.userId(), false
-        );
+        FileUrlResult profileImageFile = resolveFileUrl(result.profileImageFileId(), authUser.userId(), false);
+        FileUrlResult certificateFile = resolveFileUrl(result.certificateFileId(), authUser.userId(), false);
 
-        return ResponseEntity.status(200).body(
-                GlobalApiResponse.ok(
-                        TrainerApplicationResponseCode.TRAINER_APPLICATION_DETAIL_FOUND,
-                        TrainerApplicationDetailResponse.from(
-                                result,
-                                profileImageFile == null ? null : profileImageFile.url(),
-                                profileImageFile == null ? null : profileImageFile.originalName(),
-                                certificateFile == null ? null : certificateFile.url(),
-                                certificateFile == null ? null : certificateFile.originalName()
-                        )
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                TrainerApplicationResponseCode.TRAINER_APPLICATION_DETAIL_FOUND,
+                TrainerApplicationDetailResponse.from(
+                        result,
+                        profileImageFile == null ? null : profileImageFile.url(),
+                        profileImageFile == null ? null : profileImageFile.originalName(),
+                        certificateFile == null ? null : certificateFile.url(),
+                        certificateFile == null ? null : certificateFile.originalName()
                 )
-        );
+        ));
     }
 
     // File 도메인에서 Id로 FileResult 받기

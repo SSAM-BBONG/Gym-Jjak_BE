@@ -1,0 +1,23 @@
+package com.ssambbong.gymjjak.dashboard.organization.presentation.api.response;
+
+import com.ssambbong.gymjjak.dashboard.organization.application.query.OrgSalesResult;
+
+import java.util.List;
+
+public record OrgSalesResponse(
+        long totalRevenue,
+        long thisMonthRevenue,
+        double monthOverMonthRate,
+        OrgRevenueTrendResponse revenueTrend,
+        List<TrainerSalesResponse> trainerSales
+) {
+    public static OrgSalesResponse from(OrgSalesResult result) {
+        return new OrgSalesResponse(
+                result.totalRevenue(),
+                result.thisMonthRevenue(),
+                result.monthOverMonthRate(),
+                OrgRevenueTrendResponse.from(result.revenueTrend()),
+                result.trainerSales().stream().map(TrainerSalesResponse::from).toList()
+        );
+    }
+}

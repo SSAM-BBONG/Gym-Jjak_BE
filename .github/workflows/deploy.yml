@@ -34,6 +34,7 @@ jobs:
           test -f Dockerfile
           test -f docker-compose.deploy.yml
           test -f monitoring/promtail/promtail-config.deploy.yml
+          test -f caddy/Caddyfile
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -65,8 +66,10 @@ jobs:
       - name: Generate Elastic Beanstalk deployment package
         run: |
           mkdir -p deploy/monitoring/promtail
+          mkdir -p deploy/caddy
           cp docker-compose.deploy.yml deploy/docker-compose.yml
           cp monitoring/promtail/promtail-config.deploy.yml deploy/monitoring/promtail/promtail-config.deploy.yml
+          cp caddy/Caddyfile deploy/caddy/Caddyfile
           sed -i "s|\${BACKEND_IMAGE}|${{ steps.build-image.outputs.image }}|g" deploy/docker-compose.yml
           cd deploy && zip -r deploy.zip .
 
@@ -77,7 +80,7 @@ jobs:
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: ${{ secrets.EB_APP_NAME }}
           environment_name: ${{ secrets.EB_ENV_NAME }}
-          version_label: gymjjak-${{ github.sha }}
+          version_label: gymjjak-${{ github.sha }}-${{ github.run_number }}-${{ github.run_attempt }}
           region: ${{ secrets.AWS_REGION }}
           deployment_package: deploy/deploy.zip
-          wait_for_environment_recovery: 200
+          wait_for_environment_recovery: 600

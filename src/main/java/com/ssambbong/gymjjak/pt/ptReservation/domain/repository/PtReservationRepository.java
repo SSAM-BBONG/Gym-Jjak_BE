@@ -33,4 +33,35 @@ public interface PtReservationRepository {
 
     // 특정 상태 예약 수 집계 (통계용)
     long countByStatus(PtReservationStatus status);
+
+    // progressCount 기준 진행 중인 코스 수 (user+course 쌍 단위)
+    long countInProgressCourses();
+
+    // 수강생 PT 코스 전체 취소
+    int bulkCancelByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
+    // 수강생 전체 코스 완료 처리
+    int bulkCompleteByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
+    // 유저+코스 기준 세션 한도 소모 수 (당일 취소 포함, 이전 취소 제외)
+    int countConsumedByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
+    // 유저+코스 기준 진행 회차 수 (endAt 지난 비취소 + 당일 취소)
+    int countProgressByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
+    // 특정 강습의 기간 내 RESERVED 예약 시작 시각 목록 (가용 날짜/시간 슬롯 계산용)
+    List<LocalDateTime> findReservedStartAtsByPtCourseId(Long ptCourseId, LocalDateTime from, LocalDateTime to);
+
+    // AdminDashboard : 월별 예약된 pt 수 조회 (통계)
+    List<MonthlyReservationCount> findMonthlyReservationCounts(
+            PtReservationStatus excludedStatus,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
+    // 내부 record 사용
+    record MonthlyReservationCount(
+            String month,
+            long count
+    ) {
+    }
 }

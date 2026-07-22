@@ -26,7 +26,7 @@ import java.util.List;
 
 @Tag(name = "피드백", description = "PT 피드백 관련 API")
 @RestController
-@RequestMapping("/api/reservations/{ptReservationId}/feedbacks")
+@RequestMapping("/api/reservations/{reservationId}/feedbacks")
 @RequiredArgsConstructor
 public class FeedbackController {
 
@@ -39,7 +39,7 @@ public class FeedbackController {
     @Operation(summary = "피드백 목록 조회", description = "예약 ID로 커리큘럼별 피드백 목록을 조회한다.")
     public ResponseEntity<GlobalApiResponse<List<FeedbackListResponse>>>
     findfeedbacks(@AuthenticationPrincipal AuthUser authUser,
-                  @PathVariable Long ptReservationId
+                  @PathVariable("reservationId") Long ptReservationId
     ) {
         List<FeedbackListResponse> responses = feedbackQueryUseCase
                 .findFeedbacksByReservation(authUser.userId(), ptReservationId)
@@ -61,7 +61,7 @@ public class FeedbackController {
     @Operation(summary = "피드백 상세 조회", description = "피드백 ID로 상세 내용을 조회한다.")
     public ResponseEntity<GlobalApiResponse<FeedbackDetailResponse>>
     findFeedbackDetail(@AuthenticationPrincipal AuthUser authUser,
-                       @PathVariable Long ptReservationId,
+                       @PathVariable("reservationId") Long ptReservationId,
                        @PathVariable Long feedbackId
     ) {
         FeedbackDetailResponse response = FeedbackDetailResponse.from(
@@ -78,7 +78,7 @@ public class FeedbackController {
     @Operation(summary = "피드백 등록", description = "트레이너가 수강생의 PT 회차에 대한 피드백을 등록한다.")
     public ResponseEntity<GlobalApiResponse<CreateFeedbackResponse>>
     createFeedback(@AuthenticationPrincipal AuthUser authUser,
-                   @PathVariable Long ptReservationId,
+                   @PathVariable("reservationId") Long ptReservationId,
                    @RequestBody @Valid CreateFeedbackRequest request
     ) {
         Long feedbackId = feedbackCommandUseCase.createFeedback(
@@ -95,7 +95,7 @@ public class FeedbackController {
     @Operation(summary = "피드백 수정", description = "트레이너가 본인이 작성한 피드백을 수정한다.")
     public ResponseEntity<GlobalApiResponse<UpdateFeedbackResponse>>
     updateFeedback(@AuthenticationPrincipal AuthUser authUser,
-                   @PathVariable Long ptReservationId,
+                   @PathVariable("reservationId") Long ptReservationId,
                    @PathVariable Long feedbackId,
                    @RequestBody @Valid UpdateFeedbackRequest request
     ) {
@@ -113,7 +113,7 @@ public class FeedbackController {
     @Operation(summary = "피드백 삭제", description = "트레이너가 본인이 작성한 피드백을 삭제한다. 예약이 COMPLETED 상태이면 삭제 불가.")
     public ResponseEntity<GlobalApiResponse<Void>> deleteFeedback(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long ptReservationId,
+            @PathVariable("reservationId") Long ptReservationId,
             @PathVariable Long feedbackId
     ) {
         feedbackCommandUseCase.deleteFeedback(

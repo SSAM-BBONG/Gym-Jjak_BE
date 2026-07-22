@@ -20,6 +20,8 @@ services:
       NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:?NAVER_CLIENT_ID is required}
       NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:?NAVER_CLIENT_SECRET is required}
 
+      BACKEND_BASE_URL: ${BACKEND_BASE_URL}
+
       OAUTH2_SUCCESS_REDIRECT_URL: ${OAUTH2_SUCCESS_REDIRECT_URL}
 
       AWS_REGION: ${AWS_REGION}
@@ -33,31 +35,40 @@ services:
 
       APP_SCHEDULER_RETENTION_CRON: ${APP_SCHEDULER_RETENTION_CRON}
       APP_SCHEDULER_RETENTION_ZONE: ${APP_SCHEDULER_RETENTION_ZONE}
-      APP_RETENTION_REPORT_GROUP_PERIOD_DAYS: ${APP_RETENTION_REPORT_GROUP_PERIOD_DAYS}
-      APP_RETENTION_REPORT_GROUP_BATCH_SIZE: ${APP_RETENTION_REPORT_GROUP_BATCH_SIZE}
+
       APP_RETENTION_WITHDRAWN_USER_ENABLED: ${APP_RETENTION_WITHDRAWN_USER_ENABLED}
-      APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS: ${APP_RETENTION_WITHDRAWN_USER_PERIOD_DAYS}
-      APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE: ${APP_RETENTION_WITHDRAWN_USER_BATCH_SIZE}
-      APP_RETENTION_PT_COURSE_PERIOD_DAYS: ${APP_RETENTION_PT_COURSE_PERIOD_DAYS}
-      APP_RETENTION_PT_COURSE_BATCH_SIZE: ${APP_RETENTION_PT_COURSE_BATCH_SIZE}
-      APP_RETENTION_FEEDBACK_PERIOD_DAYS: ${APP_RETENTION_FEEDBACK_PERIOD_DAYS}
-      APP_RETENTION_FEEDBACK_BATCH_SIZE: ${APP_RETENTION_FEEDBACK_BATCH_SIZE}
-      APP_RETENTION_TRAINER_REVIEW_PERIOD_DAYS: ${APP_RETENTION_TRAINER_REVIEW_PERIOD_DAYS}
-      APP_RETENTION_TRAINER_REVIEW_BATCH_SIZE: ${APP_RETENTION_TRAINER_REVIEW_BATCH_SIZE}
-      APP_RETENTION_NOTIFICATION_PERIOD_DAYS: ${APP_RETENTION_NOTIFICATION_PERIOD_DAYS}
-      APP_RETENTION_NOTIFICATION_BATCH_SIZE: ${APP_RETENTION_NOTIFICATION_BATCH_SIZE}
 
       CLOVA_OCR_INVOKE_URL: ${CLOVA_OCR_INVOKE_URL}
       CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2.8
+    container_name: gymjjak-caddy
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
-      - "${DEPLOY_BACKEND_PORT:-8081}:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - gymjjak-caddy-data:/data
+      - gymjjak-caddy-config:/config
 
   promtail:
     image: grafana/promtail:2.9.8
     container_name: gymjjak-promtail
     restart: unless-stopped
-    command: -config.file=/etc/promtail/promtail-config.yml
+    command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
+    environment:
+      MONITORING_EC2_PRIVATE_IP: ${MONITORING_EC2_PRIVATE_IP}
     volumes:
       - ./monitoring/promtail/promtail-config.deploy.yml:/etc/promtail/promtail-config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+volumes:
+  gymjjak-caddy-data:
+  gymjjak-caddy-config:

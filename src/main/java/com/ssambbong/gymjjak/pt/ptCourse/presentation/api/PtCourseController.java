@@ -28,7 +28,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Tag(name = "PT", description = "PT 관련 API")
 @RestController
@@ -59,8 +61,8 @@ public class PtCourseController {
     ) {
         CreatePtCourseCommand command = new CreatePtCourseCommand(
                 authUser.userId(),
-                request.categoryId(),
-                request.tagId(),
+                request.organizationId(),
+                request.part(),
                 request.title(),
                 request.description(),
                 request.price(),
@@ -285,6 +287,31 @@ public class PtCourseController {
                 GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_POPULAR, response));
     }
 
+
+    // 예약 가능 날짜 조회
+    @Operation(summary = "예약 가능 날짜 조회", description = "오늘부터 30일 내 예약 가능한 날짜 목록을 조회한다.")
+    @GetMapping("/{ptCourseId}/available-dates")
+    public ResponseEntity<GlobalApiResponse<AvailableDatesResponse>> findAvailableDates(
+            @PathVariable Long ptCourseId
+    ) {
+        AvailableDatesResponse response = AvailableDatesResponse.from(
+                ptCourseQueryUseCase.findAvailableDates(ptCourseId));
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(PtCourseResponseCode.AVAILABLE_DATES_FETCHED, response));
+    }
+
+    // 예약 가능 시간 슬롯 조회
+    @Operation(summary = "예약 가능 시간 슬롯 조회", description = "선택한 날짜의 예약 가능한 시간 슬롯 목록을 조회한다.")
+    @GetMapping("/{ptCourseId}/available-time-slots")
+    public ResponseEntity<GlobalApiResponse<AvailableTimeSlotsResponse>> findAvailableTimeSlots(
+            @PathVariable Long ptCourseId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        AvailableTimeSlotsResponse response = AvailableTimeSlotsResponse.from(
+                ptCourseQueryUseCase.findAvailableTimeSlots(ptCourseId, date));
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(PtCourseResponseCode.AVAILABLE_TIME_SLOTS_FETCHED, response));
+    }
 
     // UploadedFileMetadataRequest → UploadedFileMetadataCommand 변환 (null 허용)
     private UploadedFileMetadataCommand toMetadataCommand(UploadedFileMetadataRequest request) {

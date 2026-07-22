@@ -26,6 +26,20 @@ public interface SpringDataNotificationRepository extends JpaRepository<Notifica
             Pageable pageable
     );
 
+    // 미조회 알림 조회용
+    @Query("""
+        select count(n)
+        from NotificationJpaEntity n
+        where n.receiverId = :receiverId
+          and n.readAt is null
+          and n.deletedAt is null
+          and n.expiresAt > :now
+        """)
+    long countUnreadNotifications(
+            @Param("receiverId") Long receiverId,
+            @Param("now") LocalDateTime now
+    );
+
     @Query(
             value = "select notification_id " +
                     "FROM notifications " +

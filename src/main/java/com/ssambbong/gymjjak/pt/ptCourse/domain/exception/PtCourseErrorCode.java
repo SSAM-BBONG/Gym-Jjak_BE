@@ -19,7 +19,7 @@ public enum PtCourseErrorCode implements ErrorCode {
     PT_COURSE_FORBIDDEN(HttpStatus.FORBIDDEN, "PT_COURSE_003", "본인의 PT 강습이 아닙니다."),
 
     // 조직 소속 트레이너가 아닐 때
-    PT_COURSE_TRAINER_NOT_IN_ORGANIZATION(HttpStatus.FORBIDDEN, "PT_COURSE_004", "소속 조직이 없는 트레이너입니다."),
+    PT_COURSE_TRAINER_NOT_IN_ORGANIZATION(HttpStatus.FORBIDDEN, "PT_COURSE_004", "선택한 조직에 소속되지 않은 트레이너입니다."),
 
     // 트레이너 프로필 조회 실패
     TRAINER_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "PT_COURSE_005", "트레이너 프로필을 찾을 수 없습니다."),
@@ -43,7 +43,10 @@ public enum PtCourseErrorCode implements ErrorCode {
     PT_COURSE_CANNOT_DELETE(HttpStatus.CONFLICT, "PT_COURSE_009", "BLOCKED 상태의 PT 강습은 삭제할 수 없습니다."),
 
     // 활성 예약(RESERVED/IN_PROGRESS)이 있어 삭제 불가
-    PT_COURSE_HAS_ACTIVE_RESERVATION(HttpStatus.CONFLICT, "PT_COURSE_010", "진행 중인 예약이 있어 PT 강습을 삭제할 수 없습니다.");
+    PT_COURSE_HAS_ACTIVE_RESERVATION(HttpStatus.CONFLICT, "PT_COURSE_010", "진행 중인 예약이 있어 PT 강습을 삭제할 수 없습니다."),
+
+    // 활성 예약(RESERVED/IN_PROGRESS)이 있어 비활성화 불가
+    PT_COURSE_HAS_ACTIVE_RESERVATION_FOR_HIDE(HttpStatus.CONFLICT, "PT_COURSE_011", "진행 중인 예약이 있어 PT 강습을 비활성화할 수 없습니다.");
 
 
     private final HttpStatus httpStatus;

@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.notification.application.query.FindNotificationsQue
 import com.ssambbong.gymjjak.notification.application.result.DeleteNotificationsResult;
 import com.ssambbong.gymjjak.notification.application.result.MarkNotificationReadResult;
 import com.ssambbong.gymjjak.notification.application.result.NotificationListResult;
+import com.ssambbong.gymjjak.notification.application.result.UnreadNotificationCountResult;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationCommandUseCase;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationQueryUseCase;
 import com.ssambbong.gymjjak.notification.application.usecase.NotificationUserCommandUseCase;
@@ -18,6 +19,7 @@ import com.ssambbong.gymjjak.notification.presentation.api.response.DeleteNotifi
 import com.ssambbong.gymjjak.notification.presentation.api.response.MarkNotificationReadResponse;
 import com.ssambbong.gymjjak.notification.presentation.api.response.NotificationListResponse;
 import com.ssambbong.gymjjak.notification.presentation.api.response.NotificationResponseCode;
+import com.ssambbong.gymjjak.notification.presentation.api.response.UnreadNotificationCountResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -71,6 +73,31 @@ public class NotificationController {
                 GlobalApiResponse.ok(
                         NotificationResponseCode.NOTIFICATION_LIST_FOUND,
                         NotificationListResponse.from(result)
+                )
+        );
+    }
+
+    @Operation(
+            summary = "내 미읽음 알림 개수 조회",
+            description = "헤더 표시용 활성 미읽음 알림 개수를 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "미읽음 알림 개수 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/unread-count")
+    // 헤더 표시용 활성 미읽음 알림 개수를 반환합니다.
+    public ResponseEntity<GlobalApiResponse<UnreadNotificationCountResponse>> findUnreadNotificationCount(
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        UnreadNotificationCountResult result =
+                queryUseCase.findUnreadNotificationCount(authUser.userId());
+
+        return ResponseEntity.ok(
+                GlobalApiResponse.ok(
+                        NotificationResponseCode.NOTIFICATION_UNREAD_COUNT_FOUND,
+                        UnreadNotificationCountResponse.from(result)
                 )
         );
     }

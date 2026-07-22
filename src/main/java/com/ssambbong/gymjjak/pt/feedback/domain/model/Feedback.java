@@ -15,13 +15,13 @@ public class Feedback {
     private final Long trainerProfileId;
     private final Long userId;
     private String content;
-    private final String status;
+    private final FeedbackStatus status;
     private final LocalDateTime createdAt;
 
     @Builder(access = AccessLevel.PUBLIC)
     private Feedback(Long id, Long ptReservationId, Long ptCurriculumId,
                      Long trainerProfileId, Long userId, String content,
-                     String status, LocalDateTime createdAt) {
+                     FeedbackStatus status, LocalDateTime createdAt) {
         this.id = id;
         this.ptReservationId = ptReservationId;
         this.ptCurriculumId = ptCurriculumId;
@@ -40,13 +40,13 @@ public class Feedback {
                 .trainerProfileId(trainerProfileId)
                 .userId(userId)
                 .content(content)
-                .status("ACTIVE")
+                .status(FeedbackStatus.ACTIVE)
                 .build();
     }
 
     public static Feedback restore(Long id, Long ptReservationId, Long ptCurriculumId,
                                    Long trainerProfileId, Long userId, String content,
-                                   String status, LocalDateTime createdAt) {
+                                   FeedbackStatus status, LocalDateTime createdAt) {
         return Feedback.builder()
                 .id(id)
                 .ptReservationId(ptReservationId)

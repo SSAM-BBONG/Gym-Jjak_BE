@@ -6,6 +6,6 @@ import java.util.List;
 public record CalendarDayResult(
         LocalDate date,
         List<CalendarDayPtResult> pts,
-        CalendarDayDiaryResult diary
+        List<CalendarDayDiaryResult> diaries
 ) {
 }

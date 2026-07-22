@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatRoomUseCase;
 import com.ssambbong.gymjjak.chat.exception.*;
 import com.ssambbong.gymjjak.chat.presentation.api.ChatRoomController;
+import com.ssambbong.gymjjak.chat.presentation.api.mapper.ChatMapper;
 import com.ssambbong.gymjjak.global.application.auth.port.in.AuthenticateAccessTokenUseCase;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.global.presentation.security.JwtAuthenticationConverter;
@@ -46,6 +47,9 @@ class ChatRoomControllerTest {
 
     @MockitoBean
     private ChatRoomUseCase chatRoomUseCase;
+
+    @MockitoBean
+    private ChatMapper chatMapper;
 
     @MockitoBean
     private AuthenticateAccessTokenUseCase authenticateAccessTokenUseCase;

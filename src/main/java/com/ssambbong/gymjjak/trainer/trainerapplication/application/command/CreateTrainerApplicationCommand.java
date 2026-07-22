@@ -9,6 +9,10 @@ public record CreateTrainerApplicationCommand(
         // 트레이너 신청 요청한 사용자 ID
         Long applicantUserId,
 
+        // 신청 대상 조직 ID
+        // 조직 도메인에서 선택된 organizationId
+        List<Long> organizationIds,
+
         // 프로필 이미지 file
         UploadedFileMetadataCommand profileImageFile,
 
@@ -31,6 +35,8 @@ public record CreateTrainerApplicationCommand(
                     "applicantUserId는 1 이상이어야 합니다."
             );
         }
+
+        organizationIds = normalizeOrganizationIds(organizationIds);
 
         if (certificateFile == null) {
             throw new InvalidTrainerApplicationException(
@@ -72,5 +78,32 @@ public record CreateTrainerApplicationCommand(
         return values.stream()
                 .map(String::trim)
                 .toList();
+    }
+
+    private static List<Long> normalizeOrganizationIds(
+            List<Long> organizationIds
+    ) {
+        if (organizationIds == null || organizationIds.isEmpty()) {
+            throw new InvalidTrainerApplicationException(
+                    "신청 대상 조직은 하나 이상이어야 합니다."
+            );
+        }
+
+        // null or 0 이하는 예외
+        if (organizationIds.stream().anyMatch(
+                organizationId -> organizationId == null || organizationId <= 0
+        )) {
+            throw new InvalidTrainerApplicationException(
+                    "신청 대상 조직 ID는 1 이상이어야 합니다."
+            );
+        }
+
+        if (organizationIds.size() != organizationIds.stream().distinct().count()) {
+            throw new InvalidTrainerApplicationException(
+                    "신청 대상 조직 ID는 중복될 수 없습니다."
+            );
+        }
+
+        return List.copyOf(organizationIds);
     }
 }

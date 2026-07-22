@@ -1,8 +1,8 @@
 package com.ssambbong.gymjjak.report.infrastructure.persistence;
 
 import com.ssambbong.gymjjak.report.application.policy.ReportTargetOwnerPolicy;
-import com.ssambbong.gymjjak.report.application.port.UserProfileView;
-import com.ssambbong.gymjjak.report.application.port.UserQueryPort;
+import com.ssambbong.gymjjak.report.application.port.user.UserProfileView;
+import com.ssambbong.gymjjak.report.application.port.user.UserQueryPort;
 import com.ssambbong.gymjjak.report.application.query.*;
 import com.ssambbong.gymjjak.report.domain.exception.ReportGroupNotFoundException;
 import com.ssambbong.gymjjak.report.domain.model.*;
@@ -55,6 +55,14 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     @Transactional(readOnly = true)
     public Optional<ReportGroup> findById(Long reportGroupId) {
         return reportGroupRepository.findById(reportGroupId)
+                .map(reportGroupPersistenceMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ReportGroup> findActiveById(Long reportGroupId) {
+        // soft delete 안된 신고그룹 조회
+        return reportGroupRepository.findByReportGroupIdAndDeletedAtIsNull(reportGroupId)
                 .map(reportGroupPersistenceMapper::toDomain);
     }
 
@@ -251,6 +259,7 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
             case COMMENT -> fallbackSnapshot(entity, "댓글");
             case FEEDBACK -> fallbackSnapshot(entity, "피드백");
             case TRAINER_REVIEW -> fallbackSnapshot(entity, "트레이너 리뷰");
+            case CHAT -> fallbackSnapshot(entity, "채팅");
         };
     }
 
@@ -309,7 +318,7 @@ public class ReportGroupRepositoryAdapter implements ReportGroupRepository {
     private ReportNavigationType resolveNavigationType(ReportTargetType targetType) {
         return switch (targetType) {
             case PT_COURSE, POST, FEEDBACK -> ReportNavigationType.PAGE;
-            case COMMENT, TRAINER_REVIEW -> ReportNavigationType.MODAL;
+            case COMMENT, TRAINER_REVIEW, CHAT -> ReportNavigationType.MODAL;
         };
     }
 }

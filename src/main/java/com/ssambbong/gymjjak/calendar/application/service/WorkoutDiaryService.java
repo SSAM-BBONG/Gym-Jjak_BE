@@ -2,21 +2,25 @@ package com.ssambbong.gymjjak.calendar.application.service;
 
 import com.ssambbong.gymjjak.calendar.application.command.CreateWorkoutDiaryCommand;
 import com.ssambbong.gymjjak.calendar.application.command.UpdateWorkoutDiaryCommand;
+import com.ssambbong.gymjjak.calendar.application.command.WorkoutDiarySetCommand;
 import com.ssambbong.gymjjak.calendar.application.port.in.WorkoutDiaryUsecase;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarCacheEvictionPort;
+import com.ssambbong.gymjjak.calendar.application.port.out.CalendarExercisePort;
 import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
-import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPortToCategory;
+import com.ssambbong.gymjjak.calendar.application.result.CalendarExerciseSnapshot;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarErrorCode;
 import com.ssambbong.gymjjak.calendar.domain.exception.CalendarException;
 import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiary;
+import com.ssambbong.gymjjak.calendar.domain.model.WorkoutDiarySet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -25,127 +29,114 @@ import java.time.LocalDate;
 public class WorkoutDiaryService implements WorkoutDiaryUsecase {
 
     private final WorkoutDiaryPort workoutDiaryPort;
-    private final WorkoutDiaryPortToCategory workoutDiaryPortToCategory;
-    private final CacheManager cacheManager;
+    private final CalendarExercisePort calendarExercisePort;
+    private final CalendarCacheEvictionPort calendarCacheEvictionPort;
 
     @Override
-    public Long createWorkoutDiary(
-            Long userId,
-            CreateWorkoutDiaryCommand command
-    ) {
-
+    public Long createWorkoutDiary(Long userId, CreateWorkoutDiaryCommand command) {
         log.debug("event=workoutDiary_create_start userId={}", userId);
 
-        if (userId == null) {
-            throw new CalendarException(CalendarErrorCode.USER_ID_REQUIRED);
-        }
-
-        if (command.diaryDate() == null) {
-            throw new CalendarException(CalendarErrorCode.DIARY_DATE_REQUIRED);
-        }
-
-        if (workoutDiaryPort.existsByUserIdAndDiaryDate(userId, command.diaryDate())) {
-            throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
-        }
-
-        Long categoryId = workoutDiaryPortToCategory.findCategoryIdByName(
-                command.categoryName()
+        CalendarExerciseSnapshot exercise = calendarExercisePort.findExerciseByIdAndPart(
+                command.exerciseId(),
+                command.part()
         );
 
         WorkoutDiary workoutDiary = WorkoutDiary.create(
                 userId,
-                categoryId,
-                command.title(),
-                command.content(),
-                command.diaryDate()
+                command.diaryDate(),
+                command.part(),
+                command.exerciseId(),
+                exercise.exerciseName(),
+                toDomainSets(command.sets())
         );
 
-        try {
-            Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
+        Long workoutDiaryId = workoutDiaryPort.saveWorkoutDiary(workoutDiary);
+        evictMonthAfterCommit(userId, command.diaryDate());
 
-            evictCalendarMonthCache(userId, command.diaryDate());
-
-            log.debug(
-                    "event=workoutDiary_create_succeed userId={} workoutDiaryId={}",
-                    userId,
-                    workoutDiaryId
-            );
-
-            return workoutDiaryId;
-        } catch (DataIntegrityViolationException ex) {
-            throw new CalendarException(CalendarErrorCode.DIARY_ALREADY_EXISTS);
-        }
+        log.debug("event=workoutDiary_create_succeed userId={} workoutDiaryId={}", userId, workoutDiaryId);
+        return workoutDiaryId;
     }
 
     @Override
-    public void updateWorkoutDiary(
-            Long userId,
-            Long workoutDiaryId,
-            UpdateWorkoutDiaryCommand command
-    ) {
-
+    public void updateWorkoutDiary(Long userId, Long workoutDiaryId, UpdateWorkoutDiaryCommand command) {
         log.debug("event=workoutDiary_update_start userId={}", userId);
 
-        LocalDate diaryDate = workoutDiaryPort.findDiaryDateByUserIdAndWorkoutDiaryId(
-                userId,
-                workoutDiaryId
+        LocalDate diaryDate = workoutDiaryPort.findDiaryDateByUserIdAndWorkoutDiaryId(userId, workoutDiaryId);
+
+        CalendarExerciseSnapshot exercise = calendarExercisePort.findExerciseByIdAndPart(
+                command.exerciseId(),
+                command.part()
         );
 
-        Long categoryId = workoutDiaryPortToCategory.findCategoryIdByName(command.categoryName());
+        WorkoutDiary workoutDiary = WorkoutDiary.create(
+                userId,
+                diaryDate,
+                command.part(),
+                command.exerciseId(),
+                exercise.exerciseName(),
+                toDomainSets(command.sets())
+        );
 
         workoutDiaryPort.updateWorkoutDiary(
                 userId,
                 workoutDiaryId,
-                categoryId,
-                command.title(),
-                command.content()
+                workoutDiary.getExerciseId(),
+                workoutDiary.getPart(),
+                workoutDiary.getExercise(),
+                workoutDiary.getSets()
         );
 
-        evictCalendarMonthCache(userId, diaryDate);
-
+        evictMonthAfterCommit(userId, diaryDate);
         log.debug("event=workoutDiary_update_succeed userId={}", userId);
     }
 
     @Override
-    public void deleteWorkoutDiary(
-            Long userId,
-            Long workoutDiaryId
-    ) {
-        LocalDate diaryDate = workoutDiaryPort.findDiaryDateByUserIdAndWorkoutDiaryId(
-                userId,
-                workoutDiaryId
-        );
+    public void deleteWorkoutDiary(Long userId, Long workoutDiaryId) {
+        LocalDate diaryDate = workoutDiaryPort.findDiaryDateByUserIdAndWorkoutDiaryId(userId, workoutDiaryId);
 
         log.debug("event=workoutDiary_delete_start userId={}", userId);
 
-        boolean exists = workoutDiaryPort.existsByIdAndUserId(
-                workoutDiaryId,
-                userId
-        );
-        if (!exists) {
+        if (!workoutDiaryPort.existsByIdAndUserId(workoutDiaryId, userId)) {
             throw new CalendarException(CalendarErrorCode.DIARY_NOT_FOUND);
         }
-        workoutDiaryPort.deleteWorkoutDiary(
-                userId,
-                workoutDiaryId
-        );
+        workoutDiaryPort.deleteWorkoutDiary(userId, workoutDiaryId);
 
-        evictCalendarMonthCache(userId, diaryDate);
-
+        evictMonthAfterCommit(userId, diaryDate);
         log.debug("event=workoutDiary_delete_succeed userId={}", userId);
     }
 
-    private void evictCalendarMonthCache(Long userId, LocalDate diaryDate) {
-        String key = "user:%d:year:%d:month:%d".formatted(
-                userId,
-                diaryDate.getYear(),
-                diaryDate.getMonthValue()
-        );
-
-        Cache cache = cacheManager.getCache("calendarMonth");
-
-        if (cache != null) {
-            cache.evict(key);
+    private List<WorkoutDiarySet> toDomainSets(List<WorkoutDiarySetCommand> sets) {
+        if (sets == null) {
+            return List.of();
         }
+        return sets.stream()
+                .map(this::toDomainSet)
+                .toList();
+    }
+
+    private WorkoutDiarySet toDomainSet(WorkoutDiarySetCommand set) {
+        if (set == null) {
+            return null;
+        }
+        return WorkoutDiarySet.create(
+                set.setOrder(),
+                set.weight(),
+                set.reps()
+        );
+    }
+
+    private void evictMonthAfterCommit(Long userId, LocalDate date) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            calendarCacheEvictionPort.evictMonth(userId, date);
+                        }
+                    }
+            );
+            return;
+        }
+        calendarCacheEvictionPort.evictMonth(userId, date);
     }
 }

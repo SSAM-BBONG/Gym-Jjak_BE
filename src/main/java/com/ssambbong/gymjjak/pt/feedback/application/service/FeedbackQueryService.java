@@ -1,5 +1,8 @@
 package com.ssambbong.gymjjak.pt.feedback.application.service;
 
+import com.ssambbong.gymjjak.file.application.result.FileUrlResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUrlUseCase;
+import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtCurriculumQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.PtReservationQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
@@ -29,6 +32,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
     private final PtReservationQueryPort ptReservationQueryPort;
     private final PtCurriculumQueryPort ptCurriculumQueryPort;
     private final TrainerQueryPort trainerQueryPort;
+    private final FileUrlUseCase fileUrlUseCase;
 
     @Override
     public List<FeedbackListView> findFeedbacksByReservation(Long userId, Long ptReservationId) {
@@ -45,9 +49,11 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         List<PtCurriculumQueryPort.CurriculumSummary> curricula =
                 ptCurriculumQueryPort.findAllByPtCourseId(reservation.ptCourseId());
 
-        // 4. ptCurriculumId 기준으로 피드백 목록을 Map
+        // 4. 해당 유저의 코스 전체 세션 예약 ID 조회 후 피드백 Map 구성
+        List<Long> reservationIds = ptReservationQueryPort.findReservationIdsByUserIdAndPtCourseId(
+                reservation.userId(), reservation.ptCourseId());
         Map<Long, Feedback> feedbackMap =
-                feedbackRepository.findAllByPtReservationId(ptReservationId)
+                feedbackRepository.findAllByPtReservationIds(reservationIds)
                         .stream()
                         .collect(Collectors.toMap(
                                 Feedback::getPtCurriculumId,
@@ -55,9 +61,20 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
                                 (a, b) -> a   // 중복 시 먼저 저장된 거 유지
                         ));
 
-        // 5. 커리큘럼별 피드백 매핑
+        // 5. 예약 ID → 예약 시작일 맵 조회 (피드백 회차별 날짜 표시용)
+        Map<Long, java.time.LocalDate> reservationDateMap =
+                ptReservationQueryPort.findReservationStartDatesByUserIdAndPtCourseId(
+                        reservation.userId(), reservation.ptCourseId());
+
+        // 6. 커리큘럼별 피드백 매핑
         List<FeedbackListView> result = curricula.stream()
-                .map(c -> toListView(c, feedbackMap.get(c.ptCurriculumId())))
+                .map(c -> {
+                    Feedback feedback = feedbackMap.get(c.ptCurriculumId());
+                    java.time.LocalDate reservedStartAt = (feedback != null)
+                            ? reservationDateMap.get(feedback.getPtReservationId())
+                            : null;
+                    return toListView(c, feedback, reservedStartAt);
+                })
                 .toList();
 
         log.info("event=feedback_list_query_complete ptReservationId={} curriculumCount={}", ptReservationId, result.size());
@@ -73,8 +90,10 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         Feedback feedback = feedbackRepository.findById(feedbackId)
                 .orElseThrow(FeedbackNotFoundException::new);
 
-        // 2. path param의 ptReservationId와 피드백의 예약 ID 일치 확인
-        if (!feedback.getPtReservationId().equals(ptReservationId)) {
+        // 2. path param 예약과 피드백 예약이 같은 코스인지 확인
+        PtReservationQueryPort.ReservationInfo pathReservation = ptReservationQueryPort.findById(ptReservationId);
+        PtReservationQueryPort.ReservationInfo feedbackReservation = ptReservationQueryPort.findById(feedback.getPtReservationId());
+        if (!pathReservation.ptCourseId().equals(feedbackReservation.ptCourseId())) {
             throw new FeedbackNotFoundException();
         }
 
@@ -85,11 +104,11 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         PtCurriculumQueryPort.CurriculumSummary curriculum =
                 ptCurriculumQueryPort.findById(feedback.getPtCurriculumId());
 
-        // 5. 미디어 목록 조회
+        // 5. 미디어 목록 조회 (FEEDBACK_VIDEO는 public → requesterId 없이 URL 변환)
         List<MediaView> mediaList =
                 feedbackMediaRepository.findAllByFeedbackId(feedbackId)
                         .stream()
-                        .map(m -> new MediaView(m.getId(), m.getMediaType(), m.getFileId()))
+                        .map(m -> new MediaView(m.getId(), m.getMediaType(), resolveMediaUrl(m.getFileId(), userId)))
                         .toList();
 
         log.info("event=feedback_detail_query_complete feedbackId={}", feedbackId);
@@ -131,9 +150,25 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         }
     }
 
-    // 커리큘럼 + 피드백(nullable) → FeedbackListView 변환
+    // isAdmin=true로 소유권 검증 우회
+    private String resolveMediaUrl(Long fileId, Long userId) {
+        if (fileId == null) return null;
+        try {
+            FileUrlResult file = fileUrlUseCase.getUrl(fileId, userId, true);
+            return file.url();
+        } catch (FileNotFoundException e) {
+            log.warn("event=feedback_media_file_not_found fileId={}", fileId);
+            return null;
+        } catch (RuntimeException e) {
+            log.error("event=feedback_media_url_resolve_failed fileId={}", fileId, e);
+            return null;
+        }
+    }
+
+    // 커리큘럼 + 피드백(nullable) + 예약 시작일(nullable) → FeedbackListView 변환
     private FeedbackListView toListView(PtCurriculumQueryPort.CurriculumSummary curriculum,
-                                        Feedback feedback) {
+                                        Feedback feedback,
+                                        java.time.LocalDate reservedStartAt) {
         FeedbackSummary summary = (feedback == null) ? null : new FeedbackSummary(
                 feedback.getId(),
                 feedback.getContent(),
@@ -143,6 +178,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
                 curriculum.ptCurriculumId(),
                 curriculum.sessionNo(),
                 curriculum.title(),
+                reservedStartAt,
                 summary
         );
     }
