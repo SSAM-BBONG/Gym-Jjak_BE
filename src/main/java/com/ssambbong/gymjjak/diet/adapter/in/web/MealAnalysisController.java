@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.diet.adapter.in.web.request.MealAnalysisRequest;
 import com.ssambbong.gymjjak.diet.adapter.in.web.request.UpdateMealAnalysisRequest;
 import com.ssambbong.gymjjak.diet.adapter.in.web.response.*;
 import com.ssambbong.gymjjak.diet.application.command.MealAnalysisCommand;
+import com.ssambbong.gymjjak.diet.application.command.MealImageMetadataCommand;
 import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.in.MealAnalysisUseCase;
 import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
@@ -111,7 +112,10 @@ public class MealAnalysisController {
 
     private MealAnalysisCommand toCommand(Long userId, MealAnalysisRequest request) {
         return new MealAnalysisCommand(userId, mealTypeMapper.toEnum(request.mealType()), request.mealTime(),
-                request.menu().trim(), request.kcal(), request.carbohydrate(), request.protein(), request.fat(), request.fileId());
+                request.menu().trim(), request.kcal(), request.carbohydrate(), request.protein(), request.fat(),
+                request.file() == null ? null : new MealImageMetadataCommand(
+                        request.file().fileKey(), request.file().originalName(),
+                        request.file().contentType(), request.file().fileSize()));
     }
 
     private UpdateMealAnalysisCommand toUpdateCommand(Long userId, UpdateMealAnalysisRequest request) {
@@ -143,8 +147,10 @@ public class MealAnalysisController {
                 request.isProteinPresent(),
                 request.getFat(),
                 request.isFatPresent(),
-                request.getFileId(),
-                request.isFileIdPresent()
+                request.getFile() == null ? null : new MealImageMetadataCommand(
+                        request.getFile().fileKey(), request.getFile().originalName(),
+                        request.getFile().contentType(), request.getFile().fileSize()),
+                request.isFilePresent()
         );
     }
 
