@@ -25,7 +25,7 @@ public record PtRecommendationRequest(
         @Schema(description = "통증/부상 여부")
         boolean hasPain,
 
-        @Schema(description = "통증 부위 (무릎/허리/어깨/손목/발목 등, '그 외 부위' 선택 시 미입력)")
+        @Schema(description = "통증 부위 (무릎/허리/어깨/손목/발목, '그 외 부위' 선택 시 미입력)")
         String painArea,
 
         @Schema(description = "통증 발생 시기 (hasPain=true일 때 필수)")

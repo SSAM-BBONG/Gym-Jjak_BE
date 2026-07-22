@@ -1,14 +1,14 @@
 package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response;
 
+import com.ssambbong.gymjjak.global.presentation.api.common.PartTypeNameMapper;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 
 public record PopularPtCourseResponse(
         Long ptCourseId,
         String title,
         int price,
         String thumbnailUrl,
-        PartType part,
+        String part,
         String trainerName,
         String roadAddress
 ) {
@@ -18,7 +18,7 @@ public record PopularPtCourseResponse(
                 view.title(),
                 view.price(),
                 view.thumbnailUrl(),
-                view.part(),
+                PartTypeNameMapper.toKoreanName(view.part()),
                 view.trainerName(),
                 view.roadAddress()
         );
