@@ -250,3 +250,6 @@ src/main/resources/db/performance-seed.sql
 
 # 루트 로컬 작업 지침 (개인용, 커밋 제외)
 /CLAUDE.md
+
+# Local Git worktrees
+.worktrees/
