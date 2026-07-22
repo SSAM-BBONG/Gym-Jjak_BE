@@ -113,6 +113,7 @@ public interface PtCourseQueryUseCase {
     // 수강생 1명의 예약 정보
     record CourseReservationView(
             Long ptReservationId,
+            Long userId,
             String nickname,
             PtReservationStatus status,
             LocalDate lastPtDate,      // 가장 최근 완료 회차의 종료일, 없으면 null
