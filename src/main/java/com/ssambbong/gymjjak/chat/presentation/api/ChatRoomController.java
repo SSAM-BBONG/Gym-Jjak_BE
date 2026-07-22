@@ -96,8 +96,10 @@ public class ChatRoomController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody @Valid CreateChatRoomRequest request
     ) {
+        Long targetUserId = "TRAINER".equals(authUser.role()) ? request.userId() : authUser.userId();
         CreateChatRoomCommand command = new CreateChatRoomCommand(
                 authUser.userId(),
+                targetUserId,
                 request.ptCourseId()
         );
 
