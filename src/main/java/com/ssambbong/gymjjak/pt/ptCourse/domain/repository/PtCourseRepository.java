@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.pt.ptCourse.domain.repository;
 
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 
@@ -19,6 +20,9 @@ public interface PtCourseRepository {
 
     // VISIBLE 상태 전체 목록 조회
     List<PtCourse> findAllVisible();
+
+    // PT추천 1차 필터링 — 부위 조건으로 VISIBLE 목록 조회
+    List<PtCourse> findAllVisibleByParts(List<PartType> parts);
 
     // 상태 변경 (blind/unblind/delete)
     void update(PtCourse ptCourse);
