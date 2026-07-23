@@ -46,9 +46,11 @@ public class ChatbotMessageQueryService implements ChatbotMessageQueryUseCase {
         );
         boolean hasNext = rows.size() > query.size();
         List<ChatbotMessage> retainedRows = new ArrayList<>(rows.subList(0, Math.min(rows.size(), query.size())));
-        ChatbotMessage oldestRetainedMessage = retainedRows.get(retainedRows.size() - 1);
         String nextCursor = hasNext
-                ? cursorCodec.encode(oldestRetainedMessage.createdAt(), oldestRetainedMessage.messageId())
+                ? cursorCodec.encode(
+                        retainedRows.get(retainedRows.size() - 1).createdAt(),
+                        retainedRows.get(retainedRows.size() - 1).messageId()
+                )
                 : null;
 
         Collections.reverse(retainedRows);

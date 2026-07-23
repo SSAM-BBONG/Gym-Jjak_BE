@@ -83,6 +83,20 @@ class ChatbotMessageQueryServiceTest {
     }
 
     @Test
+    void returnsEmptyHistoryWithoutNextCursorWhenOwnedSessionHasNoMessages() {
+        ownedSession();
+        when(messageRepository.findHistory(SESSION_ID, null, null, 21)).thenReturn(List.of());
+
+        ChatbotMessageHistoryResult result = service.findMessages(
+                new FindChatbotMessagesQuery(USER_ID, SESSION_ID, null, 20)
+        );
+
+        assertThat(result.messages()).isEmpty();
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.nextCursor()).isNull();
+    }
+
+    @Test
     void throwsSessionNotFoundWithoutQueryingMessageHistory() {
         when(sessionRepository.findBySessionId(SESSION_ID)).thenReturn(Optional.empty());
 
