@@ -2,6 +2,7 @@ spring:
   application:
     name: Gym-Jjak
 
+# hi
 #  cache:
 #    type: redis
 #
