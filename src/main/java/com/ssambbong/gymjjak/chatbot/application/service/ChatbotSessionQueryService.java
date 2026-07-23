@@ -4,8 +4,8 @@ import com.ssambbong.gymjjak.chatbot.application.query.FindChatbotSessionsQuery;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotSessionListItem;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotSessionListResult;
 import com.ssambbong.gymjjak.chatbot.application.usecase.ChatbotSessionQueryUseCase;
-import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.ChatbotSessionListRow;
-import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.SpringDataChatbotSessionRepository;
+import com.ssambbong.gymjjak.chatbot.domain.model.ChatbotSessionSummary;
+import com.ssambbong.gymjjak.chatbot.domain.repository.ChatbotSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,20 +16,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatbotSessionQueryService implements ChatbotSessionQueryUseCase {
 
-    private final SpringDataChatbotSessionRepository sessionRepository;
+    private final ChatbotSessionRepository sessionRepository;
     private final ChatbotSessionCursorCodec cursorCodec;
 
     @Override
     public ChatbotSessionListResult findSessions(FindChatbotSessionsQuery query) {
         ChatbotSessionCursorCodec.CursorPayload cursor = decodeCursor(query.cursor());
-        List<ChatbotSessionListRow> rows = sessionRepository.findSessionList(
+        List<ChatbotSessionSummary> summaries = sessionRepository.findSessionSummaries(
                 query.userId(),
                 cursor == null ? null : cursor.lastActivityAt(),
                 cursor == null ? null : cursor.sessionId(),
                 query.size() + 1
         );
-        boolean hasNext = rows.size() > query.size();
-        List<ChatbotSessionListItem> sessions = rows.stream()
+        boolean hasNext = summaries.size() > query.size();
+        List<ChatbotSessionListItem> sessions = summaries.stream()
                 .limit(query.size())
                 .map(this::toListItem)
                 .toList();
@@ -48,9 +48,9 @@ public class ChatbotSessionQueryService implements ChatbotSessionQueryUseCase {
         return cursorCodec.decode(cursor);
     }
 
-    private ChatbotSessionListItem toListItem(ChatbotSessionListRow row) {
+    private ChatbotSessionListItem toListItem(ChatbotSessionSummary summary) {
         return new ChatbotSessionListItem(
-                row.getSessionId(), row.getTitle(), row.getLastMessage(), row.getLastActivityAt()
+                summary.sessionId(), summary.title(), summary.lastMessage(), summary.lastActivityAt()
         );
     }
 }

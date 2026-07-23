@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.chatbot.application.query.FindChatbotSessionsQuery;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotSessionListItem;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotSessionListResult;
+import com.ssambbong.gymjjak.chatbot.domain.model.ChatbotSessionSummary;
+import com.ssambbong.gymjjak.chatbot.domain.repository.ChatbotSessionRepository;
 import com.ssambbong.gymjjak.chatbot.exception.InvalidChatbotSessionCursorException;
-import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.ChatbotSessionListRow;
-import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.SpringDataChatbotSessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,8 +18,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -27,9 +25,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ChatbotSessionQueryServiceTest {
 
-    @Mock private SpringDataChatbotSessionRepository sessionRepository;
-    @Mock private ChatbotSessionListRow row;
-    @Mock private ChatbotSessionListRow nextRow;
+    @Mock private ChatbotSessionRepository sessionRepository;
 
     private ChatbotSessionQueryService service;
 
@@ -44,11 +40,10 @@ class ChatbotSessionQueryServiceTest {
     @Test
     void mapsSessionRowAndReturnsNoNextCursorWhenRowsFitRequestedSize() {
         LocalDateTime lastActivityAt = LocalDateTime.of(2026, 7, 23, 10, 0);
-        when(row.getSessionId()).thenReturn("session-1");
-        when(row.getTitle()).thenReturn("first question");
-        when(row.getLastMessage()).thenReturn("latest answer");
-        when(row.getLastActivityAt()).thenReturn(lastActivityAt);
-        when(sessionRepository.findSessionList(7L, null, null, 21)).thenReturn(List.of(row));
+        ChatbotSessionSummary summary = new ChatbotSessionSummary(
+                "session-1", "first question", "latest answer", lastActivityAt
+        );
+        when(sessionRepository.findSessionSummaries(7L, null, null, 21)).thenReturn(List.of(summary));
 
         ChatbotSessionListResult result = service.findSessions(new FindChatbotSessionsQuery(7L, null, 20));
 
@@ -57,16 +52,19 @@ class ChatbotSessionQueryServiceTest {
         ));
         assertThat(result.hasNext()).isFalse();
         assertThat(result.nextCursor()).isNull();
+        verify(sessionRepository).findSessionSummaries(7L, null, null, 21);
     }
 
     @Test
     void returnsRequestedSizeAndNextCursorWhenAnExtraRowExists() {
         LocalDateTime firstActivityAt = LocalDateTime.of(2026, 7, 23, 10, 0);
-        when(row.getSessionId()).thenReturn("session-2");
-        when(row.getTitle()).thenReturn("first question");
-        when(row.getLastMessage()).thenReturn("latest answer");
-        when(row.getLastActivityAt()).thenReturn(firstActivityAt);
-        when(sessionRepository.findSessionList(7L, null, null, 2)).thenReturn(List.of(row, nextRow));
+        ChatbotSessionSummary summary = new ChatbotSessionSummary(
+                "session-2", "first question", "latest answer", firstActivityAt
+        );
+        ChatbotSessionSummary nextSummary = new ChatbotSessionSummary(
+                "session-1", "older question", "older answer", firstActivityAt.minusMinutes(1)
+        );
+        when(sessionRepository.findSessionSummaries(7L, null, null, 2)).thenReturn(List.of(summary, nextSummary));
 
         ChatbotSessionListResult result = service.findSessions(new FindChatbotSessionsQuery(7L, null, 1));
 
@@ -75,7 +73,7 @@ class ChatbotSessionQueryServiceTest {
         ));
         assertThat(result.hasNext()).isTrue();
         assertThat(result.nextCursor()).isNotBlank();
-        verify(sessionRepository).findSessionList(7L, null, null, 2);
+        verify(sessionRepository).findSessionSummaries(7L, null, null, 2);
     }
 
     @Test
