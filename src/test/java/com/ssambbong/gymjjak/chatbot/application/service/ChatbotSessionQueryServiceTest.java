@@ -85,4 +85,12 @@ class ChatbotSessionQueryServiceTest {
 
         verifyNoInteractions(sessionRepository);
     }
+
+    @Test
+    void throwsInvalidCursorExceptionWithoutQueryingRepositoryForJsonNullCursor() {
+        assertThatThrownBy(() -> service.findSessions(new FindChatbotSessionsQuery(7L, "bnVsbA", 20)))
+                .isInstanceOf(InvalidChatbotSessionCursorException.class);
+
+        verifyNoInteractions(sessionRepository);
+    }
 }

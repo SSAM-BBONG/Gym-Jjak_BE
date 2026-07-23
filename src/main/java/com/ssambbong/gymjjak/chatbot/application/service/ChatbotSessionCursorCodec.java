@@ -30,7 +30,8 @@ public class ChatbotSessionCursorCodec {
         try {
             byte[] decoded = Base64.getUrlDecoder().decode(cursor);
             CursorPayload payload = objectMapper.readValue(decoded, CursorPayload.class);
-            if (payload.lastActivityAt() == null || payload.sessionId() == null || payload.sessionId().isBlank()) {
+            if (payload == null || payload.lastActivityAt() == null
+                    || payload.sessionId() == null || payload.sessionId().isBlank()) {
                 throw new InvalidChatbotSessionCursorException();
             }
             return payload;
