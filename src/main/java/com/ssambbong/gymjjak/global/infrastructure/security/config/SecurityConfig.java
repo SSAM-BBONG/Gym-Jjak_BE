@@ -98,6 +98,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/pt-recommendations").hasAuthority("USER")
 
                         // PT API
+                        .requestMatchers(HttpMethod.GET, "/api/trainer-profiles/*/reviews").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/trainer-profiles/*/reviews/summary").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations").hasAnyAuthority("USER", "TRAINER")
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations/*/reviews").hasAnyAuthority("USER", "TRAINER")
