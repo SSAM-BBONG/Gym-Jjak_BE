@@ -118,10 +118,10 @@ public class PtCourseController {
 
     // PT 강습 수정 (트레이너 전용)
     @PreAuthorize("hasAuthority('TRAINER')")
-    @Operation(summary = "PT 강습 수정", description = "트레이너가 본인 PT 강습 정보를 수정한다.")
+    @Operation(summary = "PT 강습 수정", description = "트레이너가 본인 PT 강습 정보를 수정하고, 수정된 최신 상태(썸네일 URL 포함)를 반환한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공",
-                    content = @Content(schema = @Schema(implementation = UpdatePtCourseResponse.class))),
+                    content = @Content(schema = @Schema(implementation = PtCourseDetailResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 또는 수강생이 있어 커리큘럼 수정 불가",
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "403", description = "본인 강습 아님",
@@ -130,14 +130,15 @@ public class PtCourseController {
                     content = @Content(schema = @Schema()))
     })
     @PatchMapping("/{ptCourseId}")
-    public ResponseEntity<GlobalApiResponse<UpdatePtCourseResponse>> updatePtCourse(
+    public ResponseEntity<GlobalApiResponse<PtCourseDetailResponse>> updatePtCourse(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long ptCourseId,
             @RequestBody @Valid UpdatePtCourseRequest request
     ) {
         Long updatedId = ptCourseCommandUseCase.updatePtCourse(request.toCommand(authUser.userId(), ptCourseId));
-        return ResponseEntity.ok(GlobalApiResponse.ok(
-                PtCourseResponseCode.PT_COURSE_UPDATED, new UpdatePtCourseResponse(updatedId)));
+        PtCourseDetailResponse response = PtCourseDetailResponse.from(
+                ptCourseQueryUseCase.findPtCourseDetail(updatedId));
+        return ResponseEntity.ok(GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_UPDATED, response));
     }
 
     // PT 강습 상태 변경
@@ -289,7 +290,7 @@ public class PtCourseController {
 
 
     // 예약 가능 날짜 조회
-    @Operation(summary = "예약 가능 날짜 조회", description = "오늘부터 30일 내 예약 가능한 날짜 목록을 조회한다.")
+    @Operation(summary = "예약 가능 날짜 조회", description = "오늘부터 1년 내 예약 가능한 날짜 목록을 조회한다.")
     @GetMapping("/{ptCourseId}/available-dates")
     public ResponseEntity<GlobalApiResponse<AvailableDatesResponse>> findAvailableDates(
             @PathVariable Long ptCourseId

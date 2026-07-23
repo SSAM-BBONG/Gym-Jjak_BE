@@ -47,6 +47,7 @@ public interface PtReservationQueryUseCase {
             PtReservationStatus status,
             int progressCount,
             int totalSessionCount,
+            LocalDateTime reservedStartAt,
             List<CurriculumView> curriculums   // 회차별 커리큘럼 + 피드백 여부
     ) {}
 

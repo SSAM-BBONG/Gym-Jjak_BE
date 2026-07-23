@@ -2,6 +2,7 @@ package com.ssambbong.gymjjak.global.infrastructure.security.config;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.oauth.OAuth2SuccessHandler;
 import com.ssambbong.gymjjak.global.presentation.security.JwtAuthenticationFilter;
+import com.ssambbong.gymjjak.chatbot.presentation.internal.ChatbotInternalApiKeyFilter;
 import com.ssambbong.gymjjak.global.presentation.security.handler.CustomAccessDeniedHandler;
 import com.ssambbong.gymjjak.global.presentation.security.handler.CustomAuthenticationEntryPoint;
 import com.ssambbong.gymjjak.global.infrastructure.security.jwt.JwtProperties;
@@ -34,6 +35,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ChatbotInternalApiKeyFilter chatbotInternalApiKeyFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
@@ -81,6 +83,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/token/validate").authenticated()
 
+                        // FastAPI 서버 간 챗봇 도구 API: 별도 API 키 필터가 인증을 수행함
+                        .requestMatchers("/internal/chatbot/**").permitAll()
+
                         .requestMatchers("/api/onboarding/**")
                         .hasAnyAuthority("USER", "ADMIN")
                         
@@ -98,6 +103,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/pt-recommendations").hasAuthority("USER")
 
                         // PT API
+                        .requestMatchers(HttpMethod.GET, "/api/trainer-profiles/*/reviews").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/trainer-profiles/*/reviews/summary").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pt-courses/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations").hasAnyAuthority("USER", "TRAINER")
                         .requestMatchers(HttpMethod.POST, "/api/pt-courses/*/reservations/*/reviews").hasAnyAuthority("USER", "TRAINER")
@@ -216,6 +223,11 @@ public class SecurityConfig {
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
+                )
+
+                .addFilterBefore(
+                        chatbotInternalApiKeyFilter,
+                        JwtAuthenticationFilter.class
                 )
 
                 // 인증/인가 예외 처리

@@ -467,7 +467,7 @@ Response Body
 
 ## 🚨 신고 API
 
-신고 대상의 타입과 ID, 신고 사유를 전달해 신고를 접수합니다. 같은 대상에 대한 신고는 하나의 `ReportGroup`으로 관리되며, 신고 그룹이 처음 생성될 때 대상의 스냅샷 정보도 함께 저장됩니다.
+신고 대상의 타입과 ID, 신고 사유를 전달해 신고를 접수합니다. 인증된 `USER`, `TRAINER`, `ORGANIZATION`, `ADMIN` 권한이 사용할 수 있으며, 로그인한 사용자의 ID는 Access Token의 인증 정보에서 가져옵니다. 같은 대상에 대한 신고는 하나의 `ReportGroup`으로 관리되며, 신고 그룹이 처음 생성될 때 대상의 스냅샷 정보도 함께 저장됩니다.
 
 ### 신고 접수
 
@@ -479,7 +479,7 @@ Request Header
 
 | name | description |
 | --- | --- |
-| `Authorization` | `Bearer {accessToken}` 형식의 인증 토큰입니다. |
+| `Authorization` | `Bearer {accessToken}` 형식의 인증 토큰입니다. `USER`, `TRAINER`, `ORGANIZATION`, `ADMIN` 권한이 필요합니다. |
 | `Content-Type` | `application/json` |
 
 Request Parameter
@@ -499,10 +499,33 @@ Request Body
 
 | name | 설명 |
 | --- | --- |
-| `targetId` | 신고 대상의 ID입니다. 필수이며 양수여야 합니다. |
-| `targetType` | 신고 대상 타입입니다. `PT_COURSE`, `FEEDBACK`, `TRAINER_REVIEW`, `POST`, `COMMENT`, `CHAT` 중 하나입니다. |
-| `reason` | 신고 사유입니다. `SPAM`, `ADVERTISEMENT`, `ABUSE`, `SEXUAL_CONTENT`, `FRAUD`, `PRIVACY_EXPOSURE`, `ETC` 중 하나입니다. |
+| `targetId` | 신고 대상의 ID입니다. 필수입니다. |
+| `targetType` | 신고 대상 타입 enum입니다. 아래 `targetType` enum 목록 중 하나를 전달해야 합니다. |
+| `reason` | 신고 사유 enum입니다. 아래 `reason` enum 목록 중 하나를 전달해야 합니다. |
 | `detail` | 신고 상세 사유입니다. 필수이며 공백일 수 없고 최대 1,000자입니다. |
+
+### `targetType` enum
+
+| 값 | 설명 |
+| --- | --- |
+| `PT_COURSE` | PT 코스 |
+| `TRAINER_REVIEW` | 강사평 |
+| `COMMENT` | 댓글 |
+| `POST` | 게시글 |
+| `FEEDBACK` | 피드백 |
+| `CHAT` | 채팅 |
+
+### `reason` enum
+
+| 값 | 설명 |
+| --- | --- |
+| `SPAM` | 도배 |
+| `ADVERTISEMENT` | 광고 |
+| `ABUSE` | 욕설 |
+| `SEXUAL_CONTENT` | 음란물 |
+| `FRAUD` | 사기 |
+| `PRIVACY_EXPOSURE` | 개인정보 |
+| `ETC` | 기타 |
 
 > 로그인한 사용자의 ID는 Access Token에서 추출합니다. 요청 본문으로 신고자 ID를 전달하지 않습니다.
 
@@ -512,7 +535,7 @@ Request Body
 
 | HTTP 상태 | code | 설명 |
 | --- | --- | --- |
-| `200 OK` | `REPORT_200_1` | 신고 접수 성공 |
+| `200 OK` | `REPORT_200_1` | 신고가 성공적으로 접수됐습니다. |
 
 Response Body
 
@@ -520,10 +543,19 @@ Response Body
 {
   "status": 200,
   "code": "REPORT_200_1",
-  "message": "신고가 성공적으로 접수되었습니다.",
+  "message": "신고가 성공적으로 접수됐습니다.",
   "data": null
 }
 ```
+
+### Response Field
+
+| name | 설명 |
+| --- | --- |
+| `status` | HTTP 응답 상태 코드입니다. |
+| `code` | 신고 접수 성공 코드인 `REPORT_200_1`입니다. |
+| `message` | `신고가 성공적으로 접수됐습니다.` |
+| `data` | 신고 등록 결과로 프론트에 전달하는 데이터가 없으므로 `null`입니다. |
 
 ### 처리 정책
 
@@ -536,7 +568,7 @@ Response Body
 
 | HTTP 상태 | code | message | 설명 |
 | --- | --- | --- | --- |
-| `400 Bad Request` | `COMMON_400` | 잘못된 요청입니다. | 필수값 누락, `targetId`가 0 이하, `detail` 공백 또는 1,000자 초과 |
+| `400 Bad Request` | `COMMON_400` | 잘못된 요청입니다. | `targetId`, `targetType`, `reason`, `detail` 누락 또는 `detail` 공백·1,000자 초과 |
 | `400 Bad Request` | `REPORT_400_4` | 본인이 작성한 대상을 신고할 수 없습니다. | 대상 소유자와 신고자가 같은 경우 |
 | `401 Unauthorized` | `COMMON_401` | 인증이 필요합니다. | Access Token이 없거나 유효하지 않은 경우 |
 | `403 Forbidden` | `COMMON_403` | 접근 권한이 없습니다. | 인증은 되었지만 허용된 권한이 아닌 경우 |
@@ -548,8 +580,10 @@ Response Body
 
 ## 📝 문서 정보
 
-- 업데이트일: `2026-07-21`
+- 업데이트일: `2026-07-23`
 - 변경 사항(요약):
+  - 신고 접수 요청의 `targetType`, `reason` enum 전체 값과 설명을 명시했습니다.
+  - 신고 접수 API의 인증 권한, 요청 필드 제약, 성공 응답 필드를 보완했습니다.
   - 신고 접수 시점에 저장된 대상 스냅샷을 관리자 모달에서 조회하는 `GET /api/reportgroup/{reportGroupId}/snapshot` 명세를 추가했습니다. 🖼️
   - 승인·반려 응답의 `reportId`가 신고자 ID가 아닌 개별 신고 ID를 반환하도록 구현과 문서를 일치시켰습니다.
   - PT 코스 신고의 대상 소유자 ID를 트레이너 프로필 ID가 아닌 사용자 ID 기준으로 정정했습니다.
