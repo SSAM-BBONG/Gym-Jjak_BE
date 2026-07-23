@@ -19,6 +19,8 @@ public interface SpringDataTrainerProfileRepository extends JpaRepository<Traine
 
     Optional<TrainerProfileJpaEntity> findByUserId(Long userId);
 
+    boolean existsByUserIdAndStatus(Long userId, TrainerProfileStatus status);
+
     @Query(value = """
             select
                 result.trainerProfileId as trainerProfileId,
