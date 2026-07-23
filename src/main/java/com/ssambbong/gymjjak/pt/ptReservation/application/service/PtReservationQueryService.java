@@ -128,6 +128,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 derivedStatus,
                 progressCount,
                 totalSessionCount,
+                reservation.getReservedStartAt(),
                 curriculumViews
         );
 

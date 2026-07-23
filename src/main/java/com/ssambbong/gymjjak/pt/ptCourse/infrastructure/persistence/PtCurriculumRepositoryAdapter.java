@@ -62,6 +62,11 @@ public class PtCurriculumRepositoryAdapter implements PtCurriculumRepository {
     }
 
     @Override
+    public void flush() {
+        repository.flush();
+    }
+
+    @Override
     @Transactional
     public int hardDeleteByPtCourseIds(List<Long> ptCourseIds) {
         if (ptCourseIds.isEmpty()) return 0; // 빈 IN절 쿼리 방지

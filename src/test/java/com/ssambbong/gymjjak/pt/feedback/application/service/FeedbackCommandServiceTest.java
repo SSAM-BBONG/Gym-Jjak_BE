@@ -12,6 +12,7 @@ import com.ssambbong.gymjjak.pt.feedback.application.port.TrainerQueryPort;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackUpdateNotAllowedException;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackStatus;
@@ -175,6 +176,28 @@ class FeedbackCommandServiceTest {
 
         // when & then
         assertThrows(FeedbackForbiddenException.class,
+                () -> feedbackCommandService.updateFeedback(defaultUpdateCommand()));
+
+        verify(feedbackRepository, never()).update(any());
+    }
+
+    @Test
+    @DisplayName("완료된 예약의 피드백을 수정하려 하면 FeedbackUpdateNotAllowedException(수정 불가 메시지)이 발생한다")
+    void updateFeedback_reservationCompleted_throwsUpdateNotAllowedException() {
+
+        // given — 세션이 COMPLETED 상태인 예약
+        PtReservationQueryPort.ReservationInfo completedReservation = new PtReservationQueryPort.ReservationInfo(
+                PT_COURSE_ID, TRAINER_PROFILE_ID, USER_ID,
+                PtReservationStatus.COMPLETED, LocalDateTime.of(2099, 1, 1, 0, 0));
+
+        when(feedbackRepository.findById(FEEDBACK_ID)).thenReturn(Optional.of(existingFeedback()));
+        when(ptReservationQueryPort.findById(PT_RESERVATION_ID)).thenReturn(completedReservation);
+        when(trainerQueryPort.findTrainerProfileIdByUserId(USER_ID))
+                .thenReturn(Optional.of(TRAINER_PROFILE_ID));
+
+        // when & then — 삭제 전용 예외(FeedbackReservationCompletedException)가 아니라
+        // 수정 전용 예외가 발생해야 한다 (메시지: "완료된 예약의 피드백은 수정할 수 없습니다.")
+        assertThrows(FeedbackUpdateNotAllowedException.class,
                 () -> feedbackCommandService.updateFeedback(defaultUpdateCommand()));
 
         verify(feedbackRepository, never()).update(any());

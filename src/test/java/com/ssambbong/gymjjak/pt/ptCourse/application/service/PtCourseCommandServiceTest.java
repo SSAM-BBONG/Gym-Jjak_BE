@@ -28,6 +28,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepositor
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -453,6 +454,41 @@ class PtCourseCommandServiceTest {
         // when & then
         assertThrows(PtCourseRequestInvalidException.class,
                 () -> ptCourseCommandService.updatePtCourse(command));
+    }
+
+    @Test
+    @DisplayName("커리큘럼 sessionNo를 다른 값으로 옮기면서 그 번호로 신규 커리큘럼을 추가해도 " +
+            "UNIQUE(course_id, session_no) 충돌 없이 처리된다 (수정을 flush한 뒤 삽입)")
+    void updatePtCourse_reassignsSessionNoAndInsertsNewOne_flushesBeforeInsert() {
+
+        // given — 기존 1회차(id=1L)를 2회차로 옮기고, 1회차 자리에 새 커리큘럼을 추가
+        UpdatePtCourseCommand command = new UpdatePtCourseCommand(
+                1L, 1L,
+                "수정된 PT 강습 제목", "수정된 설명", PartType.BACK, 60000, null,
+                List.of(
+                        new UpdatePtCourseCommand.CurriculumData(1L, 2, "옮겨진 회차", "설명"),
+                        new UpdatePtCourseCommand.CurriculumData(null, 1, "새 1회차", "설명")
+                ),
+                null
+        );
+
+        when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existingPtCourse()));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
+        when(ptReservationCountQueryPort.countStudentsByPtCourseIds(List.of(1L)))
+                .thenReturn(new PtReservationCountQueryPort.StudentCounts(Map.of(1L, 0), Map.of(1L, 0)));
+        when(ptCurriculumRepository.findAllByPtCourseId(1L)).thenReturn(List.of(
+                PtCurriculum.restore(1L, 1L, 1, "기존 1회차", "설명")
+        ));
+        when(ptCurriculumRepository.saveAll(any())).thenReturn(List.of());
+
+        // when
+        ptCourseCommandService.updatePtCourse(command);
+
+        // then — update()가 flush()보다 먼저, flush()가 saveAll()보다 먼저 호출돼야 한다
+        InOrder inOrder = inOrder(ptCurriculumRepository);
+        inOrder.verify(ptCurriculumRepository).update(any(PtCurriculum.class));
+        inOrder.verify(ptCurriculumRepository).flush();
+        inOrder.verify(ptCurriculumRepository).saveAll(any());
     }
 
     @Test
