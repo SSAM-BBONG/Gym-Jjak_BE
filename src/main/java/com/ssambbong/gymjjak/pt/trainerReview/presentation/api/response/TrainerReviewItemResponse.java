@@ -10,7 +10,8 @@ public record TrainerReviewItemResponse(
         String ptCourseTitle,
         int rating,
         String content,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        boolean isMine
 ) {
     public static TrainerReviewItemResponse from(TrainerReviewItem item) {
         return new TrainerReviewItemResponse(
@@ -19,7 +20,8 @@ public record TrainerReviewItemResponse(
                 item.ptCourseTitle(),
                 item.rating(),
                 item.content(),
-                item.createdAt()
+                item.createdAt(),
+                item.isMine()
         );
     }
 }

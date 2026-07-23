@@ -54,7 +54,7 @@ public class ChatRoomController {
         ));
     }
 
-    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @Operation(summary = "전체 안 읽은 메시지 수 조회", description = "내 모든 채팅방의 안 읽은 메시지 총 개수를 조회한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",

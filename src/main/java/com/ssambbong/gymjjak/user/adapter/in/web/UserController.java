@@ -6,6 +6,8 @@ import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdatePasswordRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserProfileRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.PasswordVerificationRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.UpdateUserStatusRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.NicknameAvailabilityRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.PhoneAvailabilityRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.*;
 import com.ssambbong.gymjjak.user.application.command.UpdatePasswordCommand;
 import com.ssambbong.gymjjak.user.application.command.UpdateProfileCommand;
@@ -30,6 +32,45 @@ import java.util.List;
 public class UserController {
 
     private final UserCommandUseCase userCommandUseCase;
+
+    @PostMapping("/me/availability/nickname")
+    @Operation(summary = "프로필 수정 닉네임 중복 확인")
+    public ResponseEntity<GlobalApiResponse<AvailabilityResponse>> checkMyNicknameAvailability(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody NicknameAvailabilityRequest request) {
+        boolean available = userCommandUseCase.isNicknameAvailableForUser(
+                request.nickname(), authUser.userId());
+        return availabilityResponse(
+                UserResponseCode.USER_NICKNAME_AVAILABILITY_CHECKED,
+                available,
+                "사용 가능한 닉네임입니다.",
+                "이미 사용 중인 닉네임입니다.");
+    }
+
+    @PostMapping("/me/availability/phone")
+    @Operation(summary = "프로필 수정 전화번호 중복 확인")
+    public ResponseEntity<GlobalApiResponse<AvailabilityResponse>> checkMyPhoneAvailability(
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody PhoneAvailabilityRequest request) {
+        boolean available = userCommandUseCase.isPhoneAvailableForUser(
+                request.phone(), authUser.userId());
+        return availabilityResponse(
+                UserResponseCode.USER_PHONE_AVAILABILITY_CHECKED,
+                available,
+                "사용 가능한 전화번호입니다.",
+                "이미 사용 중인 전화번호입니다.");
+    }
+
+    private ResponseEntity<GlobalApiResponse<AvailabilityResponse>> availabilityResponse(
+            UserResponseCode responseCode,
+            boolean available,
+            String availableMessage,
+            String duplicatedMessage) {
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                responseCode.getCode(),
+                available ? availableMessage : duplicatedMessage,
+                new AvailabilityResponse(available)));
+    }
 
     @PostMapping("/me/password-verification")
     @Operation(summary = "프로필 수정 전 비밀번호 확인", description = "프로필 수정 화면 진입 전 현재 비밀번호를 확인한다.")
