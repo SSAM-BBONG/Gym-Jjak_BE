@@ -289,7 +289,7 @@ public class PtCourseController {
 
 
     // 예약 가능 날짜 조회
-    @Operation(summary = "예약 가능 날짜 조회", description = "오늘부터 30일 내 예약 가능한 날짜 목록을 조회한다.")
+    @Operation(summary = "예약 가능 날짜 조회", description = "오늘부터 1년 내 예약 가능한 날짜 목록을 조회한다.")
     @GetMapping("/{ptCourseId}/available-dates")
     public ResponseEntity<GlobalApiResponse<AvailableDatesResponse>> findAvailableDates(
             @PathVariable Long ptCourseId

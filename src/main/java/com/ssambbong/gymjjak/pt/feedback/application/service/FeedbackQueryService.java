@@ -113,12 +113,17 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
 
         log.info("event=feedback_detail_query_complete feedbackId={}", feedbackId);
 
+        boolean isMine = trainerQueryPort.findTrainerProfileIdByUserId(userId)
+                .map(id -> id.equals(feedback.getTrainerProfileId()))
+                .orElse(false);
+
         return new FeedbackDetailView(
                 curriculum.sessionNo(),
                 curriculum.title(),
                 feedback.getContent(),
                 mediaList,
-                feedback.getCreatedAt().toLocalDate()
+                feedback.getCreatedAt().toLocalDate(),
+                isMine
         );
 
     }
