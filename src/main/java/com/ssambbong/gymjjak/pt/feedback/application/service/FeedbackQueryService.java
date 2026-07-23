@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -97,8 +98,9 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
             throw new FeedbackNotFoundException();
         }
 
-        // 3. 소유권 검증
-        verifyOwnershipByFeedback(userId, feedback);
+        // 3. 소유권 검증 + isMine 계산 (트레이너 프로필 조회 1회)
+        Optional<Long> trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(userId);
+        verifyOwnershipByFeedback(userId, feedback, trainerProfileId);
 
         // 4. 커리큘럼 조회 (sessionNo, title)
         PtCurriculumQueryPort.CurriculumSummary curriculum =
@@ -113,7 +115,7 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
 
         log.info("event=feedback_detail_query_complete feedbackId={}", feedbackId);
 
-        boolean isMine = trainerQueryPort.findTrainerProfileIdByUserId(userId)
+        boolean isMine = trainerProfileId
                 .map(id -> id.equals(feedback.getTrainerProfileId()))
                 .orElse(false);
 
@@ -142,15 +144,14 @@ public class FeedbackQueryService implements FeedbackQueryUseCase {
         }
     }
 
-    // 상세 조회용 소유권 검증
-    private void verifyOwnershipByFeedback(Long userId, Feedback feedback) {
+    // 상세 조회용 소유권 검증 (trainerProfileId는 호출부에서 조회해 전달)
+    private void verifyOwnershipByFeedback(Long userId, Feedback feedback, Optional<Long> trainerProfileId) {
 
         if (feedback.getUserId().equals(userId)) return;
 
-        Long trainerProfileId = trainerQueryPort.findTrainerProfileIdByUserId(userId)
-                .orElseThrow(FeedbackForbiddenException::new);
+        Long profileId = trainerProfileId.orElseThrow(FeedbackForbiddenException::new);
 
-        if (!trainerProfileId.equals(feedback.getTrainerProfileId())) {
+        if (!profileId.equals(feedback.getTrainerProfileId())) {
             throw new FeedbackForbiddenException();
         }
     }
