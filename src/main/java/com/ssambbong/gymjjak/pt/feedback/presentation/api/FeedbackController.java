@@ -11,7 +11,6 @@ import com.ssambbong.gymjjak.pt.feedback.presentation.api.response.CreateFeedbac
 import com.ssambbong.gymjjak.pt.feedback.presentation.api.response.FeedbackDetailResponse;
 import com.ssambbong.gymjjak.pt.feedback.presentation.api.response.FeedbackListResponse;
 import com.ssambbong.gymjjak.pt.feedback.presentation.api.response.FeedbackResponseCode;
-import com.ssambbong.gymjjak.pt.feedback.presentation.api.response.UpdateFeedbackResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -92,18 +91,19 @@ public class FeedbackController {
     // 피드백 수정
     @PatchMapping("/{feedbackId}")
     @PreAuthorize("hasAnyAuthority('TRAINER')")
-    @Operation(summary = "피드백 수정", description = "트레이너가 본인이 작성한 피드백을 수정한다.")
-    public ResponseEntity<GlobalApiResponse<UpdateFeedbackResponse>>
+    @Operation(summary = "피드백 수정", description = "트레이너가 본인이 작성한 피드백을 수정하고, 수정된 최신 상태(미디어 URL 포함)를 반환한다.")
+    public ResponseEntity<GlobalApiResponse<FeedbackDetailResponse>>
     updateFeedback(@AuthenticationPrincipal AuthUser authUser,
                    @PathVariable("reservationId") Long ptReservationId,
                    @PathVariable Long feedbackId,
                    @RequestBody @Valid UpdateFeedbackRequest request
     ) {
-        Long updatedId = feedbackCommandUseCase.updateFeedback(
+        feedbackCommandUseCase.updateFeedback(
                 request.toCommand(authUser.userId(), ptReservationId, feedbackId));
+        FeedbackDetailResponse response = FeedbackDetailResponse.from(
+                feedbackQueryUseCase.findFeedbackDetail(authUser.userId(), ptReservationId, feedbackId));
         return ResponseEntity.ok(
-                GlobalApiResponse.ok(FeedbackResponseCode.FEEDBACK_UPDATED,
-                        UpdateFeedbackResponse.from(updatedId))
+                GlobalApiResponse.ok(FeedbackResponseCode.FEEDBACK_UPDATED, response)
         );
     }
 

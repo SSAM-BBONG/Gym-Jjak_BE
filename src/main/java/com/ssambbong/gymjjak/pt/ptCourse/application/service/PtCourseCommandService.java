@@ -179,10 +179,10 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             }
         }
 
-        // 썸네일 파일 등록 (null이면 기존 유지)
+        // 썸네일 파일 등록 (null이면 기존 값 유지)
         Long thumbnailFileId = command.thumbnailFile() != null
                 ? registerThumbnailFile(command.userId(), command.thumbnailFile())
-                : null;
+                : ptCourse.getThumbnailFileId();
 
         // 강습 필드 수정
         ptCourse.update(
@@ -225,13 +225,23 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             List<Long> toDelete = existingIds.stream().filter(id -> !requestIds.contains(id)).toList();
             ptCurriculumRepository.deleteAllByIdIn(toDelete);
 
-            // 수정 또는 신규 생성
+            // 기존 커리큘럼 수정을 먼저 처리한다 (session_no를 다른 값으로 옮기는 경우 포함).
             for (UpdatePtCourseCommand.CurriculumData c : command.curriculums()) {
                 if (c.id() != null) {
                     ptCurriculumRepository.update(PtCurriculum.restore(c.id(), command.ptCourseId(), c.sessionNo(), c.title(), c.content()));
-                } else {
-                    ptCurriculumRepository.saveAll(List.of(PtCurriculum.create(command.ptCourseId(), c.sessionNo(), c.title(), c.content())));
                 }
+            }
+            // Hibernate는 flush 시 삽입을 수정보다 먼저 실행하므로, 위 수정을 먼저 DB에
+            // 반영해야 아래 신규 삽입의 session_no가 UNIQUE(course_id, session_no)와 충돌하지 않는다.
+            ptCurriculumRepository.flush();
+
+            // 신규 커리큘럼 생성
+            List<PtCurriculum> toCreate = command.curriculums().stream()
+                    .filter(c -> c.id() == null)
+                    .map(c -> PtCurriculum.create(command.ptCourseId(), c.sessionNo(), c.title(), c.content()))
+                    .toList();
+            if (!toCreate.isEmpty()) {
+                ptCurriculumRepository.saveAll(toCreate);
             }
         }
 
