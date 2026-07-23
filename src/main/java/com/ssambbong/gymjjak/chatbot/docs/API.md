@@ -6,13 +6,23 @@
 
 > 메시지 생성은 REST가 아닌 [WEBSOCKET_API.md](WEBSOCKET_API.md)의 STOMP API를 사용합니다. 아래 API는 저장된 챗봇 세션과 이력 조회 전용입니다.
 >
-> **구현 예정 계약:** 아래 REST API와 테이블은 신규 `chatbot` 도메인 구현 시 추가합니다.
+> `GET /api/chatbot/sessions`는 구현 완료되었습니다. 메시지 이력 조회 API는 구현 예정입니다.
 
 ## 📋 세션 목록 조회
 
 `GET /api/chatbot/sessions?cursor={cursor}&size={size}`
 
-인증된 본인의 세션만 `lastActivityAt DESC, sessionId DESC` 순으로 조회합니다. 기본 `size`는 20, 최대 50이며, `cursor`는 `(lastActivityAt, sessionId)`를 인코딩한 불투명 값입니다.
+로그인한 사용자의 세션만 `lastActivityAt DESC, sessionId DESC` 순으로 조회합니다.
+
+| Query parameter | 필수 여부 | 설명 |
+| --- | --- | --- |
+| `cursor` | 선택 | 다음 페이지 조회용 커서입니다. `(lastActivityAt, sessionId)`를 인코딩한 불투명 값입니다. |
+| `size` | 선택 | 조회 개수입니다. 기본값은 `20`이고, 허용 범위는 `1~50`입니다. |
+
+- 서버는 `size + 1`개를 조회하여 다음 페이지 존재 여부를 판단합니다.
+- `hasNext`가 `true`이면 `nextCursor`를 다음 요청의 `cursor`로 전달합니다. 마지막 페이지면 `hasNext`는 `false`, `nextCursor`는 `null`입니다.
+- `sessionId`는 외부에 노출하는 UUID이며, DB 내부 PK인 `chatbot_session_id`는 응답하지 않습니다.
+- `title`은 세션의 첫 번째 `USER` 메시지이고, `lastMessage`는 해당 세션의 최신 메시지입니다.
 
 ```json
 {
@@ -28,13 +38,15 @@
         "lastActivityAt": "2026-07-23T10:00:00"
       }
     ],
-    "nextCursor": "eyJsYXN0QWN0aXZpdHlBdCI6IjIwMjYtMDctMjNUMTA6MDA6MDAiLCJzZXNzaW9uSWQiOiIwMTlmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEifQ",
+    "nextCursor": null,
     "hasNext": false
   }
 }
 ```
 
 ## 💬 메시지 이력 조회
+
+> **구현 예정**
 
 `GET /api/chatbot/sessions/{sessionId}/messages?cursor={cursor}&size={size}`
 
@@ -80,7 +92,7 @@
 
 | HTTP 상태 | code | 발생 조건 |
 | --- | --- | --- |
-| 400 | `COMMON_400` | 잘못된 UUID, cursor 또는 size |
+| 400 | `COMMON_400` | 잘못된 cursor 또는 size 범위 위반 |
 | 401 | `COMMON_401` | 인증되지 않은 요청 |
 | 403 | `COMMON_403` | 다른 사용자의 세션 접근 |
 | 404 | `CHATBOT_SESSION_NOT_FOUND` | 존재하지 않거나 정리된 세션 |
@@ -95,4 +107,4 @@
 
 | 날짜 | 변경 내용 |
 | --- | --- |
-| 2026-07-23 | 챗봇 세션 목록·메시지 이력 조회 및 6개월 정리 정책 작성 |
+| 2026-07-23 | 챗봇 세션 목록 조회 API 구현 계약 반영, 메시지 이력 조회는 구현 예정으로 유지 |
