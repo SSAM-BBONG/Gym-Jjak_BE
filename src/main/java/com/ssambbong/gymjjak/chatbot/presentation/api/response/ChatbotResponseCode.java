@@ -11,6 +11,10 @@ public enum ChatbotResponseCode implements ResponseCode {
     CHATBOT_SESSION_LIST_SUCCESS(
             "CHATBOT_SESSION_LIST_SUCCESS",
             "챗봇 세션 목록 조회에 성공했습니다."
+    ),
+    CHATBOT_MESSAGE_HISTORY_SUCCESS(
+            "CHATBOT_MESSAGE_HISTORY_SUCCESS",
+            "챗봇 메시지 이력 조회에 성공했습니다."
     );
 
     private final String code;
