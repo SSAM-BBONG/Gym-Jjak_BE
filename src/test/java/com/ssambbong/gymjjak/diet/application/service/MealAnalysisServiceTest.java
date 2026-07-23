@@ -6,9 +6,11 @@ import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
 import com.ssambbong.gymjjak.diet.application.port.out.AiNutritionAccessPort;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAccessPort;
+import com.ssambbong.gymjjak.diet.application.port.out.MealImageUrlPort;
 import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
 import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
+import com.ssambbong.gymjjak.diet.application.result.MealAnalysisDetailResult;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAnalysisNotFoundException;
 import com.ssambbong.gymjjak.diet.domain.exception.AiNutritionAccessRequiredException;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAccessDeniedException;
@@ -50,6 +52,9 @@ class MealAnalysisServiceTest {
 
     @Mock
     private FileUseCase fileUseCase;
+
+    @Mock
+    private MealImageUrlPort mealImageUrlPort;
 
     @InjectMocks
     private MealAnalysisService service;
@@ -150,10 +155,25 @@ class MealAnalysisServiceTest {
         given(mealAccessPort.existsActivePtRelation(20L, 10L)).willReturn(true);
         given(repository.findByIdAndUserId(1L, 20L)).willReturn(Optional.of(memberMeal));
 
-        MealAnalysisResult result = service.get(10L, 20L, 1L);
+        MealAnalysisDetailResult result = service.get(10L, 20L, 1L);
 
-        assertThat(result.mealId()).isEqualTo(1L);
+        assertThat(result.meal().mealId()).isEqualTo(1L);
+        assertThat(result.imageUrl()).isNull();
         verify(mealAccessPort).existsActivePtRelation(20L, 10L);
+    }
+
+    @Test
+    void 담당_트레이너가_회원의_식단_이미지_URL을_조회한다() {
+        MealAnalysis memberMeal = meal(1L, 20L, MealType.LUNCH,
+                LocalDateTime.of(2026, 7, 21, 12, 30), "샐러드", 300L, 15L);
+        given(mealAccessPort.existsActivePtRelation(20L, 10L)).willReturn(true);
+        given(repository.findByIdAndUserId(1L, 20L)).willReturn(Optional.of(memberMeal));
+        given(mealImageUrlPort.resolve(15L, 20L)).willReturn("https://s3.example/meal");
+
+        MealAnalysisDetailResult result = service.get(10L, 20L, 1L);
+
+        assertThat(result.imageUrl()).isEqualTo("https://s3.example/meal");
+        verify(mealImageUrlPort).resolve(15L, 20L);
     }
 
     @Test

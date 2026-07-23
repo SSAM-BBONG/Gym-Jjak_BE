@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.chatbot.application.service;
 import com.ssambbong.gymjjak.chatbot.application.command.SendChatbotMessageCommand;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiEvent;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
+import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotSubscriptionAccessPort;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotConversationStart;
 import com.ssambbong.gymjjak.chatbot.exception.ChatbotErrorCode;
 import com.ssambbong.gymjjak.chatbot.exception.ChatbotSessionException;
@@ -31,6 +32,7 @@ public class ChatbotConversationService {
     private final SpringDataChatbotSessionRepository sessionRepository;
     private final SpringDataChatbotMessageRepository messageRepository;
     private final SpringDataChatbotContextRepository contextRepository;
+    private final ChatbotSubscriptionAccessPort subscriptionAccessPort;
 
     /**
      * STOMP 메시지를 FastAPI 요청으로 바꾸기 전의 영속화와 동시성 제어를 담당합니다.
@@ -38,6 +40,9 @@ public class ChatbotConversationService {
      */
     @Transactional
     public ChatbotConversationStart prepare(SendChatbotMessageCommand command) {
+        if (!subscriptionAccessPort.hasActiveAccess(command.userId())) {
+            throw new ChatbotSessionException(ChatbotErrorCode.SUBSCRIPTION_REQUIRED);
+        }
         LocalDateTime now = LocalDateTime.now();
         ChatbotSessionJpaEntity session = resolveSession(command.sessionId(), command.userId(), now);
         List<ChatbotMessageJpaEntity> recentMessages = messageRepository
