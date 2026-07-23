@@ -2,7 +2,10 @@ package com.ssambbong.gymjjak.chatbot.application.service;
 
 import com.ssambbong.gymjjak.chatbot.application.command.SendChatbotMessageCommand;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
+import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotSubscriptionAccessPort;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotConversationStart;
+import com.ssambbong.gymjjak.chatbot.exception.ChatbotErrorCode;
+import com.ssambbong.gymjjak.chatbot.exception.ChatbotSessionException;
 import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.ChatbotContextJpaEntity;
 import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.ChatbotMessageJpaEntity;
 import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.ChatbotSessionJpaEntity;
@@ -22,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -33,12 +37,15 @@ class ChatbotConversationServiceTest {
     @Mock private SpringDataChatbotSessionRepository sessionRepository;
     @Mock private SpringDataChatbotMessageRepository messageRepository;
     @Mock private SpringDataChatbotContextRepository contextRepository;
+    @Mock private ChatbotSubscriptionAccessPort subscriptionAccessPort;
 
     private ChatbotConversationService service;
 
     @BeforeEach
     void setUp() {
-        service = new ChatbotConversationService(sessionRepository, messageRepository, contextRepository);
+        service = new ChatbotConversationService(
+                sessionRepository, messageRepository, contextRepository, subscriptionAccessPort
+        );
     }
 
     @Test
@@ -59,6 +66,7 @@ class ChatbotConversationServiceTest {
                 .thenReturn(List.of(new ChatbotContextJpaEntity(
                         session.getSessionId(), 7L, ChatbotContextKind.PAIN, "무릎 통증", null
                 )));
+        when(subscriptionAccessPort.hasActiveAccess(7L)).thenReturn(true);
 
         ChatbotConversationStart start = service.prepare(new SendChatbotMessageCommand(
                 session.getSessionId(), 7L, "USER", "이번 주 루틴 추천", "ROUTINE_RECOMMENDATION"
@@ -80,5 +88,17 @@ class ChatbotConversationServiceTest {
         verify(messageRepository).save(savedMessage.capture());
         assertThat(savedMessage.getValue().getContent()).isEqualTo("이번 주 루틴 추천");
         verify(sessionRepository).save(session);
+    }
+
+    @Test
+    void throwsSubscriptionRequiredWhenUserHasNoActiveChatbotSubscription() {
+        when(subscriptionAccessPort.hasActiveAccess(7L)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.prepare(new SendChatbotMessageCommand(
+                null, 7L, "USER", "운동 루틴을 추천해 주세요.", "ROUTINE_RECOMMENDATION"
+        )))
+                .isInstanceOf(ChatbotSessionException.class)
+                .extracting(exception -> ((ChatbotSessionException) exception).getErrorCode())
+                .isEqualTo(ChatbotErrorCode.SUBSCRIPTION_REQUIRED);
     }
 }
