@@ -19,6 +19,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidEx
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackSessionNotCompletedException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackUpdateNotAllowedException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import com.ssambbong.gymjjak.pt.feedback.domain.model.Feedback;
@@ -177,7 +178,7 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
         boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
                 || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
         if (sessionCompleted) {
-            throw new FeedbackReservationCompletedException();
+            throw new FeedbackUpdateNotAllowedException();
         }
 
         // 미디어 파일 필수값 검증
