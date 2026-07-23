@@ -34,7 +34,8 @@ public interface FeedbackQueryUseCase {
             String curriculumTitle,
             String content,
             List<MediaView> mediaList,
-            LocalDate createdAt
+            LocalDate createdAt,
+            boolean isMine
     ) {}
 
     record MediaView(
