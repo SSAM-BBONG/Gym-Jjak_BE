@@ -141,7 +141,7 @@ class PaymentCommandServiceTest {
     void processWebhook_subscriptionPaid_createsSubscriptionAndMarksUserPaid() {
         Payment payment = pendingSubscriptionPayment();
         when(paymentRepository.findByOrderId("SUB-TEST0001")).thenReturn(Optional.of(payment));
-        when(portOnePaymentVerifyPort.getPaymentInfo(PORTONE_PAYMENT_ID))
+        when(portOnePaymentVerifyPort.getPaymentInfo("SUB-TEST0001"))
                 .thenReturn(new PortOnePaymentVerifyPort.PortOnePaymentInfo(
                         "PAID", SubscriptionPlanType.MONTHLY.price()));
         when(subscriptionCreatePort.create(eq(1L), eq(SubscriptionPlanType.MONTHLY),
@@ -178,7 +178,7 @@ class PaymentCommandServiceTest {
     @DisplayName("Transaction.Paid — 금액 일치 시 PAID로 전환된다")
     void processWebhook_paid_amountMatch_success() {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(pendingPayment()));
-        when(portOnePaymentVerifyPort.getPaymentInfo(PORTONE_PAYMENT_ID))
+        when(portOnePaymentVerifyPort.getPaymentInfo(ORDER_ID))
                 .thenReturn(new PortOnePaymentVerifyPort.PortOnePaymentInfo("PAID", AMOUNT));
 
         paymentCommandService.processWebhook(
@@ -194,7 +194,7 @@ class PaymentCommandServiceTest {
     @DisplayName("Transaction.Paid — 금액 불일치 시 상태 변경 없이 무시된다")
     void processWebhook_paid_amountMismatch_ignored() {
         when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(pendingPayment()));
-        when(portOnePaymentVerifyPort.getPaymentInfo(PORTONE_PAYMENT_ID))
+        when(portOnePaymentVerifyPort.getPaymentInfo(ORDER_ID))
                 .thenReturn(new PortOnePaymentVerifyPort.PortOnePaymentInfo("PAID", 100));
 
         paymentCommandService.processWebhook(
