@@ -94,16 +94,18 @@ public class TrainerReviewController {
     @GetMapping("/api/trainer-profiles/{trainerProfileId}/reviews")
     @Operation(summary = "강사평 목록 조회", description = "트레이너의 강사평 목록을 커서 기반으로 조회한다.")
     public ResponseEntity<GlobalApiResponse<TrainerReviewListResponse>> getReviews(
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long trainerProfileId,
             @Parameter(description = "커서 ID (이전 응답의 nextCursor, 첫 페이지는 미입력)") @RequestParam(required = false) Long cursor,
             @Parameter(description = "커서 별점 (HIGH_RATING 정렬 시 이전 응답의 nextCursorRating, 첫 페이지는 미입력)") @RequestParam(required = false) Integer cursorRating,
             @Parameter(description = "페이지 크기 (기본값: 10, 최대: 50)") @Max(50) @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "정렬 기준", schema = @Schema(type = "string", allowableValues = {"LATEST", "HIGH_RATING"})) @RequestParam(defaultValue = "LATEST") TrainerReviewSortType sort
     ) {
+        Long requesterId = authUser != null ? authUser.userId() : null;
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(TrainerReviewResponseCode.TRAINER_REVIEW_FETCHED,
                         TrainerReviewListResponse.from(
                                 trainerReviewQueryUseCase.getReviews(
-                                        new TrainerReviewListQuery(trainerProfileId, cursor, cursorRating, size, sort)))));
+                                        new TrainerReviewListQuery(trainerProfileId, cursor, cursorRating, size, sort, requesterId)))));
     }
 }

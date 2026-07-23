@@ -34,6 +34,7 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
     @Query(value = """
             SELECT
                 tr.trainer_review_id AS trainerReviewId,
+                tr.user_id           AS userId,
                 u.nickname           AS nickname,
                 pc.title             AS ptCourseTitle,
                 tr.rating            AS rating,
@@ -57,6 +58,7 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
     @Query(value = """
             SELECT
                 tr.trainer_review_id AS trainerReviewId,
+                tr.user_id           AS userId,
                 u.nickname           AS nickname,
                 pc.title             AS ptCourseTitle,
                 tr.rating            AS rating,
