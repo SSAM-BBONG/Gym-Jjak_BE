@@ -174,10 +174,8 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackForbiddenException();
         }
 
-        // 피드백이 연결된 세션이 완료된 경우 수정 불가
-        boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
-                || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
-        if (sessionCompleted) {
+        // 예약 전체가 완료된 경우 수정 불가 (세션 종료 시각은 체크하지 않음 — 피드백은 세션 후 작성)
+        if (feedbackReservation.status() == PtReservationStatus.COMPLETED) {
             throw new FeedbackUpdateNotAllowedException();
         }
 
@@ -242,10 +240,8 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackForbiddenException();
         }
 
-        // 피드백이 연결된 세션이 완료된 경우 삭제 불가 (작성 체크와 동일 기준)
-        boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
-                || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
-        if (sessionCompleted) {
+        // 예약 전체가 완료된 경우 삭제 불가 (세션 종료 시각은 체크하지 않음 — 피드백은 세션 후 작성)
+        if (feedbackReservation.status() == PtReservationStatus.COMPLETED) {
             log.warn("event=feedback_delete_failed reason=reservation_completed feedbackId={}", command.feedbackId());
             throw new FeedbackReservationCompletedException();
         }
