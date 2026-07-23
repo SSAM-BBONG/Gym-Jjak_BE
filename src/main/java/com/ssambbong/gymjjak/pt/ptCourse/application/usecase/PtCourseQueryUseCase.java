@@ -34,7 +34,7 @@ public interface PtCourseQueryUseCase {
     // PT 통계 조회
     PtStatsView findStats();
 
-    // 예약 가능 날짜 조회 (오늘부터 30일)
+    // 예약 가능 날짜 조회 (오늘부터 1년)
     AvailableDatesView findAvailableDates(Long ptCourseId);
 
     // 예약 가능 시간 슬롯 조회 (날짜 기준)
@@ -156,6 +156,6 @@ public interface PtCourseQueryUseCase {
             String thumbnailUrl,
             PartType part,
             String trainerName,
-            String roadAddress
+            String businessName
     ) {}
 }

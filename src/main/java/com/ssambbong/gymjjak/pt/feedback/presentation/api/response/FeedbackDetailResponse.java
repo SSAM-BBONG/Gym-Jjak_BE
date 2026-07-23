@@ -11,7 +11,8 @@ public record FeedbackDetailResponse(
         String curriculumTitle,
         String content,
         List<MediaSummary> mediaList,
-        LocalDate createdAt
+        LocalDate createdAt,
+        boolean isMine
 ) {
     public static FeedbackDetailResponse from(FeedbackQueryUseCase.FeedbackDetailView view) {
         List<MediaSummary> mediaList = view.mediaList().stream()
@@ -22,7 +23,8 @@ public record FeedbackDetailResponse(
                 view.curriculumTitle(),
                 view.content(),
                 mediaList,
-                view.createdAt()
+                view.createdAt(),
+                view.isMine()
         );
     }
 

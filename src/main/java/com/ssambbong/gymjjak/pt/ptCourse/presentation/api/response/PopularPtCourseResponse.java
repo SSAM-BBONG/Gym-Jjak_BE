@@ -10,7 +10,7 @@ public record PopularPtCourseResponse(
         String thumbnailUrl,
         String part,
         String trainerName,
-        String roadAddress
+        String businessName
 ) {
     public static PopularPtCourseResponse from(PtCourseQueryUseCase.PopularCourseView view) {
         return new PopularPtCourseResponse(
@@ -20,7 +20,7 @@ public record PopularPtCourseResponse(
                 view.thumbnailUrl(),
                 PartTypeNameMapper.toKoreanName(view.part()),
                 view.trainerName(),
-                view.roadAddress()
+                view.businessName()
         );
     }
 }

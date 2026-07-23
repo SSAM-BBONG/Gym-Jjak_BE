@@ -413,7 +413,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
                             ptCourse.getPart(),
                             trainer != null ? trainer.trainerName() : null,
-                            organization != null ? organization.roadAddress() : null
+                            organization != null ? organization.businessName() : null
                     );
                 })
                 .toList();
@@ -480,7 +480,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         if (schedules.isEmpty()) return new AvailableDatesView(List.of());
 
         LocalDate firstDay = LocalDate.now(clock);
-        LocalDate lastDay = firstDay.plusDays(29);
+        LocalDate lastDay = firstDay.plusDays(364);
 
         Set<LocalDateTime> reserved = new HashSet<>(
                 ptReservationRepository.findReservedStartAtsByPtCourseId(
