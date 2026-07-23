@@ -14,14 +14,10 @@ import java.util.List;
 
 public record UpdateFeedbackRequest(
         @NotBlank String content,
-        @NotEmpty @Size(max = 2) @Valid List<@NotNull MediaRequest> media
+        @Size(max = 2) @Valid List<@NotNull MediaRequest> media
 ) {
     public UpdateFeedbackCommand toCommand(Long userId, Long ptReservationId, Long feedbackId) {
-        return new UpdateFeedbackCommand(
-                userId,
-                ptReservationId,
-                feedbackId,
-                content,
+        List<UpdateFeedbackCommand.MediaCommand> mediaCommands = (media == null) ? null :
                 media.stream()
                         .map(m -> new UpdateFeedbackCommand.MediaCommand(
                                 new UploadedFileMetadataCommand(
@@ -32,8 +28,8 @@ public record UpdateFeedbackRequest(
                                 ),
                                 m.mediaType()
                         ))
-                        .toList()
-        );
+                        .toList();
+        return new UpdateFeedbackCommand(userId, ptReservationId, feedbackId, content, mediaCommands);
     }
 
     // create와 동일하게 파일 메타데이터 전체를 받음 — fileId 방식 사용 안 함

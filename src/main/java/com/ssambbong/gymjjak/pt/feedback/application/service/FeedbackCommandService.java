@@ -142,12 +142,14 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
     public Long updateFeedback(UpdateFeedbackCommand command) {
         log.debug("event=feedback_update userId={} feedbackId={}", command.userId(), command.feedbackId());
 
-        // 미디어 타입 중복 검증 (BEFORE/AFTER 각 1개)
-        Set<FeedbackMediaType> mediaTypes = command.media().stream()
-                .map(UpdateFeedbackCommand.MediaCommand::mediaType)
-                .collect(Collectors.toSet());
-        if (mediaTypes.size() != command.media().size()) {
-            throw new FeedbackMediaInvalidException();
+        // 미디어 타입 중복 검증 (BEFORE/AFTER 각 1개) — media null이면 기존 유지이므로 스킵
+        if (command.media() != null) {
+            Set<FeedbackMediaType> mediaTypes = command.media().stream()
+                    .map(UpdateFeedbackCommand.MediaCommand::mediaType)
+                    .collect(Collectors.toSet());
+            if (mediaTypes.size() != command.media().size()) {
+                throw new FeedbackMediaInvalidException();
+            }
         }
 
         // 피드백 조회
@@ -179,34 +181,32 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackUpdateNotAllowedException();
         }
 
-        // 미디어 파일 필수값 검증
-        for (UpdateFeedbackCommand.MediaCommand m : command.media()) {
-            if (m.file() == null || m.file().fileKey() == null || m.file().fileKey().isBlank()
-                    || m.file().originalName() == null || m.file().originalName().isBlank()
-                    || m.file().contentType() == null || m.file().contentType().isBlank()
-                    || m.file().fileSize() == null || m.file().fileSize() <= 0) {
-                throw new FeedbackMediaInvalidException();
-            }
-        }
-
-        // 미디어 파일 일괄 등록
-        List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(),
-                command.media().stream().map(UpdateFeedbackCommand.MediaCommand::file).toList());
-
         // 피드백 내용 수정
         feedback.update(command.content());
         feedbackRepository.update(feedback);
 
-        // 기존 미디어 전체 삭제 후 신규 등록 (교체)
-        feedbackMediaRepository.deleteAllByFeedbackId(feedback.getId());
-        List<FeedbackMedia> newMedia = IntStream.range(0, command.media().size())
-                .mapToObj(i -> FeedbackMedia.create(
-                        feedback.getId(),
-                        command.media().get(i).mediaType(),
-                        fileResults.get(i).fileId()
-                ))
-                .toList();
-        feedbackMediaRepository.saveAll(newMedia);
+        // media null이면 기존 미디어 유지, 있으면 전체 교체
+        if (command.media() != null) {
+            for (UpdateFeedbackCommand.MediaCommand m : command.media()) {
+                if (m.file() == null || m.file().fileKey() == null || m.file().fileKey().isBlank()
+                        || m.file().originalName() == null || m.file().originalName().isBlank()
+                        || m.file().contentType() == null || m.file().contentType().isBlank()
+                        || m.file().fileSize() == null || m.file().fileSize() <= 0) {
+                    throw new FeedbackMediaInvalidException();
+                }
+            }
+            List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(),
+                    command.media().stream().map(UpdateFeedbackCommand.MediaCommand::file).toList());
+            feedbackMediaRepository.deleteAllByFeedbackId(feedback.getId());
+            List<FeedbackMedia> newMedia = IntStream.range(0, command.media().size())
+                    .mapToObj(i -> FeedbackMedia.create(
+                            feedback.getId(),
+                            command.media().get(i).mediaType(),
+                            fileResults.get(i).fileId()
+                    ))
+                    .toList();
+            feedbackMediaRepository.saveAll(newMedia);
+        }
 
         log.info("event=feedback_update_complete feedbackId={}", feedback.getId());
         return feedback.getId();
