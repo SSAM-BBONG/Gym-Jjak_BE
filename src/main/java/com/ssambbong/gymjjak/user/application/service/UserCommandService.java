@@ -380,6 +380,36 @@ public class UserCommandService implements UserCommandUseCase {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isEmailAvailable(String email) {
+        return !userPort.existsByUsername(normalize(email));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isNicknameAvailable(String nickname) {
+        return !userPort.existsByNickname(normalize(nickname));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isPhoneAvailable(String phone) {
+        return !userPort.existsByPhone(normalize(phone));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isNicknameAvailableForUser(String nickname, Long userId) {
+        return !userPort.existsByNicknameAndIdNot(normalize(nickname), userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isPhoneAvailableForUser(String phone, Long userId) {
+        return !userPort.existsByPhoneAndIdNot(normalize(phone), userId);
+    }
+
     private void validateDuplicatePhoneExceptforMe(String phone, Long userId) {
         if (userPort.existsByPhoneAndIdNot(phone, userId)) {
             throw new UserException(UserErrorCode.DUPLICATE_PHONE);

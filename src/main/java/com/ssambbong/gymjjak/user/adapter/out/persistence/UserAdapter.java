@@ -63,6 +63,11 @@ public class UserAdapter implements UserPort, DeleteWithdrawnUserPort {
     }
 
     @Override
+    public boolean existsByPhone(String phone) {
+        return springDataUserRepository.existsByPhone(phone);
+    }
+
+    @Override
     public Optional<User> findByUsername(String username) {
         return springDataUserRepository.findByUsername(username)
                 .map(userPersistenceMapper::toDomain);
