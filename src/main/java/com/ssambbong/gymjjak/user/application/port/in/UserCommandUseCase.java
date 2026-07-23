@@ -39,5 +39,15 @@ public interface UserCommandUseCase {
 
     UserUsernameAndNicknameResult findUsernameAndNickname(Long userId);
 
+    boolean isEmailAvailable(String email);
+
+    boolean isNicknameAvailable(String nickname);
+
+    boolean isPhoneAvailable(String phone);
+
+    boolean isNicknameAvailableForUser(String nickname, Long userId);
+
+    boolean isPhoneAvailableForUser(String phone, Long userId);
+
 
 }

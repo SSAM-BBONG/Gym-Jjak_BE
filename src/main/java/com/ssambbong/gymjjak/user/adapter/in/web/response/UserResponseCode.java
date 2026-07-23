@@ -20,7 +20,10 @@ public enum UserResponseCode implements ResponseCode {
     PASSWORD_CHANGED("PASSWORD_CHANGED", "비밀번호 변경에 성공했습니다."),
     USER_FOUND("USER_FOUND", "유저 목록이 조회되었습니다."),
     TEMPORARY_PASSWORD_SENT("TEMPORARY_PASSWORD_SENT", "입력한 이메일로 임시 비밀번호가 발급되었습니다."),
-    SOCIAL_SIGNUP_COMPLETED("SOCIAL_SIGNUP_COMPLETED", "소셜 회원가입이 완료되었습니다.");
+    SOCIAL_SIGNUP_COMPLETED("SOCIAL_SIGNUP_COMPLETED", "소셜 회원가입이 완료되었습니다."),
+    USER_EMAIL_AVAILABILITY_CHECKED("USER_EMAIL_AVAILABILITY_CHECKED", "이메일 사용 가능 여부를 확인했습니다."),
+    USER_NICKNAME_AVAILABILITY_CHECKED("USER_NICKNAME_AVAILABILITY_CHECKED", "닉네임 사용 가능 여부를 확인했습니다."),
+    USER_PHONE_AVAILABILITY_CHECKED("USER_PHONE_AVAILABILITY_CHECKED", "전화번호 사용 가능 여부를 확인했습니다.");
 
     private final String code;
     private final String message;
