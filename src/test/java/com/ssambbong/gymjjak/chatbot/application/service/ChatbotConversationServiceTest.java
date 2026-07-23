@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -100,5 +101,7 @@ class ChatbotConversationServiceTest {
                 .isInstanceOf(ChatbotSessionException.class)
                 .extracting(exception -> ((ChatbotSessionException) exception).getErrorCode())
                 .isEqualTo(ChatbotErrorCode.SUBSCRIPTION_REQUIRED);
+
+        verifyNoInteractions(sessionRepository, messageRepository, contextRepository);
     }
 }

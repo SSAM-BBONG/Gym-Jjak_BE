@@ -40,6 +40,8 @@ public class ChatbotConversationService {
      */
     @Transactional
     public ChatbotConversationStart prepare(SendChatbotMessageCommand command) {
+
+        // 구독권 검증
         if (!subscriptionAccessPort.hasActiveAccess(command.userId())) {
             throw new ChatbotSessionException(ChatbotErrorCode.SUBSCRIPTION_REQUIRED);
         }
@@ -89,7 +91,7 @@ public class ChatbotConversationService {
         }
     }
 
-    /** FastAPI의 done 이벤트만 assistant 메시지와 UI 복원용 메타데이터로 저장합니다. */
+    // FastAPI의 done 이벤트만 assistant 메시지와 UI 복원용 메타데이터로 저장합니다.
     @Transactional
     public void persistDone(ChatbotConversationStart start, ChatbotAiEvent.Done done) {
         if (!start.sessionId().equals(done.sessionId())) {
@@ -102,13 +104,13 @@ public class ChatbotConversationService {
         sessionRepository.findBySessionId(start.sessionId()).ifPresent(session -> session.touch(now));
     }
 
-    /** 스트림 종료 여부와 무관하게 현재 요청이 잡은 잠금을 해제합니다. */
+    // 스트림 종료 여부와 무관하게 현재 요청이 잡은 잠금을 해제합니다.
     @Transactional
     public void releaseStreamLock(ChatbotConversationStart start) {
         sessionRepository.releaseStreamLock(start.sessionId(), start.requestId());
     }
 
-    /** 세션이 없으면 생성하고, 있으면 현재 사용자 소유인지 검증합니다. */
+    // 세션이 없으면 생성하고, 있으면 현재 사용자 소유인지 검증합니다.
     private ChatbotSessionJpaEntity resolveSession(String sessionId, Long userId, LocalDateTime now) {
         if (sessionId == null || sessionId.isBlank()) {
             return sessionRepository.save(ChatbotSessionJpaEntity.create(userId, now));
@@ -121,7 +123,7 @@ public class ChatbotConversationService {
         return session;
     }
 
-    /** DB의 최신순 메시지를 LLM 대화 순서인 오래된 순으로 되돌립니다. */
+    // DB의 최신순 메시지를 LLM 대화 순서인 오래된 순으로 되돌립니다.
     private List<ChatbotAiRequest.Message> toChronologicalMessages(List<ChatbotMessageJpaEntity> messages) {
         List<ChatbotMessageJpaEntity> chronological = new ArrayList<>(messages);
         Collections.reverse(chronological);
