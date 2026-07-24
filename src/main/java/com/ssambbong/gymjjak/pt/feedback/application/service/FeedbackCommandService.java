@@ -17,6 +17,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackAlreadyExistsE
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCancelledException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackSessionNotCompletedException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackUpdateNotAllowedException;
@@ -77,6 +78,11 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
 
         if (!reservation.trainerProfileId().equals(trainerProfileId)) {
             throw new FeedbackForbiddenException();
+        }
+
+        // 취소된 예약은 세션이 진행되지 않았으므로 피드백 작성 불가
+        if (reservation.status() == PtReservationStatus.CANCELLED) {
+            throw new FeedbackReservationCancelledException();
         }
 
         // sessionStatus 기준: DB status가 COMPLETED이거나 예약 종료 시각이 지난 경우만 피드백 작성 가능
@@ -142,12 +148,14 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
     public Long updateFeedback(UpdateFeedbackCommand command) {
         log.debug("event=feedback_update userId={} feedbackId={}", command.userId(), command.feedbackId());
 
-        // 미디어 타입 중복 검증 (BEFORE/AFTER 각 1개)
-        Set<FeedbackMediaType> mediaTypes = command.media().stream()
-                .map(UpdateFeedbackCommand.MediaCommand::mediaType)
-                .collect(Collectors.toSet());
-        if (mediaTypes.size() != command.media().size()) {
-            throw new FeedbackMediaInvalidException();
+        // 미디어 타입 중복 검증 (BEFORE/AFTER 각 1개) — media null이면 기존 유지이므로 스킵
+        if (command.media() != null) {
+            Set<FeedbackMediaType> mediaTypes = command.media().stream()
+                    .map(UpdateFeedbackCommand.MediaCommand::mediaType)
+                    .collect(Collectors.toSet());
+            if (mediaTypes.size() != command.media().size()) {
+                throw new FeedbackMediaInvalidException();
+            }
         }
 
         // 피드백 조회
@@ -174,41 +182,37 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackForbiddenException();
         }
 
-        // 피드백이 연결된 세션이 완료된 경우 수정 불가
-        boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
-                || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
-        if (sessionCompleted) {
+        // 예약 전체가 완료된 경우 수정 불가 (세션 종료 시각은 체크하지 않음 — 피드백은 세션 후 작성)
+        if (feedbackReservation.status() == PtReservationStatus.COMPLETED) {
             throw new FeedbackUpdateNotAllowedException();
         }
-
-        // 미디어 파일 필수값 검증
-        for (UpdateFeedbackCommand.MediaCommand m : command.media()) {
-            if (m.file() == null || m.file().fileKey() == null || m.file().fileKey().isBlank()
-                    || m.file().originalName() == null || m.file().originalName().isBlank()
-                    || m.file().contentType() == null || m.file().contentType().isBlank()
-                    || m.file().fileSize() == null || m.file().fileSize() <= 0) {
-                throw new FeedbackMediaInvalidException();
-            }
-        }
-
-        // 미디어 파일 일괄 등록
-        List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(),
-                command.media().stream().map(UpdateFeedbackCommand.MediaCommand::file).toList());
 
         // 피드백 내용 수정
         feedback.update(command.content());
         feedbackRepository.update(feedback);
 
-        // 기존 미디어 전체 삭제 후 신규 등록 (교체)
-        feedbackMediaRepository.deleteAllByFeedbackId(feedback.getId());
-        List<FeedbackMedia> newMedia = IntStream.range(0, command.media().size())
-                .mapToObj(i -> FeedbackMedia.create(
-                        feedback.getId(),
-                        command.media().get(i).mediaType(),
-                        fileResults.get(i).fileId()
-                ))
-                .toList();
-        feedbackMediaRepository.saveAll(newMedia);
+        // media null이거나 빈 리스트면 기존 미디어 유지, 있으면 전체 교체
+        if (command.media() != null && !command.media().isEmpty()) {
+            for (UpdateFeedbackCommand.MediaCommand m : command.media()) {
+                if (m.file() == null || m.file().fileKey() == null || m.file().fileKey().isBlank()
+                        || m.file().originalName() == null || m.file().originalName().isBlank()
+                        || m.file().contentType() == null || m.file().contentType().isBlank()
+                        || m.file().fileSize() == null || m.file().fileSize() <= 0) {
+                    throw new FeedbackMediaInvalidException();
+                }
+            }
+            List<FileRegistrationResult> fileResults = registerMediaFiles(command.userId(),
+                    command.media().stream().map(UpdateFeedbackCommand.MediaCommand::file).toList());
+            feedbackMediaRepository.deleteAllByFeedbackId(feedback.getId());
+            List<FeedbackMedia> newMedia = IntStream.range(0, command.media().size())
+                    .mapToObj(i -> FeedbackMedia.create(
+                            feedback.getId(),
+                            command.media().get(i).mediaType(),
+                            fileResults.get(i).fileId()
+                    ))
+                    .toList();
+            feedbackMediaRepository.saveAll(newMedia);
+        }
 
         log.info("event=feedback_update_complete feedbackId={}", feedback.getId());
         return feedback.getId();
@@ -242,10 +246,8 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
             throw new FeedbackForbiddenException();
         }
 
-        // 피드백이 연결된 세션이 완료된 경우 삭제 불가 (작성 체크와 동일 기준)
-        boolean sessionCompleted = feedbackReservation.status() == PtReservationStatus.COMPLETED
-                || feedbackReservation.reservedEndAt().isBefore(LocalDateTime.now(clock));
-        if (sessionCompleted) {
+        // 예약 전체가 완료된 경우 삭제 불가 (세션 종료 시각은 체크하지 않음 — 피드백은 세션 후 작성)
+        if (feedbackReservation.status() == PtReservationStatus.COMPLETED) {
             log.warn("event=feedback_delete_failed reason=reservation_completed feedbackId={}", command.feedbackId());
             throw new FeedbackReservationCompletedException();
         }

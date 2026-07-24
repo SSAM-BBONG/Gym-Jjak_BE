@@ -15,4 +15,4 @@ COPY build/libs/*.jar app.jar
 # 4. 컨테이너 시작 시 실행할 명령어
 # java -jar app.jar - Spring Boot 애플리케이션 실행
 # CMD는 컨테이너 실행 시 기본 명령어 (docker run에서 오버라이드 가능)
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-Duser.timezone=Asia/Seoul", "-jar", "app.jar"]

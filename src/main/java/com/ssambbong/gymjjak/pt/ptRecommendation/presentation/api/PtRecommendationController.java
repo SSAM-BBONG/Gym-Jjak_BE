@@ -39,7 +39,7 @@ public class PtRecommendationController {
             @ApiResponse(responseCode = "502", description = "AI 서버 호출 실패 또는 결과 오류"),
             @ApiResponse(responseCode = "504", description = "AI 서버 응답 시간 초과")
     })
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @PostMapping
     public ResponseEntity<GlobalApiResponse<PtRecommendationResponse>> recommend(
             @AuthenticationPrincipal AuthUser authUser,
