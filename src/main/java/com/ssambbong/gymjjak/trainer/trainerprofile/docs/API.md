@@ -64,7 +64,7 @@ Response Body
 | `code` | 서비스 응답 코드입니다. |
 | `message` | 응답 메시지입니다. |
 | `data.organizationCount` | `removedAt`이 없는 활성 소속 조직 수입니다. 같은 조직 관계가 중복되어도 한 번만 집계합니다. |
-| `data.currentStudentCount` | 내 `VISIBLE`, `HIDDEN` PT 강습의 `IN_PROGRESS` 수강생을 강습별로 `DISTINCT userId` 집계한 합계입니다. 동일 수강생이 서로 다른 강습을 수강하면 강습별로 각각 집계합니다. |
+| `data.currentStudentCount` | 내 `VISIBLE`, `HIDDEN` PT 강습의 `RESERVED`, `IN_PROGRESS` 상태 수강생을 강습별로 `DISTINCT userId` 집계한 합계입니다. 동일 수강생이 서로 다른 강습을 수강하면 강습별로 각각 집계합니다. |
 | `data.averageRating` | 트레이너 프로필에 저장된 평균 강사 평점입니다. 리뷰가 없으면 `0`입니다. |
 | `data.reviewCount` | 트레이너 프로필에 저장된 강사평 수입니다. 리뷰가 없으면 `0`입니다. |
 | `data.inProgressPtCourses` | 내 `VISIBLE`, `HIDDEN` PT 강습 목록입니다. 현재 수강생이 없는 강습도 포함하며 최대 4개를 반환합니다. |
@@ -74,7 +74,7 @@ Response Body
 | `data.inProgressPtCourses[].trainerName` | 담당 트레이너명입니다. |
 | `data.inProgressPtCourses[].organizationName` | 강습이 속한 조직명입니다. 소속 조직 ID가 없거나 조직명을 찾지 못하면 `null`입니다. |
 | `data.inProgressPtCourses[].price` | PT 강습 가격입니다. |
-| `data.inProgressPtCourses[].currentStudentCount` | 해당 강습의 `IN_PROGRESS` 상태 수강생 수입니다. |
+| `data.inProgressPtCourses[].currentStudentCount` | 해당 강습의 `RESERVED`, `IN_PROGRESS` 상태 수강생 수입니다. |
 
 ### 정렬·빈 데이터 정책
 
