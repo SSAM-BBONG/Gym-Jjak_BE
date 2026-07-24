@@ -325,7 +325,8 @@ Response Body
         "ptCourseTitle": "가슴 집중 PT",
         "rating": 5,
         "content": "정말 좋았습니다.",
-        "createdAt": "2026-07-01T10:00:00"
+        "createdAt": "2026-07-01T10:00:00",
+        "isMine": true
       }
     ],
     "nextCursor": 1,
@@ -339,6 +340,7 @@ Response Body
 
 | name | 설명 |
 | --- | --- |
+| `data.reviews[].isMine` | 로그인한 사용자가 작성한 강사평이면 `true`, 아니면 `false`. 비로그인 조회 시 항상 `false`입니다. |
 | `data.nextCursor` | 다음 페이지 조회 시 `cursor` 파라미터로 전달합니다. 다음 페이지가 없으면 `null`입니다. |
 | `data.nextCursorRating` | `HIGH_RATING` 정렬 시 다음 페이지 조회에 사용합니다. `LATEST` 정렬 시 `null`입니다. |
 | `data.hasNext` | 다음 페이지 존재 여부입니다. |
