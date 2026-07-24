@@ -1,6 +1,7 @@
 package com.ssambbong.gymjjak.trainer.trainerprofile.presentation.api;
 
 import com.ssambbong.gymjjak.global.infrastructure.security.config.SecurityConfig;
+import com.ssambbong.gymjjak.global.infrastructure.config.AiServiceProperties;
 import com.ssambbong.gymjjak.global.infrastructure.security.oauth.OAuth2SuccessHandler;
 import com.ssambbong.gymjjak.global.application.auth.port.in.AuthenticateAccessTokenUseCase;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
@@ -52,6 +53,9 @@ class TrainerMainPageControllerTest {
 
     @MockitoBean
     private OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @MockitoBean
+    private AiServiceProperties aiServiceProperties;
 
     @Test
     void findMainPage_returnsDashboardForTrainer() throws Exception {

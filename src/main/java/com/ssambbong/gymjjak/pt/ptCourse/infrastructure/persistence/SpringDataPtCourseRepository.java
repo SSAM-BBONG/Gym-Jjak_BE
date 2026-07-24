@@ -76,7 +76,7 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
             WHERE pc.trainer_profile_id = :trainerProfileId
               AND pc.status IN ('VISIBLE', 'HIDDEN')
               AND pc.deleted_at IS NULL
-              AND pr.status = 'IN_PROGRESS'
+              AND pr.status IN ('RESERVED', 'IN_PROGRESS')
             """, nativeQuery = true)
     long countCurrentStudentsByTrainerProfileId(
             @Param("trainerProfileId") Long trainerProfileId
@@ -89,7 +89,7 @@ public interface SpringDataPtCourseRepository extends JpaRepository<PtCourseJpaE
                    pc.thumbnail_file_id AS thumbnailFileId,
                    pc.title AS title,
                    pc.price AS price,
-                   COUNT(DISTINCT CASE WHEN pr.status = 'IN_PROGRESS' THEN pr.user_id END) AS currentStudentCount
+                   COUNT(DISTINCT CASE WHEN pr.status IN ('RESERVED', 'IN_PROGRESS') THEN pr.user_id END) AS currentStudentCount
             FROM pt_courses pc
             LEFT JOIN pt_reservations pr ON pr.pt_course_id = pc.pt_course_id
             WHERE pc.trainer_profile_id = :trainerProfileId
