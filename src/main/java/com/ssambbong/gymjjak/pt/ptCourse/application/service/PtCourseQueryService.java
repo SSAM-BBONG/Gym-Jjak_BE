@@ -287,6 +287,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 studentSessions, progressCount, totalSessionCount);
 
         return new ReservationDetailView(
+                reservation.getUserId(),
                 studentProfile.nickname(),
                 studentProfile.email(),
                 studentProfile.phone(),
