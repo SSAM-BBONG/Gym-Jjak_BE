@@ -60,4 +60,9 @@ public class ChatbotContextJpaEntity extends CreatedAtEntity {
     public boolean isExpiredAt(LocalDateTime now) {
         return expiresAt != null && !expiresAt.isAfter(now);
     }
+
+    public void updateValue(String value, LocalDateTime expiresAt) {
+        this.value = value;
+        this.expiresAt = expiresAt;
+    }
 }
