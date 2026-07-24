@@ -11,7 +11,8 @@ public sealed interface ChatbotAiEvent permits ChatbotAiEvent.Delta, ChatbotAiEv
             String category,
             String routineJson,
             String sourcesJson,
-            boolean limited
+            boolean limited,
+            String quickRepliesJson
     ) implements ChatbotAiEvent {
     }
 

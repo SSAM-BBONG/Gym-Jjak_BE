@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.chatbot.application.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.chatbot.application.command.SendChatbotMessageCommand;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotSubscriptionAccessPort;
@@ -45,7 +46,7 @@ class ChatbotConversationServiceTest {
     @BeforeEach
     void setUp() {
         service = new ChatbotConversationService(
-                sessionRepository, messageRepository, contextRepository, subscriptionAccessPort
+                sessionRepository, messageRepository, contextRepository, subscriptionAccessPort, new ObjectMapper()
         );
     }
 
@@ -70,7 +71,7 @@ class ChatbotConversationServiceTest {
         when(subscriptionAccessPort.hasActiveAccess(7L)).thenReturn(true);
 
         ChatbotConversationStart start = service.prepare(new SendChatbotMessageCommand(
-                session.getSessionId(), 7L, "USER", "이번 주 루틴 추천", "ROUTINE_RECOMMENDATION"
+                session.getSessionId(), 7L, "USER", "이번 주 루틴 추천", "ROUTINE_RECOMMENDATION", null
         ));
 
         ChatbotAiRequest request = start.fastApiRequest();
@@ -96,7 +97,7 @@ class ChatbotConversationServiceTest {
         when(subscriptionAccessPort.hasActiveAccess(7L)).thenReturn(false);
 
         assertThatThrownBy(() -> service.prepare(new SendChatbotMessageCommand(
-                null, 7L, "USER", "운동 루틴을 추천해 주세요.", "ROUTINE_RECOMMENDATION"
+                null, 7L, "USER", "운동 루틴을 추천해 주세요.", "ROUTINE_RECOMMENDATION", null
         )))
                 .isInstanceOf(ChatbotSessionException.class)
                 .extracting(exception -> ((ChatbotSessionException) exception).getErrorCode())
