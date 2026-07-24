@@ -148,13 +148,14 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
 
         boolean allCancelled = sessions.stream().allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
         boolean allCompleted = sessions.stream().allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
+        boolean anyInProgress = sessions.stream().anyMatch(r -> r.getStatus() == PtReservationStatus.IN_PROGRESS);
 
         int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
         int totalSessionCount = sessions.isEmpty() ? 0 : sessions.get(0).getTotalSessionCount();
 
         if (allCancelled) return PtReservationStatus.CANCELLED;
         if (allCompleted || progressCount >= totalSessionCount) return PtReservationStatus.COMPLETED;
-        if (progressCount == 0) return PtReservationStatus.RESERVED;
+        if (progressCount == 0 && !anyInProgress) return PtReservationStatus.RESERVED;
         return PtReservationStatus.IN_PROGRESS;
     }
 

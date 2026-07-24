@@ -1,6 +1,8 @@
 package com.ssambbong.gymjjak.pt.ptCourse.application.retention;
 
 import com.ssambbong.gymjjak.global.application.scheduler.RetentionJobResult;
+import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackMediaRepository;
+import com.ssambbong.gymjjak.pt.feedback.domain.repository.FeedbackRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepository;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
@@ -23,6 +25,8 @@ public class PtCourseRetentionService {
     private final PtCourseRepository ptCourseRepository;
     private final PtCurriculumRepository ptCurriculumRepository;
     private final PtCourseScheduleRepository ptCourseScheduleRepository;
+    private final FeedbackRepository feedbackRepository;
+    private final FeedbackMediaRepository feedbackMediaRepository;
 
     @Transactional
     public RetentionJobResult hardDeleteExpiredPtCourses(LocalDateTime now) {
@@ -36,7 +40,12 @@ public class PtCourseRetentionService {
             return RetentionJobResult.empty(JOB_NAME);
         }
 
-        // 자식 테이블 먼저 삭제 (커리큘럼 → 스케줄 → PT 강습)
+        // 자식 테이블 먼저 삭제 (피드백미디어 → 피드백 → 커리큘럼 → 스케줄 → PT 강습)
+        List<Long> feedbackIds = feedbackRepository.findIdsByPtCourseIds(candidateIds);
+        if (!feedbackIds.isEmpty()) {
+            feedbackMediaRepository.hardDeleteByFeedbackIds(feedbackIds);
+            feedbackRepository.hardDeleteByIds(feedbackIds);
+        }
         int deletedCurriculums = ptCurriculumRepository.hardDeleteByPtCourseIds(candidateIds);
         int deletedSchedules = ptCourseScheduleRepository.hardDeleteByPtCourseIds(candidateIds);
         int deletedCourses = ptCourseRepository.hardDeleteByIds(candidateIds);

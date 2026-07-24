@@ -34,4 +34,7 @@ public interface FeedbackRepository {
 
     // 하드딜리트
     int hardDeleteByIds(List<Long> ids);
+
+    // PT 강습 ID 목록에 속한 피드백 ID 조회 (리텐션 삭제 순서 보장용)
+    List<Long> findIdsByPtCourseIds(List<Long> ptCourseIds);
 }
