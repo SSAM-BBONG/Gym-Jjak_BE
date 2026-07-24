@@ -19,7 +19,7 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
             FROM trainer_reviews tr
             JOIN users u ON tr.user_id = u.user_id
             WHERE tr.trainer_profile_id = :trainerProfileId AND tr.deleted_at IS NULL
-            ORDER BY tr.created_at DESC LIMIT :limit
+            ORDER BY tr.created_at DESC, tr.trainer_review_id DESC LIMIT :limit
             """, nativeQuery = true)
     List<TrainerReviewProjection> findRecentByTrainerProfileId(
             @Param("trainerProfileId") Long trainerProfileId, @Param("limit") int limit);
@@ -31,7 +31,7 @@ public interface SpringDataTrainerReviewRepository extends JpaRepository<Trainer
             FROM trainer_reviews tr
             JOIN users u ON tr.user_id = u.user_id
             WHERE tr.pt_course_id = :ptCourseId AND tr.deleted_at IS NULL
-            ORDER BY tr.created_at DESC LIMIT :limit
+            ORDER BY tr.created_at DESC, tr.trainer_review_id DESC LIMIT :limit
             """, nativeQuery = true)
     List<TrainerReviewProjection> findRecentByPtCourseId(
             @Param("ptCourseId") Long ptCourseId, @Param("limit") int limit);
