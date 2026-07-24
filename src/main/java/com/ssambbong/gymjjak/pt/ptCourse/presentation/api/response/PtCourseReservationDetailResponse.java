@@ -3,6 +3,7 @@ package com.ssambbong.gymjjak.pt.ptCourse.presentation.api.response;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
 
 public record PtCourseReservationDetailResponse(
+        Long userId,
         String nickname,
         String email,
         String phone,
@@ -13,6 +14,7 @@ public record PtCourseReservationDetailResponse(
 ) {
     public static PtCourseReservationDetailResponse from(PtCourseQueryUseCase.ReservationDetailView view) {
         return new PtCourseReservationDetailResponse(
+                view.userId(),
                 view.nickname(),
                 view.email(),
                 view.phone(),

@@ -122,6 +122,7 @@ public interface PtCourseQueryUseCase {
 
     // 수강생 상세 뷰
     record ReservationDetailView(
+            Long userId,
             String nickname,
             String email,
             String phone,
