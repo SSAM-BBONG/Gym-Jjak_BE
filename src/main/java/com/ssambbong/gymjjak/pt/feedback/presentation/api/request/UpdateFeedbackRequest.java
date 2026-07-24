@@ -6,7 +6,6 @@ import com.ssambbong.gymjjak.pt.feedback.application.command.UploadedFileMetadat
 import com.ssambbong.gymjjak.pt.feedback.domain.model.FeedbackMediaType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -14,7 +13,7 @@ import java.util.List;
 
 public record UpdateFeedbackRequest(
         @NotBlank String content,
-        @Size(max = 2) @Valid List<@NotNull MediaRequest> media
+        @Size(min = 1, max = 2) @Valid List<@NotNull MediaRequest> media
 ) {
     public UpdateFeedbackCommand toCommand(Long userId, Long ptReservationId, Long feedbackId) {
         List<UpdateFeedbackCommand.MediaCommand> mediaCommands = (media == null) ? null :

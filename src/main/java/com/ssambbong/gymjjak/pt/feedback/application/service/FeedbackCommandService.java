@@ -17,6 +17,7 @@ import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackAlreadyExistsE
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackForbiddenException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackMediaInvalidException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackNotFoundException;
+import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCancelledException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackReservationCompletedException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackSessionNotCompletedException;
 import com.ssambbong.gymjjak.pt.feedback.domain.exception.FeedbackUpdateNotAllowedException;
@@ -77,6 +78,11 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
 
         if (!reservation.trainerProfileId().equals(trainerProfileId)) {
             throw new FeedbackForbiddenException();
+        }
+
+        // 취소된 예약은 세션이 진행되지 않았으므로 피드백 작성 불가
+        if (reservation.status() == PtReservationStatus.CANCELLED) {
+            throw new FeedbackReservationCancelledException();
         }
 
         // sessionStatus 기준: DB status가 COMPLETED이거나 예약 종료 시각이 지난 경우만 피드백 작성 가능
@@ -185,8 +191,8 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
         feedback.update(command.content());
         feedbackRepository.update(feedback);
 
-        // media null이면 기존 미디어 유지, 있으면 전체 교체
-        if (command.media() != null) {
+        // media null이거나 빈 리스트면 기존 미디어 유지, 있으면 전체 교체
+        if (command.media() != null && !command.media().isEmpty()) {
             for (UpdateFeedbackCommand.MediaCommand m : command.media()) {
                 if (m.file() == null || m.file().fileKey() == null || m.file().fileKey().isBlank()
                         || m.file().originalName() == null || m.file().originalName().isBlank()
