@@ -27,7 +27,7 @@ ptCourse
 ### 집계 정책
 
 - `organization_trainers.removed_at IS NULL`인 조직만 중복 없이 집계합니다.
-- `VISIBLE`, `HIDDEN` PT 강습의 `IN_PROGRESS` 예약만 현재 수강생으로 봅니다.
+- `VISIBLE`, `HIDDEN` PT 강습의 `RESERVED`, `IN_PROGRESS` 예약을 현재 수강생으로 봅니다.
 - 수강생은 강습별 `DISTINCT user_id`로 집계합니다.
 - 동일 사용자가 서로 다른 강습을 듣는 경우, 각 강습 수강생 수에 각각 포함합니다.
 - 상위 강습은 `currentStudentCount DESC`, `ptCourseId DESC`로 정렬하며 최대 4개를 반환합니다. 수강생이 없는 활성 강습은 남은 자리에 포함합니다.

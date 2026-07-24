@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -22,6 +23,19 @@ class TrainerMainPtQueryAdapterTest {
 
     @InjectMocks
     private TrainerMainPtQueryAdapter adapter;
+
+    @Test
+    void currentStudentQueries_includeReservedReservations() throws NoSuchMethodException {
+        Query totalStudentCountQuery = SpringDataPtCourseRepository.class
+                .getMethod("countCurrentStudentsByTrainerProfileId", Long.class)
+                .getAnnotation(Query.class);
+        Query courseStudentCountQuery = SpringDataPtCourseRepository.class
+                .getMethod("findTopCoursesByCurrentStudentCount", Long.class, int.class)
+                .getAnnotation(Query.class);
+
+        assertThat(totalStudentCountQuery.value()).contains("'RESERVED'");
+        assertThat(courseStudentCountQuery.value()).contains("'RESERVED'");
+    }
 
     @Test
     void countCurrentStudents_returnsPerCourseAggregatedStudentCount() {
