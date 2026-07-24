@@ -436,7 +436,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourse.getTrainerProfileId(),
                 curriculums,
                 schedules,
-                reviewQueryPort.findRecentByTrainerProfileId(ptCourse.getTrainerProfileId(), 3)
+                reviewQueryPort.findRecentByPtCourseId(ptCourse.getId(), 3)
         );
     }
 
