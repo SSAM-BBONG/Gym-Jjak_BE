@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.organization.organizationApplication.application.service;
 
+import com.ssambbong.gymjjak.organization.organizationApplication.application.port.UserLoginIdValidationPort;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListQuery;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.query.ApplicationListResult;
 import com.ssambbong.gymjjak.organization.organizationApplication.application.usecase.OrganizationApplicationQueryUsecase;
@@ -23,6 +24,7 @@ import java.util.List;
 public class OrganizationApplicationQueryService implements OrganizationApplicationQueryUsecase {
 
     private final OrganizationApplicationRepository organizationApplicationRepository;
+    private final UserLoginIdValidationPort userLoginIdValidationPort;
 
     @Monitored(name = "gymjjak.org.application.query.duration", domain = "org_application", action = "find_my")
     @Override
@@ -50,6 +52,7 @@ public class OrganizationApplicationQueryService implements OrganizationApplicat
 
     @Override
     public void checkLoginIdDuplicate(String requestedLoginId) {
+        userLoginIdValidationPort.validate(requestedLoginId);
 
         if (organizationApplicationRepository.existsByRequestedLoginId(requestedLoginId)) {
             throw new DuplicateRequestedLoginIdException();
