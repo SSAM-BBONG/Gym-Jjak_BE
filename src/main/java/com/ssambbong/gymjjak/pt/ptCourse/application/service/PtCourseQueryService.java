@@ -15,6 +15,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseScheduleRepos
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCurriculumRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationCourseStatusDeriver;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
 import lombok.RequiredArgsConstructor;
@@ -212,21 +213,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                             studentUserId, rep.getPtCourseId());
                     int totalSessionCount = rep.getTotalSessionCount();
 
-                    boolean allCancelled = studentSessions.stream()
-                            .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
-                    boolean allCompleted = studentSessions.stream()
-                            .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
-
-                    PtReservationStatus derivedStatus;
-                    if (allCancelled) {
-                        derivedStatus = PtReservationStatus.CANCELLED;
-                    } else if (allCompleted || progressCount >= totalSessionCount) {
-                        derivedStatus = PtReservationStatus.COMPLETED;
-                    } else if (progressCount == 0) {
-                        derivedStatus = PtReservationStatus.RESERVED;
-                    } else {
-                        derivedStatus = PtReservationStatus.IN_PROGRESS;
-                    }
+                    PtReservationStatus derivedStatus = PtReservationCourseStatusDeriver.derive(
+                            studentSessions, progressCount, totalSessionCount);
 
                     return new CourseReservationView(
                             rep.getId(),
@@ -294,21 +282,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .filter(r -> r.getPtCourseId().equals(reservation.getPtCourseId()))
                 .toList();
 
-        boolean allCancelled = studentSessions.stream()
-                .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
-        boolean allCompleted = studentSessions.stream()
-                .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
-
-        PtReservationStatus derivedStatus;
-        if (allCancelled) {
-            derivedStatus = PtReservationStatus.CANCELLED;
-        } else if (allCompleted || progressCount >= totalSessionCount) {
-            derivedStatus = PtReservationStatus.COMPLETED;
-        } else if (progressCount == 0) {
-            derivedStatus = PtReservationStatus.RESERVED;
-        } else {
-            derivedStatus = PtReservationStatus.IN_PROGRESS;
-        }
+        PtReservationStatus derivedStatus = PtReservationCourseStatusDeriver.derive(
+                studentSessions, progressCount, totalSessionCount);
 
         return new ReservationDetailView(
                 studentProfile.nickname(),

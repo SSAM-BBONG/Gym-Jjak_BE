@@ -98,4 +98,11 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
         if (ptCourseIds.isEmpty()) return List.of();
         return repository.findIdsByPtCourseIds(ptCourseIds);
     }
+
+    @Override
+    @Transactional
+    public int forceHardDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) return 0; // 빈 IN절 쿼리 방지
+        return repository.forceHardDeleteByIds(ids);
+    }
 }

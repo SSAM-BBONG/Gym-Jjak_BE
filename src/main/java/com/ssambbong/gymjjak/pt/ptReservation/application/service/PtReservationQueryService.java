@@ -10,6 +10,7 @@ import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQ
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationForbiddenException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationCourseStatusDeriver;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.repository.PtReservationRepository;
@@ -103,21 +104,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 .filter(r -> r.getPtCourseId().equals(reservation.getPtCourseId()))
                 .toList();
 
-        boolean allCancelled = mySessions.stream()
-                .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
-        boolean allCompleted = mySessions.stream()
-                .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
-
-        PtReservationStatus derivedStatus;
-        if (allCancelled) {
-            derivedStatus = PtReservationStatus.CANCELLED;
-        } else if (allCompleted || progressCount >= totalSessionCount) {
-            derivedStatus = PtReservationStatus.COMPLETED;
-        } else if (progressCount == 0) {
-            derivedStatus = PtReservationStatus.RESERVED;
-        } else {
-            derivedStatus = PtReservationStatus.IN_PROGRESS;
-        }
+        PtReservationStatus derivedStatus = PtReservationCourseStatusDeriver.derive(mySessions, progressCount, totalSessionCount);
 
         log.info("event=pt_reservation_detail_succeeded ptReservationId={}", ptReservationId);
         return new PtReservationDetailView(
@@ -146,17 +133,10 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 .filter(r -> r.getPtCourseId().equals(ptCourseId))
                 .toList();
 
-        boolean allCancelled = sessions.stream().allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
-        boolean allCompleted = sessions.stream().allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
-        boolean anyInProgress = sessions.stream().anyMatch(r -> r.getStatus() == PtReservationStatus.IN_PROGRESS);
-
         int progressCount = ptReservationRepository.countProgressByUserIdAndPtCourseId(userId, ptCourseId);
         int totalSessionCount = sessions.isEmpty() ? 0 : sessions.get(0).getTotalSessionCount();
 
-        if (allCancelled) return PtReservationStatus.CANCELLED;
-        if (allCompleted || progressCount >= totalSessionCount) return PtReservationStatus.COMPLETED;
-        if (progressCount == 0 && !anyInProgress) return PtReservationStatus.RESERVED;
-        return PtReservationStatus.IN_PROGRESS;
+        return PtReservationCourseStatusDeriver.derive(sessions, progressCount, totalSessionCount);
     }
 
     // 내 PT 세션 목록 조회
@@ -300,21 +280,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 userId, rep.getPtCourseId());
         int totalSessionCount = rep.getTotalSessionCount();
 
-        boolean allCancelled = sessions.stream()
-                .allMatch(r -> r.getStatus() == PtReservationStatus.CANCELLED);
-        boolean allCompleted = sessions.stream()
-                .allMatch(r -> r.getStatus() == PtReservationStatus.COMPLETED);
-
-        PtReservationStatus derivedStatus;
-        if (allCancelled) {
-            derivedStatus = PtReservationStatus.CANCELLED;
-        } else if (allCompleted || progressCount >= totalSessionCount) {
-            derivedStatus = PtReservationStatus.COMPLETED;
-        } else if (progressCount == 0) {
-            derivedStatus = PtReservationStatus.RESERVED;
-        } else {
-            derivedStatus = PtReservationStatus.IN_PROGRESS;
-        }
+        PtReservationStatus derivedStatus = PtReservationCourseStatusDeriver.derive(sessions, progressCount, totalSessionCount);
 
         return new MyPtReservationView(
                 rep.getId(),

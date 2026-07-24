@@ -43,6 +43,11 @@ public class PtCourseScheduleRepositoryAdapter implements PtCourseScheduleReposi
         entity.updateFields(schedule.getDayOfWeek(), schedule.getStartTime(), schedule.getEndTime());
     }
 
+    @Override
+    public void flush() {
+        repository.flush();
+    }
+
     // upsert 시 요청에 없는 스케줄 일괄 삭제
     @Override
     public void deleteAllByIdIn(List<Long> ids) {

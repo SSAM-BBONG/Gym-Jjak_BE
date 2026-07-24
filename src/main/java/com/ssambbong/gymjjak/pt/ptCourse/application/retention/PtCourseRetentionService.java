@@ -41,10 +41,12 @@ public class PtCourseRetentionService {
         }
 
         // 자식 테이블 먼저 삭제 (피드백미디어 → 피드백 → 커리큘럼 → 스케줄 → PT 강습)
+        // 활성 피드백도 코스와 같은 리텐션 주기를 타고 함께 정리되는 게 정책이므로,
+        // deleted_at 여부와 무관하게 강제 삭제한다 (안 그러면 뒤이은 커리큘럼 삭제가 FK 위반으로 실패)
         List<Long> feedbackIds = feedbackRepository.findIdsByPtCourseIds(candidateIds);
         if (!feedbackIds.isEmpty()) {
             feedbackMediaRepository.hardDeleteByFeedbackIds(feedbackIds);
-            feedbackRepository.hardDeleteByIds(feedbackIds);
+            feedbackRepository.forceHardDeleteByIds(feedbackIds);
         }
         int deletedCurriculums = ptCurriculumRepository.hardDeleteByPtCourseIds(candidateIds);
         int deletedSchedules = ptCourseScheduleRepository.hardDeleteByPtCourseIds(candidateIds);

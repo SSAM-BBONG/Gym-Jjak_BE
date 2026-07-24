@@ -281,17 +281,26 @@ public class PtCourseCommandService implements PtCourseCommandUseCase {
             List<Long> toDeleteSchedules = existingScheduleIds.stream().filter(id -> !requestScheduleIds.contains(id)).toList();
             ptCourseScheduleRepository.deleteAllByIdIn(toDeleteSchedules);
 
+            // 기존 스케줄 수정을 먼저 처리한다 (슬롯을 다른 값으로 옮기는 경우 포함).
             for (UpdatePtCourseCommand.ScheduleData s : command.schedules()) {
                 if (s.id() != null) {
                     // update() 사용 — 파싱·시간순 검증 포함
                     ptCourseScheduleRepository.update(
                             PtCourseSchedule.update(s.id(), command.ptCourseId(), s.dayOfWeek(), s.startTime(), s.endTime())
                     );
-                } else {
-                    ptCourseScheduleRepository.saveAll(List.of(
-                            PtCourseSchedule.create(command.ptCourseId(), s.dayOfWeek(), s.startTime(), s.endTime())
-                    ));
                 }
+            }
+            // Hibernate는 flush 시 삽입을 수정보다 먼저 실행하므로, 위 수정을 먼저 DB에
+            // 반영해야 아래 신규 삽입의 슬롯이 UNIQUE(course_id, day_of_week, start_time, end_time)와 충돌하지 않는다.
+            ptCourseScheduleRepository.flush();
+
+            // 신규 스케줄 생성
+            List<PtCourseSchedule> toCreateSchedules = command.schedules().stream()
+                    .filter(s -> s.id() == null)
+                    .map(s -> PtCourseSchedule.create(command.ptCourseId(), s.dayOfWeek(), s.startTime(), s.endTime()))
+                    .toList();
+            if (!toCreateSchedules.isEmpty()) {
+                ptCourseScheduleRepository.saveAll(toCreateSchedules);
             }
         }
 

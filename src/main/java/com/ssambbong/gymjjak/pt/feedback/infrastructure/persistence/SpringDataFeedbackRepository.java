@@ -49,6 +49,11 @@ public interface SpringDataFeedbackRepository extends JpaRepository<FeedbackJpaE
     @Query(value = "DELETE FROM feedbacks WHERE feedback_id IN (:ids) AND deleted_at IS NOT NULL", nativeQuery = true)
     int hardDeleteByIds(@Param("ids") List<Long> ids);
 
+    // PT 강습 연쇄 삭제 전용 하드딜리트 — deleted_at 무관하게 삭제 (활성 피드백도 코스와 함께 정리)
+    @Modifying
+    @Query(value = "DELETE FROM feedbacks WHERE feedback_id IN (:ids)", nativeQuery = true)
+    int forceHardDeleteByIds(@Param("ids") List<Long> ids);
+
     // PT 강습 ID 목록에 속한 피드백 ID 조회 (리텐션 삭제 순서 보장용 — feedback_media 먼저 삭제 후 사용)
     @Query(value = """
             SELECT f.feedback_id FROM feedbacks f
