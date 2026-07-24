@@ -98,7 +98,7 @@ Request Header
 
 | name | description |
 | --- | --- |
-| `Authorization` | `Bearer {accessToken}` (USER 또는 TRAINER 권한) |
+| `Authorization` | `Bearer {accessToken}` (USER, TRAINER, ADMIN, ORGANIZATION 권한) |
 
 ### **[response]**
 
@@ -126,7 +126,7 @@ Response Body
 | HTTP 상태 | code | message | 설명 |
 | --- | --- | --- | --- |
 | `401 Unauthorized` | `COMMON_401` | 인증이 필요합니다. | 토큰 없음 또는 유효하지 않음 |
-| `403 Forbidden` | `COMMON_403` | 접근 권한이 없습니다. | USER/TRAINER 권한 없음 |
+| `403 Forbidden` | `COMMON_403` | 접근 권한이 없습니다. | USER/TRAINER/ADMIN/ORGANIZATION 권한 없음 |
 
 ---
 
@@ -134,7 +134,10 @@ Response Body
 
 `POST /api/chat/rooms`
 
-> 🔒 USER 권한 필요. 동일 트레이너·PT코스 조합의 ACTIVE 채팅방이 이미 있으면 생성 불가.
+> 🔒 USER 또는 TRAINER 권한 필요. 동일 PT 코스의 ACTIVE 채팅방이 이미 있으면 생성 불가.
+>
+> - **USER**: `userId` 불필요. 서버가 로그인 사용자를 채팅 상대로 설정합니다.
+> - **TRAINER**: `userId` 필수. 채팅을 시작할 수강생의 userId를 전달해야 합니다.
 
 ### **[request]**
 
@@ -142,21 +145,21 @@ Request Header
 
 | name | description |
 | --- | --- |
-| `Authorization` | `Bearer {accessToken}` (USER 권한) |
+| `Authorization` | `Bearer {accessToken}` (USER 또는 TRAINER 권한) |
 
 Request Body
 
 ```json
 {
-  "trainerProfileId": 10,
-  "ptCourseId": 5
+  "ptCourseId": 5,
+  "userId": 12
 }
 ```
 
 | name | 필수 | description |
 | --- | --- | --- |
-| `trainerProfileId` | O | 대화할 트레이너의 프로필 ID (양수) |
 | `ptCourseId` | O | 연결할 PT 코스 ID (양수) |
+| `userId` | TRAINER만 필수 | 채팅 상대 수강생의 userId. USER 권한일 때는 무시됩니다. |
 
 ### **[response]**
 
@@ -186,9 +189,9 @@ Response Body
 | `400 Bad Request` | `COMMON_400` | 잘못된 요청입니다. | 필수값 누락 또는 0 이하 값 |
 | `400 Bad Request` | `CHAT_007` | 유효하지 않은 PT 코스입니다. | 존재하지 않는 PT 코스 ID |
 | `401 Unauthorized` | `COMMON_401` | 인증이 필요합니다. | 토큰 없음 또는 유효하지 않음 |
-| `403 Forbidden` | `COMMON_403` | 접근 권한이 없습니다. | USER 권한 없음 |
-| `404 Not Found` | `CHAT_006` | 해당 트레이너를 찾을 수 없습니다. | 존재하지 않는 트레이너 프로필 ID |
-| `409 Conflict` | `CHAT_002` | 이미 해당 트레이너와의 채팅방이 존재합니다. | 동일 조합의 ACTIVE 채팅방 존재 |
+| `403 Forbidden` | `COMMON_403` | 접근 권한이 없습니다. | USER/TRAINER 권한 없음 |
+| `404 Not Found` | `CHAT_006` | 해당 트레이너를 찾을 수 없습니다. | PT 코스에 연결된 트레이너를 찾을 수 없음 |
+| `409 Conflict` | `CHAT_002` | 이미 해당 트레이너와의 채팅방이 존재합니다. | 동일 PT 코스의 ACTIVE 채팅방 존재 |
 
 ---
 
