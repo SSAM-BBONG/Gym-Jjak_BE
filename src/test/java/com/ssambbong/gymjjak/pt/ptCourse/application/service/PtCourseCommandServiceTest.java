@@ -492,6 +492,40 @@ class PtCourseCommandServiceTest {
     }
 
     @Test
+    @DisplayName("스케줄 슬롯을 다른 값으로 옮기면서 그 자리에 신규 스케줄을 추가해도 " +
+            "UNIQUE(course_id, day_of_week, start_time, end_time) 충돌 없이 처리된다 (수정을 flush한 뒤 삽입)")
+    void updatePtCourse_reassignsScheduleSlotAndInsertsNewOne_flushesBeforeInsert() {
+
+        // given — 기존 스케줄(id=1L, 월요일)을 화요일로 옮기고, 월요일 그 자리에 새 스케줄을 추가
+        UpdatePtCourseCommand command = new UpdatePtCourseCommand(
+                1L, 1L,
+                "수정된 PT 강습 제목", "수정된 설명", PartType.BACK, 60000, null,
+                null,
+                List.of(
+                        new UpdatePtCourseCommand.ScheduleData(1L, "TUESDAY", "10:00", "11:00"),
+                        new UpdatePtCourseCommand.ScheduleData(null, "MONDAY", "10:00", "11:00")
+                )
+        );
+
+        when(ptCourseRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(existingPtCourse()));
+        when(trainerProfileQueryPort.findActiveTrainerProfileIdByUserId(1L)).thenReturn(1L);
+        when(ptCourseScheduleRepository.findAllByPtCourseId(1L)).thenReturn(List.of(
+                PtCourseSchedule.restore(1L, 1L, java.time.DayOfWeek.MONDAY,
+                        java.time.LocalTime.of(10, 0), java.time.LocalTime.of(11, 0))
+        ));
+        when(ptCourseScheduleRepository.saveAll(any())).thenReturn(List.of());
+
+        // when
+        ptCourseCommandService.updatePtCourse(command);
+
+        // then — update()가 flush()보다 먼저, flush()가 saveAll()보다 먼저 호출돼야 한다
+        InOrder inOrder = inOrder(ptCourseScheduleRepository);
+        inOrder.verify(ptCourseScheduleRepository).update(any(PtCourseSchedule.class));
+        inOrder.verify(ptCourseScheduleRepository).flush();
+        inOrder.verify(ptCourseScheduleRepository).saveAll(any());
+    }
+
+    @Test
     @DisplayName("thumbnailFile이 있으면 파일 등록 후 수정이 완료된다")
     void updatePtCourse_withThumbnail_success() {
 
