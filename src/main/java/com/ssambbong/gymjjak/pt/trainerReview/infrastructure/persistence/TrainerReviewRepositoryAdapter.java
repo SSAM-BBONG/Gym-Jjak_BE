@@ -100,6 +100,20 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository, 
         return repository.findRecentByTrainerProfileId(trainerProfileId, limit).stream()
                 .map(p -> new ReviewQueryPort.ReviewSummary(
                         p.getTrainerReviewId(),
+                        p.getNickname(),
+                        p.getRating(),
+                        p.getContent(),
+                        p.getCreatedAt()
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<ReviewQueryPort.ReviewSummary> findRecentByPtCourseId(Long ptCourseId, int limit) {
+        return repository.findRecentByPtCourseId(ptCourseId, limit).stream()
+                .map(p -> new ReviewQueryPort.ReviewSummary(
+                        p.getTrainerReviewId(),
+                        p.getNickname(),
                         p.getRating(),
                         p.getContent(),
                         p.getCreatedAt()

@@ -126,7 +126,7 @@ class PtCourseQueryServiceTest {
                 PtCourseSchedule.restore(1L, 1L, DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0))
         );
         when(ptCourseScheduleRepository.findAllByPtCourseId(1L)).thenReturn(schedules);
-        when(reviewQueryPort.findRecentByTrainerProfileId(anyLong(), anyInt())).thenReturn(List.of());
+        when(reviewQueryPort.findRecentByPtCourseId(anyLong(), anyInt())).thenReturn(List.of());
 
         // when
         PtCourseQueryUseCase.PtCourseDetailView result =
