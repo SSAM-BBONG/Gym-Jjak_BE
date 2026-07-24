@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.chatbot.presentation.websocket;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiClientPort;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiEvent;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
@@ -41,7 +42,7 @@ class ChatbotWebSocketControllerTest {
     void relaysStartedDeltaAndDoneAndPersistsOnlyDone() {
         TaskExecutor directExecutor = Runnable::run;
         ChatbotWebSocketController controller = new ChatbotWebSocketController(
-                conversationService, chatbotAiClientPort, messagingTemplate, directExecutor
+                conversationService, chatbotAiClientPort, messagingTemplate, new ObjectMapper(), directExecutor
         );
         ChatbotConversationStart start = start();
         AuthUser authUser = new AuthUser(7L, "member@example.com", "USER");
@@ -51,13 +52,13 @@ class ChatbotWebSocketControllerTest {
             Consumer<ChatbotAiEvent> consumer = invocation.getArgument(1);
             consumer.accept(new ChatbotAiEvent.Delta("이번 주는 "));
             consumer.accept(new ChatbotAiEvent.Done(
-                    "session-123", "하체 운동을 2회로 나눠보세요.", "ROUTINE", null, "[]", false
+                    "session-123", "하체 운동을 2회로 나눠보세요.", "ROUTINE", null, "[]", false, "[]"
             ));
             return null;
         }).when(chatbotAiClientPort).stream(eq(start.fastApiRequest()), any());
 
         controller.sendMessage(
-                new SendChatbotMessageRequest("session-123", "루틴 추천", "ROUTINE_RECOMMENDATION"),
+                new SendChatbotMessageRequest("session-123", "루틴 추천", "ROUTINE_RECOMMENDATION", null),
                 new UsernamePasswordAuthenticationToken(authUser, null)
         );
 
@@ -69,9 +70,25 @@ class ChatbotWebSocketControllerTest {
                 ChatbotStartedEvent.of("session-123", "request-123"),
                 ChatbotDeltaEvent.of("session-123", "request-123", "이번 주는 "),
                 ChatbotDoneEvent.of("request-123", new ChatbotAiEvent.Done(
-                        "session-123", "하체 운동을 2회로 나눠보세요.", "ROUTINE", null, "[]", false
-                ))
+                        "session-123", "하체 운동을 2회로 나눠보세요.", "ROUTINE", null, "[]", false, "[]"
+                ), new ObjectMapper())
         );
+    }
+
+    @Test
+    void exposesDoneQuickRepliesAsJsonArray() {
+        ChatbotDoneEvent event = ChatbotDoneEvent.of(
+                "request-123",
+                new ChatbotAiEvent.Done(
+                        "session-123", "목표를 선택해 주세요.", "ROUTINE", null, "[]", true,
+                        "[{\"question_id\":\"ROUTINE_GOAL\",\"label\":\"근육 증가\",\"value\":\"MUSCLE_GAIN\"}]"
+                ),
+                new ObjectMapper()
+        );
+
+        assertThat(event.quickReplies().isArray()).isTrue();
+        assertThat(event.quickReplies().get(0).get("questionId").asText()).isEqualTo("ROUTINE_GOAL");
+        assertThat(event.quickReplies().get(0).get("value").asText()).isEqualTo("MUSCLE_GAIN");
     }
 
     private ChatbotConversationStart start() {

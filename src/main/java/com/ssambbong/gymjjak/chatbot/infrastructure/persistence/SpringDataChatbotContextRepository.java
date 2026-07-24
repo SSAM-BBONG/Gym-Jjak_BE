@@ -6,6 +6,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
+import com.ssambbong.gymjjak.chatbot.domain.model.ChatbotContextKind;
 
 public interface SpringDataChatbotContextRepository extends JpaRepository<ChatbotContextJpaEntity, Long> {
 
@@ -21,5 +24,9 @@ public interface SpringDataChatbotContextRepository extends JpaRepository<Chatbo
             @Param("sessionId") String sessionId,
             @Param("userId") Long userId,
             @Param("now") LocalDateTime now
+    );
+
+    Optional<ChatbotContextJpaEntity> findBySessionIdAndUserIdAndKind(
+            String sessionId, Long userId, ChatbotContextKind kind
     );
 }

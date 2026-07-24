@@ -1,12 +1,17 @@
 package com.ssambbong.gymjjak.chatbot.application.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.chatbot.application.command.SendChatbotMessageCommand;
+import com.ssambbong.gymjjak.chatbot.application.model.ChatbotQuickReply;
+import com.ssambbong.gymjjak.chatbot.application.model.RoutinePreferenceContext;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiEvent;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotSubscriptionAccessPort;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotConversationStart;
 import com.ssambbong.gymjjak.chatbot.exception.ChatbotErrorCode;
 import com.ssambbong.gymjjak.chatbot.exception.ChatbotSessionException;
+import com.ssambbong.gymjjak.chatbot.domain.model.ChatbotContextKind;
 import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.ChatbotContextJpaEntity;
 import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.ChatbotMessageJpaEntity;
 import com.ssambbong.gymjjak.chatbot.infrastructure.persistence.ChatbotSessionJpaEntity;
@@ -33,6 +38,7 @@ public class ChatbotConversationService {
     private final SpringDataChatbotMessageRepository messageRepository;
     private final SpringDataChatbotContextRepository contextRepository;
     private final ChatbotSubscriptionAccessPort subscriptionAccessPort;
+    private final ObjectMapper objectMapper;
 
     /**
      * STOMP 메시지를 FastAPI 요청으로 바꾸기 전의 영속화와 동시성 제어를 담당합니다.
@@ -59,6 +65,7 @@ public class ChatbotConversationService {
         }
 
         try {
+            applyQuickReplyIfPresent(session, command, now);
             messageRepository.save(ChatbotMessageJpaEntity.user(
                     session.getSessionId(), command.content(), command.intentHint()
             ));
@@ -101,6 +108,7 @@ public class ChatbotConversationService {
         messageRepository.save(ChatbotMessageJpaEntity.assistant(
                 start.sessionId(), done.answer(), done.category(), done.routineJson(), done.sourcesJson(), done.limited()
         ));
+        persistRoutineQuickReplies(start.sessionId(), start.fastApiRequest().actor().userId(), done.quickRepliesJson(), now);
         sessionRepository.findBySessionId(start.sessionId()).ifPresent(session -> session.touch(now));
     }
 
@@ -132,5 +140,57 @@ public class ChatbotConversationService {
                         message.getRole().name().toLowerCase(), message.getContent()
                 ))
                 .toList();
+    }
+
+    private void applyQuickReplyIfPresent(
+            ChatbotSessionJpaEntity session, SendChatbotMessageCommand command, LocalDateTime now
+    ) {
+        if (command.quickReply() == null) {
+            return;
+        }
+        ChatbotContextJpaEntity context = contextRepository.findBySessionIdAndUserIdAndKind(
+                        session.getSessionId(), command.userId(), ChatbotContextKind.ROUTINE_PREFERENCE
+                )
+                .orElseThrow(() -> new ChatbotSessionException(ChatbotErrorCode.INVALID_QUICK_REPLY));
+        try {
+            RoutinePreferenceContext updated = RoutinePreferenceContext.fromJson(objectMapper, context.getValue())
+                    .apply(command.quickReply().questionId(), command.quickReply().value());
+            String value = updated.toJson(objectMapper);
+            if (value.length() > 500) {
+                throw new IllegalArgumentException("Routine preference context exceeds column length");
+            }
+            context.updateValue(value, now.plusDays(30));
+        } catch (IllegalArgumentException exception) {
+            throw new ChatbotSessionException(ChatbotErrorCode.INVALID_QUICK_REPLY);
+        }
+    }
+
+    private void persistRoutineQuickReplies(String sessionId, Long userId, String quickRepliesJson, LocalDateTime now) {
+        try {
+            List<ChatbotQuickReply> replies = objectMapper.readValue(
+                    quickRepliesJson, new TypeReference<List<ChatbotQuickReply>>() {
+                    }
+            );
+            if (replies.stream().anyMatch(reply -> !reply.questionId().startsWith("ROUTINE_"))) {
+                return;
+            }
+            ChatbotContextJpaEntity context = contextRepository.findBySessionIdAndUserIdAndKind(
+                            sessionId, userId, ChatbotContextKind.ROUTINE_PREFERENCE
+                    )
+                    .orElseGet(() -> new ChatbotContextJpaEntity(
+                            sessionId, userId, ChatbotContextKind.ROUTINE_PREFERENCE,
+                            RoutinePreferenceContext.empty().toJson(objectMapper), now.plusDays(30)
+                    ));
+            RoutinePreferenceContext updated = RoutinePreferenceContext.fromJson(objectMapper, context.getValue())
+                    .withPendingQuickReplies(replies);
+            String value = updated.toJson(objectMapper);
+            if (value.length() > 500) {
+                throw new IllegalArgumentException("Routine preference context exceeds column length");
+            }
+            context.updateValue(value, now.plusDays(30));
+            contextRepository.save(context);
+        } catch (IllegalArgumentException | java.io.IOException exception) {
+            throw new ChatbotSessionException(ChatbotErrorCode.FASTAPI_RESPONSE_INVALID);
+        }
     }
 }

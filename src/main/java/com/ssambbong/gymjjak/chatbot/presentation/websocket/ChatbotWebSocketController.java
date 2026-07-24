@@ -1,5 +1,6 @@
 package com.ssambbong.gymjjak.chatbot.presentation.websocket;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.chatbot.application.command.SendChatbotMessageCommand;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiClientPort;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiEvent;
@@ -38,6 +39,7 @@ public class ChatbotWebSocketController {
     private final ChatbotConversationService conversationService;
     private final ChatbotAiClientPort chatbotAiClientPort;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ObjectMapper objectMapper;
     @Qualifier("chatbotStreamingTaskExecutor")
     private final TaskExecutor chatbotStreamingTaskExecutor;
 
@@ -45,7 +47,7 @@ public class ChatbotWebSocketController {
     public void sendMessage(@Payload @Valid SendChatbotMessageRequest request, Principal principal) {
         AuthUser authUser = (AuthUser) ((Authentication) principal).getPrincipal();
         ChatbotConversationStart start = conversationService.prepare(new SendChatbotMessageCommand(
-                request.sessionId(), authUser.userId(), authUser.role(), request.content(), request.intentHint()
+                request.sessionId(), authUser.userId(), authUser.role(), request.content(), request.intentHint(), request.quickReply()
         ));
 
         send(authUser, ChatbotStartedEvent.of(start.sessionId(), start.requestId()));
@@ -85,7 +87,7 @@ public class ChatbotWebSocketController {
         }
         if (event instanceof ChatbotAiEvent.Done done) {
             conversationService.persistDone(start, done);
-            send(authUser, ChatbotDoneEvent.of(start.requestId(), done));
+            send(authUser, ChatbotDoneEvent.of(start.requestId(), done, objectMapper));
             return;
         }
         ChatbotAiEvent.Error error = (ChatbotAiEvent.Error) event;

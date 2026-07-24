@@ -52,7 +52,7 @@ class ChatbotFastApiClientAdapterTest {
                         data: {"text":"이번 주는 "}
 
                         event: done
-                        data: {"session_id":"session-123","answer":"하체 운동을 2회로 나눠보세요.","category":"ROUTINE","routine":{"days":2},"sources":[{"title":"ACSM"}],"limited":false}
+                        data: {"session_id":"session-123","answer":"하체 운동을 2회로 나눠보세요.","category":"ROUTINE","routine":{"days":2},"sources":[{"title":"ACSM"}],"limited":false,"quick_replies":[{"question_id":"ROUTINE_GOAL","label":"근육 증가","value":"MUSCLE_GAIN"}]}
 
                         """, MediaType.TEXT_EVENT_STREAM));
 
@@ -64,7 +64,8 @@ class ChatbotFastApiClientAdapterTest {
                 new ChatbotAiEvent.Delta("이번 주는 "),
                 new ChatbotAiEvent.Done(
                         "session-123", "하체 운동을 2회로 나눠보세요.", "ROUTINE",
-                        "{\"days\":2}", "[{\"title\":\"ACSM\"}]", false
+                        "{\"days\":2}", "[{\"title\":\"ACSM\"}]", false,
+                        "[{\"question_id\":\"ROUTINE_GOAL\",\"label\":\"근육 증가\",\"value\":\"MUSCLE_GAIN\"}]"
                 )
         );
         server.verify();

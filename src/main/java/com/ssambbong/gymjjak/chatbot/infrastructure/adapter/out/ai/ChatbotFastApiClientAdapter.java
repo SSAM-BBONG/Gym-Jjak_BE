@@ -108,7 +108,8 @@ public class ChatbotFastApiClientAdapter implements ChatbotAiClientPort {
                         nullableText(payload, "category"),
                         jsonValue(payload, "routine"),
                         jsonValue(payload, "sources"),
-                        payload.path("limited").asBoolean(false)
+                        payload.path("limited").asBoolean(false),
+                        jsonValueOrEmptyArray(payload, "quick_replies")
                 ));
                 case "error" -> eventConsumer.accept(new ChatbotAiEvent.Error(
                         requiredText(payload, "code"),
@@ -138,6 +139,11 @@ public class ChatbotFastApiClientAdapter implements ChatbotAiClientPort {
     private String jsonValue(JsonNode payload, String field) throws JsonProcessingException {
         JsonNode value = payload.get(field);
         return value == null || value.isNull() ? null : objectMapper.writeValueAsString(value);
+    }
+
+    private String jsonValueOrEmptyArray(JsonNode payload, String field) throws JsonProcessingException {
+        String value = jsonValue(payload, field);
+        return value == null ? "[]" : value;
     }
 
     private ChatbotErrorCode resolveErrorCode(ResourceAccessException exception) {
