@@ -22,6 +22,8 @@ import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationInva
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationLimitExceededException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationScheduleMismatchException;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationErrorCode;
+import com.ssambbong.gymjjak.pt.ptReservation.domain.exception.PtReservationStatusInvalidException;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservation;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtSessionStatus;
@@ -239,9 +241,38 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
             throw new PtReservationForbiddenException();
         }
 
-        // PT 코스 전체 취소 (COMPLETED 제외 전 세션 일괄 CANCELLED)
-        ptReservationRepository.bulkCancelByUserIdAndPtCourseId(
+        List<PtReservation> sessions = ptReservationRepository.findAllByUserIdAndPtCourseId(
                 reservation.getUserId(), reservation.getPtCourseId());
+
+        boolean allCancelled = !sessions.isEmpty() && sessions.stream()
+                .allMatch(session -> session.getStatus() == PtReservationStatus.CANCELLED);
+        if (allCancelled) {
+            throw new PtReservationStatusInvalidException(
+                    PtReservationErrorCode.PT_RESERVATION_ALREADY_CANCELLED);
+        }
+
+        boolean allCompleted = !sessions.isEmpty() && sessions.stream()
+                .allMatch(session -> session.getStatus() == PtReservationStatus.COMPLETED);
+        if (allCompleted) {
+            throw new PtReservationStatusInvalidException(
+                    PtReservationErrorCode.PT_RESERVATION_ALREADY_COMPLETED);
+        }
+
+        boolean hasCancellableSession = sessions.stream().anyMatch(session ->
+                session.getStatus() == PtReservationStatus.RESERVED
+                        || session.getStatus() == PtReservationStatus.IN_PROGRESS);
+        if (!hasCancellableSession) {
+            throw new PtReservationStatusInvalidException(
+                    PtReservationErrorCode.PT_RESERVATION_CANNOT_CANCEL);
+        }
+
+        // PT 코스 전체 취소 (COMPLETED 제외 전 세션 일괄 CANCELLED)
+        int cancelledCount = ptReservationRepository.bulkCancelByUserIdAndPtCourseId(
+                reservation.getUserId(), reservation.getPtCourseId());
+        if (cancelledCount == 0) {
+            throw new PtReservationStatusInvalidException(
+                    PtReservationErrorCode.PT_RESERVATION_CANNOT_CANCEL);
+        }
 
         eventPublisher.publishEvent(
                 new PtReservationCanceledEvent(reservation.getUserId(), reservation.getId()));
