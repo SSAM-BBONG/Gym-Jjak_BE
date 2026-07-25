@@ -28,13 +28,26 @@ public interface PtReservationQueryUseCase {
     // 내 PT 세션 목록 조회 (예약 탭)
     List<PtSessionView> findMySessions(Long userId);
 
+    // PT 강습별 내 세션 목록 조회
+    List<PtSessionView> findMySessionsByPtCourse(Long userId, Long ptCourseId);
+
+    record LastPtDateInfo(
+            LocalDate date,
+            String message
+    ) {
+        public static LastPtDateInfo of(LocalDate date) {
+            if (date == null) return new LastPtDateInfo(null, "아직 PT를 시작하지 않았습니다.");
+            return new LastPtDateInfo(date, null);
+        }
+    }
+
     record MyPtReservationView(
             Long ptReservationId,
             String thumbnailUrl,
             String title,
             String trainerName,
             PtReservationStatus status,
-            LocalDate lastPtDate,
+            LastPtDateInfo lastPtDate,
             int progressCount,
             int totalSessionCount
     ) {}

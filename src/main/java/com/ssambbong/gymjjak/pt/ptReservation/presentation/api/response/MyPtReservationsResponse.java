@@ -3,7 +3,6 @@ package com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
 import com.ssambbong.gymjjak.pt.ptReservation.domain.model.PtReservationStatus;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public record MyPtReservationsResponse(
@@ -15,7 +14,7 @@ public record MyPtReservationsResponse(
             String title,
             String trainerName,
             PtReservationStatus status,
-            LocalDate lastPtDate,
+            PtReservationQueryUseCase.LastPtDateInfo lastPtDate,
             int progressCount,
             int totalSessionCount
     ) {}

@@ -92,7 +92,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     @Override
-    public PtCourseDetailView findPtCourseDetail(Long ptCourseId) {
+    public PtCourseDetailView findPtCourseDetail(Long ptCourseId, Long userId) {
         log.debug("event=pt_course_detail_find ptCourseId={}", ptCourseId);
 
         PtCourse ptCourse = ptCourseRepository.findById(ptCourseId)
@@ -104,7 +104,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
         }
 
         log.info("event=pt_course_detail_find_succeeded ptCourseId={}", ptCourseId);
-        return toDetailView(ptCourse);
+        return toDetailView(ptCourse, userId);
     }
 
     @Override
@@ -414,7 +414,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     }
 
     // ptCourse + 커리큘럼/스케쥴 목록 -> 상세 응답용 View 반환
-    private PtCourseDetailView toDetailView(PtCourse ptCourse) {
+    private PtCourseDetailView toDetailView(PtCourse ptCourse, Long userId) {
         // 커리큘럼 조회 (도메인 모델 -> View 변환)
         List<CurriculumView> curriculums = ptCurriculumRepository.findAllByPtCourseId(ptCourse.getId()).stream()
                 .map(c -> new CurriculumView(c.getId(), c.getSessionNo(), c.getTitle(), c.getContent()))
@@ -427,6 +427,18 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .toList();
         log.debug("event=pt_course_detail_find ptCourseId={} schedule_count={}", ptCourse.getId(), schedules.size());
 
+        // 로그인 사용자면 예약 여부 및 예약 횟수 조회
+        Boolean hasActiveReservation = null;
+        Integer usedCount = null;
+        if (userId != null) {
+            List<PtReservation> myReservations = ptReservationRepository.findAllByUserId(userId, null).stream()
+                    .filter(r -> r.getPtCourseId().equals(ptCourse.getId()))
+                    .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
+                    .toList();
+            hasActiveReservation = !myReservations.isEmpty();
+            usedCount = myReservations.isEmpty() ? null : myReservations.size();
+        }
+
         return new PtCourseDetailView(
                 ptCourse.getId(),
                 resolveThumbnailUrl(ptCourse.getThumbnailFileId()),
@@ -438,7 +450,9 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 ptCourse.getTrainerProfileId(),
                 curriculums,
                 schedules,
-                reviewQueryPort.findRecentByPtCourseId(ptCourse.getId(), 3)
+                reviewQueryPort.findRecentByPtCourseId(ptCourse.getId(), 3),
+                hasActiveReservation,
+                usedCount
         );
     }
 
