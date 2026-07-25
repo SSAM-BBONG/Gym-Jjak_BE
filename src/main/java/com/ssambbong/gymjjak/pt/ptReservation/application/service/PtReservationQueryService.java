@@ -179,6 +179,33 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
         return result;
     }
 
+    @Override
+    public List<PtSessionView> findMySessionsByPtCourse(Long userId, Long ptCourseId) {
+        log.debug("event=pt_session_list_by_course userId={} ptCourseId={}", userId, ptCourseId);
+
+        List<PtReservation> sessions = ptReservationRepository.findAllByUserId(userId, null).stream()
+                .filter(r -> r.getPtCourseId().equals(ptCourseId))
+                .toList();
+
+        PtCourseQueryPort.PtCourseInfo courseInfo = ptCourseQueryPort.findPtCourseInfo(ptCourseId);
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        List<PtSessionView> result = sessions.stream()
+                .map(r -> new PtSessionView(
+                        r.getId(),
+                        r.getPtCourseId(),
+                        courseInfo.title(),
+                        courseInfo.trainerName(),
+                        r.getReservedStartAt(),
+                        r.getReservedEndAt(),
+                        computeSessionStatus(r, now)
+                ))
+                .toList();
+
+        log.info("event=pt_session_list_by_course_succeeded userId={} ptCourseId={} count={}", userId, ptCourseId, result.size());
+        return result;
+    }
+
     private PtSessionStatus computeSessionStatus(PtReservation r, LocalDateTime now) {
         if (r.getStatus() == PtReservationStatus.CANCELLED) return PtSessionStatus.CANCELLED;
         if (r.getStatus() == PtReservationStatus.COMPLETED || r.getReservedEndAt().isBefore(now)) {
@@ -288,7 +315,7 @@ public class PtReservationQueryService implements PtReservationQueryUseCase {
                 courseInfo.title(),
                 courseInfo.trainerName(),
                 derivedStatus,
-                lastPtDate,
+                PtReservationQueryUseCase.LastPtDateInfo.of(lastPtDate),
                 progressCount,
                 totalSessionCount
         );

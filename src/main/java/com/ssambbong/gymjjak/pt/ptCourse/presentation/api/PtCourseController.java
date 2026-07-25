@@ -8,6 +8,9 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.command.DeletePtCourseComma
 import com.ssambbong.gymjjak.pt.ptCourse.application.command.UploadedFileMetadataCommand;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseCommandUseCase;
 import com.ssambbong.gymjjak.pt.ptCourse.application.usecase.PtCourseQueryUseCase;
+import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
+import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.PtSessionsResponse;
+import com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.PtReservationResponseCode;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourseStatus;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.ChangePtCourseStatusRequest;
 import com.ssambbong.gymjjak.pt.ptCourse.presentation.api.request.CreatePtCourseRequest;
@@ -40,6 +43,7 @@ public class PtCourseController {
 
     private final PtCourseCommandUseCase ptCourseCommandUseCase;
     private final PtCourseQueryUseCase ptCourseQueryUseCase;
+    private final PtReservationQueryUseCase ptReservationQueryUseCase;
 
     // 트레이너만 PT 강습 등록 가능
     @PreAuthorize("hasAuthority('TRAINER')")
@@ -99,7 +103,7 @@ public class PtCourseController {
 
     // 누구나 상세 조회 가능
     @Operation(summary = "PT 강습 상세 조회",
-            description = "VISIBLE 상태의 PT 강습 상세 정보를 조회한다.")
+            description = "VIS  IBLE 상태의 PT 강습 상세 정보를 조회한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = PtCourseDetailResponse.class))),
@@ -107,9 +111,13 @@ public class PtCourseController {
                     content = @Content(schema = @Schema()))
     })
     @GetMapping("/{ptCourseId}")
-    public ResponseEntity<GlobalApiResponse<PtCourseDetailResponse>> findPtCourse(@PathVariable Long ptCourseId) {
+    public ResponseEntity<GlobalApiResponse<PtCourseDetailResponse>> findPtCourse(
+            @PathVariable Long ptCourseId,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        Long userId = authUser != null ? authUser.userId() : null;
         PtCourseDetailResponse response = PtCourseDetailResponse.from(
-                ptCourseQueryUseCase.findPtCourseDetail(ptCourseId));
+                ptCourseQueryUseCase.findPtCourseDetail(ptCourseId, userId));
         return ResponseEntity.ok(
                 GlobalApiResponse.ok(
                         PtCourseResponseCode.PT_COURSE_DETAIL,
@@ -137,7 +145,7 @@ public class PtCourseController {
     ) {
         Long updatedId = ptCourseCommandUseCase.updatePtCourse(request.toCommand(authUser.userId(), ptCourseId));
         PtCourseDetailResponse response = PtCourseDetailResponse.from(
-                ptCourseQueryUseCase.findPtCourseDetail(updatedId));
+                ptCourseQueryUseCase.findPtCourseDetail(updatedId, authUser.userId()));
         return ResponseEntity.ok(GlobalApiResponse.ok(PtCourseResponseCode.PT_COURSE_UPDATED, response));
     }
 
@@ -242,6 +250,25 @@ public class PtCourseController {
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtCourseResponseCode.STUDENT_DETAIL_FETCHED, response));
+    }
+
+    // PT별 내 세션 목록 조회 (수강생 전용)
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @Operation(summary = "PT별 내 세션 목록 조회", description = "수강생이 특정 PT 강습의 본인 세션 목록을 조회한다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = com.ssambbong.gymjjak.pt.ptReservation.presentation.api.response.PtSessionsResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/{ptCourseId}/reservations/me/sessions")
+    public ResponseEntity<GlobalApiResponse<PtSessionsResponse>> findMySessionsByPtCourse(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long ptCourseId
+    ) {
+        PtSessionsResponse response = PtSessionsResponse.from(
+                ptReservationQueryUseCase.findMySessionsByPtCourse(authUser.userId(), ptCourseId));
+        return ResponseEntity.ok(GlobalApiResponse.ok(PtReservationResponseCode.PT_SESSIONS_FETCHED, response));
     }
 
     // PT 강습 삭제 (트레이너 전용)

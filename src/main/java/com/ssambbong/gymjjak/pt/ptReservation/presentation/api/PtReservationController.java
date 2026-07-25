@@ -145,7 +145,7 @@ public class PtReservationController {
     @Operation(summary = "PT 예약 취소", description = "수강생이 본인의 PT 예약을 취소한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "취소 성공",
-                    content = @Content(schema = @Schema(implementation = CancelPtReservationResponse.class))),
+                    content = @Content(schema = @Schema(implementation = CancelReservationResponse.class))),
             @ApiResponse(responseCode = "403", description = "본인 예약 아님",
                     content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음",
@@ -154,7 +154,7 @@ public class PtReservationController {
                     content = @Content(schema = @Schema()))
     })
     @PatchMapping("/reservations/me/{reservationId}/cancel")
-    public ResponseEntity<GlobalApiResponse<CancelPtReservationResponse>> cancelPtReservation(
+    public ResponseEntity<GlobalApiResponse<CancelReservationResponse>> cancelPtReservation(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("reservationId") Long ptReservationId
     ) {
@@ -163,7 +163,7 @@ public class PtReservationController {
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtReservationResponseCode.PT_RESERVATION_CANCELLED,
-                CancelPtReservationResponse.cancelled()
+                CancelReservationResponse.cancelled()
         ));
     }
 
