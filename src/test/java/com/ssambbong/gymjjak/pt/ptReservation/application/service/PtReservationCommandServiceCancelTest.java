@@ -84,7 +84,7 @@ class PtReservationCommandServiceCancelTest {
         when(ptReservationRepository.findAllByUserIdAndPtCourseId(USER_ID, COURSE_ID))
                 .thenReturn(List.of(requested, reservation(2L, PtReservationStatus.COMPLETED)));
 
-        assertErrorCode(PtReservationErrorCode.PT_RESERVATION_ALREADY_COMPLETED);
+        assertErrorCode(PtReservationErrorCode.PT_RESERVATION_COMPLETED_CANNOT_CANCEL);
         verify(ptReservationRepository, never()).bulkCancelByUserIdAndPtCourseId(USER_ID, COURSE_ID);
     }
 
