@@ -8,6 +8,7 @@ import com.ssambbong.gymjjak.chatbot.application.model.RoutinePreferenceContext;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiEvent;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotSubscriptionAccessPort;
+import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotUserDataSnapshotPort;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotConversationStart;
 import com.ssambbong.gymjjak.chatbot.exception.ChatbotErrorCode;
 import com.ssambbong.gymjjak.chatbot.exception.ChatbotSessionException;
@@ -38,6 +39,7 @@ public class ChatbotConversationService {
     private final SpringDataChatbotMessageRepository messageRepository;
     private final SpringDataChatbotContextRepository contextRepository;
     private final ChatbotSubscriptionAccessPort subscriptionAccessPort;
+    private final ChatbotUserDataSnapshotPort userDataSnapshotPort;
     private final ObjectMapper objectMapper;
 
     /**
@@ -47,7 +49,7 @@ public class ChatbotConversationService {
     @Transactional
     public ChatbotConversationStart prepare(SendChatbotMessageCommand command) {
 
-        // 구독권 검증
+        // 챗봇 접근 권한 검증
         if (!subscriptionAccessPort.hasActiveAccess(command.userId())) {
             throw new ChatbotSessionException(ChatbotErrorCode.SUBSCRIPTION_REQUIRED);
         }
@@ -111,6 +113,7 @@ public class ChatbotConversationService {
                                             )
                                             .toList()
                             ),
+                            userDataSnapshotPort.load(command.userId()),
                             // 추적용 requestId
                             requestId
                     )

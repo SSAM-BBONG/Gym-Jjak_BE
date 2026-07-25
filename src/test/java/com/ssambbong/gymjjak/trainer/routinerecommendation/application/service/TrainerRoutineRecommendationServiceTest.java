@@ -1,10 +1,5 @@
 package com.ssambbong.gymjjak.trainer.routinerecommendation.application.service;
 
-import com.ssambbong.gymjjak.calendar.application.port.out.CalendarPtReservationPort;
-import com.ssambbong.gymjjak.calendar.application.port.out.WorkoutDiaryPort;
-import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiaryResult;
-import com.ssambbong.gymjjak.calendar.application.result.CalendarDayDiarySetResult;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.trainer.routinerecommendation.application.command.RecommendTrainerRoutineCommand;
 import com.ssambbong.gymjjak.trainer.routinerecommendation.application.model.TrainerRoutineGender;
 import com.ssambbong.gymjjak.trainer.routinerecommendation.application.model.TrainerRoutineGoal;
@@ -29,36 +24,38 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TrainerRoutineRecommendationServiceTest {
-    @Mock private CalendarPtReservationPort calendarPtReservationPort;
-    @Mock private WorkoutDiaryPort workoutDiaryPort;
+    @Mock private TrainerRoutineRecommendationSnapshotService snapshotService;
     @Mock private TrainerRoutineAiPort trainerRoutineAiPort;
     @InjectMocks private TrainerRoutineRecommendationService service;
 
     @Test
     void recommend_sendsRecentMemberWorkoutsOnlyAfterActivePtRelationIsVerified() {
-        when(calendarPtReservationPort.existsActivePtRelationWithTrainer(10L, 20L)).thenReturn(true);
-        when(workoutDiaryPort.findDiariesByUserIdAndPeriod(eq(10L), any(), any())).thenReturn(List.of(diary()));
-        when(trainerRoutineAiPort.recommend(any(), anyList())).thenReturn(result());
+        when(snapshotService.load(command())).thenReturn(workoutData());
+        when(trainerRoutineAiPort.recommend(any(), any())).thenReturn(result());
 
         TrainerRoutineRecommendationResult actual = service.recommend(command());
 
-        ArgumentCaptor<List<TrainerRoutineAiPort.TrainerWorkoutSnapshot>> workouts = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<TrainerRoutineAiPort.TrainerWorkoutData> workouts = ArgumentCaptor.forClass(TrainerRoutineAiPort.TrainerWorkoutData.class);
         verify(trainerRoutineAiPort).recommend(eq(command()), workouts.capture());
         assertThat(actual.title()).isEqualTo("recommended");
-        assertThat(workouts.getValue()).singleElement().satisfies(workout -> {
+        assertThat(workouts.getValue().recentWorkouts()).singleElement().satisfies(workout -> {
             assertThat(workout.exercise()).isEqualTo("Bench Press");
             assertThat(workout.sets()).singleElement().satisfies(set -> assertThat(set.reps()).isEqualTo(10));
         });
+        assertThat(workouts.getValue().summary().periodDays()).isEqualTo(28);
+        assertThat(workouts.getValue().summary().partSessionCounts()).containsEntry("CHEST", 1);
+        assertThat(workouts.getValue().summary().partTotalVolumeKg()).containsEntry("CHEST", new BigDecimal("600"));
     }
 
     @Test
     void recommend_rejectsMemberWithoutActivePtRelationBeforeReadingWorkoutHistory() {
-        when(calendarPtReservationPort.existsActivePtRelationWithTrainer(10L, 20L)).thenReturn(false);
+        when(snapshotService.load(command())).thenThrow(new TrainerRoutineRecommendationException(
+                com.ssambbong.gymjjak.trainer.routinerecommendation.domain.exception.TrainerRoutineRecommendationErrorCode.MEMBER_ACCESS_DENIED));
 
         assertThatThrownBy(() -> service.recommend(command()))
                 .isInstanceOf(TrainerRoutineRecommendationException.class);
 
-        verifyNoInteractions(workoutDiaryPort, trainerRoutineAiPort);
+        verifyNoInteractions(trainerRoutineAiPort);
     }
 
     private RecommendTrainerRoutineCommand command() {
@@ -66,9 +63,12 @@ class TrainerRoutineRecommendationServiceTest {
                 new BigDecimal("175.5"), new BigDecimal("72.3"), TrainerRoutineGoal.MUSCLE_GAIN);
     }
 
-    private CalendarDayDiaryResult diary() {
-        return new CalendarDayDiaryResult(1L, 2L, "Bench Press", LocalDate.now(), PartType.CHEST,
-                List.of(new CalendarDayDiarySetResult(1L, 1, new BigDecimal("60"), 10)));
+    private TrainerRoutineAiPort.TrainerWorkoutData workoutData() {
+        return new TrainerRoutineAiPort.TrainerWorkoutData(
+                List.of(new TrainerRoutineAiPort.TrainerWorkoutSnapshot(LocalDate.now().toString(), "CHEST", "Bench Press",
+                        List.of(new TrainerRoutineAiPort.TrainerWorkoutSetSnapshot(1, new BigDecimal("60"), 10)))),
+                new TrainerRoutineAiPort.TrainerWorkoutSummary(28, 1, java.util.Map.of("CHEST", 1),
+                        java.util.Map.of("CHEST", new BigDecimal("600"))));
     }
 
     private TrainerRoutineRecommendationResult result() {

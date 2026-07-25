@@ -9,6 +9,7 @@ public record ChatbotAiRequest(
         String intentHint,
         Actor actor,    // user or ai
         Memory memory,  // 이전 기록
+        ChatbotUserDataSnapshot personalData,
         String requestId
 ) {
     // 응답 주체
