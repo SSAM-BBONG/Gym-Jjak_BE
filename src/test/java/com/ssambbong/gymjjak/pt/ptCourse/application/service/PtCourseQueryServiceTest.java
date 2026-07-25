@@ -127,10 +127,11 @@ class PtCourseQueryServiceTest {
         );
         when(ptCourseScheduleRepository.findAllByPtCourseId(1L)).thenReturn(schedules);
         when(reviewQueryPort.findRecentByPtCourseId(anyLong(), anyInt())).thenReturn(List.of());
+        when(ptReservationRepository.findAllByUserId(anyLong(), any())).thenReturn(List.of());
 
         // when
         PtCourseQueryUseCase.PtCourseDetailView result =
-                ptCourseQueryService.findPtCourseDetail(1L);
+                ptCourseQueryService.findPtCourseDetail(1L, 1L);
 
         // then
         assertEquals(1L, result.ptCourseId());
@@ -163,7 +164,7 @@ class PtCourseQueryServiceTest {
 
         // when & then
         assertThrows(PtCourseNotFoundException.class,
-                () -> ptCourseQueryService.findPtCourseDetail(999L));
+                () -> ptCourseQueryService.findPtCourseDetail(999L, null));
 
         verify(ptCourseRepository).findById(999L);
     }
@@ -177,6 +178,6 @@ class PtCourseQueryServiceTest {
 
         // when & then
         assertThrows(PtCourseNotFoundException.class,
-                () -> ptCourseQueryService.findPtCourseDetail(1L));
+                () -> ptCourseQueryService.findPtCourseDetail(1L, null));
     }
 }

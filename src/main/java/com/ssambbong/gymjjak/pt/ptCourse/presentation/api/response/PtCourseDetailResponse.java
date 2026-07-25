@@ -43,7 +43,13 @@ public record PtCourseDetailResponse(
         List<ScheduleInfo> schedules,
 
         @Schema(description = "최근 강사평 목록 (최대 3개)")
-        List<ReviewQueryPort.ReviewSummary> recentReviews
+        List<ReviewQueryPort.ReviewSummary> recentReviews,
+
+        @Schema(description = "활성 예약 여부 (비로그인 시 null)", nullable = true)
+        Boolean hasActiveReservation,
+
+        @Schema(description = "예약된 세션 수 (비로그인 시 null)", nullable = true)
+        Integer reservedCount
 
 ) {
 
@@ -92,7 +98,9 @@ public record PtCourseDetailResponse(
                 view.trainerProfileId(),
                 curriculums,
                 schedules,
-                view.recentReviews()
+                view.recentReviews(),
+                view.hasActiveReservation(),
+                view.reservedCount()
         );
     }
 }
