@@ -28,6 +28,9 @@ public interface PtReservationRepository {
     // 강습별 수강생 목록 조회
     List<PtReservation> findAllByPtCourseId(Long ptCourseId);
 
+    // 사용자+PT 코스 기준 전체 세션 조회
+    List<PtReservation> findAllByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
     // PT 상태 변경
     void updateStatus(PtReservation ptReservation);
 
