@@ -151,9 +151,32 @@ class PtCourseQueryServiceTest {
         assertEquals(LocalTime.of(10, 0), result.schedules().get(0).startTime());
         assertEquals(LocalTime.of(11, 0), result.schedules().get(0).endTime());
 
+        // 로그인 사용자 + 예약 없음 → hasActiveReservation=false, usedCount=null
+        assertEquals(false, result.hasActiveReservation());
+        assertNull(result.usedCount());
+
         verify(ptCourseRepository).findById(1L);
         verify(ptCurriculumRepository).findAllByPtCourseId(1L);
         verify(ptCourseScheduleRepository).findAllByPtCourseId(1L);
+    }
+
+    @Test
+    @DisplayName("비로그인 사용자가 PT 강습 상세 조회 시 hasActiveReservation과 usedCount는 null이어야 한다")
+    void findPtCourseDetail_guestUser() {
+        // given
+        PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
+        when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
+        when(ptCurriculumRepository.findAllByPtCourseId(1L)).thenReturn(List.of());
+        when(ptCourseScheduleRepository.findAllByPtCourseId(1L)).thenReturn(List.of());
+        when(reviewQueryPort.findRecentByPtCourseId(anyLong(), anyInt())).thenReturn(List.of());
+
+        // when
+        PtCourseQueryUseCase.PtCourseDetailView result =
+                ptCourseQueryService.findPtCourseDetail(1L, null);
+
+        // then
+        assertNull(result.hasActiveReservation());
+        assertNull(result.usedCount());
     }
 
     @Test

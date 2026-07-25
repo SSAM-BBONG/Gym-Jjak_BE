@@ -48,8 +48,11 @@ public record PtCourseDetailResponse(
         @Schema(description = "활성 예약 여부 (비로그인 시 null)", nullable = true)
         Boolean hasActiveReservation,
 
-        @Schema(description = "예약된 세션 수 (비로그인 시 null)", nullable = true)
-        Integer reservedCount
+        @Schema(description = "소진된 세션 수 (비로그인 또는 결제 이력 없을 시 null)", nullable = true)
+        Integer usedCount,
+
+        @Schema(description = "결제 불가 안내 메시지. 결제 이력 있을 때만 반환, 없으면 null", nullable = true)
+        String reservationMessage
 
 ) {
 
@@ -100,7 +103,8 @@ public record PtCourseDetailResponse(
                 schedules,
                 view.recentReviews(),
                 view.hasActiveReservation(),
-                view.reservedCount()
+                view.usedCount(),
+                view.reservationMessage()
         );
     }
 }

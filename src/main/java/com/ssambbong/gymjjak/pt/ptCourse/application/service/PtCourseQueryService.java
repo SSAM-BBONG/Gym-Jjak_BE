@@ -428,14 +428,16 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
         // 로그인 사용자면 예약 여부 및 예약 횟수 조회
         Boolean hasActiveReservation = null;
-        Integer reservedCount = null;
+        Integer usedCount = null;
+        String reservationMessage = null;
         if (userId != null) {
             List<PtReservation> myReservations = ptReservationRepository.findAllByUserId(userId, null).stream()
                     .filter(r -> r.getPtCourseId().equals(ptCourse.getId()))
                     .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
                     .toList();
             hasActiveReservation = !myReservations.isEmpty();
-            reservedCount = myReservations.size();
+            usedCount = myReservations.isEmpty() ? null : myReservations.size();
+            reservationMessage = hasActiveReservation ? "결제 내역이 있는 PT는 결제할 수 없습니다." : null;
         }
 
         return new PtCourseDetailView(
@@ -451,7 +453,8 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 schedules,
                 reviewQueryPort.findRecentByPtCourseId(ptCourse.getId(), 3),
                 hasActiveReservation,
-                reservedCount
+                usedCount,
+                reservationMessage
         );
     }
 
