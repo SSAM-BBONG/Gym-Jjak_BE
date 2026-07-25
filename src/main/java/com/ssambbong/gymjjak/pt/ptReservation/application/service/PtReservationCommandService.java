@@ -255,7 +255,7 @@ public class PtReservationCommandService implements PtReservationCommandUseCase 
                 .allMatch(session -> session.getStatus() == PtReservationStatus.COMPLETED);
         if (allCompleted) {
             throw new PtReservationStatusInvalidException(
-                    PtReservationErrorCode.PT_RESERVATION_ALREADY_COMPLETED);
+                    PtReservationErrorCode.PT_RESERVATION_COMPLETED_CANNOT_CANCEL);
         }
 
         boolean hasCancellableSession = sessions.stream().anyMatch(session ->
