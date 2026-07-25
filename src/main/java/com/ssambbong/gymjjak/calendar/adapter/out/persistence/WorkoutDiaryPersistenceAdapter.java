@@ -100,6 +100,22 @@ public class WorkoutDiaryPersistenceAdapter implements WorkoutDiaryPort {
     }
 
     @Override
+    public List<CalendarDayDiaryResult> findDiariesByUserIdAndPeriod(
+            Long userId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        return workoutDiaryJpaRepository.findAllWithSetsByUserIdAndPeriod(
+                        userId,
+                        startDate,
+                        endDate
+                )
+                .stream()
+                .map(this::toCalendarDayDiaryResult)
+                .toList();
+    }
+
+    @Override
     public List<CalendarMonthDiaryResult> findDiarySummariesByUserIdAndPeriod(
             Long userId,
             LocalDate startDate,

@@ -164,7 +164,7 @@ assistant 메시지는 저장하지 않습니다.
 | `CHATBOT_STREAM_IN_PROGRESS` | 같은 세션에서 이전 스트림이 종료되지 않음 |
 | `CHATBOT_STREAM_CAPACITY_EXCEEDED` | 전용 스트리밍 executor가 포화되어 새 스트림을 받을 수 없음 |
 | `CHATBOT_SESSION_NOT_FOUND` | 존재하지 않거나 본인 소유가 아닌 `sessionId` |
-| `CHATBOT_SUBSCRIPTION_REQUIRED` | Spring이 FastAPI 호출 전에 활성 챗봇 구독을 검증해 거부함 |
+| `CHATBOT_SUBSCRIPTION_REQUIRED` | Spring이 FastAPI 호출 전에 활성·미만료 구독권 또는 ACTIVE 트레이너 프로필을 검증해 거부함 |
 | `CHATBOT_INVALID_QUICK_REPLY` | 현재 질문에 존재하지 않거나 만료된 선택값 전송 |
 | `LLM_CALL_LIMIT_EXCEEDED`, `LLM_NETWORK_ERROR`, `INTERNAL_ERROR` | FastAPI SSE `error`의 코드 전달 |
 

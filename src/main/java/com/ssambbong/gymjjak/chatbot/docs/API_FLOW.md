@@ -94,7 +94,7 @@ Frontend
   → STOMP SEND /app/chatbot.send
   → ChatbotWebSocketController.sendMessage()
   → ChatbotConversationService.prepare()
-      → 활성 챗봇 구독권 검증
+      → 챗봇 접근 권한 검증(활성·미만료 구독권 또는 ACTIVE 트레이너 프로필)
       → 세션 생성 또는 세션 소유권 검증
       → 세션 단위 스트림 잠금 획득
       → quickReply 검증 및 선택값 컨텍스트 저장
@@ -115,7 +115,7 @@ Frontend
 ### 4.3 요청 준비 단계
 
 1. `ChatbotWebSocketController`가 STOMP Principal에서 `AuthUser`를 추출하고, 요청 DTO를 `SendChatbotMessageCommand`로 변환한다.
-2. `ChatbotConversationService.prepare()`가 활성 챗봇 구독권을 먼저 확인한다.
+2. `ChatbotConversationService.prepare()`가 활성·미만료 구독권 또는 ACTIVE 트레이너 프로필 보유 여부를 먼저 확인한다.
    - 실패 시 `CHATBOT_SUBSCRIPTION_REQUIRED` 오류를 반환한다.
    - 이 경우 세션 생성·조회, 메시지 저장, FastAPI 호출은 모두 수행하지 않는다.
 3. `sessionId`가 없으면 새 `chatbot_session`을 생성한다. 있으면 세션 존재 여부와 로그인 사용자의 소유권을 검증한다.
@@ -166,7 +166,7 @@ FastAPI quick_replies
 
 | 상황 | 처리 |
 | --- | --- |
-| 활성 구독권 없음 | `CHATBOT_SUBSCRIPTION_REQUIRED` 오류, 세션/메시지/FastAPI 호출 없음 |
+| 활성·미만료 구독권과 ACTIVE 트레이너 프로필 모두 없음 | `CHATBOT_SUBSCRIPTION_REQUIRED` 오류, 세션/메시지/FastAPI 호출 없음 |
 | 세션 없음 또는 타인 소유 | `CHATBOT_SESSION_NOT_FOUND` 또는 `CHATBOT_SESSION_ACCESS_DENIED` 오류 |
 | 잘못되었거나 만료된 버튼 선택 | `CHATBOT_INVALID_QUICK_REPLY` 오류, 선택값/메시지/FastAPI 호출 없음 |
 | 같은 세션 중복 요청 | `CHATBOT_STREAM_IN_PROGRESS` 오류 |

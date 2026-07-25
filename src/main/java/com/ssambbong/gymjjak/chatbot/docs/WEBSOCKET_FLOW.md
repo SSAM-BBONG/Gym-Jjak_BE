@@ -14,7 +14,7 @@
   → STOMP SEND /app/chatbot.send
   → ChatbotWebSocketController(인증 Principal)
   → ChatbotConversationService.prepare(...)
-      → 활성 챗봇 구독 검증
+      → 챗봇 접근 권한 검증(활성·미만료 구독권 또는 ACTIVE 트레이너 프로필)
           → 미보유: /user/queue/chatbot error(CHATBOT_SUBSCRIPTION_REQUIRED) 전송, FastAPI 호출 없음
           → 보유: 아래 세션 처리 계속
   → sessionId 유무 판단
@@ -63,7 +63,7 @@ Spring은 FastAPI에 요청 한 번을 보내고, 그 **동일한 HTTP 응답 �
 
 | 상황 | 처리 |
 | --- | --- |
-| 활성 챗봇 구독 미보유 | `prepare()` 첫 단계에서 `CHATBOT_SUBSCRIPTION_REQUIRED` error를 전송하고, 세션 생성·조회, 스트림 잠금, 메시지 저장 및 FastAPI 호출을 수행하지 않음 |
+| 활성·미만료 구독권과 ACTIVE 트레이너 프로필 모두 미보유 | `prepare()` 첫 단계에서 `CHATBOT_SUBSCRIPTION_REQUIRED` error를 전송하고, 세션 생성·조회, 스트림 잠금, 메시지 저장 및 FastAPI 호출을 수행하지 않음 |
 | 같은 세션의 동시 요청 | 두 번째 요청은 `CHATBOT_STREAM_IN_PROGRESS` error; 새 FastAPI 호출 없음 |
 | 다른 세션의 요청 | 독립적으로 실행 가능 |
 | FastAPI 연결/파싱/타임아웃 실패 | assistant 미저장, `error` 전송, 잠금 해제 |
@@ -83,6 +83,7 @@ Spring은 FastAPI에 요청 한 번을 보내고, 그 **동일한 HTTP 응답 �
 
 | 날짜 | 변경 내용 |
 | --- | --- |
+| 2026-07-26 | 챗봇 접근 권한을 활성·미만료 구독권 또는 ACTIVE 트레이너 프로필 기준으로 확장 |
 | 2026-07-25 | FastAPI 어절 단위 delta 분할에 맞춰 Spring 즉시 릴레이 원칙 및 delta 0건 시 `done.answer` fallback delta 전송 규칙 추가 |
 | 2026-07-24 | Spring 컨텍스트 기반 quickReply 검증·저장, `done.quickReplies` 릴레이 흐름 추가 |
 | 2026-07-23 | STOMP 입력부터 FastAPI SSE 릴레이, 저장 순서, 동시성·트랜잭션 경계 작성 |
