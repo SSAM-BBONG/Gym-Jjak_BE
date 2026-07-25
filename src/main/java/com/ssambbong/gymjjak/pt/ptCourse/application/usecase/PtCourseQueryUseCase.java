@@ -16,8 +16,8 @@ public interface PtCourseQueryUseCase {
     // 목록 조회
     List<PtCourseListView> findAllPtCourses();
 
-    // 상세 조회
-    PtCourseDetailView findPtCourseDetail(Long ptCourseId);
+    // 상세 조회 (userId null이면 비로그인 사용자)
+    PtCourseDetailView findPtCourseDetail(Long ptCourseId, Long userId);
 
     // 내 강습 목록 조회 (트레이너 전용)
     List<MyPtCourseListView> findMyPtCourses(Long userId, PtCourseStatus status);
@@ -74,7 +74,9 @@ public interface PtCourseQueryUseCase {
             Long trainerProfileId,
             List<CurriculumView> curriculums,
             List<ScheduleView> schedules,
-            List<ReviewQueryPort.ReviewSummary> recentReviews
+            List<ReviewQueryPort.ReviewSummary> recentReviews,
+            Boolean hasActiveReservation,  // 비로그인 시 null
+            Integer usedCount              // 비로그인 시 null
     ) {}
 
     // ──── 커리큘럼 뷰 ────
@@ -123,6 +125,7 @@ public interface PtCourseQueryUseCase {
 
     // 수강생 상세 뷰
     record ReservationDetailView(
+            Long userId,
             String nickname,
             String email,
             String phone,

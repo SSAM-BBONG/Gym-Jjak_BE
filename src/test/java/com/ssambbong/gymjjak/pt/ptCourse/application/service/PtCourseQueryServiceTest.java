@@ -126,11 +126,12 @@ class PtCourseQueryServiceTest {
                 PtCourseSchedule.restore(1L, 1L, DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0))
         );
         when(ptCourseScheduleRepository.findAllByPtCourseId(1L)).thenReturn(schedules);
-        when(reviewQueryPort.findRecentByTrainerProfileId(anyLong(), anyInt())).thenReturn(List.of());
+        when(reviewQueryPort.findRecentByPtCourseId(anyLong(), anyInt())).thenReturn(List.of());
+        when(ptReservationRepository.findAllByUserId(anyLong(), any())).thenReturn(List.of());
 
         // when
         PtCourseQueryUseCase.PtCourseDetailView result =
-                ptCourseQueryService.findPtCourseDetail(1L);
+                ptCourseQueryService.findPtCourseDetail(1L, 1L);
 
         // then
         assertEquals(1L, result.ptCourseId());
@@ -150,9 +151,32 @@ class PtCourseQueryServiceTest {
         assertEquals(LocalTime.of(10, 0), result.schedules().get(0).startTime());
         assertEquals(LocalTime.of(11, 0), result.schedules().get(0).endTime());
 
+        // 로그인 사용자 + 예약 없음 → hasActiveReservation=false, usedCount=null
+        assertEquals(false, result.hasActiveReservation());
+        assertNull(result.usedCount());
+
         verify(ptCourseRepository).findById(1L);
         verify(ptCurriculumRepository).findAllByPtCourseId(1L);
         verify(ptCourseScheduleRepository).findAllByPtCourseId(1L);
+    }
+
+    @Test
+    @DisplayName("비로그인 사용자가 PT 강습 상세 조회 시 hasActiveReservation과 usedCount는 null이어야 한다")
+    void findPtCourseDetail_guestUser() {
+        // given
+        PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
+        when(ptCourseRepository.findById(1L)).thenReturn(Optional.of(ptCourse));
+        when(ptCurriculumRepository.findAllByPtCourseId(1L)).thenReturn(List.of());
+        when(ptCourseScheduleRepository.findAllByPtCourseId(1L)).thenReturn(List.of());
+        when(reviewQueryPort.findRecentByPtCourseId(anyLong(), anyInt())).thenReturn(List.of());
+
+        // when
+        PtCourseQueryUseCase.PtCourseDetailView result =
+                ptCourseQueryService.findPtCourseDetail(1L, null);
+
+        // then
+        assertNull(result.hasActiveReservation());
+        assertNull(result.usedCount());
     }
 
     @Test
@@ -163,7 +187,7 @@ class PtCourseQueryServiceTest {
 
         // when & then
         assertThrows(PtCourseNotFoundException.class,
-                () -> ptCourseQueryService.findPtCourseDetail(999L));
+                () -> ptCourseQueryService.findPtCourseDetail(999L, null));
 
         verify(ptCourseRepository).findById(999L);
     }
@@ -177,6 +201,6 @@ class PtCourseQueryServiceTest {
 
         // when & then
         assertThrows(PtCourseNotFoundException.class,
-                () -> ptCourseQueryService.findPtCourseDetail(1L));
+                () -> ptCourseQueryService.findPtCourseDetail(1L, null));
     }
 }
