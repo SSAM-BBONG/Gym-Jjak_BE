@@ -33,6 +33,7 @@
       → X-Internal-Api-Key, 서버 생성 X-Request-ID, actor, memory 전달
       → 동일 HTTP 응답의 SSE를 종료까지 소비
           → delta: 사용자 전용 큐로 즉시 릴레이
+          → delta가 0건인 done: done.answer를 delta로 한 번 보완 릴레이
           → done: assistant 최종 메시지 저장
               → ROUTINE quickReplies가 있으면 현재 질문·선택지 저장
               → quickReplies JSON 배열을 포함한 done 릴레이
@@ -46,14 +47,15 @@ Spring은 FastAPI에 요청 한 번을 보내고, 그 **동일한 HTTP 응답 �
 
 | FastAPI SSE | Spring 처리 | Frontend STOMP |
 | --- | --- | --- |
-| `event: delta`, `{"text":"..."}` | 텍스트 조각을 즉시 릴레이 | `type=delta` |
+| `event: delta`, `{"text":"..."}` | 텍스트 조각을 지연 없이 즉시 릴레이 | `type=delta` |
 | `event: done`, `ChatResponse` | assistant 최종본 저장 | `type=done` |
 | `event: error`, `{code,message,request_id,retryable}` | assistant 미저장, 오류 변환 | `type=error` |
 
 - FastAPI `delta` payload에는 `session_id`가 없으므로 Spring이 현재 처리 중인 세션의 `sessionId`를 붙입니다.
 - FastAPI `done`의 `session_id`는 Spring이 요청한 세션과 일치해야 합니다. 다르면 안전하게 `error(INTERNAL_ERROR)`로 종료하고 assistant를 저장하지 않습니다.
 - Spring의 `requestId`는 STOMP 처리마다 서버가 새 UUID로 생성하며, `X-Request-ID`와 FastAPI payload의 `request_id`를 같은 추적 키로 사용합니다.
-- `done.answer`는 최종 전체 문자열입니다. 앞서 받은 delta와 합쳐 화면에 중복 출력하지 않습니다.
+- `done.answer`는 최종 전체 문자열입니다. Spring은 이미 delta를 하나 이상 릴레이했다면 다시 출력하지 않습니다. 다만 delta가 0건인 채 done이 오면 빈 말풍선을 막기 위해 `done.answer`를 delta로 한 번 릴레이한 뒤 done을 전송합니다.
+- Spring은 전송 속도를 조절하지 않습니다. 프론트는 수신한 delta를 렌더링 큐에 적재하고 일정 간격으로 화면에 출력해 타이핑 효과를 구현합니다.
 - FastAPI의 `quick_replies`는 Spring의 `ChatbotAiEvent.Done`을 거쳐 STOMP `done.quickReplies` JSON 배열로 전달됩니다. 이때 Spring이 FastAPI의 `question_id`를 프론트 계약인 `questionId`로 정규화합니다. 프론트는 이 배열만 버튼으로 렌더링합니다.
 - FastAPI는 Spring이 요청의 `memory`로 전달한 summary, 최근 메시지, 활성 컨텍스트를 사용하며 자체 InMemory 대화 상태를 저장하지 않습니다.
 
@@ -81,5 +83,6 @@ Spring은 FastAPI에 요청 한 번을 보내고, 그 **동일한 HTTP 응답 �
 
 | 날짜 | 변경 내용 |
 | --- | --- |
+| 2026-07-25 | FastAPI 어절 단위 delta 분할에 맞춰 Spring 즉시 릴레이 원칙 및 delta 0건 시 `done.answer` fallback delta 전송 규칙 추가 |
 | 2026-07-24 | Spring 컨텍스트 기반 quickReply 검증·저장, `done.quickReplies` 릴레이 흐름 추가 |
 | 2026-07-23 | STOMP 입력부터 FastAPI SSE 릴레이, 저장 순서, 동시성·트랜잭션 경계 작성 |

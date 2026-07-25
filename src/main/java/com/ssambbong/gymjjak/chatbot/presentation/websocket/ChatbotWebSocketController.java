@@ -28,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Controller
@@ -97,8 +98,12 @@ public class ChatbotWebSocketController {
     }
 
     private void stream(AuthUser authUser, ChatbotConversationStart start) {
+        AtomicBoolean relayedDelta = new AtomicBoolean(false);
         try {
-            chatbotAiClientPort.stream(start.fastApiRequest(), event -> handleFastApiEvent(authUser, start, event));
+            chatbotAiClientPort.stream(
+                    start.fastApiRequest(),
+                    event -> handleFastApiEvent(authUser, start, event, relayedDelta)
+            );
         } catch (ApplicationException exception) {
             send(authUser, ChatbotErrorEvent.of(
                     start.sessionId(), start.requestId(), exception.getErrorCode().getCode(), exception.getMessage(), true
@@ -113,9 +118,15 @@ public class ChatbotWebSocketController {
         }
     }
 
-    private void handleFastApiEvent(AuthUser authUser, ChatbotConversationStart start, ChatbotAiEvent event) {
+    private void handleFastApiEvent(
+            AuthUser authUser,
+            ChatbotConversationStart start,
+            ChatbotAiEvent event,
+            AtomicBoolean relayedDelta
+    ) {
         // delta event인지 확인
         if (event instanceof ChatbotAiEvent.Delta delta) {
+            relayedDelta.set(true);
             // FastAPI 응답 내용 담은 send 호출,
             send(authUser, ChatbotDeltaEvent.of(start.sessionId(), start.requestId(), delta.text()));
             return;
@@ -124,6 +135,9 @@ public class ChatbotWebSocketController {
         if (event instanceof ChatbotAiEvent.Done done) {
             // done 이벤트 저장 및 최종 문자 저장
             conversationService.persistDone(start, done);
+            if (!relayedDelta.get()) {
+                send(authUser, ChatbotDeltaEvent.of(start.sessionId(), start.requestId(), done.answer()));
+            }
             // Done 이벤트 프론트로 전송
             send(authUser, ChatbotDoneEvent.of(start.requestId(), done, objectMapper));
             return;

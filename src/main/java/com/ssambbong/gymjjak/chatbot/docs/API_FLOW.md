@@ -106,6 +106,7 @@ Frontend
       → POST FastAPI /api/v1/chatbot/messages
       → 동일 HTTP 연결의 SSE 수신
           → delta: STOMP delta 즉시 릴레이
+          → delta가 0건인 done: done.answer를 STOMP delta로 한 번 보완 릴레이
           → done: ASSISTANT 메시지·선택지 컨텍스트 저장 후 STOMP done 릴레이
           → error: STOMP error 릴레이
   → finally: 세션 스트림 잠금 해제
@@ -138,7 +139,9 @@ Frontend
 | `error` | 메시지 저장 없이 오류 전달 | `error` |
 
 4. `done` 수신 시에만 AI의 최종 `answer`, `routine`, `sources`를 ASSISTANT 메시지로 저장한다. 따라서 FastAPI 오류나 스트림 실패 시 불완전한 assistant 메시지는 남지 않는다.
-5. `finally`에서 성공·실패와 관계없이 세션 스트림 잠금을 해제한다.
+5. Spring은 FastAPI delta를 지연·버퍼링하지 않고 즉시 릴레이한다. 다만 요청 동안 delta가 없었고 done이 오면, 빈 응답을 방지하기 위해 `done.answer`를 delta로 한 번 전송한 뒤 done을 전달한다. delta가 하나 이상 있었다면 `done.answer`를 다시 delta로 보내지 않는다.
+6. 프론트는 수신한 delta를 렌더링 큐에 보관하고 일정 간격으로 화면에 출력한다. 타이핑 효과의 속도 제어는 Spring이 아닌 프론트의 책임이다.
+7. `finally`에서 성공·실패와 관계없이 세션 스트림 잠금을 해제한다.
 
 ### 4.5 quickReply 상태 흐름
 
