@@ -91,6 +91,39 @@ class ChatbotWebSocketControllerTest {
         assertThat(event.quickReplies().get(0).get("value").asText()).isEqualTo("MUSCLE_GAIN");
     }
 
+    @Test
+    void relaysDoneAnswerAsDeltaWhenFastApiSendsNoDelta() {
+        TaskExecutor directExecutor = Runnable::run;
+        ChatbotWebSocketController controller = new ChatbotWebSocketController(
+                conversationService, chatbotAiClientPort, messagingTemplate, new ObjectMapper(), directExecutor
+        );
+        ChatbotConversationStart start = start();
+        AuthUser authUser = new AuthUser(7L, "member@example.com", "USER");
+        ChatbotAiEvent.Done done = new ChatbotAiEvent.Done(
+                "session-123", "fallback answer", "ROUTINE", null, "[]", false, "[]"
+        );
+        when(conversationService.prepare(any())).thenReturn(start);
+        doAnswer(invocation -> {
+            @SuppressWarnings("unchecked")
+            Consumer<ChatbotAiEvent> consumer = invocation.getArgument(1);
+            consumer.accept(done);
+            return null;
+        }).when(chatbotAiClientPort).stream(eq(start.fastApiRequest()), any());
+
+        controller.sendMessage(
+                new SendChatbotMessageRequest("session-123", "routine recommendation", "ROUTINE_RECOMMENDATION", null),
+                new UsernamePasswordAuthenticationToken(authUser, null)
+        );
+
+        ArgumentCaptor<Object> events = ArgumentCaptor.forClass(Object.class);
+        verify(messagingTemplate, times(3)).convertAndSendToUser(eq("7"), eq("/queue/chatbot"), events.capture());
+        assertThat(events.getAllValues()).containsExactly(
+                ChatbotStartedEvent.of("session-123", "request-123"),
+                ChatbotDeltaEvent.of("session-123", "request-123", "fallback answer"),
+                ChatbotDoneEvent.of("request-123", done, new ObjectMapper())
+        );
+    }
+
     private ChatbotConversationStart start() {
         return new ChatbotConversationStart(
                 "session-123",

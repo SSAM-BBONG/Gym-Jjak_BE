@@ -42,6 +42,8 @@ public interface SpringDataChatbotSessionRepository extends JpaRepository<Chatbo
             @Param("limit") int limit
     );
 
+    // 특정 세션 및 requestId에 충돌 방지 낙관적 락을 거는 메서드
+    // 특정 세션 대상으로, 세션 소유권 재확인,
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             UPDATE chatbot_sessions
@@ -59,6 +61,7 @@ public interface SpringDataChatbotSessionRepository extends JpaRepository<Chatbo
             @Param("now") LocalDateTime now
     );
 
+    // 잠겼던 현재 session 중 requestId에 해당하는 채팅만 해제
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             UPDATE chatbot_sessions
@@ -67,5 +70,8 @@ public interface SpringDataChatbotSessionRepository extends JpaRepository<Chatbo
             WHERE session_id = :sessionId
               AND active_request_id = :requestId
             """, nativeQuery = true)
-    int releaseStreamLock(@Param("sessionId") String sessionId, @Param("requestId") String requestId);
+    int releaseStreamLock(
+            @Param("sessionId") String sessionId,
+            @Param("requestId") String requestId
+    );
 }
