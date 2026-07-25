@@ -13,7 +13,7 @@ import java.util.List;
 
 public record UpdateFeedbackRequest(
         @NotBlank String content,
-        @Size(min = 1, max = 2) @Valid List<@NotNull MediaRequest> media
+        @Size(max = 2) @Valid List<@NotNull MediaRequest> media
 ) {
     public UpdateFeedbackCommand toCommand(Long userId, Long ptReservationId, Long feedbackId) {
         List<UpdateFeedbackCommand.MediaCommand> mediaCommands = (media == null) ? null :
