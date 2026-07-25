@@ -154,7 +154,7 @@ public class PtReservationController {
                     content = @Content(schema = @Schema()))
     })
     @PatchMapping("/reservations/me/{reservationId}/cancel")
-    public ResponseEntity<GlobalApiResponse<CancelPtReservationResponse>> cancelPtReservation(
+    public ResponseEntity<GlobalApiResponse<CancelReservationResponse>> cancelPtReservation(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("reservationId") Long ptReservationId
     ) {
@@ -163,7 +163,7 @@ public class PtReservationController {
         );
         return ResponseEntity.ok(GlobalApiResponse.ok(
                 PtReservationResponseCode.PT_RESERVATION_CANCELLED,
-                CancelPtReservationResponse.cancelled()
+                CancelReservationResponse.cancelled()
         ));
     }
 
