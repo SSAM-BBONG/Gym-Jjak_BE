@@ -11,6 +11,7 @@ import com.ssambbong.gymjjak.file.domain.repository.FileStoragePort;
 import com.ssambbong.gymjjak.file.exception.FileNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class FileUrlService implements FileUrlUseCase {
     private final FileUseCase fileUseCase;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public FileUrlResult getUrl(Long fileId, Long requesterId, boolean isAdmin) {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new FileNotFoundException(fileId));
@@ -43,7 +44,7 @@ public class FileUrlService implements FileUrlUseCase {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public Map<Long, FileUrlResult> getUrls(List<Long> fileIds, Long requesterId, boolean isAdmin) {
         return fileRepository.findAllByIds(fileIds).stream()
                 .collect(Collectors.toMap(
