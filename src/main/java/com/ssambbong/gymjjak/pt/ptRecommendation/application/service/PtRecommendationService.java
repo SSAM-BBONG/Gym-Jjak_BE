@@ -4,6 +4,7 @@ import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.OrganizationQueryPort.OrganizationInfo;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.dto.TrainerSummaryInfo;
+import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PartType;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.model.PtCourse;
 import com.ssambbong.gymjjak.pt.ptCourse.domain.repository.PtCourseRepository;
 import com.ssambbong.gymjjak.pt.ptReservation.application.usecase.PtReservationQueryUseCase;
@@ -52,7 +53,21 @@ public class PtRecommendationService implements PtRecommendationUseCase {
     public PtRecommendationResult recommend(PtRecommendationCommand command) {
         OnboardingQueryPort.MyOnboardingInfo onboarding = onboardingQueryPort.findMyOnboarding(command.userId());
 
-        List<PtCourse> candidates = filterByPartAndDistance(command, onboarding);
+        double maxDistanceKm = DISTANCE_LEVEL_TO_KM.getOrDefault(command.distanceLevel(), DEFAULT_MAX_DISTANCE_KM);
+
+        // 1단계: 부위+거리 조건 그대로
+        List<PtCourse> candidates = filterCandidates(command.targetParts(), maxDistanceKm, onboarding);
+
+        // 2단계: 후보가 없으면 거리 조건을 완화(무제한)해서 재검색 — 부위는 유지
+        if (candidates.isEmpty()) {
+            candidates = filterCandidates(command.targetParts(), null, onboarding);
+        }
+
+        // 3단계: 그래도 없으면 부위 조건까지 완화해서 재검색 — 항상 결과를 내기 위한 최후 수단
+        if (candidates.isEmpty()) {
+            candidates = filterCandidates(null, null, onboarding);
+        }
+
         if (candidates.isEmpty()) {
             throw new PtRecommendationNotFoundException();
         }
@@ -87,29 +102,31 @@ public class PtRecommendationService implements PtRecommendationUseCase {
                         .toList());
     }
 
-    // 1차 필터링(비AI): 부위 조건으로 후보를 뽑은 뒤, 온보딩 기준주소 대비 거리로 좁힌다.
-    private List<PtCourse> filterByPartAndDistance(
-            PtRecommendationCommand command, OnboardingQueryPort.MyOnboardingInfo onboarding) {
-        List<PtCourse> matchedByPart = ptCourseRepository.findAllVisibleByParts(command.targetParts());
-        if (matchedByPart.isEmpty()) {
+    // 1차 필터링(비AI): 부위 조건(null이면 전체)으로 후보를 뽑은 뒤, 온보딩 기준주소 대비
+    // 거리로 좁힌다(maxDistanceKm이 null이면 거리 제한 없이 전체 대상으로 정렬만 한다).
+    private List<PtCourse> filterCandidates(
+            List<PartType> parts, Double maxDistanceKm, OnboardingQueryPort.MyOnboardingInfo onboarding) {
+        List<PtCourse> matched = (parts == null || parts.isEmpty())
+                ? ptCourseRepository.findAllVisible()
+                : ptCourseRepository.findAllVisibleByParts(parts);
+        if (matched.isEmpty()) {
             return List.of();
         }
 
         Map<Long, OrganizationInfo> organizations = organizationQueryPort.findAllByIds(
-                matchedByPart.stream().map(PtCourse::getOrganizationId).distinct().toList());
+                matched.stream().map(PtCourse::getOrganizationId).distinct().toList());
 
-        double maxDistanceKm = DISTANCE_LEVEL_TO_KM.getOrDefault(command.distanceLevel(), DEFAULT_MAX_DISTANCE_KM);
         double userLat = onboarding.regionLatitude().doubleValue();
         double userLng = onboarding.regionLongitude().doubleValue();
 
-        return matchedByPart.stream()
+        return matched.stream()
                 .map(course -> Map.entry(course, organizations.get(course.getOrganizationId())))
                 .filter(entry -> entry.getValue() != null
                         && entry.getValue().latitude() != null
                         && entry.getValue().longitude() != null)
                 .map(entry -> Map.entry(entry.getKey(),
                         haversineKm(userLat, userLng, entry.getValue().latitude(), entry.getValue().longitude())))
-                .filter(entry -> entry.getValue() <= maxDistanceKm)
+                .filter(entry -> maxDistanceKm == null || entry.getValue() <= maxDistanceKm)
                 .sorted(Comparator.comparingDouble(Map.Entry::getValue))
                 .limit(MAX_CANDIDATES_TO_AI)
                 .map(Map.Entry::getKey)
