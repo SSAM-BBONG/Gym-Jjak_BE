@@ -20,6 +20,9 @@ public interface SpringDataFeedbackRepository extends JpaRepository<FeedbackJpaE
     // 피드백 단건 조회
     Optional<FeedbackJpaEntity> findByIdAndDeletedAtIsNull(Long id);
 
+    // 삭제되지 않은 피드백 존재 여부 확인 (사용자 직접 삭제 시 권한 검증용)
+    boolean existsByIdAndDeletedAtIsNull(Long id);
+
     // 코스 전체 세션 중 동일 커리큘럼 피드백 중복 여부 확인
     boolean existsByPtReservationIdInAndPtCurriculumIdAndDeletedAtIsNull(List<Long> ptReservationIds, Long ptCurriculumId);
 

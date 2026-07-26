@@ -1,7 +1,7 @@
 package com.ssambbong.gymjjak.pt.ptReservation.infrastructure.adapter;
 
 import com.ssambbong.gymjjak.pt.ptCourse.application.port.TrainerProfileQueryPort;
-import com.ssambbong.gymjjak.pt.ptCourse.domain.exception.TrainerProfileNotFoundException;
+import com.ssambbong.gymjjak.trainer.trainerprofile.domain.exception.TrainerProfileNotFoundException;
 import com.ssambbong.gymjjak.pt.ptReservation.application.port.TrainerQueryPort;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;

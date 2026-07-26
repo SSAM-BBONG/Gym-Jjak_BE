@@ -70,9 +70,10 @@ public class FeedbackRepositoryAdapter implements FeedbackRepository {
 
     @Override
     public void deleteById(Long feedbackId) {
-        FeedbackJpaEntity entity = repository.findByIdAndDeletedAtIsNull(feedbackId)
-                .orElseThrow(FeedbackNotFoundException::new);
-        entity.delete();
+        if (!repository.existsByIdAndDeletedAtIsNull(feedbackId)) {
+            throw new FeedbackNotFoundException();
+        }
+        repository.deleteById(feedbackId);
     }
 
     @Override
