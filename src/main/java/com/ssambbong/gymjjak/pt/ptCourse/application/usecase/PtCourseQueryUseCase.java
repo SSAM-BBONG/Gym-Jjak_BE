@@ -75,8 +75,7 @@ public interface PtCourseQueryUseCase {
             List<CurriculumView> curriculums,
             List<ScheduleView> schedules,
             List<ReviewQueryPort.ReviewSummary> recentReviews,
-            Boolean hasActiveReservation,  // 비로그인 시 null
-            Integer usedCount              // 비로그인 시 null
+            Integer usedCount   // 비로그인 or 미결제 시 null / 결제 O 세션 없음 시 0 / 세션 있음 시 N
     ) {}
 
     // ──── 커리큘럼 뷰 ────
