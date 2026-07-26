@@ -74,7 +74,7 @@ stompClient.send('/app/chatbot.send', {}, JSON.stringify({
 
 ## 🌊 수신 이벤트
 
-모든 이벤트는 원칙적으로 `type`, `sessionId`, `requestId`를 포함합니다. 다만 활성 챗봇 구독 사전 검증에 실패한 `CHATBOT_SUBSCRIPTION_REQUIRED` error는 세션과 요청 ID가 생성되기 전에 발생하므로 `sessionId`와 `requestId`가 `null`입니다. 이는 Spring의 `ChatbotErrorEvent.of(null, null, ...)` 동작과 같습니다. 새 세션은 첫 번째 `started` 이벤트에서 클라이언트가 보관할 `sessionId`를 받습니다.
+모든 이벤트는 원칙적으로 `type`, `sessionId`, `requestId`를 포함합니다. 다만 챗봇 접근 권한 사전 검증에 실패한 `CHATBOT_SUBSCRIPTION_REQUIRED` error는 세션과 요청 ID가 생성되기 전에 발생하므로 `sessionId`와 `requestId`가 `null`입니다. 이는 Spring의 `ChatbotErrorEvent.of(null, null, ...)` 동작과 같습니다. 새 세션은 첫 번째 `started` 이벤트에서 클라이언트가 보관할 `sessionId`를 받습니다.
 
 ### `started`
 
@@ -164,7 +164,7 @@ assistant 메시지는 저장하지 않습니다.
 | `CHATBOT_STREAM_IN_PROGRESS` | 같은 세션에서 이전 스트림이 종료되지 않음 |
 | `CHATBOT_STREAM_CAPACITY_EXCEEDED` | 전용 스트리밍 executor가 포화되어 새 스트림을 받을 수 없음 |
 | `CHATBOT_SESSION_NOT_FOUND` | 존재하지 않거나 본인 소유가 아닌 `sessionId` |
-| `CHATBOT_SUBSCRIPTION_REQUIRED` | Spring이 FastAPI 호출 전에 활성·미만료 구독권 또는 ACTIVE 트레이너 프로필을 검증해 거부함 |
+| `CHATBOT_SUBSCRIPTION_REQUIRED` | Spring이 FastAPI 호출 전에 챗봇 접근 권한(활성·미만료 구독권 또는 ACTIVE 트레이너 프로필)을 검증해 거부함 |
 | `CHATBOT_INVALID_QUICK_REPLY` | 현재 질문에 존재하지 않거나 만료된 선택값 전송 |
 | `LLM_CALL_LIMIT_EXCEEDED`, `LLM_NETWORK_ERROR`, `INTERNAL_ERROR` | FastAPI SSE `error`의 코드 전달 |
 

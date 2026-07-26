@@ -116,7 +116,7 @@ Frontend
 
 1. `ChatbotWebSocketController`가 STOMP Principal에서 `AuthUser`를 추출하고, 요청 DTO를 `SendChatbotMessageCommand`로 변환한다.
 2. `ChatbotConversationService.prepare()`가 활성·미만료 구독권 또는 ACTIVE 트레이너 프로필 보유 여부를 먼저 확인한다.
-   - 실패 시 `CHATBOT_SUBSCRIPTION_REQUIRED` 오류를 반환한다.
+   - 접근 권한이 없으면 `CHATBOT_SUBSCRIPTION_REQUIRED` 오류를 반환한다.
    - 이 경우 세션 생성·조회, 메시지 저장, FastAPI 호출은 모두 수행하지 않는다.
 3. `sessionId`가 없으면 새 `chatbot_session`을 생성한다. 있으면 세션 존재 여부와 로그인 사용자의 소유권을 검증한다.
 4. 세션 단위 스트림 잠금을 획득한다. 같은 세션의 응답이 생성 중이면 `CHATBOT_STREAM_IN_PROGRESS` 오류를 반환한다. 서로 다른 세션은 독립적으로 처리한다.
@@ -125,6 +125,7 @@ Frontend
    - 유효한 선택값은 기존 컨텍스트 행에 갱신하며, 별도 DB 마이그레이션은 필요하지 않다.
    - 잘못되었거나 만료된 선택값은 `CHATBOT_INVALID_QUICK_REPLY` 오류를 반환하고, 메시지 저장과 FastAPI 호출을 수행하지 않는다.
 6. Service가 USER 메시지를 저장하고, 최근 메시지와 활성 `chatbot_contexts`를 조회해 FastAPI 요청의 `memory`를 구성한다.
+7. Spring은 동일 사용자 기준으로 온보딩(목적·기간·빈도·선호 운동), 최근 28일 운동일지의 최신 상세 최대 30건과 28일 요약(운동 일수·부위별 세션 수·부위별 총 볼륨), 최신 인바디 목록을 읽어 FastAPI 요청의 `personal_data` 스냅샷에 포함한다. 이 스냅샷은 요청 중에만 사용하며 저장하지 않는다.
 
 ### 4.4 Spring → FastAPI → Frontend 스트리밍
 
@@ -166,7 +167,7 @@ FastAPI quick_replies
 
 | 상황 | 처리 |
 | --- | --- |
-| 활성·미만료 구독권과 ACTIVE 트레이너 프로필 모두 없음 | `CHATBOT_SUBSCRIPTION_REQUIRED` 오류, 세션/메시지/FastAPI 호출 없음 |
+| 챗봇 접근 권한 없음(활성·미만료 구독권과 ACTIVE 트레이너 프로필 모두 없음) | `CHATBOT_SUBSCRIPTION_REQUIRED` 오류, 세션/메시지/FastAPI 호출 없음 |
 | 세션 없음 또는 타인 소유 | `CHATBOT_SESSION_NOT_FOUND` 또는 `CHATBOT_SESSION_ACCESS_DENIED` 오류 |
 | 잘못되었거나 만료된 버튼 선택 | `CHATBOT_INVALID_QUICK_REPLY` 오류, 선택값/메시지/FastAPI 호출 없음 |
 | 같은 세션 중복 요청 | `CHATBOT_STREAM_IN_PROGRESS` 오류 |

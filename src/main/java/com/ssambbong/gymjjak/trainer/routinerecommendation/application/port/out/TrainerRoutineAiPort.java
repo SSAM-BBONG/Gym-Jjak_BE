@@ -8,8 +8,19 @@ import java.util.List;
 public interface TrainerRoutineAiPort {
     TrainerRoutineRecommendationResult recommend(
             RecommendTrainerRoutineCommand command,
-            List<TrainerWorkoutSnapshot> workouts
+            TrainerWorkoutData workoutData
     );
+
+    record TrainerWorkoutData(List<TrainerWorkoutSnapshot> recentWorkouts, TrainerWorkoutSummary summary) {
+    }
+
+    record TrainerWorkoutSummary(
+            int periodDays,
+            int workoutDays,
+            java.util.Map<String, Integer> partSessionCounts,
+            java.util.Map<String, java.math.BigDecimal> partTotalVolumeKg
+    ) {
+    }
 
     record TrainerWorkoutSnapshot(
             String diaryDate,

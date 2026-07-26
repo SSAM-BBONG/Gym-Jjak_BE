@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiClientPort;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiEvent;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
+import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotUserDataSnapshot;
 import com.ssambbong.gymjjak.chatbot.application.result.ChatbotConversationStart;
 import com.ssambbong.gymjjak.chatbot.application.service.ChatbotConversationService;
 import com.ssambbong.gymjjak.chatbot.presentation.websocket.request.SendChatbotMessageRequest;
@@ -132,6 +133,7 @@ class ChatbotWebSocketControllerTest {
                         "session-123", "루틴 추천", "ROUTINE_RECOMMENDATION",
                         new ChatbotAiRequest.Actor(7L, "USER"),
                         new ChatbotAiRequest.Memory(null, List.of(), List.of()),
+                        ChatbotUserDataSnapshot.empty(),
                         "request-123"
                 )
         );

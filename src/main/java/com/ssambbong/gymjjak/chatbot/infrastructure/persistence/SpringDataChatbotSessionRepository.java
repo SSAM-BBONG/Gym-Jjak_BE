@@ -44,11 +44,13 @@ public interface SpringDataChatbotSessionRepository extends JpaRepository<Chatbo
 
     // 특정 세션 및 requestId에 충돌 방지 낙관적 락을 거는 메서드
     // 특정 세션 대상으로, 세션 소유권 재확인,
+    // 스트림이 비어 있거나 만료된 세션만 원자적으로 선점한다.
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             UPDATE chatbot_sessions
             SET active_request_id = :requestId,
-                active_stream_expires_at = :expiresAt
+                active_stream_expires_at = :expiresAt,
+                last_activity_at = :now
             WHERE session_id = :sessionId
               AND user_id = :userId
               AND (active_request_id IS NULL OR active_stream_expires_at < :now)
@@ -62,6 +64,7 @@ public interface SpringDataChatbotSessionRepository extends JpaRepository<Chatbo
     );
 
     // 잠겼던 현재 session 중 requestId에 해당하는 채팅만 해제
+    // 현재 요청 ID와 일치하는 경우에만 스트림 실행 권한을 해제한다.
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             UPDATE chatbot_sessions
