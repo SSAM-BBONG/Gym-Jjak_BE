@@ -47,6 +47,7 @@ class PtCourseQueryServiceTest {
     @Mock private UserNicknameQueryPort userNicknameQueryPort;
     @Mock private ReviewQueryPort reviewQueryPort;
     @Mock private FileUrlUseCase fileUrlUseCase;
+    @Mock private com.ssambbong.gymjjak.pt.ptCourse.application.port.PaymentQueryPort paymentQueryPort;
 
     @InjectMocks
     private PtCourseQueryService ptCourseQueryService;
@@ -128,6 +129,7 @@ class PtCourseQueryServiceTest {
         when(ptCourseScheduleRepository.findAllByPtCourseId(1L)).thenReturn(schedules);
         when(reviewQueryPort.findRecentByPtCourseId(anyLong(), anyInt())).thenReturn(List.of());
         when(ptReservationRepository.findAllByUserId(anyLong(), any())).thenReturn(List.of());
+        when(paymentQueryPort.existsPaidByUserIdAndPtCourseId(anyLong(), anyLong())).thenReturn(false);
 
         // when
         PtCourseQueryUseCase.PtCourseDetailView result =
@@ -151,8 +153,7 @@ class PtCourseQueryServiceTest {
         assertEquals(LocalTime.of(10, 0), result.schedules().get(0).startTime());
         assertEquals(LocalTime.of(11, 0), result.schedules().get(0).endTime());
 
-        // 로그인 사용자 + 예약 없음 → hasActiveReservation=false, usedCount=null
-        assertEquals(false, result.hasActiveReservation());
+        // 로그인 사용자 + 결제 없음 + 세션 없음 → usedCount=null
         assertNull(result.usedCount());
 
         verify(ptCourseRepository).findById(1L);
@@ -161,7 +162,7 @@ class PtCourseQueryServiceTest {
     }
 
     @Test
-    @DisplayName("비로그인 사용자가 PT 강습 상세 조회 시 hasActiveReservation과 usedCount는 null이어야 한다")
+    @DisplayName("비로그인 사용자가 PT 강습 상세 조회 시 usedCount는 null이어야 한다")
     void findPtCourseDetail_guestUser() {
         // given
         PtCourse ptCourse = stubPtCourse(1L, PtCourseStatus.VISIBLE);
@@ -175,7 +176,6 @@ class PtCourseQueryServiceTest {
                 ptCourseQueryService.findPtCourseDetail(1L, null);
 
         // then
-        assertNull(result.hasActiveReservation());
         assertNull(result.usedCount());
     }
 

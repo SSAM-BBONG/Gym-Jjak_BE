@@ -47,6 +47,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
     private final UserNicknameQueryPort userNicknameQueryPort;
     private final ReviewQueryPort reviewQueryPort;
     private final FileUrlUseCase fileUrlUseCase;
+    private final PaymentQueryPort paymentQueryPort;
     private final Clock clock;
 
     @Override
@@ -427,16 +428,18 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 .toList();
         log.debug("event=pt_course_detail_find ptCourseId={} schedule_count={}", ptCourse.getId(), schedules.size());
 
-        // 로그인 사용자면 예약 여부 및 예약 횟수 조회
-        Boolean hasActiveReservation = null;
+        // 로그인 사용자면 소진 횟수 조회
         Integer usedCount = null;
         if (userId != null) {
             List<PtReservation> myReservations = ptReservationRepository.findAllByUserId(userId, null).stream()
                     .filter(r -> r.getPtCourseId().equals(ptCourse.getId()))
                     .filter(r -> r.getStatus() != PtReservationStatus.CANCELLED)
                     .toList();
-            hasActiveReservation = !myReservations.isEmpty();
-            usedCount = myReservations.isEmpty() ? null : myReservations.size();
+            if (!myReservations.isEmpty()) {
+                usedCount = myReservations.size();
+            } else if (paymentQueryPort.existsPaidByUserIdAndPtCourseId(userId, ptCourse.getId())) {
+                usedCount = 0;
+            }
         }
 
         return new PtCourseDetailView(
@@ -451,7 +454,6 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
                 curriculums,
                 schedules,
                 reviewQueryPort.findRecentByPtCourseId(ptCourse.getId(), 3),
-                hasActiveReservation,
                 usedCount
         );
     }
