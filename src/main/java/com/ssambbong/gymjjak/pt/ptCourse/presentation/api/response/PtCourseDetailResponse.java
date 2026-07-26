@@ -45,10 +45,7 @@ public record PtCourseDetailResponse(
         @Schema(description = "최근 강사평 목록 (최대 3개)")
         List<ReviewQueryPort.ReviewSummary> recentReviews,
 
-        @Schema(description = "활성 예약 여부 (비로그인 시 null)", nullable = true)
-        Boolean hasActiveReservation,
-
-        @Schema(description = "소진된 세션 수 (비로그인 또는 결제 이력 없을 시 null)", nullable = true)
+        @Schema(description = "소진된 세션 수. 비로그인 or 미결제 시 null / 결제 후 세션 없음 시 0 / 세션 있음 시 N", nullable = true)
         Integer usedCount
 
 ) {
@@ -99,7 +96,6 @@ public record PtCourseDetailResponse(
                 curriculums,
                 schedules,
                 view.recentReviews(),
-                view.hasActiveReservation(),
                 view.usedCount()
         );
     }
