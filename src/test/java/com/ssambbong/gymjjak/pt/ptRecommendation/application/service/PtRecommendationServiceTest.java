@@ -104,31 +104,73 @@ class PtRecommendationServiceTest {
     }
 
     @Test
-    @DisplayName("부위 조건에 맞는 코스가 하나도 없으면 PtRecommendationNotFoundException이 발생한다")
-    void recommend_throwsNotFound_whenNoPartMatch() {
+    @DisplayName("부위+전체 코스 어디에도 맞는 후보가 없으면 PtRecommendationNotFoundException이 발생한다")
+    void recommend_throwsNotFound_whenNoCandidateAtAll() {
         when(onboardingQueryPort.findMyOnboarding(USER_ID)).thenReturn(onboardingWithRegion(USER_LAT, USER_LNG));
+        // 1·2단계(부위 유지, 거리만 완화)도, 3단계(부위까지 완화)도 전부 후보가 없는 최후의 경우
         when(ptCourseRepository.findAllVisibleByParts(List.of(PartType.LEG))).thenReturn(List.of());
+        when(ptCourseRepository.findAllVisible()).thenReturn(List.of());
 
         assertThrows(PtRecommendationNotFoundException.class, () -> service.recommend(command(3)));
         verify(ptRecommendationAiPort, never()).recommend(any(), any(), anyBoolean(), any(), any());
     }
 
     @Test
-    @DisplayName("부위는 맞아도 전부 거리 범위 밖이면 PtRecommendationNotFoundException이 발생한다")
-    void recommend_throwsNotFound_whenAllOutOfDistanceRange() {
+    @DisplayName("부위는 맞아도 전부 거리 범위 밖이면 거리 제한을 완화해 재검색하여 후보를 찾는다")
+    void recommend_relaxesDistance_whenPartMatchesButAllOutOfRange() {
         when(onboardingQueryPort.findMyOnboarding(USER_ID)).thenReturn(onboardingWithRegion(USER_LAT, USER_LNG));
 
         PtCourse farCourse = course(101L, 10L, 5L, "먼 코스");
         when(ptCourseRepository.findAllVisibleByParts(List.of(PartType.LEG))).thenReturn(List.of(farCourse));
 
-        // 부산 좌표 (서울과 약 300km 이상 떨어짐) — distanceLevel=1(1km 이내)로는 절대 안 걸림
+        // 부산 좌표 (서울과 약 300km 이상 떨어짐) — distanceLevel=1(1km 이내)로는 1단계에서 걸림
         when(organizationQueryPort.findAllByIds(List.of(10L))).thenReturn(Map.of(
                 10L, new OrganizationQueryPort.OrganizationInfo(
                         10L, "부산 헬스장", "부산", 35.1796, 129.0756, null, null, null)
         ));
+        when(trainerProfileQueryPort.findSummaryAllByIds(List.of(5L))).thenReturn(Map.of(
+                5L, new TrainerSummaryInfo(5L, "김트레이너", 4.8, 12)
+        ));
+        when(ptReservationQueryUseCase.findMyReservations(USER_ID, null)).thenReturn(List.of());
+        when(ptRecommendationAiPort.recommend(any(), any(), eq(false), isNull(), isNull()))
+                .thenReturn(List.of(new PtRecommendationAiPort.RecommendedCourse(
+                        101L, "먼 코스", 5L, "김트레이너", "거리는 멀지만 조건에 맞습니다.")));
 
-        assertThrows(PtRecommendationNotFoundException.class, () -> service.recommend(command(1)));
-        verify(ptRecommendationAiPort, never()).recommend(any(), any(), anyBoolean(), any(), any());
+        // 2단계(거리 무제한)에서 farCourse가 후보로 잡혀 정상적으로 추천 결과가 나와야 한다
+        PtRecommendationResult result = service.recommend(command(1));
+
+        assertEquals(1, result.recommendations().size());
+        assertEquals(101L, result.recommendations().get(0).courseId());
+    }
+
+    @Test
+    @DisplayName("부위 조건에 맞는 코스가 전혀 없으면 부위 조건까지 완화해 전체 코스 중에서 후보를 찾는다")
+    void recommend_relaxesPart_whenNoPartMatchAtAll() {
+        when(onboardingQueryPort.findMyOnboarding(USER_ID)).thenReturn(onboardingWithRegion(USER_LAT, USER_LNG));
+
+        // 1·2단계: 하체(LEG) 조건에 맞는 코스 자체가 없음
+        when(ptCourseRepository.findAllVisibleByParts(List.of(PartType.LEG))).thenReturn(List.of());
+
+        // 3단계: 부위 무관 전체 코스 중 가까운 코스가 하나 있음
+        PtCourse anyPartCourse = course(202L, 20L, 6L, "전신 코스");
+        when(ptCourseRepository.findAllVisible()).thenReturn(List.of(anyPartCourse));
+        when(organizationQueryPort.findAllByIds(List.of(20L))).thenReturn(Map.of(
+                20L, new OrganizationQueryPort.OrganizationInfo(
+                        20L, "가까운 헬스장", "서울 강남구", USER_LAT.doubleValue(), USER_LNG.doubleValue(),
+                        null, null, null)
+        ));
+        when(trainerProfileQueryPort.findSummaryAllByIds(List.of(6L))).thenReturn(Map.of(
+                6L, new TrainerSummaryInfo(6L, "박트레이너", 4.5, 3)
+        ));
+        when(ptReservationQueryUseCase.findMyReservations(USER_ID, null)).thenReturn(List.of());
+        when(ptRecommendationAiPort.recommend(any(), any(), eq(false), isNull(), isNull()))
+                .thenReturn(List.of(new PtRecommendationAiPort.RecommendedCourse(
+                        202L, "전신 코스", 6L, "박트레이너", "원하는 부위는 아니지만 가장 가까운 코스입니다.")));
+
+        PtRecommendationResult result = service.recommend(command(3));
+
+        assertEquals(1, result.recommendations().size());
+        assertEquals(202L, result.recommendations().get(0).courseId());
     }
 
     @Test
