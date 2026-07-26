@@ -16,6 +16,10 @@ public interface SpringDataChatRoomRepository extends JpaRepository<ChatRoomJpaE
     boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status);
     long countByStatus(ChatRoomStatus status);
 
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE ChatRoomJpaEntity c SET c.lastMessageAt = :lastMessageAt WHERE c.id = :id")
+    void updateLastMessageAt(@Param("id") Long chatRoomId, @Param("lastMessageAt") LocalDateTime lastMessageAt);
+
 @Modifying(clearAutomatically = true)
     @Query("UPDATE ChatRoomJpaEntity c SET c.userLeft = true WHERE c.id = :id AND c.status != com.ssambbong.gymjjak.chat.domain.model.ChatRoomStatus.DELETED")
     void markUserLeft(@Param("id") Long chatRoomId);

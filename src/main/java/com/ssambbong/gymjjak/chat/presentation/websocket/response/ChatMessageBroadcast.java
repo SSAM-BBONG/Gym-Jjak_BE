@@ -5,6 +5,7 @@ import com.ssambbong.gymjjak.chat.domain.model.ChatMessage;
 import java.time.LocalDateTime;
 
 public record ChatMessageBroadcast(
+        String type,
         Long messageId,
         Long chatRoomId,
         Long senderId,
@@ -12,13 +13,14 @@ public record ChatMessageBroadcast(
         boolean read,
         LocalDateTime createdAt
 ) {
-    public static ChatMessageBroadcast from(ChatMessage message, boolean isRead) {
+    public static ChatMessageBroadcast from(ChatMessage message) {
         return new ChatMessageBroadcast(
+                "MESSAGE",
                 message.getId(),
                 message.getChatRoomId(),
                 message.getSenderId(),
                 message.getContent(),
-                isRead,
+                false,
                 message.getCreatedAt()
         );
     }

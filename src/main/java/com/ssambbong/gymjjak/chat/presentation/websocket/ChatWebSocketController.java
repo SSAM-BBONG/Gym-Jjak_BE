@@ -4,9 +4,11 @@ import com.ssambbong.gymjjak.chat.application.command.SendChatMessageCommand;
 import com.ssambbong.gymjjak.chat.application.port.ChatMetricsPort;
 import com.ssambbong.gymjjak.chat.application.usecase.ChatMessageUseCase;
 import com.ssambbong.gymjjak.chat.domain.model.ChatMessage;
+import com.ssambbong.gymjjak.chat.presentation.websocket.request.MarkAsReadRequest;
 import com.ssambbong.gymjjak.chat.presentation.websocket.request.SendChatMessageRequest;
 import com.ssambbong.gymjjak.chat.presentation.websocket.response.ChatErrorResponse;
 import com.ssambbong.gymjjak.chat.presentation.websocket.response.ChatMessageBroadcast;
+import com.ssambbong.gymjjak.chat.presentation.websocket.response.ChatReadBroadcast;
 import com.ssambbong.gymjjak.global.domain.common.exception.ApplicationException;
 import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import jakarta.validation.Valid;
@@ -17,7 +19,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
@@ -32,7 +33,6 @@ public class ChatWebSocketController {
 
     private final ChatMessageUseCase chatMessageUseCase;
     private final SimpMessagingTemplate messagingTemplate;
-    private final SimpUserRegistry simpUserRegistry;
     private final ChatMetricsPort chatMetricsPort;
 
     @MessageMapping("/chat.send")
@@ -50,15 +50,19 @@ public class ChatWebSocketController {
         ChatMessage saved = chatMessageUseCase.createMessage(command);
 
         String destination = "/topic/chat.room." + saved.getChatRoomId();
-        boolean isRead = simpUserRegistry.findSubscriptions(
-                s -> s.getDestination().equals(destination)
-        ).size() == 2;
+        messagingTemplate.convertAndSend(destination, ChatMessageBroadcast.from(saved));
+    }
 
-        if (isRead) {
-            chatMessageUseCase.markAsRead(saved.getId());
-        }
+    @MessageMapping("/chat.read")
+    public void markAsRead(
+            @Payload @Valid MarkAsReadRequest request,
+            Principal principal
+    ) {
+        AuthUser authUser = (AuthUser) ((Authentication) principal).getPrincipal();
+        chatMessageUseCase.markAllAsRead(request.chatRoomId(), authUser.userId());
 
-        messagingTemplate.convertAndSend(destination, ChatMessageBroadcast.from(saved, isRead));
+        String destination = "/topic/chat.room." + request.chatRoomId();
+        messagingTemplate.convertAndSend(destination, ChatReadBroadcast.of(request.chatRoomId()));
     }
 
     @MessageExceptionHandler(ApplicationException.class)

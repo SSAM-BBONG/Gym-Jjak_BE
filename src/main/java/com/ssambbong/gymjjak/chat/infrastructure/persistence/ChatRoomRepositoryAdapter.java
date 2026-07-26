@@ -40,6 +40,11 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     }
 
     @Override
+    public void updateLastMessageAt(Long chatRoomId, LocalDateTime lastMessageAt) {
+        repository.updateLastMessageAt(chatRoomId, lastMessageAt);
+    }
+
+    @Override
     public void leaveChatRoom(ChatRoom chatRoom) {
         if (chatRoom.isUserLeft()) {
             repository.markUserLeft(chatRoom.getId());
