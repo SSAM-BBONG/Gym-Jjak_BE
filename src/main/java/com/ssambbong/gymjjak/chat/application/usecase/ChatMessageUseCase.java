@@ -8,5 +8,6 @@ import com.ssambbong.gymjjak.chat.domain.model.ChatMessage;
 public interface ChatMessageUseCase {
     ChatMessage createMessage(SendChatMessageCommand command);
     void markAsRead(Long messageId);
+    void markAllAsRead(Long chatRoomId, Long readerId);
     ChatMessageListResult findMessages(Long requesterId, ChatMessageQuery query);
 }

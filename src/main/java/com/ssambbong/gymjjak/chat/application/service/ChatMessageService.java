@@ -39,6 +39,13 @@ public class ChatMessageService implements ChatMessageUseCase {
         chatMessageRepository.markAsRead(messageId);
     }
 
+    @Override
+    @Transactional
+    public void markAllAsRead(Long chatRoomId, Long readerId) {
+        validateParticipant(chatRoomId, readerId);
+        chatMessageRepository.markAllAsRead(chatRoomId, readerId);
+    }
+
     @Monitored(name = "gymjjak.chat.message.duration", domain = "chat", action = "create_message")
     @Override
     @Transactional
@@ -47,6 +54,7 @@ public class ChatMessageService implements ChatMessageUseCase {
 
         ChatMessage message = ChatMessage.create(command.chatRoomId(), command.senderId(), command.content());
         ChatMessage saved = chatMessageRepository.save(message);
+        chatRoomRepository.updateLastMessageAt(command.chatRoomId(), saved.getCreatedAt());
         recordMetricSafely(chatMetricsPort::recordMessageSent, "message_sent");
         return saved;
     }
