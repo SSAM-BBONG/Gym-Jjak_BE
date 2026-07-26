@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -31,7 +32,9 @@ public class TrainerProfileQueryPortAdapter implements TrainerProfileQueryPort {
     private final SpringDataTrainerAwardRepository awardRepository;
 
     // userId로 활성화된 트레이너 프로필 ID 조회
+    // noRollbackFor: 비트레이너 사용자 조회 시 발생하는 예상된 예외가 호출 측 트랜잭션을 오염시키지 않도록 방지
     @Override
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED, noRollbackFor = TrainerProfileNotFoundException.class)
     public Long findActiveTrainerProfileIdByUserId(Long userId) {
         return trainerProfileRepository
                 .findTrainerProfileIdByUserIdAndStatus(
