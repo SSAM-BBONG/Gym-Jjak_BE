@@ -54,7 +54,7 @@ public class ChatRoomController {
         ));
     }
 
-    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER', 'ADMIN', 'ORGANIZATION')")
     @Operation(summary = "전체 안 읽은 메시지 수 조회", description = "내 모든 채팅방의 안 읽은 메시지 총 개수를 조회한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -75,7 +75,7 @@ public class ChatRoomController {
         ));
     }
 
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAnyAuthority('USER', 'TRAINER')")
     @Operation(summary = "채팅방 생성", description = "회원이 트레이너와의 1:1 채팅방을 생성한다.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "채팅방 생성 성공",
@@ -96,9 +96,10 @@ public class ChatRoomController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody @Valid CreateChatRoomRequest request
     ) {
+        Long targetUserId = "TRAINER".equals(authUser.role()) ? request.userId() : authUser.userId();
         CreateChatRoomCommand command = new CreateChatRoomCommand(
                 authUser.userId(),
-                request.trainerProfileId(),
+                targetUserId,
                 request.ptCourseId()
         );
 

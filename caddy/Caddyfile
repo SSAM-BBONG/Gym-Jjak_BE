@@ -2,6 +2,6 @@
     email xxv211@g.eulji.ac.kr
 }
 
-3-34-87-41.sslip.io {
+api.gymjjak.site {
     reverse_proxy backend:8080
 }

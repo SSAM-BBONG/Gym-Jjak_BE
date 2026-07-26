@@ -21,21 +21,20 @@ import java.util.List;
 @Component
 @Slf4j
 public class AiMealAnalysisClientAdapter implements MealNutritionAnalysisPort {
+    private static final String ANALYZE_PATH = "/api/v1/meals/analyze";
+
     private final RestClient restClient;
-    private final AiMealAnalysisProperties properties;
 
     public AiMealAnalysisClientAdapter(
-            @Qualifier("aiMealAnalysisRestClient") RestClient restClient,
-            AiMealAnalysisProperties properties) {
+            @Qualifier("aiServiceRestClient") RestClient restClient) {
         this.restClient = restClient;
-        this.properties = properties;
     }
 
     @Override
     public AnalysisResult analyze(AnalysisRequest request) {
         try {
             AiResponse response = restClient.post()
-                    .uri(properties.getAnalyzePath())
+                    .uri(ANALYZE_PATH)
                     .body(AiRequest.from(request))
                     .retrieve()
                     // FastAPI가 음식 미검출을 422로 반환하면 사용자에게 구분 가능한 비즈니스 오류로 변환한다.
@@ -61,8 +60,8 @@ public class AiMealAnalysisClientAdapter implements MealNutritionAnalysisPort {
         } catch (AiMealAnalysisException exception) {
             throw exception;
         } catch (RestClientException exception) {
-            log.warn("AI 식단 분석 서버 통신에 실패했습니다. baseUrl={}, path={}, exception={}",
-                    properties.getBaseUrl(), properties.getAnalyzePath(), exception.toString(), exception);
+            log.warn("AI 식단 분석 서버 통신에 실패했습니다. path={}, exception={}",
+                    ANALYZE_PATH, exception.toString(), exception);
             throw convertException(exception);
         }
     }

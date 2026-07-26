@@ -1,17 +1,19 @@
 package com.ssambbong.gymjjak.diet.adapter.in.web.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.ssambbong.gymjjak.file.presentation.api.request.UploadedFileMetadataRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-@Schema(description = "식단 등록 및 수정 요청")
+@Schema(description = "식단 등록 요청")
 public record MealAnalysisRequest(
         @Schema(description = "식사 유형", example = "아침", allowableValues = {"아침", "점심", "저녁", "간식"})
         @NotBlank(message = "식사 유형은 필수입니다.")
@@ -39,8 +41,8 @@ public record MealAnalysisRequest(
         @PositiveOrZero(message = "지방은 0 이상이어야 합니다.")
         @Digits(integer = 6, fraction = 2, message = "지방은 소수점 둘째 자리까지 입력할 수 있습니다.")
         BigDecimal fat,
-        @Schema(description = "식단 사진의 파일 ID, 입력하지 않아도 됩니다.", example = "15", nullable = true)
-        @PositiveOrZero(message = "파일 ID는 0 이상이어야 합니다.")
-        Long fileId
+        @Schema(description = "Presigned URL로 업로드를 완료한 식단 이미지 메타데이터", nullable = true)
+        @Valid
+        UploadedFileMetadataRequest file
 ) {
 }

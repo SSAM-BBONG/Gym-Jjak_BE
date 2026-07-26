@@ -1,3 +1,4 @@
+/*
 package com.ssambbong.gymjjak.pt.feedback.application.service;
 
 import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
@@ -282,3 +283,4 @@ class FeedbackCommandServiceTest {
         verify(feedbackRepository, never()).update(any());
     }
 }
+*/

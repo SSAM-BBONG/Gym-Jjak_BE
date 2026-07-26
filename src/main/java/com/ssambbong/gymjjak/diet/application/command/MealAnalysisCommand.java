@@ -14,7 +14,7 @@ public record MealAnalysisCommand(
         BigDecimal carbohydrate,
         BigDecimal protein,
         BigDecimal fat,
-        Long fileId
+        MealImageMetadataCommand file
 ) {
     // 등록 요청에 영양성분이 하나라도 들어오면 AI 구독 권한 검증 대상이다.
     public boolean hasMacronutrients() {

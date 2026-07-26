@@ -55,6 +55,7 @@ OcrUseCase.extractOcr(command)
 → RestClient POST 요청
 → ClovaOcrResponse 수신
 → images[0]·inferResult·fields 검증
+→ `NOT_FOUND: not found matched template` 또는 `validationResult.result = NO_REQUESTED`이면 빈 OCR 결과로 변환
 → Clova DTO를 OcrResult로 변환
 → OcrMetric으로 성공·실패·처리 시간 기록
 ```
@@ -77,6 +78,8 @@ ExtractOcrCommand
 ClovaOcrResponse
 → images[0] 선택
 → inferResult == SUCCESS 확인
+→ inferResult != SUCCESS이고 템플릿 미매칭 신호(`NOT_FOUND` 또는 `NO_REQUESTED`)가 있으면 matchedTemplateName = null, fields = [] 반환
+→ 그 외 inferResult != SUCCESS는 OCR_INVALID_RESPONSE 예외
 → matchedTemplate.name → OcrResult.matchedTemplateName
 → fields[].name/inferText/inferConfidence → OcrExtractedField
 ```
@@ -98,6 +101,7 @@ Clova 5xx 응답
 - 연결 시간 제한은 3초입니다.
 - 읽기 시간 제한은 30초입니다.
 - Clova 4xx, 메시지 JSON 직렬화 오류, 기타 RestClient 오류는 재시도하지 않습니다.
+- Clova 템플릿 미매칭(`NOT_FOUND` 또는 `NO_REQUESTED`)은 외부 장애가 아닌 정책 검증 대상이므로 재시도하지 않습니다.
 - 재시도 소진 시 `gymjjak.ocr.retry.exhausted.total` 카운터를 증가시킵니다.
 
 ## 6. 트레이너 신청 자격증 검증 정책
@@ -113,7 +117,8 @@ OcrResult
 
 하나라도 불충족
 → RequiredCertificationNotVerifiedException
-→ TRAINER_APPLICATION_400_2 반환
+→ 400 / TRAINER_APPLICATION_400_2 반환
+→ `필수 자격증을 확인할 수 없습니다. 올바른 자격증 이미지를 업로드해 주세요.` 안내
 ```
 
 ## 7. 관측 지점
@@ -128,8 +133,9 @@ OcrResult
 
 ## 📝 문서 정보
 
-- 업데이트일: `2026-07-21`
+- 업데이트일: `2026-07-22`
 - 변경 사항(요약):
   - 트레이너 신청 → File → OCR → Clova → 자격증 정책 검증 흐름을 정리했습니다. 🔄
   - 형식 판별, multipart 요청, 재시도·타임아웃·메트릭 정책을 코드 기준으로 기록했습니다. ⚡
   - OCR 추출과 트레이너 신청 정책 검증의 책임 경계를 명확히 했습니다. 🧩
+  - Clova 템플릿 미매칭을 빈 OCR 결과로 변환하고, 트레이너 신청 정책에서 400으로 처리하는 흐름을 반영했습니다. 🪪

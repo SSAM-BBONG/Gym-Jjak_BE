@@ -67,7 +67,7 @@ trainerProfileId
 → COUNT(DISTINCT pt_course_id, user_id)
 
 상위 카드
-→ 강습별 COUNT(DISTINCT CASE WHEN pr.status = 'IN_PROGRESS' THEN user_id END)
+→ 강습별 COUNT(DISTINCT CASE WHEN pr.status IN ('RESERVED', 'IN_PROGRESS') THEN user_id END)
 → currentStudentCount DESC, ptCourseId DESC
 → LIMIT 4
 ```

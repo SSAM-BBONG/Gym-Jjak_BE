@@ -73,7 +73,8 @@ public class TrainerReviewRepositoryAdapter implements TrainerReviewRepository, 
                         p.getPtCourseTitle(),
                         p.getRating(),
                         p.getContent(),
-                        p.getCreatedAt()
+                        p.getCreatedAt(),
+                        query.requesterId() != null && query.requesterId().equals(p.getUserId())
                 ))
                 .toList();
 

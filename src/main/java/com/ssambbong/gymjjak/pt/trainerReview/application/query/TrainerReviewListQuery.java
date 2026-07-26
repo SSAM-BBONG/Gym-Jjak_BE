@@ -5,5 +5,6 @@ public record TrainerReviewListQuery(
         Long cursor,
         Integer cursorRating,
         int size,
-        TrainerReviewSortType sort
+        TrainerReviewSortType sort,
+        Long requesterId
 ) {}

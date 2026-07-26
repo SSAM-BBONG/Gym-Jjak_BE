@@ -219,6 +219,7 @@ public class PtCourseQueryService implements PtCourseQueryUseCase {
 
                     return new CourseReservationView(
                             rep.getId(),
+                            studentUserId,
                             nicknameMap.getOrDefault(studentUserId, null),
                             derivedStatus,
                             lastPtDate,

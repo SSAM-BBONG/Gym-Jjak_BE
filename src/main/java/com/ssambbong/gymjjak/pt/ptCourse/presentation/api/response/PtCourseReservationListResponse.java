@@ -20,6 +20,7 @@ public record PtCourseReservationListResponse(
     // 수강생 1명의 예약 정보
     public record ReservationItem(
             Long ptReservationId,
+            Long userId,
             String nickname,
             String status,
             LocalDate lastPtDate,
@@ -29,6 +30,7 @@ public record PtCourseReservationListResponse(
         public static ReservationItem from(PtCourseQueryUseCase.CourseReservationView view) {
             return new ReservationItem(
                     view.ptReservationId(),
+                    view.userId(),
                     view.nickname(),
                     view.status().name(),
                     view.lastPtDate(),

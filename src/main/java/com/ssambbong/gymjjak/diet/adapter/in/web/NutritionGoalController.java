@@ -42,7 +42,7 @@ public class NutritionGoalController {
     @Operation(summary = "영양 목표 조회", description = "로그인 사용자의 일일 영양 목표를 조회합니다.")
     public ResponseEntity<GlobalApiResponse<NutritionGoalResponse>> get(@AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(GlobalApiResponse.ok(NutritionGoalResponseCode.GOAL_FETCHED,
-                toResponse(nutritionGoalUseCase.get(authUser.userId()))));
+                nutritionGoalUseCase.get(authUser.userId()).map(this::toResponse).orElse(null)));
     }
 
     @PatchMapping

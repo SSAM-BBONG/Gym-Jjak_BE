@@ -37,6 +37,12 @@ public interface WorkoutDiaryPort {
             LocalDate date
     );
 
+    List<CalendarDayDiaryResult> findDiariesByUserIdAndPeriod(
+            Long userId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
     List<CalendarMonthDiaryResult> findDiarySummariesByUserIdAndPeriod(
             Long userId,
             LocalDate startDate,

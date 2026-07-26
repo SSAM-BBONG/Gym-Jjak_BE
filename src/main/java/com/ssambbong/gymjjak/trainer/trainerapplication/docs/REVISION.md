@@ -1,5 +1,29 @@
 # 🔄 트레이너 신청 다중 조직 선택 개선
 
+## ✅ 2026-07-22 · 필수 자격증 OCR 템플릿 미매칭 처리
+
+### 오류 처리 개선
+
+- Clova OCR 응답의 `message`가 `NOT_FOUND: not found matched template`이거나
+  `validationResult.result`가 `NO_REQUESTED`이면, 외부 OCR 장애가 아닌 자격증
+  템플릿 미매칭으로 처리합니다.
+- 템플릿 미매칭은 빈 OCR 결과로 전달하고, 기존 필수 자격증 검증에서
+  `400 Bad Request` / `TRAINER_APPLICATION_400_2`를 반환합니다.
+- 사용자에게는 `필수 자격증을 확인할 수 없습니다. 올바른 자격증 이미지를 업로드해 주세요.`를 안내합니다.
+- Clova 5xx·네트워크·타임아웃만 기존 재시도 정책을 적용하며, 템플릿 미매칭은 재시도하지 않습니다.
+
+### 실패 보상 처리
+
+- OCR 검증 실패 시, 요청에서 등록한 프로필 이미지와 자격증 파일을 모두 삭제합니다.
+- S3 객체 삭제 후 `files` 테이블의 파일 메타데이터도 함께 삭제합니다.
+- OCR 검증 실패 시 `trainer_applications` 행은 생성하지 않습니다.
+
+### 검증
+
+- Clova 템플릿 미매칭 응답 fixture(`NOT_FOUND`, `NO_REQUESTED`) 회귀 테스트를 추가했습니다.
+- Spring Retry가 비재시도 `OcrException`을 `ExhaustedRetryException`으로 변환하지 않는 회귀 테스트를 추가했습니다.
+- 실제 프론트 트레이너 신청에서 일반 PNG 업로드 시 `400 / TRAINER_APPLICATION_400_2` 응답과 프로필·자격증 파일 보상 삭제를 확인했습니다.
+
 ## ✅ 2026-07-18 · 사용자 트레이너 신청 목록·상세 조회 완료
 
 ### API 경로 변경

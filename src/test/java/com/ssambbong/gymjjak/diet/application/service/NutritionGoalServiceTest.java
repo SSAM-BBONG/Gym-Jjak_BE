@@ -4,7 +4,6 @@ import com.ssambbong.gymjjak.diet.application.command.NutritionGoalCommand;
 import com.ssambbong.gymjjak.diet.application.command.UpdateNutritionGoalCommand;
 import com.ssambbong.gymjjak.diet.application.port.out.NutritionGoalPort;
 import com.ssambbong.gymjjak.diet.domain.exception.DuplicateNutritionGoalException;
-import com.ssambbong.gymjjak.diet.domain.exception.NutritionGoalNotFoundException;
 import com.ssambbong.gymjjak.diet.domain.model.NutritionGoal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,8 +44,8 @@ class NutritionGoalServiceTest {
         assertThat(captor.getValue().getGoalCarbohydrate()).isEqualTo(200L);
     }
 
-    @Test void throwsWhenGoalDoesNotExist() {
+    @Test void returnsEmptyWhenGoalDoesNotExist() {
         when(port.findByUserId(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.get(1L)).isInstanceOf(NutritionGoalNotFoundException.class);
+        assertThat(service.get(1L)).isEmpty();
     }
 }

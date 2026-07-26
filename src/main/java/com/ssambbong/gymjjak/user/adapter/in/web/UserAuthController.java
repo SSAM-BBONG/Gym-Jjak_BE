@@ -5,6 +5,10 @@ import com.ssambbong.gymjjak.global.presentation.security.AuthUser;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.CompleteSocialSignupRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.IssueTemporaryPasswordRequest;
 import com.ssambbong.gymjjak.user.adapter.in.web.request.LoginRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.EmailAvailabilityRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.NicknameAvailabilityRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.request.PhoneAvailabilityRequest;
+import com.ssambbong.gymjjak.user.adapter.in.web.response.AvailabilityResponse;
 import com.ssambbong.gymjjak.user.adapter.in.web.response.LoginResponse;
 import com.ssambbong.gymjjak.user.application.command.CompleteSocialSignupCommand;
 import com.ssambbong.gymjjak.user.application.command.LoginCommand;
@@ -39,6 +43,53 @@ public class UserAuthController {
 
     private final UserCommandUseCase userCommandUseCase;
     private final MailUseCase mailUseCase;
+
+    @PostMapping("/availability/email")
+    @Operation(summary = "회원가입 이메일 중복 확인")
+    public ResponseEntity<GlobalApiResponse<AvailabilityResponse>> checkEmailAvailability(
+            @Valid @RequestBody EmailAvailabilityRequest request) {
+        boolean available = userCommandUseCase.isEmailAvailable(request.email());
+        return availabilityResponse(
+                UserResponseCode.USER_EMAIL_AVAILABILITY_CHECKED,
+                available,
+                "사용 가능한 이메일입니다.",
+                "이미 사용 중인 이메일입니다.");
+    }
+
+    @PostMapping("/availability/nickname")
+    @Operation(summary = "회원가입 닉네임 중복 확인")
+    public ResponseEntity<GlobalApiResponse<AvailabilityResponse>> checkNicknameAvailability(
+            @Valid @RequestBody NicknameAvailabilityRequest request) {
+        boolean available = userCommandUseCase.isNicknameAvailable(request.nickname());
+        return availabilityResponse(
+                UserResponseCode.USER_NICKNAME_AVAILABILITY_CHECKED,
+                available,
+                "사용 가능한 닉네임입니다.",
+                "이미 사용 중인 닉네임입니다.");
+    }
+
+    @PostMapping("/availability/phone")
+    @Operation(summary = "회원가입 전화번호 중복 확인")
+    public ResponseEntity<GlobalApiResponse<AvailabilityResponse>> checkPhoneAvailability(
+            @Valid @RequestBody PhoneAvailabilityRequest request) {
+        boolean available = userCommandUseCase.isPhoneAvailable(request.phone());
+        return availabilityResponse(
+                UserResponseCode.USER_PHONE_AVAILABILITY_CHECKED,
+                available,
+                "사용 가능한 전화번호입니다.",
+                "이미 사용 중인 전화번호입니다.");
+    }
+
+    private ResponseEntity<GlobalApiResponse<AvailabilityResponse>> availabilityResponse(
+            UserResponseCode responseCode,
+            boolean available,
+            String availableMessage,
+            String duplicatedMessage) {
+        return ResponseEntity.ok(GlobalApiResponse.ok(
+                responseCode.getCode(),
+                available ? availableMessage : duplicatedMessage,
+                new AvailabilityResponse(available)));
+    }
 
     @PostMapping("/signup")
     @Operation( summary = "일반 회원 계정 생성", description = "회원이 회원가입을 하는 요청이다.")

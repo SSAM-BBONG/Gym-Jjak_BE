@@ -21,6 +21,8 @@ public interface UserPort {
 
     boolean existsByPhoneAndRole(String phone,  UserRole role);
 
+    boolean existsByPhone(String phone);
+
     String encode(String rawPassword);
 
 

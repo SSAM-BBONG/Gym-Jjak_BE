@@ -1,21 +1,30 @@
 package com.ssambbong.gymjjak.diet.application.service;
 
 import com.ssambbong.gymjjak.diet.application.command.MealAnalysisCommand;
+import com.ssambbong.gymjjak.diet.application.command.MealImageMetadataCommand;
 import com.ssambbong.gymjjak.diet.application.command.UpdateMealAnalysisCommand;
 import com.ssambbong.gymjjak.diet.application.port.in.MealAnalysisUseCase;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAnalysisPort;
 import com.ssambbong.gymjjak.diet.application.port.out.AiNutritionAccessPort;
 import com.ssambbong.gymjjak.diet.application.port.out.MealAccessPort;
+import com.ssambbong.gymjjak.diet.application.port.out.MealImageUrlPort;
 import com.ssambbong.gymjjak.diet.application.query.MealPageQuery;
 import com.ssambbong.gymjjak.diet.application.result.MealAnalysisResult;
+import com.ssambbong.gymjjak.diet.application.result.MealAnalysisDetailResult;
 import com.ssambbong.gymjjak.diet.application.result.MealPageResult;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAnalysisNotFoundException;
 import com.ssambbong.gymjjak.diet.domain.exception.MealAccessDeniedException;
 import com.ssambbong.gymjjak.diet.domain.exception.AiNutritionAccessRequiredException;
 import com.ssambbong.gymjjak.diet.domain.model.MealAnalysis;
+import com.ssambbong.gymjjak.file.application.command.CreateFileCommand;
+import com.ssambbong.gymjjak.file.application.result.FileRegistrationResult;
+import com.ssambbong.gymjjak.file.application.usecase.FileUseCase;
+import com.ssambbong.gymjjak.global.domain.common.model.FileType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +33,8 @@ public class MealAnalysisService implements MealAnalysisUseCase {
     private final MealAnalysisPort mealAnalysisPort;
     private final AiNutritionAccessPort aiNutritionAccessPort;
     private final MealAccessPort mealAccessPort;
+    private final FileUseCase fileUseCase;
+    private final MealImageUrlPort mealImageUrlPort;
 
     @Override
     @Transactional
@@ -32,16 +43,21 @@ public class MealAnalysisService implements MealAnalysisUseCase {
         if (command.hasMacronutrients()) {
             validateAiNutritionAccess(command.userId());
         }
+        Long fileId = registerMealImage(command);
         MealAnalysis meal = MealAnalysis.create(command.userId(), command.mealType(), command.mealTime(),
-                command.menu(), command.kcal(), command.carbohydrate(), command.protein(), command.fat(), command.fileId());
+                command.menu(), command.kcal(), command.carbohydrate(), command.protein(), command.fat(), fileId);
         return MealAnalysisResult.from(mealAnalysisPort.save(meal));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public MealAnalysisResult get(Long requesterUserId, Long targetUserId, Long mealId) {
+    public MealAnalysisDetailResult get(Long requesterUserId, Long targetUserId, Long mealId) {
         validateReadAccess(requesterUserId, targetUserId);
-        return MealAnalysisResult.from(getOwnedMeal(targetUserId, mealId));
+        MealAnalysis meal = getOwnedMeal(targetUserId, mealId);
+        String imageUrl = meal.getFileId() == null
+                ? null
+                : mealImageUrlPort.resolve(meal.getFileId(), targetUserId);
+        return new MealAnalysisDetailResult(MealAnalysisResult.from(meal), imageUrl);
     }
 
     @Transactional(readOnly = true)
@@ -59,6 +75,7 @@ public class MealAnalysisService implements MealAnalysisUseCase {
         if (command.updatesMacronutrients()) {
             validateAiNutritionAccess(command.userId());
         }
+        Long fileId = command.filePresent() ? registerMealImage(command.userId(), command.file()) : null;
         meal.update(
                 command.mealType(), command.mealTypePresent(),
                 command.mealTime(), command.mealTimePresent(),
@@ -67,7 +84,7 @@ public class MealAnalysisService implements MealAnalysisUseCase {
                 command.carbohydrate(), command.carbohydratePresent(),
                 command.protein(), command.proteinPresent(),
                 command.fat(), command.fatPresent(),
-                command.fileId(), command.fileIdPresent()
+                fileId, command.filePresent()
         );
         return MealAnalysisResult.from(mealAnalysisPort.save(meal));
     }
@@ -101,5 +118,17 @@ public class MealAnalysisService implements MealAnalysisUseCase {
         if (!aiNutritionAccessPort.hasActiveAccess(userId)) {
             throw new AiNutritionAccessRequiredException();
         }
+    }
+
+    private Long registerMealImage(MealAnalysisCommand command) {
+        return registerMealImage(command.userId(), command.file());
+    }
+
+    private Long registerMealImage(Long userId, MealImageMetadataCommand file) {
+        if (file == null) return null;
+        FileRegistrationResult registeredFile = fileUseCase.registerFiles(List.of(new CreateFileCommand(
+                userId, file.fileKey(), file.originalName(), file.contentType(), file.fileSize(), FileType.MEAL_IMAGE
+        ))).get(0);
+        return registeredFile.fileId();
     }
 }

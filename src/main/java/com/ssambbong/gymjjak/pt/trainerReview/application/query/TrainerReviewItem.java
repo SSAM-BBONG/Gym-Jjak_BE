@@ -8,5 +8,6 @@ public record TrainerReviewItem(
         String ptCourseTitle,
         int rating,
         String content,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        boolean isMine
 ) {}
