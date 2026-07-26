@@ -29,6 +29,21 @@ public interface WorkoutDiaryJpaRepository extends JpaRepository<WorkoutDiaryJpa
             @Param("date") LocalDate date
     );
 
+    @EntityGraph(attributePaths = "sets")
+    @Query("""
+        select distinct d
+        from WorkoutDiaryJpaEntity d
+        where d.userId = :userId
+          and d.diaryDate >= :startDate
+          and d.diaryDate < :endDate
+        order by d.diaryDate asc, d.id asc
+    """)
+    List<WorkoutDiaryJpaEntity> findAllWithSetsByUserIdAndPeriod(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
     @Query("""
         select new com.ssambbong.gymjjak.calendar.application.result.CalendarMonthDiaryResult(
             d.diaryDate,
