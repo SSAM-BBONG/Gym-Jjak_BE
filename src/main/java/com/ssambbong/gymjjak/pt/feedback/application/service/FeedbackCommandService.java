@@ -136,9 +136,11 @@ public class FeedbackCommandService implements FeedbackCommandUseCase {
         feedbackMediaRepository.saveAll(mediaList);
 
         // 피드백 등록 완료 - 예약 회원에게 알림 발행
+        // targetId에 feedbackId 대신 ptReservationId를 담아야 프론트가
+        // /reservations/{targetId}/feedbacks 경로로 올바르게 이동할 수 있음
         eventPublisher.publishEvent(new FeedbackCreatedEvent(
                 reservation.userId(),
-                saved.getId()
+                command.ptReservationId()
         ));
 
         log.info("event=feedback_create_complete feedbackId={}", saved.getId());
