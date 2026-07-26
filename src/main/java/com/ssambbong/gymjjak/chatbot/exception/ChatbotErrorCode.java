@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ChatbotErrorCode implements ErrorCode {
-    SUBSCRIPTION_REQUIRED(HttpStatus.FORBIDDEN, "CHATBOT_SUBSCRIPTION_REQUIRED", "활성 챗봇 구독이 필요합니다."),
+    SUBSCRIPTION_REQUIRED(HttpStatus.FORBIDDEN, "CHATBOT_SUBSCRIPTION_REQUIRED", "챗봇 접근 권한이 필요합니다."),
     SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATBOT_SESSION_NOT_FOUND", "챗봇 세션을 찾을 수 없습니다."),
     SESSION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CHATBOT_SESSION_ACCESS_DENIED", "챗봇 세션에 접근할 수 없습니다."),
     INVALID_QUICK_REPLY(HttpStatus.BAD_REQUEST, "CHATBOT_INVALID_QUICK_REPLY", "유효하지 않거나 만료된 챗봇 선택지입니다."),

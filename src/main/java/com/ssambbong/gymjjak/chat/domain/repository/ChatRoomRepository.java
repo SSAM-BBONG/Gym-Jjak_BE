@@ -13,6 +13,7 @@ public interface ChatRoomRepository {
     Optional<ChatRoom> findById(Long id);
     boolean existsByUserIdAndTrainerProfileIdAndPtCourseIdAndStatus(Long userId, Long trainerProfileId, Long ptCourseId, ChatRoomStatus status);
     void leaveChatRoom(ChatRoom chatRoom);
+    void updateLastMessageAt(Long chatRoomId, LocalDateTime lastMessageAt);
     List<ChatRoomSummary> findChatRoomsByRequesterId(Long requesterId);
     long countActive();
 

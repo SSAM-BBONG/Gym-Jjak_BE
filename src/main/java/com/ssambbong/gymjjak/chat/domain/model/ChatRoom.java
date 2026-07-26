@@ -74,6 +74,10 @@ public class ChatRoom {
         }
     }
 
+    public void updateLastMessageAt(LocalDateTime sentAt) {
+        this.lastMessageAt = sentAt;
+    }
+
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
     public Long getTrainerProfileId() { return trainerProfileId; }

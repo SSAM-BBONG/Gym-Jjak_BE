@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiClientPort;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiEvent;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
+import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotUserDataSnapshot;
+import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotWorkoutData;
 import com.ssambbong.gymjjak.chatbot.exception.ChatbotAiException;
 import com.ssambbong.gymjjak.chatbot.exception.ChatbotErrorCode;
 import lombok.extern.slf4j.Slf4j;
@@ -180,12 +182,13 @@ public class ChatbotFastApiClientAdapter implements ChatbotAiClientPort {
             String message,
             @JsonProperty("intent_hint") String intentHint,
             Actor actor,
-            Memory memory
+            Memory memory,
+            @JsonProperty("personal_data") PersonalData personalData
     ) {
         static FastApiRequest from(ChatbotAiRequest request) {
             return new FastApiRequest(
                     request.sessionId(), request.message(), request.intentHint(),
-                    Actor.from(request.actor()), Memory.from(request.memory())
+                    Actor.from(request.actor()), Memory.from(request.memory()), PersonalData.from(request.personalData())
             );
         }
     }
@@ -219,6 +222,88 @@ public class ChatbotFastApiClientAdapter implements ChatbotAiClientPort {
     private record Context(String kind, String value) {
         static Context from(ChatbotAiRequest.Context context) {
             return new Context(context.kind(), context.value());
+        }
+    }
+
+    private record PersonalData(
+            Onboarding onboarding,
+            @JsonProperty("recent_workouts") List<Workout> recentWorkouts,
+            @JsonProperty("workout_summary") WorkoutSummary workoutSummary,
+            List<Inbody> inbodies
+    ) {
+        // Maps Spring's bounded detail data and full-period summary to FastAPI's request contract.
+        static PersonalData from(ChatbotUserDataSnapshot snapshot) {
+            if (snapshot == null) {
+                return new PersonalData(null, List.of(), WorkoutSummary.empty(), List.of());
+            }
+            return new PersonalData(
+                    Onboarding.from(snapshot.onboarding()),
+                    snapshot.workoutData().recentWorkouts().stream().map(Workout::from).toList(),
+                    WorkoutSummary.from(snapshot.workoutData().summary()),
+                    snapshot.inbodies().stream().map(Inbody::from).toList()
+            );
+        }
+    }
+
+    private record Onboarding(
+            @JsonProperty("exercise_goal") String exerciseGoal,
+            @JsonProperty("exercise_period") String exercisePeriod,
+            @JsonProperty("exercise_frequency") String exerciseFrequency,
+            @JsonProperty("preferred_exercise") String preferredExercise
+    ) {
+        static Onboarding from(ChatbotUserDataSnapshot.Onboarding onboarding) {
+            return onboarding == null ? null : new Onboarding(
+                    onboarding.exerciseGoal(), onboarding.exercisePeriod(),
+                    onboarding.exerciseFrequency(), onboarding.preferredExercise());
+        }
+    }
+
+    private record Workout(
+            @JsonProperty("diary_date") String diaryDate,
+            String part,
+            String exercise,
+            List<WorkoutSet> sets
+    ) {
+        static Workout from(ChatbotUserDataSnapshot.Workout workout) {
+            return new Workout(workout.diaryDate().toString(), workout.part(), workout.exercise(),
+                    workout.sets().stream().map(set -> new WorkoutSet(
+                            set.setNumber(), set.weight(), set.reps())).toList());
+        }
+    }
+
+    private record WorkoutSet(
+            @JsonProperty("set_number") int setNumber,
+            java.math.BigDecimal weight,
+            int reps
+    ) {
+    }
+
+    private record WorkoutSummary(
+            @JsonProperty("period_days") int periodDays,
+            @JsonProperty("workout_days") int workoutDays,
+            @JsonProperty("part_session_counts") java.util.Map<String, Integer> partSessionCounts,
+            @JsonProperty("part_total_volume_kg") java.util.Map<String, java.math.BigDecimal> partTotalVolumeKg
+    ) {
+        // Preserves the summary units and map values without converting numeric volumes to strings.
+        static WorkoutSummary from(ChatbotWorkoutData.Summary summary) {
+            return new WorkoutSummary(summary.periodDays(), summary.workoutDays(),
+                    summary.partSessionCounts(), summary.partTotalVolumeKg());
+        }
+
+        // Provides the same zero-value structure when no personal snapshot exists.
+        static WorkoutSummary empty() {
+            return new WorkoutSummary(28, 0, java.util.Map.of(), java.util.Map.of());
+        }
+    }
+
+    private record Inbody(
+            @JsonProperty("measured_at") String measuredAt,
+            java.math.BigDecimal weight,
+            @JsonProperty("body_fat_percentage") java.math.BigDecimal bodyFatPercentage,
+            @JsonProperty("skeletal_muscle_mass") java.math.BigDecimal skeletalMuscleMass
+    ) {
+        static Inbody from(ChatbotUserDataSnapshot.Inbody inbody) {
+            return new Inbody(inbody.measuredAt().toString(), inbody.weight(), inbody.bodyFatPercentage(), inbody.skeletalMuscleMass());
         }
     }
 }

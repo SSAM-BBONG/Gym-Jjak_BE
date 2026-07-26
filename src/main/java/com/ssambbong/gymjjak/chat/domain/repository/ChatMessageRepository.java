@@ -10,5 +10,6 @@ public interface ChatMessageRepository {
     ChatMessage save(ChatMessage message);
     Optional<ChatMessage> findById(Long id);
     void markAsRead(Long messageId);
+    void markAllAsRead(Long chatRoomId, Long readerId);
     ChatMessageListResult findMessages(ChatMessageQuery query, Long readerId);
 }

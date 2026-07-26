@@ -3,6 +3,8 @@ package com.ssambbong.gymjjak.chatbot.infrastructure.adapter.out.ai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiEvent;
 import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotAiRequest;
+import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotUserDataSnapshot;
+import com.ssambbong.gymjjak.chatbot.application.port.out.ChatbotWorkoutData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -10,6 +12,8 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,6 +48,32 @@ class ChatbotFastApiClientAdapterTest {
                             "summary": "주 3회 운동",
                             "recent_messages": [{"role": "user", "content": "이전 질문"}],
                             "contexts": [{"kind": "PAIN", "value": "무릎 통증"}]
+                          },
+                          "personal_data": {
+                            "onboarding": {
+                              "exercise_goal": "MUSCLE_GAIN",
+                              "exercise_period": "OVER_6_MONTHS",
+                              "exercise_frequency": "THREE_TO_FOUR",
+                              "preferred_exercise": "WEIGHT_TRAINING"
+                            },
+                            "recent_workouts": [{
+                              "diary_date": "2026-07-25",
+                              "part": "CHEST",
+                              "exercise": "Bench Press",
+                              "sets": [{"set_number": 1, "weight": 60, "reps": 10}]
+                            }],
+                            "workout_summary": {
+                              "period_days": 28,
+                              "workout_days": 1,
+                              "part_session_counts": {"CHEST": 1},
+                              "part_total_volume_kg": {"CHEST": 600}
+                            },
+                            "inbodies": [{
+                              "measured_at": "2026-07-01",
+                              "weight": 70,
+                              "body_fat_percentage": 20,
+                              "skeletal_muscle_mass": 30
+                            }]
                           }
                         }
                         """))
@@ -81,6 +111,16 @@ class ChatbotFastApiClientAdapterTest {
                         "주 3회 운동",
                         List.of(new ChatbotAiRequest.Message("user", "이전 질문")),
                         List.of(new ChatbotAiRequest.Context("PAIN", "무릎 통증"))
+                ),
+                new ChatbotUserDataSnapshot(
+                        new ChatbotUserDataSnapshot.Onboarding(
+                                "MUSCLE_GAIN", "OVER_6_MONTHS", "THREE_TO_FOUR", "WEIGHT_TRAINING"),
+                        ChatbotWorkoutData.from(List.of(new ChatbotUserDataSnapshot.Workout(
+                                LocalDate.of(2026, 7, 25), "CHEST", "Bench Press",
+                                List.of(new ChatbotUserDataSnapshot.WorkoutSet(1, new BigDecimal("60"), 10)))), 30, 28),
+                        List.of(new ChatbotUserDataSnapshot.Inbody(
+                                LocalDate.of(2026, 7, 1), new BigDecimal("70"),
+                                new BigDecimal("20"), new BigDecimal("30")))
                 ),
                 "request-123"
         );
