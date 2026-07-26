@@ -30,6 +30,12 @@ public enum PtReservationErrorCode implements ErrorCode {
     // 이미 완료된 예약
     PT_RESERVATION_ALREADY_COMPLETED(HttpStatus.CONFLICT, "PT_RESERVATION_010", "이미 완료된 예약은 상태를 변경할 수 없습니다."),
 
+    // 완료/취소 상태만 남아 취소할 수 있는 세션이 없는 PT
+    PT_RESERVATION_CANNOT_CANCEL(HttpStatus.CONFLICT, "PT_RESERVATION_011", "취소할 수 없는 PT입니다."),
+
+    // 모든 세션이 완료되어 전체 취소할 수 없는 PT
+    PT_RESERVATION_COMPLETED_CANNOT_CANCEL(HttpStatus.CONFLICT, "PT_RESERVATION_012", "이미 완료된 예약은 취소할 수 없습니다."),
+
     // 강습 스케줄에 없는 요일/시간으로 예약 시도
     PT_RESERVATION_SCHEDULE_MISMATCH(HttpStatus.BAD_REQUEST, "PT_RESERVATION_006", "강습 스케줄에 없는 요일 또는 시간입니다."),
 

@@ -33,6 +33,8 @@ public interface SpringDataPtReservationRepository extends JpaRepository<PtReser
     // status 지정 -> 필터
     List<PtReservationJpaEntity> findAllByUserIdAndStatusOrderByReservedStartAtDesc(Long userId, PtReservationStatus status);
 
+    List<PtReservationJpaEntity> findAllByUserIdAndPtCourseId(Long userId, Long ptCourseId);
+
     // 강습별 현재 수강 중인 수강생 수 + 전체 수강생 수를 한 번에 배치 집계
     // activeCount: 취소 안됨 + done_count < totalSessionCount (수동완료 포함)
     @Query(value = """
